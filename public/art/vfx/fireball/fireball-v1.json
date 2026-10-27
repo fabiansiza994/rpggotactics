@@ -1,0 +1,38 @@
+{
+  "columns": 4,
+  "rows": 4,
+  "frames": {
+    "core": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explosion": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "smoke": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "trail": [
+      12
+    ],
+    "embers": [
+      13
+    ],
+    "wave": [
+      14
+    ],
+    "ignition": [
+      15
+    ]
+  },
+  "sources": "Generated with built-in imagegen; no existing champion/card asset replaced",
+  "alpha": true
+}

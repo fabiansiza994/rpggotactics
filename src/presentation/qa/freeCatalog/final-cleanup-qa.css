@@ -1,0 +1,28 @@
+/* Private lab composition. Give Pixi its actual remaining viewport: no translated canvas. */
+.battle.final-cleanup-qa {
+ position:fixed; inset:0; width:100%; height:100dvh; min-height:0;
+ display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) 190px;
+ overflow:hidden; isolation:isolate;
+}
+.final-cleanup-qa > .final-cleanup-controls {
+ grid-row:1; position:relative; z-index:20; display:flex; align-items:center; flex-wrap:wrap;
+ gap:5px; padding:6px 10px; background:#101c28; color:#eadfc5; font-size:12px;
+ max-height:24dvh; overflow:auto; border-bottom:1px solid #8d7755;
+}
+.final-cleanup-controls button,.final-cleanup-controls select {min-height:36px; color:#f3e5c6; background:#172b3c; border:1px solid #8d7755; padding:4px 8px;}
+.final-cleanup-controls > div,.final-cleanup-controls > details {width:100%;}
+.final-cleanup-controls details[open] {max-height:90px;overflow:auto;}
+.battle.final-cleanup-qa > .board-host {
+ grid-row:2; position:relative; inset:auto; width:100%; height:100%; min-height:0;
+ margin:0!important; overflow:hidden; transform:none; filter:none; --battle-front-frame:20px;
+}
+.final-cleanup-qa .board-host canvas {display:block;transform:none;touch-action:none;}
+.battle.final-cleanup-qa > .hand-bar {grid-row:3;position:relative;inset:auto;height:100%;width:100%;min-height:0;}
+@media(max-height:500px) {
+ .battle.final-cleanup-qa {grid-template-rows:auto minmax(0,1fr) 112px;}
+ .final-cleanup-qa > .final-cleanup-controls {font-size:10px;padding:3px 6px;gap:3px;max-height:92px;}
+ .final-cleanup-controls button,.final-cleanup-controls select {min-height:32px;font-size:11px;padding:3px 5px;}
+ .final-cleanup-controls > div {white-space:nowrap;overflow-x:auto;}
+ .final-cleanup-qa .hand-bar .hand {margin-left:0!important;}
+ .final-cleanup-qa .hand-bar .altar-panel {display:none;}
+}

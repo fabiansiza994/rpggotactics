@@ -1,0 +1,31 @@
+.battle[data-theme='veil_forest'] .battle-veil { background: radial-gradient(ellipse at 50% 45%, transparent 20%, #07110dc2 100%); }
+[data-world='archer_act_1'] .campaign-hero-art[data-hero='archer'] {
+  width: 66%; left: auto; right: 0; object-position: 48% center;
+  mask-image: linear-gradient(to right, transparent, #000 55%);
+}
+[data-world='archer_act_1'] .campaign-hero-art[data-hero='archer'].is-current { opacity: .72; }
+.battle[data-encounter^='hunt_07'] .painted-scenery,
+.battle[data-encounter^='hunt_08'] .painted-scenery,
+.battle[data-encounter^='hunt_09'] .painted-scenery { filter: saturate(.7) brightness(.78); }
+.battle[data-encounter^='hunt_10'] .painted-scenery { filter: saturate(.72) brightness(.65); }
+[data-card-id='ice_arrow'] { --card-tone: #9bddeb; }
+[data-card-id='fire_arrow'] { --card-tone: #e5a06d; }
+[data-card-id='poison_arrow'] { --card-tone: #9bbd81; }
+[data-card-id='smoke_arrow'] { --card-tone: #aaa0b7; }
+[data-card-id='rebound_arrow'] { --card-tone: #dec486; }
+.feature-card[data-card-id='rebound_arrow'] .fc-frame { border-color: #d0b67b; box-shadow: inset 0 0 0 2px #342b1d, 0 0 14px #c5a25a32; }
+.archer-visual-lab { position: fixed; z-index: 10001; top: 100px; left: 8px; max-width: 260px; max-height: calc(100dvh - 120px); overflow: auto; padding: 7px; background: #101d18f5; color: #ddd6b7; border: 1px solid #897951; font-size: 12px; }
+.archer-visual-lab small { display: block; }
+.archer-visual-lab button { min-height: 32px; margin: 3px; font-size: 11px; }
+.veil-completion { border-color: #a5b98e; background: linear-gradient(#0c1818ef,#111321f5), url('/art/archer-hunt/veil_forest.webp') center/cover; }
+.veil-completion h2 { color: #dbc9a0; font-size: clamp(20px,3vw,32px); }
+@media (max-height: 500px) { .archer-visual-lab { top: 62px; max-width: 220px; } }
+
+/* Pending Archer rewards must remain claimable on short landscape screens. */
+[data-world='archer_act_1'] .menu-reward > .reward-card {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 16px);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

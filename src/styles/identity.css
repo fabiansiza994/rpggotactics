@@ -1,0 +1,220 @@
+/* RPG-GO: weathered brass, cold stone, and restrained facet-shaped magic. */
+.battle {
+  --scene-glow: #78644f;
+  --scene-accent: #b19770;
+  background:
+    radial-gradient(ellipse at 50% 44%, #36465166, transparent 58%),
+    radial-gradient(ellipse at 7% 64%, #b4793520, transparent 25%),
+    linear-gradient(#080d16, #101b27 55%, #060910);
+}
+.battle[data-theme='sanctuary'] {
+  --scene-glow: #4f7a95;
+  --scene-accent: #9fbdc2;
+  background:
+    radial-gradient(ellipse at 50% 44%, #376a7d55, transparent 63%),
+    radial-gradient(ellipse at 10% 60%, #428ebc18, transparent 30%),
+    linear-gradient(#090e1b, #10202c 55%, #070b13);
+}
+.battle[data-theme='fracture'] {
+  --scene-glow: #61566f;
+  --scene-accent: #a89a9d;
+  background:
+    radial-gradient(ellipse at 50% 44%, #42435455, transparent 59%),
+    linear-gradient(#070810, #11121e 55%, #05080d);
+}
+.battle .panel {
+  border-color: color-mix(in srgb, var(--scene-accent) 48%, transparent);
+  background: linear-gradient(135deg, #121b26ee, #060c14ef);
+  box-shadow:
+    0 8px 23px #0008,
+    inset 0 0 0 3px #a9956410;
+}
+.battle .hero-panel {
+  border-left: 2px solid #ac9666;
+}
+.battle .hero-portrait {
+  background: #0a1624;
+  box-shadow: inset 0 0 18px #000;
+}
+.character-portrait-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.battle .hero-portrait svg {
+  width: 100%;
+  height: 100%;
+}
+.game-icon {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  vertical-align: -3px;
+  flex: 0 0 auto;
+}
+.battle .bar-label {
+  font-size: 0;
+  color: #bca987;
+}
+.battle .bar-label .game-icon {
+  width: 13px;
+  height: 13px;
+}
+.battle .bar-hp .game-icon {
+  color: #c99388;
+}
+.battle .bar-energy .game-icon {
+  color: #9bcddd;
+}
+.battle .objective .game-icon {
+  width: 13px;
+  height: 13px;
+}
+.battle .enemy-row {
+  position: relative;
+  padding-left: 29px;
+}
+.enemy-portrait {
+  position: absolute;
+  left: 3px;
+  top: 6px;
+  width: 20px;
+  height: 25px;
+  border: 1px solid #6d727b;
+  overflow: hidden;
+  background: #101722;
+}
+.battle .enemy-name {
+  font-family: Georgia, serif;
+  letter-spacing: 0.1px;
+}
+.battle .enemy-name .muted {
+  font-family: var(--font);
+  letter-spacing: 0;
+}
+.battle .pile > .game-icon {
+  width: 23px;
+  height: 23px;
+  margin-bottom: 4px;
+  color: #a9b9c5;
+}
+.battle .card {
+  border-color: var(--card-tone, #b69d68);
+  background: linear-gradient(135deg, #34342d, #17202b 18%, #080f18 65%);
+  box-shadow:
+    0 7px 14px #000b,
+    inset 0 0 0 2px #0a1019,
+    inset 0 0 0 3px #8e7c4c66;
+}
+.battle .card::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  border: 1px solid #d6c39122;
+  border-radius: 4px;
+  background: linear-gradient(130deg, #fff0cd10, transparent 25%, transparent 80%, #e4d6a408);
+}
+.battle .card[data-family='fire'] {
+  background: linear-gradient(130deg, #674334, #282323 20%, #0d1119 65%);
+}
+.battle .card[data-family='ice'] {
+  background: linear-gradient(130deg, #43626e, #1b2934 20%, #0b121c 65%);
+}
+.battle .card[data-family='movement'] {
+  background: linear-gradient(130deg, #3f5472, #22263b 20%, #0b101b 65%);
+}
+.battle .card[data-family='defense'] {
+  background: linear-gradient(130deg, #6b5a36, #282a2b 20%, #0b1019 65%);
+}
+.battle .card-art {
+  border-bottom-color: var(--card-tone);
+  box-shadow: inset 0 0 14px #0008;
+}
+.battle .card-art svg {
+  transition:
+    transform 150ms ease,
+    filter 150ms ease;
+}
+.battle .card-name {
+  font-size: 14px;
+  letter-spacing: 0.15px;
+  color: #ece0c5;
+  text-shadow: 0 1px 2px #000;
+}
+.battle .card-rarity-slot {
+  position: absolute;
+  bottom: 3px;
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  border: 1px solid #a7987266;
+  background: #0c1420;
+  pointer-events: none;
+}
+.battle .card-meta {
+  font-size: 8.5px;
+  line-height: 1.3;
+}
+.battle .card-meta .game-icon {
+  width: 10px;
+  height: 10px;
+  margin-right: 3px;
+  vertical-align: -2px;
+  color: var(--card-tone);
+}
+.battle .card-text {
+  padding-bottom: 3px;
+}
+.battle .hand .card:nth-child(n) {
+  transform: rotate(var(--card-tilt, 0deg));
+}
+.battle .hand .card:hover,
+.battle .hand .card:focus-visible {
+  transform: translateY(-9px) scale(1.025);
+  z-index: 4;
+  box-shadow:
+    0 9px 20px #000d,
+    0 0 12px color-mix(in srgb, var(--card-tone) 30%, transparent);
+}
+.battle .hand .card:hover .card-art svg,
+.battle .hand .card:focus-visible .card-art svg {
+  transform: scale(1.055);
+  filter: brightness(1.1);
+}
+.battle .hand .card.is-selected {
+  transform: translateY(-13px) scale(1.02);
+  border-color: var(--card-tone);
+  box-shadow:
+    0 0 0 2px var(--card-tone),
+    0 0 18px color-mix(in srgb, var(--card-tone) 28%, transparent);
+  z-index: 5;
+}
+@media (min-width: 1200px) {
+  .battle .hand:has(.card:nth-child(7)) .card + .card {
+    margin-left: -12px;
+  }
+}
+@media (max-width: 760px) {
+  .battle .hand-bar > .pile:last-child > .game-icon {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .card-art svg {
+    transition: none;
+  }
+  .battle .hand .card:hover,
+  .battle .hand .card:focus-visible,
+  .battle .hand .card.is-selected {
+    transform: none;
+  }
+  .battle .hand .card:hover .card-art svg,
+  .battle .hand .card:focus-visible .card-art svg {
+    transform: none;
+    filter: none;
+  }
+}

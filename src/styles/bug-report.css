@@ -1,0 +1,371 @@
+/* "Reportar un problema" — functional pass; a visual pass can restyle it freely. */
+.bug-report-fab {
+  position: fixed;
+  z-index: 115;
+  /* Bottom-right corner, small and translucent: clear of the hand (centre), the deck pile
+     (bottom-left) and the match chat button (mid-left). */
+  right: max(6px, env(safe-area-inset-right));
+  bottom: max(6px, env(safe-area-inset-bottom));
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #8f794180;
+  border-radius: 50%;
+  background: #0b1523cc;
+  color: #e7cb8e;
+  font: 700 14px/1 var(--font);
+  opacity: 0.55;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.bug-report-fab:hover,
+.bug-report-fab:focus-visible {
+  opacity: 1;
+}
+.bug-report-fab:focus-visible {
+  outline: 2px solid #d5b982;
+  outline-offset: 2px;
+}
+
+.bug-report {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  border: 1px solid #8f7941;
+  border-radius: 10px;
+  background: #0d1825;
+  color: var(--text);
+  box-shadow: 0 16px 48px #000c;
+}
+.bug-report::backdrop {
+  background: #000a;
+}
+.bug-report-body {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+.bug-report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bug-report-head h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #e7cb8e;
+}
+.bug-report-close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+}
+.bug-report-form {
+  display: grid;
+  gap: 10px;
+}
+.bug-report-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #c9d2dc;
+}
+.bug-report-form small {
+  color: var(--muted);
+}
+.bug-report-form select,
+.bug-report-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #0b1523;
+  color: var(--text);
+  font: 15px/1.35 var(--font);
+}
+.bug-report-form select {
+  min-height: 40px;
+}
+.bug-report-form textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+.bug-report-form :focus-visible {
+  outline: 2px solid #d5b982;
+  outline-offset: 1px;
+}
+.bug-report-hint,
+.bug-report-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.bug-report-note {
+  font-size: 15px;
+  color: #c9d2dc;
+}
+.bug-report-error {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #e46a5f;
+  border-radius: 6px;
+  background: #3a15153b;
+  color: #ffd2cc;
+  font-size: 13px;
+}
+.bug-report-submit {
+  min-height: 44px;
+  border: 1px solid #d5b982;
+  border-radius: 6px;
+  background: #2a2112;
+  color: #f2e2bc;
+  font: 700 14px var(--font);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.bug-report-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.bug-report-done {
+  display: grid;
+  gap: 10px;
+}
+.bug-report-done p {
+  margin: 0;
+}
+.bug-report-id {
+  font-size: 12px;
+  color: var(--muted);
+}
+.bug-report-id code {
+  user-select: all;
+}
+
+/* Mobile landscape: short viewport — tighter spacing, fewer textarea rows. */
+@media (max-height: 500px) {
+  .bug-report-body {
+    gap: 6px;
+    padding: 10px 12px 12px;
+  }
+  .bug-report-form {
+    gap: 6px;
+  }
+  .bug-report-form textarea {
+    min-height: 44px;
+  }
+  .bug-report-form textarea[rows='4'] {
+    height: 72px;
+  }
+  .bug-report-form textarea[rows='3'] {
+    height: 52px;
+  }
+  .bug-report-hint {
+    display: none;
+  }
+}
+
+/* Shared dark-fantasy presentation; all submission and authorization rules stay in the client. */
+.bug-report-fab {
+  width: auto;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  display: flex;
+  gap: 7px;
+  border-radius: 5px;
+  opacity: 0.82;
+  font-size: 11px;
+  background: linear-gradient(150deg, #172638ee, #080f19f5);
+  box-shadow:
+    inset 0 0 0 2px #050b13,
+    0 3px 9px #0007;
+}
+.bug-report-fab > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #b9985b;
+  border-radius: 50%;
+  font-size: 12px;
+}
+.bug-report-fab[data-authenticated='false'] {
+  color: #b8bec7;
+}
+.bug-report-fab:is([data-route='BATTLE'], [data-route='PVP']) {
+  left: max(8px, env(safe-area-inset-left));
+  right: auto;
+  bottom: 148px;
+  padding: 0 10px;
+}
+.bug-report-fab:is([data-route='BATTLE'], [data-route='PVP']) .bug-report-button-text {
+  display: none;
+}
+.bug-report {
+  width: min(540px, calc(100vw - 28px));
+  border-radius: 8px;
+  background: linear-gradient(135deg, #192638, #080f19 80%);
+  box-shadow:
+    inset 0 0 0 3px #050b13,
+    0 16px 48px #000b;
+  overflow: hidden;
+}
+.bug-report::backdrop {
+  background: #030811c9;
+}
+.bug-report-body {
+  max-height: calc(100dvh - 32px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #85704b #101925;
+  padding: 0 18px 18px;
+  gap: 14px;
+}
+.bug-report-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #111d2cf5;
+  padding: 15px 0 12px;
+  border-bottom: 1px solid #9d83534d;
+}
+.bug-report-head h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.bug-report-close {
+  flex: none;
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid #957b4e;
+  border-radius: 4px;
+  background: #07111c;
+  color: #ebd6a5;
+}
+.bug-report-form label > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  color: #e5d4b1;
+}
+.bug-report-form small {
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.bug-report-form :is(select, textarea) {
+  background: #060e19b0;
+  border-color: #86724980;
+  border-radius: 4px;
+  box-shadow: inset 0 2px 5px #0004;
+  font-size: 16px;
+}
+.bug-report-submit {
+  background: linear-gradient(#294b60, #122735);
+  border-color: #c4a76c;
+  box-shadow: inset 0 0 0 2px #0a1522;
+  min-height: 44px;
+  color: #f1e0b8;
+}
+.bug-report-submit:not(:disabled):hover {
+  background: linear-gradient(#365e73, #1a3546);
+}
+.bug-report-done {
+  padding: 12px 0 2px;
+  line-height: 1.5;
+}
+.bug-report-done > p:first-child {
+  color: #c0e0c4;
+  font-size: 17px;
+}
+.bug-report-id {
+  padding: 12px;
+  border: 1px solid #9d835350;
+  background: #060f1a;
+  overflow-wrap: anywhere;
+}
+.bug-report-note {
+  padding: 12px 0;
+  line-height: 1.5;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .bug-report-fab .bug-report-button-text {
+    display: none;
+  }
+  .bug-report {
+    width: min(680px, calc(100vw - 28px));
+  }
+  .bug-report-body {
+    padding: 0 12px 12px;
+    gap: 9px;
+  }
+  .bug-report-head {
+    padding: 7px 0;
+  }
+  .bug-report-head h2 {
+    font-size: 19px;
+  }
+  .bug-report-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 9px 12px;
+  }
+  .bug-report-form > label:first-child,
+  .bug-report-form > .bug-report-submit,
+  .bug-report-form > .bug-report-error {
+    grid-column: 1/-1;
+  }
+  .bug-report-form textarea[rows] {
+    height: 86px;
+    min-height: 64px;
+  }
+  .bug-report-form label > span {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .bug-report-fab:is([data-route='BATTLE'], [data-route='PVP']) {
+    bottom: 138px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bug-report-fab,
+  .bug-report-submit {
+    transition: none;
+  }
+}
+
+/* Dedicated header slot keeps the entry clear of save/send/shop controls. */
+.bug-report-fab:is([data-route='DECK'], [data-route='STORE'], [data-route='SOCIAL']) {
+  top: max(12px, env(safe-area-inset-top));
+  bottom: auto;
+  right: max(12px, env(safe-area-inset-right));
+}
+.bug-report-fab:is([data-route='DECK'], [data-route='STORE'], [data-route='SOCIAL'])
+  .bug-report-button-text {
+  display: none;
+}
+body:has(.bug-report-fab[data-route='DECK']) .db-header,
+body:has(.bug-report-fab[data-route='STORE']) .shop-header,
+body:has(.bug-report-fab[data-route='SOCIAL']) .social-header {
+  padding-right: 60px;
+}
+body:has(.pvp-match-layout) .bug-report-fab[data-route='PVP'] {
+  top: calc(50% - 74px);
+  bottom: auto;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  body:has(.pvp-match-layout) .bug-report-fab[data-route='PVP'] {
+    top: calc(50% + 34px);
+  }
+}

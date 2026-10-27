@@ -1,0 +1,42 @@
+/* Vínculo Prohibido: HUD cue when the summon capacity grows, and the lasting "bonus" mark. */
+.battle .summon-meter[data-bonus] {
+  box-shadow: inset 0 0 0 1px rgba(214, 178, 105, 0.55), 0 0 8px rgba(154, 114, 255, 0.35);
+}
+.battle .summon-meter[data-bonus] .summon-meter-value {
+  color: #f2d9a0;
+}
+.battle .summon-meter-grown {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  margin: -9px 0 0 8px;
+  padding: 1px 7px;
+  white-space: nowrap;
+  color: #fff3f6;
+  background: linear-gradient(90deg, #5b2bb8, #b02c5c);
+  border: 1px solid rgba(242, 217, 160, 0.7);
+  border-radius: 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  pointer-events: none;
+  animation: summon-grown 2200ms ease-out forwards;
+}
+.battle .summon-meter-bonus {
+  color: #f2d9a0 !important;
+}
+@keyframes summon-grown {
+  0% { opacity: 0; transform: translateX(-4px) scale(0.92); }
+  12% { opacity: 1; transform: none; }
+  75% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@media (max-width: 760px), (max-height: 520px) {
+  .battle .summon-meter-grown { top: calc(100% + 4px); left: 0; margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .summon-meter-grown { animation: summon-grown-still 2200ms steps(1, end) forwards; }
+}
+@keyframes summon-grown-still {
+  0% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}

@@ -1,0 +1,1989 @@
+/* Deck Builder: collection (left) · card detail · deck (right). Same parchment-ink / aged-gold /
+   deep-navy language as the menu; blue marks what is in the deck. Three compositions:
+   wide desktop (3 columns) · compact desktop & phone landscape (2 columns + detail drawer) ·
+   portrait (tabs). */
+.deckbuilder {
+  --menu-ink: #eadcbb;
+  --menu-ink-dim: #b9ab8b;
+  --menu-gold: #d6b86a;
+  --menu-line: rgb(158 133 93 / 0.4);
+  --db-blue: #7fb8ff;
+  --db-blue-deep: #2f5f9c;
+  --db-panel: linear-gradient(160deg, rgb(24 36 55 / 0.92), rgb(9 15 24 / 0.94) 70%);
+  --db-border: rgb(214 184 106 / 0.42);
+  --db-display: Georgia, 'Times New Roman', serif;
+  --db-gutter: clamp(12px, 1.8vw, 28px);
+  --db-detail-w: 300px;
+  --db-deck-w: 340px;
+
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 10px;
+  padding: max(var(--db-gutter), env(safe-area-inset-top))
+    max(var(--db-gutter), env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+    max(var(--db-gutter), env(safe-area-inset-left));
+  overflow: hidden;
+  color: var(--menu-ink);
+  -webkit-tap-highlight-color: transparent;
+  background:
+    radial-gradient(ellipse 55% 60% at 80% 10%, rgb(74 118 182 / 0.2), transparent 70%),
+    radial-gradient(ellipse 50% 50% at 15% 85%, rgb(214 150 80 / 0.08), transparent 70%),
+    linear-gradient(180deg, #0a1220, #060b14 70%);
+}
+.deckbuilder button:focus-visible,
+.deckbuilder input:focus-visible,
+.deckbuilder select:focus-visible {
+  outline: 2px solid #fff6dc;
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+.db-header {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  min-width: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(90deg, var(--menu-gold), rgb(214 184 106 / 0.15) 55%, transparent) 1;
+}
+.db-back,
+.db-filter-toggle,
+.db-btn,
+.db-tabs button,
+.db-dialog-save {
+  min-height: 44px;
+  padding: 0 14px;
+  font-weight: 700;
+  color: var(--menu-ink);
+  background: rgb(9 16 26 / 0.7);
+  border: 1px solid rgb(234 220 187 / 0.35);
+  border-radius: 8px;
+}
+.db-back:hover,
+.db-filter-toggle:hover,
+.db-btn:not(:disabled):hover {
+  border-color: rgb(234 220 187 / 0.75);
+}
+.db-back span {
+  font-size: 20px;
+  line-height: 0;
+  margin-right: 2px;
+}
+.db-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.db-title .menu-eyebrow {
+  color: var(--menu-ink-dim);
+}
+.db-title h1 {
+  margin: 0;
+  font: 700 clamp(20px, 2vw, 28px) / 1.1 var(--db-display);
+  color: #f4e7c6;
+  white-space: nowrap;
+}
+.db-search {
+  position: relative;
+  flex: 1 1 220px;
+  max-width: 360px;
+  margin-left: auto;
+}
+.db-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  translate: 0 -50%;
+  fill: none;
+  stroke: var(--menu-ink-dim);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.db-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px 0 38px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--menu-ink);
+  background: rgb(4 9 16 / 0.8);
+  border: 1px solid var(--menu-line);
+  border-radius: 8px;
+}
+.db-search input::placeholder {
+  color: rgb(234 220 187 / 0.45);
+}
+.db-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim);
+}
+.db-sort select {
+  min-height: 44px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--menu-ink);
+  background: rgb(4 9 16 / 0.8);
+  border: 1px solid var(--menu-line);
+  border-radius: 8px;
+}
+.db-filter-toggle {
+  display: none;
+}
+.db-filter-toggle.is-active {
+  border-color: var(--menu-gold);
+  color: #f4e7c6;
+}
+
+/* ── Filters ─────────────────────────────────────────────────────────── */
+.db-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  min-width: 0;
+}
+.db-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.db-filter-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim);
+}
+.db-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--menu-ink-dim);
+  background: rgb(9 16 26 / 0.6);
+  border: 1px solid rgb(234 220 187 / 0.2);
+  border-radius: 999px;
+  transition:
+    border-color var(--motion-fast, 120ms),
+    color var(--motion-fast, 120ms),
+    background var(--motion-fast, 120ms);
+}
+.db-chip:hover {
+  color: var(--menu-ink);
+  border-color: rgb(234 220 187 / 0.5);
+}
+.db-chip.is-active {
+  color: #fff3d0;
+  background: linear-gradient(180deg, rgb(70 98 140 / 0.55), rgb(24 40 64 / 0.75));
+  border-color: var(--db-blue);
+  box-shadow: 0 0 10px rgb(127 184 255 / 0.25);
+}
+.db-chip .game-icon,
+.db-chip .db-lock {
+  width: 15px;
+  height: 15px;
+}
+.db-chip-cost {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  font-weight: 800;
+}
+.db-clear {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--menu-gold);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.db-lock {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+/* Tabs exist only in portrait. */
+.db-tabs {
+  display: none;
+}
+
+/* ── Body: three panes ───────────────────────────────────────────────── */
+.db-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--db-detail-w) var(--db-deck-w);
+  gap: clamp(10px, 1.2vw, 18px);
+}
+.db-collection,
+.db-deck,
+.db-detail {
+  min-height: 0;
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+  background: var(--db-panel);
+  box-shadow:
+    0 14px 34px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 240 200 / 0.08);
+}
+.db-collection {
+  overflow-y: auto;
+  padding: 14px;
+  scrollbar-gutter: stable;
+}
+.db-collection.is-drop,
+.db-deck.is-drop {
+  border-color: var(--db-blue);
+  box-shadow:
+    0 0 0 2px rgb(127 184 255 / 0.35),
+    0 14px 34px rgb(0 0 0 / 0.45);
+}
+.db-collection > .menu-section-title {
+  margin-bottom: 12px;
+}
+.db-section-count {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--menu-ink-dim);
+  font-weight: 500;
+}
+
+/* ── Collection grid & tiles ─────────────────────────────────────────── */
+.db-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
+}
+.db-tile-wrap {
+  min-width: 0;
+}
+.db-tile {
+  --card-tone: #acbada;
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  color: var(--menu-ink);
+  border: 1px solid #bda16b;
+  border-radius: 9px 9px 5px 5px;
+  background: linear-gradient(125deg, #5b4a35, #172536 14%, #080f1b 72%, #3a3326);
+  box-shadow:
+    inset 0 0 0 2px #050b14,
+    inset 0 0 0 3px #d2b57530,
+    0 5px 12px #000a;
+  transition:
+    translate var(--motion-fast, 120ms) var(--ease-enter, ease-out),
+    border-color var(--motion-fast, 120ms),
+    box-shadow var(--motion-fast, 120ms);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .db-tile:not(.is-locked):hover {
+    translate: 0 -3px;
+    border-color: #ecdcac;
+  }
+}
+.db-tile.is-in-deck {
+  border-color: var(--db-blue);
+  box-shadow:
+    inset 0 0 0 2px #050b14,
+    inset 0 0 0 3px rgb(127 184 255 / 0.35),
+    0 0 14px rgb(127 184 255 / 0.22),
+    0 5px 12px #000a;
+}
+.db-tile.is-selected {
+  outline: 2px solid #f4e7c6;
+  outline-offset: 2px;
+}
+.db-tile-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-bottom: 1px solid #c4aa7355;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    color-mix(in srgb, var(--card-tone) 30%, #0b1422),
+    #070e18
+  );
+}
+.db-tile-art > img,
+.db-tile-art > svg,
+.db-detail-art > img,
+.db-detail-art > svg,
+.db-line-art > img,
+.db-line-art > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.db-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font: 800 16px/1 var(--db-display);
+  color: #eaf6ff;
+  background: radial-gradient(circle at 35% 30%, #6fb6ff, #1f4f8f 60%, #0b1f3d);
+  border: 1px solid #cfe6ff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #050b14,
+    0 2px 6px #000c;
+}
+.db-rarity {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  rotate: 45deg;
+  border: 1px solid #050b14;
+  background: #a9b3c2;
+}
+.db-tile > .db-rarity {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  box-shadow: 0 0 0 1px #d2b57577;
+}
+.rarity-uncommon.db-rarity {
+  background: #6fd0c2;
+}
+.rarity-rare.db-rarity {
+  background: #f2c94c;
+}
+.db-tile-body {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px 9px;
+  min-width: 0;
+}
+.db-tile-name {
+  font: 700 15px/1.15 var(--db-display);
+  color: #f4e7c6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.db-tile-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--menu-ink-dim);
+}
+.db-tile-meta .game-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--card-tone);
+}
+.db-tile-copies {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+}
+.db-tile-owned {
+  font-size: 11px;
+  color: var(--menu-ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.db-pips {
+  display: inline-flex;
+  gap: 4px;
+}
+.db-pip {
+  width: 12px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(234 220 187 / 0.18);
+  border: 1px solid rgb(234 220 187 / 0.3);
+}
+.db-pip.is-in {
+  background: var(--db-blue);
+  border-color: #cfe6ff;
+  box-shadow: 0 0 6px rgb(127 184 255 / 0.6);
+}
+.db-pip.is-missing {
+  opacity: 0.35;
+  border-style: dashed;
+  background: none;
+}
+
+/* Locked: same card, dimmed and desaturated, with a clear lock band. */
+.db-tile.is-locked {
+  cursor: not-allowed;
+  border-color: rgb(120 110 90 / 0.6);
+}
+.db-tile.is-locked .db-tile-art {
+  filter: grayscale(1) brightness(0.35);
+}
+.db-tile.is-locked .db-tile-body {
+  opacity: 0.6;
+}
+.db-tile.is-locked .db-cost {
+  filter: grayscale(1) brightness(0.7);
+}
+.db-tile-lock {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d9ccb0;
+}
+.db-tile-lock .db-lock {
+  width: 18px;
+  height: 18px;
+}
+
+/* Short feedback pulses (≤ 400 ms). */
+.db-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  animation: db-flash 380ms ease-out forwards;
+}
+.flash-added {
+  background: radial-gradient(ellipse at 50% 40%, rgb(127 184 255 / 0.45), transparent 70%);
+  box-shadow: inset 0 0 0 2px var(--db-blue);
+}
+.flash-removed {
+  background: rgb(234 220 187 / 0.12);
+}
+.flash-rejected {
+  box-shadow: inset 0 0 0 2px #e46a5f;
+  background: rgb(228 106 95 / 0.18);
+}
+.db-tile:has(.flash-rejected) {
+  animation: db-shake 260ms ease-in-out;
+}
+@keyframes db-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes db-shake {
+  25% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 3px 0;
+  }
+}
+
+.db-empty {
+  margin: 18px 4px;
+  color: var(--menu-ink-dim);
+}
+
+/* ── Detail ──────────────────────────────────────────────────────────── */
+.db-detail {
+  overflow-y: auto;
+  padding: 14px;
+}
+.db-detail-empty {
+  margin: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  text-align: center;
+  color: var(--menu-ink-dim);
+  border: 1px dashed var(--menu-line);
+  border-radius: 8px;
+}
+.db-detail-card {
+  --card-tone: #acbada;
+  position: relative;
+  display: grid;
+  gap: 10px;
+}
+.db-detail-close {
+  display: none;
+}
+.db-detail-art {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid #bda16b;
+  border-radius: 8px;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    color-mix(in srgb, var(--card-tone) 30%, #0b1422),
+    #070e18
+  );
+  box-shadow: inset 0 0 0 2px #050b14;
+}
+.db-detail-art.is-locked > :first-child {
+  filter: grayscale(1) brightness(0.45);
+}
+.db-cost-lg {
+  width: 38px;
+  height: 38px;
+  font-size: 20px;
+}
+.db-detail-name {
+  margin: 0;
+  font: 700 22px/1.1 var(--db-display);
+  color: #f4e7c6;
+}
+.db-detail-tags {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 13px;
+  color: var(--menu-ink-dim);
+}
+.db-detail-tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.db-detail-tags .game-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--card-tone);
+}
+.db-rarity-label.rarity-uncommon {
+  color: #8fe0d4;
+}
+.db-rarity-label.rarity-rare {
+  color: #f2c94c;
+}
+.db-detail-text {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--menu-ink);
+  background: rgb(4 9 16 / 0.55);
+  border-left: 2px solid var(--menu-gold);
+  border-radius: 0 6px 6px 0;
+}
+.db-detail-target {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--menu-ink-dim);
+}
+.db-detail-target .card-pattern {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  padding: 2px;
+  background: #050d1880;
+  border: 1px solid #c4aa7344;
+  border-radius: 4px;
+}
+.db-detail-target > div {
+  display: grid;
+  gap: 2px;
+}
+.db-detail-target strong {
+  color: var(--menu-ink);
+}
+.db-detail-own {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--menu-ink);
+}
+.db-detail-why {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 13px;
+  color: #f2b8a8;
+}
+.db-detail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.db-detail-actions {
+  position: sticky;
+  bottom: -14px;
+  margin-bottom: -14px;
+  padding: 8px 0 14px;
+  background: linear-gradient(180deg, rgb(11 20 32 / 0), #0b1420 10px);
+}
+.db-detail-actions .db-btn {
+  padding: 0 8px;
+  font-size: 14px;
+  line-height: 1.1;
+}
+.db-btn-primary,
+.db-dialog-save {
+  color: #10141c;
+  background: linear-gradient(180deg, #ecd28a, #c39a4c);
+  border-color: #f4e2a8;
+}
+.db-btn-primary:not(:disabled):hover {
+  background: linear-gradient(180deg, #f6dfa0, #d0a95b);
+}
+.db-btn-ghost {
+  background: transparent;
+}
+
+/* ── Deck panel ──────────────────────────────────────────────────────── */
+.db-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow: hidden;
+}
+.db-deck-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.db-deck-name {
+  display: block;
+  margin-top: 4px;
+  font: italic 14px/1.2 var(--db-display);
+  color: var(--menu-ink-dim);
+}
+.db-dirty {
+  color: var(--menu-gold);
+  font-style: normal;
+  font-size: 12px;
+}
+.db-count {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  animation: db-count 260ms ease-out;
+}
+.db-count strong {
+  font: 700 34px/1 var(--db-display);
+  color: #f4e7c6;
+}
+.db-count span {
+  font-size: 15px;
+  color: var(--menu-ink-dim);
+}
+.db-count.size-ok strong {
+  color: #9fe0a8;
+}
+.db-count.size-over strong {
+  color: #ff9a8a;
+}
+@keyframes db-count {
+  40% {
+    scale: 1.08;
+  }
+}
+.db-meter {
+  height: 6px;
+  border-radius: 3px;
+  background: #030913;
+  border: 1px solid #cfb77f44;
+  overflow: hidden;
+}
+.db-meter span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--db-blue-deep), var(--db-blue));
+  transition: width var(--motion-fast, 120ms) ease-out;
+}
+.db-meter.size-ok span {
+  background: linear-gradient(90deg, #3f8a52, #9fe0a8);
+}
+.db-meter.size-over span {
+  background: #e46a5f;
+}
+.db-summary {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+.db-curve {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 64px;
+  padding: 4px 8px;
+  background: rgb(4 9 16 / 0.5);
+  border: 1px solid rgb(234 220 187 / 0.12);
+  border-radius: 6px;
+}
+.db-curve-col {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  width: 22px;
+  height: 100%;
+}
+.db-curve-n {
+  font-size: 10px;
+  color: var(--menu-ink-dim);
+}
+.db-curve-bar {
+  align-self: end;
+  width: 12px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, var(--db-blue), var(--db-blue-deep));
+}
+.db-curve-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #cfe6ff;
+}
+.db-cats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 6px;
+}
+.db-cats li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgb(9 16 26 / 0.7);
+  border: 1px solid rgb(234 220 187 / 0.18);
+  border-radius: 999px;
+}
+.db-cats .game-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--menu-gold);
+}
+.db-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0 2px 0 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+.db-line {
+  --card-tone: #acbada;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 44px;
+  border: 1px solid rgb(189 161 107 / 0.55);
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--card-tone) 18%, #0b1422),
+    #09111d 60%
+  );
+  overflow: hidden;
+}
+.db-line.is-selected {
+  border-color: #f4e7c6;
+}
+.db-line-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 6px;
+  text-align: left;
+  background: none;
+  border: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.db-cost-sm {
+  position: static;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  box-shadow: 0 0 0 1px #050b14;
+}
+.db-line-art {
+  flex: 0 0 48px;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 3px;
+  opacity: 0.85;
+  mask-image: linear-gradient(90deg, #000 60%, transparent);
+}
+.db-line-name {
+  flex: 1;
+  min-width: 0;
+  font: 700 14px/1.1 var(--db-display);
+  color: #f4e7c6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.db-line-count {
+  font-weight: 800;
+  color: var(--db-blue);
+  font-variant-numeric: tabular-nums;
+}
+.db-line-remove {
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffd9d4;
+  background: rgb(58 22 22 / 0.55);
+  border: 0;
+  border-left: 1px solid rgb(189 161 107 / 0.35);
+}
+.db-line-remove:hover {
+  background: rgb(110 36 32 / 0.7);
+}
+.db-status {
+  min-height: 22px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+/* The card list scrolls; the status and the buttons always keep their own height. */
+.db-status,
+.db-actions {
+  flex-shrink: 0;
+}
+/* A 20-card deck saved before decks became 30: shown untouched, completed by hand. */
+.db-legacy {
+  margin: 0;
+  padding: 6px 8px;
+  border-left: 3px solid #e3b35a;
+  border-radius: 4px;
+  background: #e3b35a14;
+  color: #f1d39b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.db-feedback {
+  margin: 0;
+  animation: db-feedback 220ms ease-out;
+}
+.db-feedback.is-added,
+.db-feedback.is-saved {
+  color: #9fe0a8;
+}
+.db-feedback.is-removed {
+  color: var(--menu-ink-dim);
+}
+.db-feedback.is-rejected {
+  color: #ff9a8a;
+}
+@keyframes db-feedback {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+.db-issues {
+  margin: 0;
+  padding-left: 18px;
+  color: #f2b8a8;
+}
+.db-actions {
+  display: flex;
+  gap: 8px;
+}
+.db-actions .db-save {
+  flex: 1;
+  font-size: 15px;
+}
+.db-dialog-save {
+  min-height: 44px;
+}
+
+/* Menu entry */
+.deck-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.deck-entry .game-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--menu-gold);
+}
+.deck-entry-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--menu-ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.reward-note {
+  margin-top: -4px;
+  font-size: 13px;
+}
+
+/* ── Compact desktop & phone landscape: 2 columns, detail as a drawer ─ */
+@media (max-width: 1199px), (orientation: landscape) and (max-height: 500px) {
+  .db-body {
+    grid-template-columns: minmax(0, 1fr) var(--db-deck-w);
+  }
+  .db-detail {
+    position: fixed;
+    z-index: 20;
+    top: max(12px, env(safe-area-inset-top));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: max(12px, env(safe-area-inset-right));
+    width: min(380px, calc(100vw - 24px));
+    box-shadow:
+      0 0 0 100vmax rgb(3 6 11 / 0.55),
+      0 18px 44px rgb(0 0 0 / 0.6);
+    translate: calc(100% + 40px) 0;
+    visibility: hidden;
+    transition:
+      translate var(--motion-normal, 200ms) var(--ease-enter, ease-out),
+      visibility 0s linear var(--motion-normal, 200ms);
+  }
+  .deckbuilder[data-detail='open'] .db-detail {
+    translate: 0 0;
+    visibility: visible;
+    transition: translate var(--motion-normal, 200ms) var(--ease-enter, ease-out);
+  }
+  .db-detail-empty {
+    display: none;
+  }
+  .db-detail-close {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--menu-ink);
+    background: rgb(9 16 26 / 0.92);
+    border: 1px solid var(--db-border);
+    border-radius: 50%;
+  }
+}
+
+/* ── Phone landscape: compact chrome, filters behind a toggle ───────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .deckbuilder {
+    --db-deck-w: clamp(240px, 36vw, 320px);
+    gap: 6px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .db-header {
+    gap: 8px;
+    padding-bottom: 6px;
+  }
+  .db-title .menu-eyebrow {
+    display: none;
+  }
+  .db-title h1 {
+    font-size: 18px;
+  }
+  .db-search {
+    flex-basis: 140px;
+  }
+  .db-sort > span {
+    display: none;
+  }
+  .db-filter-toggle {
+    display: block;
+  }
+  .db-filters {
+    display: none;
+    position: absolute;
+    z-index: 15;
+    top: 62px;
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    padding: 12px;
+    background: #0d1825f2;
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    box-shadow: 0 18px 40px #000c;
+  }
+  .db-filters.is-open {
+    display: flex;
+  }
+  .db-chip {
+    min-height: 40px;
+  }
+  .db-collection,
+  .db-deck {
+    padding: 10px;
+  }
+  .db-collection > .menu-section-title {
+    margin-bottom: 8px;
+  }
+  .db-grid {
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 8px;
+  }
+  .db-tile-art {
+    aspect-ratio: 16 / 10;
+  }
+  .db-tile-lock {
+    aspect-ratio: 16 / 10;
+  }
+  .db-tile-name {
+    font-size: 13px;
+  }
+  .db-tile-body {
+    padding: 6px 8px 7px;
+    gap: 3px;
+  }
+  .db-cost {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+  .db-deck {
+    gap: 6px;
+  }
+  .db-count strong {
+    font-size: 26px;
+  }
+  .db-summary {
+    display: none;
+  }
+  .db-line-art {
+    display: none;
+  }
+  .db-actions .db-btn-ghost {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .db-detail {
+    padding: 12px;
+  }
+  .db-detail-card {
+    grid-template-columns: 120px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px 12px;
+  }
+  .db-detail-card > :not(.db-detail-art, .db-detail-close) {
+    grid-column: 2;
+  }
+  .db-detail-art {
+    grid-row: 1 / span 3;
+  }
+  .db-detail-card > .db-detail-actions {
+    grid-column: 1 / -1;
+    bottom: -12px;
+    margin-bottom: -12px;
+    padding-bottom: 12px;
+  }
+  .db-detail-name {
+    font-size: 19px;
+  }
+  .db-detail-text {
+    font-size: 14px;
+  }
+}
+
+/* ── Portrait / narrow: tabs switch collection ↔ deck ───────────────── */
+@media (max-width: 720px) and (orientation: portrait) {
+  .deckbuilder {
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+  .db-header {
+    flex-wrap: wrap;
+  }
+  .db-search {
+    order: 5;
+    flex: 1 1 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+  .db-sort {
+    margin-left: auto;
+  }
+  .db-sort > span {
+    display: none;
+  }
+  .db-filter-toggle {
+    display: block;
+  }
+  .db-filters {
+    display: none;
+  }
+  .db-filters.is-open {
+    display: flex;
+  }
+  .db-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .db-tabs button[aria-pressed='true'] {
+    color: #fff3d0;
+    border-color: var(--db-blue);
+    background: linear-gradient(180deg, rgb(70 98 140 / 0.55), rgb(24 40 64 / 0.75));
+  }
+  .db-count-inline {
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .db-count-inline.size-ok {
+    color: #9fe0a8;
+  }
+  .db-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .deckbuilder[data-tab='collection'] .db-deck,
+  .deckbuilder[data-tab='deck'] .db-collection {
+    display: none;
+  }
+  .db-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .db-detail {
+    top: auto;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: 82dvh;
+    translate: 0 calc(100% + 40px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-flash,
+  .db-tile:has(.flash-rejected),
+  .db-count,
+  .db-feedback {
+    animation: none;
+  }
+  .db-tile,
+  .db-detail,
+  .db-meter span {
+    transition: none;
+  }
+}
+
+/* Phase 2: a card earned since the builder was last opened. */
+.db-new {
+  position: absolute;
+  top: 40px;
+  left: 6px;
+  z-index: 3;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #06101d;
+  background: linear-gradient(180deg, #ffe7a3, #d6b86a);
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgb(214 184 106 / 0.6);
+}
+.reward-option.is-new-card .reward-rarity {
+  color: #ffe7a3;
+}
+
+/* Ritual piece / direct summon explanation in the card detail (placeholder styling). */
+.db-detail-ritual {
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-left: 2px solid #8d79b8;
+  background: #8d79b81a;
+  font-size: 12px;
+}
+.db-detail-ritual p {
+  margin: 0 0 4px;
+}
+
+/* Premium two-zone composition: the draft is left, remaining copies are right. */
+.deckbuilder {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 10px;
+}
+.deckbuilder .db-body {
+  grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.2fr);
+}
+.deckbuilder .db-deck {
+  gap: 7px;
+  border-color: #bda26177;
+}
+.deckbuilder .db-collection {
+  position: relative;
+  padding: 16px;
+}
+.deckbuilder .db-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+}
+.deckbuilder .db-filters {
+  display: none;
+  max-height: 24dvh;
+  overflow: auto;
+}
+.deckbuilder .db-filters.is-open {
+  display: flex;
+  padding: 8px 0;
+}
+.deckbuilder .db-section-count {
+  font: 12px system-ui;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #a6b6bd;
+}
+.deckbuilder .db-grid {
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 14px;
+  padding: 5px 3px;
+}
+.deckbuilder .db-tile-wrap {
+  position: relative;
+  min-width: 0;
+}
+.deckbuilder .db-tile {
+  width: 100%;
+  min-height: 228px;
+  padding-bottom: 39px;
+  transition:
+    transform 0.12s,
+    border-color 0.12s,
+    filter 0.12s;
+}
+.deckbuilder .db-tile-art {
+  height: 110px;
+}
+.deckbuilder .db-tile-body {
+  gap: 6px;
+  padding: 9px;
+}
+.deckbuilder .db-tile-name {
+  font-size: 16px;
+  min-height: 36px;
+}
+.deckbuilder .db-tile-copies {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+.deckbuilder .db-tile-copies .db-pips {
+  display: none;
+}
+.deckbuilder .db-tile-available {
+  color: #a7d6ae;
+  font-size: 12px;
+}
+.deckbuilder .db-tile-wrap.is-depleted .db-tile-art {
+  filter: saturate(0.4) brightness(0.65);
+}
+.deckbuilder .db-tile-wrap.is-depleted .db-tile-available {
+  color: #9fa9b2;
+  font-weight: 500;
+}
+.deckbuilder .db-tile-add {
+  position: absolute;
+  bottom: 7px;
+  right: 8px;
+  min-width: 36px;
+  min-height: 32px;
+  border: 1px solid #bfab73;
+  border-radius: 5px;
+  background: linear-gradient(#344e5a, #1c2c35);
+  color: #f4dfaa;
+  font-size: 24px;
+  line-height: 1;
+}
+.deckbuilder .db-tile-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.deckbuilder .db-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 10px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 3px;
+}
+.deckbuilder .db-line {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0;
+  background: #091520;
+  border: 1px solid #a38b5855;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.deckbuilder .db-line-main {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 88px minmax(37px, auto);
+  padding: 0 0 32px;
+  width: 100%;
+  gap: 0;
+  min-height: 162px;
+  border: 0;
+  background: transparent;
+}
+.deckbuilder .db-line-art {
+  display: block;
+  grid-row: 1;
+  width: 100%;
+  height: 88px;
+  border-radius: 0;
+  margin: 0;
+}
+.deckbuilder .db-line-art > :is(img, svg) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.deckbuilder .db-line-name {
+  padding: 7px 8px;
+  font: 700 14px/1.2 var(--db-display);
+  text-align: left;
+  white-space: normal;
+}
+.deckbuilder .db-line-count {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  font-size: 14px;
+  color: #edd598;
+  border: 0;
+  background: transparent;
+  width: auto;
+  height: auto;
+}
+.deckbuilder .db-line-main .db-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+}
+.deckbuilder .db-line-remove {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  width: 34px;
+  height: 28px;
+  border: 1px solid #967f55;
+  border-radius: 4px;
+  color: #ecdcb8;
+  background: #203240;
+  font-size: 20px;
+}
+.deckbuilder .db-line.is-selected {
+  outline: 1px solid #8ebbd7;
+}
+.deckbuilder .db-empty-slot {
+  display: grid;
+  min-height: 80px;
+  border: 1px dashed #8d80534d;
+  border-radius: 8px;
+  background: #0a14196b;
+}
+.deckbuilder .db-empty-slot button {
+  border: 0;
+  background: transparent;
+  color: #b7af92;
+  font: 14px var(--db-display);
+  cursor: pointer;
+}
+.deckbuilder .db-empty-slot span {
+  display: block;
+  font-size: 26px;
+  color: #aaa37b;
+}
+.deckbuilder .db-missing {
+  margin: 0;
+  font-size: 12px;
+  color: #e8c997;
+}
+.deckbuilder .db-missing.size-ok {
+  color: #a7d6ae;
+}
+.deckbuilder .db-stats {
+  font-size: 11px;
+  color: #aab9bd;
+}
+.deckbuilder .db-stats summary {
+  cursor: pointer;
+  padding: 4px 0;
+}
+.deckbuilder .db-stats .db-summary {
+  margin: 5px 0;
+}
+.deckbuilder .db-status {
+  flex-shrink: 0;
+  max-height: 110px;
+  overflow: auto;
+  font-size: 12px;
+}
+.deckbuilder .db-actions {
+  flex-shrink: 0;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.deckbuilder .db-actions .db-btn {
+  min-height: 38px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+.deckbuilder .db-actions .db-save {
+  flex: 1;
+}
+.deckbuilder .db-drop-hint {
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid #7cb0cb;
+  background: #223e50;
+  color: #d8ebf4;
+  font-size: 12px;
+}
+.deckbuilder [data-drag-state='valid'] {
+  outline: 2px solid #88b9cb;
+  outline-offset: -2px;
+}
+.deckbuilder [data-drag-state='invalid'] {
+  outline: 2px solid #c47a74;
+  outline-offset: -2px;
+}
+.deckbuilder [data-drag-state='invalid'] .db-drop-hint {
+  background: #4c292b;
+  border-color: #c47a74;
+  color: #f1cac5;
+}
+.deckbuilder .is-dragging {
+  opacity: 0.65;
+  transform: translateY(-4px) scale(1.015);
+}
+.db-detail-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(800px, calc(100vw - 36px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 22px;
+  color: #eadcbb;
+  background: linear-gradient(135deg, #1a2d3d, #0b1420 70%);
+  border: 1px solid #b6a274;
+  border-radius: 12px;
+  box-shadow: 0 20px 70px #000a;
+}
+.db-detail-dialog::backdrop {
+  background: #030913aa;
+  backdrop-filter: blur(3px);
+}
+.db-detail-dialog .db-detail-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 10px 22px;
+}
+.db-detail-dialog .db-detail-card > :not(.db-detail-art, .db-detail-close) {
+  grid-column: 2;
+}
+.db-detail-dialog .db-detail-art {
+  grid-column: 1;
+  grid-row: 1 / span 7;
+  height: 250px;
+}
+.db-detail-dialog .db-detail-close {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  width: 36px;
+  height: 36px;
+  z-index: 2;
+}
+.db-detail-dialog .db-detail-actions {
+  position: static;
+  padding: 10px 0 0;
+  margin: 0;
+  background: transparent;
+}
+.db-detail-dialog .db-detail-name {
+  padding-right: 24px;
+}
+.db-detail-dialog .db-detail-own {
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .deckbuilder {
+    --db-gutter: 8px;
+    gap: 6px;
+  }
+  .deckbuilder .db-header {
+    gap: 6px 10px;
+    padding-bottom: 6px;
+  }
+  .deckbuilder .db-title h1 {
+    font-size: 20px;
+  }
+  .deckbuilder .db-title .menu-eyebrow {
+    display: none;
+  }
+  .deckbuilder .db-search {
+    max-width: 220px;
+  }
+  .deckbuilder .db-back,
+  .deckbuilder .db-filter-toggle {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .deckbuilder .db-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .deckbuilder .db-tabs button {
+    min-height: 34px;
+    font-size: 12px;
+  }
+  .deckbuilder .db-tabs button[aria-pressed='true'] {
+    border-color: #c8b376;
+    background: #29414e;
+  }
+  .deckbuilder .db-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .deckbuilder[data-tab='deck'] .db-collection,
+  .deckbuilder[data-tab='collection'] .db-deck {
+    display: none;
+  }
+  .deckbuilder .db-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .deckbuilder .db-list {
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    gap: 8px;
+  }
+  .deckbuilder .db-line-main {
+    min-height: 132px;
+    grid-template-rows: 65px 37px;
+  }
+  .deckbuilder .db-line-art {
+    height: 65px;
+  }
+  .deckbuilder .db-deck {
+    padding: 8px 10px;
+    gap: 4px;
+  }
+  .deckbuilder .db-count strong {
+    font-size: 24px;
+  }
+  .deckbuilder .db-deck-name {
+    font-size: 12px;
+  }
+  .deckbuilder .db-meter {
+    height: 4px;
+  }
+  .deckbuilder .db-status {
+    max-height: 45px;
+    font-size: 11px;
+  }
+  .deckbuilder .db-status p,
+  .deckbuilder .db-issues {
+    margin: 2px 0;
+  }
+  .deckbuilder .db-actions .db-btn {
+    min-height: 32px;
+  }
+  .deckbuilder .db-stats {
+    display: none;
+  }
+  .deckbuilder .db-sort span {
+    display: none;
+  }
+  .db-detail-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 16px);
+    padding: 14px;
+  }
+  .db-detail-dialog .db-detail-card {
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 6px 14px;
+  }
+  .db-detail-dialog .db-detail-art {
+    height: 170px;
+  }
+  .db-detail-dialog .db-detail-card > .db-detail-actions {
+    grid-column: 1 / -1;
+  }
+  .db-detail-dialog .db-detail-name {
+    font-size: 21px;
+  }
+  .db-detail-dialog .db-detail-text {
+    font-size: 13px;
+  }
+}
+@media (max-width: 600px) {
+  .deckbuilder .db-header {
+    flex-wrap: wrap;
+  }
+  .deckbuilder .db-search {
+    order: 5;
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .db-detail-dialog .db-detail-card {
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+  .db-detail-dialog .db-detail-art {
+    height: 130px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .deckbuilder .is-dragging {
+    transform: none;
+  }
+  .deckbuilder .db-line,
+  .deckbuilder .db-tile {
+    transition: none;
+  }
+}
+/* Explicit row minimums prevent scroll grids from shrinking/clipping card titles and quantities. */
+.deckbuilder .db-list {
+  grid-auto-rows: minmax(164px, max-content);
+}
+.deckbuilder .db-line {
+  min-height: 164px;
+}
+.deckbuilder .db-tile-wrap.is-depleted .db-tile {
+  border-color: #76879566;
+  box-shadow:
+    inset 0 0 0 2px #060c16,
+    0 3px 8px #0008;
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .deckbuilder .db-list {
+    grid-auto-rows: minmax(144px, max-content);
+  }
+  .deckbuilder .db-line {
+    min-height: 144px;
+  }
+  .deckbuilder .db-line-main {
+    min-height: 142px;
+    padding-bottom: 40px;
+  }
+  .deckbuilder .db-line-remove {
+    width: 44px;
+    height: 40px;
+  }
+  .deckbuilder .db-tile {
+    padding-bottom: 52px;
+  }
+  .deckbuilder .db-tile-add {
+    width: 44px;
+    height: 44px;
+  }
+  .db-detail-dialog .db-detail-close {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .deckbuilder .db-list {
+    grid-auto-rows: minmax(108px, max-content);
+  }
+  .deckbuilder .db-line {
+    min-height: 108px;
+  }
+  .deckbuilder .db-line-main {
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 106px;
+    padding: 6px 6px 28px;
+  }
+  .deckbuilder .db-line-art {
+    grid-column: 1;
+    grid-row: 1;
+    width: 56px;
+    height: 70px;
+    mask-image: none;
+    border-radius: 4px;
+  }
+  .deckbuilder .db-line-name {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    padding: 3px 5px;
+    font-size: 13px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+  .deckbuilder .db-line-count {
+    left: 70px;
+  }
+}
+.deckbuilder .db-collection > .menu-section-title {
+  position: sticky;
+  top: -16px;
+  z-index: 4;
+  margin: -16px -16px 14px;
+  padding: 12px 16px;
+  background: #101b2b;
+  border-bottom: 1px solid #9a87544a;
+}
+.deckbuilder .db-drop-hint {
+  position: sticky;
+  top: 38px;
+  z-index: 5;
+}
+.deckbuilder .db-tile-meta {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.deckbuilder .db-tile-rarity {
+  margin-left: auto;
+  font-size: 9px;
+  color: #c5b997;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.db-detail-dialog .db-detail-close {
+  display: grid;
+  place-items: center;
+  border: 1px solid #9d895c;
+  border-radius: 5px;
+  background: #102331;
+  color: #ecdbb4;
+  font-size: 23px;
+}
+
+/* Three-region card editor: detail / deck / available collection. */
+@media (min-width: 1001px) and (min-height: 501px) {
+  .deckbuilder .db-body {
+    grid-template-columns: minmax(240px, 22fr) minmax(0, 44fr) minmax(0, 34fr);
+    gap: 12px;
+  }
+  .deckbuilder .db-detail {
+    display: block;
+    min-width: 0;
+    border: 1px solid #907646;
+    border-radius: 8px;
+    background: linear-gradient(150deg, #142131, #080f19);
+    padding: 14px;
+  }
+  .deckbuilder .db-detail-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .deckbuilder .db-detail-art {
+    aspect-ratio: 4 / 3;
+    height: auto;
+  }
+  .deckbuilder .db-detail-close {
+    display: none;
+  }
+  .deckbuilder .db-detail-name {
+    font-size: 23px;
+  }
+  .deckbuilder .db-panel-title {
+    margin: 0 0 12px;
+    color: #cbb47b;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+  }
+  .deckbuilder .db-list {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-auto-rows: 154px;
+    gap: 8px;
+  }
+  .deckbuilder .db-line {
+    min-height: 154px;
+  }
+  .deckbuilder .db-line-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 92px 38px;
+    min-height: 154px;
+    padding: 5px 5px 20px;
+    gap: 3px;
+  }
+  .deckbuilder .db-line-art {
+    width: 100%;
+    height: 92px;
+  }
+  .deckbuilder .db-line-name {
+    font-size: 12px;
+    line-height: 1.2;
+    padding: 0;
+  }
+  .deckbuilder .db-line-count {
+    left: 8px;
+    bottom: 6px;
+    font-size: 12px;
+  }
+  .deckbuilder .db-line-remove {
+    width: 30px;
+    height: 30px;
+    min-height: 30px;
+    right: 3px;
+    bottom: 3px;
+  }
+  .deckbuilder .db-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+  .deckbuilder .db-tile {
+    min-height: 179px;
+    padding-bottom: 30px;
+  }
+  .deckbuilder .db-tile-art {
+    height: 87px;
+  }
+  .deckbuilder .db-tile-name {
+    font-size: 12px;
+    min-height: 30px;
+  }
+  .deckbuilder .db-tile-meta {
+    display: none;
+  }
+  .deckbuilder .db-tile-add {
+    width: 30px;
+    height: 30px;
+    min-height: 30px;
+  }
+  .deckbuilder .db-legacy {
+    font-size: 11px;
+    padding: 6px 9px;
+  }
+}
+.deckbuilder .db-tile-owned,
+.deckbuilder .db-tile-copies .db-copy-pips {
+  display: none;
+}
+.deckbuilder .db-tile-copies {
+  min-height: 18px;
+  padding: 0;
+}
+.deckbuilder .db-tile-available {
+  font-size: 10px;
+}
+@media (min-width: 1001px) and (min-height: 501px) {
+  .deckbuilder .db-list {
+    grid-auto-rows: 170px;
+  }
+  .deckbuilder .db-line,
+  .deckbuilder .db-line-main {
+    min-height: 170px;
+  }
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .deckbuilder .db-list {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-auto-rows: 150px;
+  }
+  .deckbuilder .db-line,
+  .deckbuilder .db-line-main {
+    min-height: 150px;
+  }
+  .deckbuilder .db-line-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 65px 34px;
+    gap: 4px;
+    padding: 5px 5px 40px;
+  }
+  .deckbuilder .db-line-art {
+    width: 100%;
+    height: 65px;
+  }
+  .deckbuilder .db-line-name {
+    padding: 0;
+    font-size: 12px;
+  }
+  .deckbuilder .db-line-count {
+    left: 8px;
+    bottom: 10px;
+  }
+}
+.deckbuilder .db-tile-copies .db-pips {
+  display: none;
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .deckbuilder .db-line-art { grid-column: 1; grid-row: 1; }
+  .deckbuilder .db-line-name { grid-column: 1; grid-row: 2; }
+}

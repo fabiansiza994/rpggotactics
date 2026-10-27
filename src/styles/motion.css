@@ -1,0 +1,378 @@
+/* MOTION 01 — battle intro. Durations/easings come from presentation/motion/tokens.ts
+   (installed as custom properties at boot). Beats come from the intro director through
+   .battle[data-intro] / [data-intro-variant] / [data-reveal~='<beat>']. Transform + opacity only. */
+
+/* ── A. Commit: the chosen mode confirms, the rest recedes, the screen darkens ─────────── */
+.menu.is-committing {
+  pointer-events: none;
+  animation: menu-commit var(--intro-commit) var(--ease-exit) forwards;
+}
+.menu.is-committing
+  :is(
+    .menu-header,
+    .menu-section-title,
+    .campaign-path,
+    .campaign-hero:not(.is-chosen),
+    .mode-card:not(.is-chosen)
+  ) {
+  opacity: 0.3;
+  transform: scale(0.98);
+  transition:
+    opacity var(--motion-fast) var(--ease-exit),
+    transform var(--motion-fast) var(--ease-exit);
+}
+.menu .is-chosen {
+  border-color: var(--gold);
+  animation: menu-chosen var(--intro-commit) var(--ease-enter) both;
+}
+@keyframes menu-chosen {
+  40% {
+    transform: scale(1.025);
+    box-shadow:
+      0 0 0 1px var(--gold),
+      0 0 30px color-mix(in srgb, var(--gold) 45%, transparent);
+  }
+  to {
+    transform: scale(1.015);
+    box-shadow:
+      0 0 0 1px var(--gold),
+      0 0 16px color-mix(in srgb, var(--gold) 25%, transparent);
+  }
+}
+/* Holds while the choice reads, then hands over to the dark veil (body background). */
+@keyframes menu-commit {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ── B/C. Veil lifts, the backdrop settles (1.03 → 1) ─────────────────────────────────── */
+.battle-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background: var(--bg);
+  animation: battle-veil var(--intro-veil) var(--ease-enter) both;
+}
+@keyframes battle-veil {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.battle .painted-scenery,
+.battle .battle-scenery {
+  transform-origin: 50% 42%;
+  animation: scene-enter var(--intro-scene) var(--ease-enter) both;
+}
+@keyframes scene-enter {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+/* D. The battlefield rise and the environment awakening are Pixi (BattleCanvas.applyIntro). */
+
+/* ── HUD enters from its own edge (FULL intro only; a restart keeps the HUD in place) ───
+   Keyframes need an explicit `to`: the underlying value while hidden is opacity 0. */
+.battle[data-intro='running'][data-intro-variant='full']
+  :is(
+    .hero-panel,
+    .turn-panel,
+    .enemy-panel,
+    .tactical-overview,
+    .battle-utilities,
+    .hand-bar .pile,
+    .end-turn-box
+  ) {
+  opacity: 0;
+}
+.battle[data-intro-variant='full'][data-reveal~='hud']
+  :is(
+    .hero-panel,
+    .turn-panel,
+    .enemy-panel,
+    .tactical-overview,
+    .battle-utilities,
+    .hand-bar .pile,
+    .end-turn-box
+  ) {
+  /* Longhands only: this selector outranks the per-panel rules below, which set name/delay. */
+  animation-duration: var(--motion-emphasis);
+  animation-timing-function: var(--ease-enter);
+  animation-fill-mode: both;
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .hero-panel {
+  animation-name: hud-from-top-left;
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .turn-panel {
+  animation-name: hud-from-top;
+  animation-delay: var(--stagger-hud);
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .enemy-panel {
+  animation-name: hud-from-top-right;
+  animation-delay: calc(var(--stagger-hud) * 2);
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .tactical-overview {
+  animation-name: hud-from-top-right;
+  animation-delay: calc(var(--stagger-hud) * 3);
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .battle-utilities {
+  animation-name: hud-from-bottom;
+  animation-delay: calc(var(--stagger-hud) * 3);
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .hand-bar .pile {
+  animation-name: hud-from-bottom;
+  animation-delay: calc(var(--stagger-hud) * 2);
+}
+.battle[data-intro-variant='full'][data-reveal~='hud'] .end-turn-box {
+  animation-name: hud-from-bottom-right;
+  animation-delay: calc(var(--stagger-hud) * 4);
+}
+@keyframes hud-from-top-left {
+  from {
+    opacity: 0;
+    transform: translate(-28px, -18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hud-from-top-right {
+  from {
+    opacity: 0;
+    transform: translate(28px, -18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hud-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hud-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hud-from-bottom-right {
+  from {
+    opacity: 0;
+    transform: translate(24px, 28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Objective: wipes in from its icon, the icon lands first ──────────────────────────── */
+.battle[data-intro='running'] .objective {
+  opacity: 0;
+}
+.battle[data-reveal~='objective'] .objective {
+  animation: objective-reveal var(--motion-emphasis) var(--ease-enter) both;
+}
+.battle[data-reveal~='objective'] .objective + .objective {
+  animation-delay: var(--stagger-hud);
+}
+.battle[data-reveal~='objective'] .objective .game-icon {
+  animation: objective-icon var(--motion-normal) var(--ease-impact) both;
+}
+@keyframes objective-reveal {
+  from {
+    opacity: 0.2;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes objective-icon {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* ── Cards are dealt one after another (the hand mounts on the `deal` beat) ───────────── */
+.battle[data-intro='running'] .hand .card,
+.battle[data-intro='running'] .hand .card:nth-child(odd),
+.battle[data-intro='running'] .hand .card:nth-child(even) {
+  animation-delay: var(--deal-delay, 0ms);
+  animation-fill-mode: backwards;
+}
+
+/* ── "Tu turno": one short presentation, then control ─────────────────────────────────── */
+.turn-banner {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  top: 40%;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 56px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, #04080fcc, transparent 72%);
+  animation: turn-banner var(--turn-banner) linear both;
+}
+.turn-banner::before,
+.turn-banner::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hud-gold, #c5b180), transparent);
+  animation: turn-banner-rule var(--turn-banner) linear both;
+}
+.turn-banner::before {
+  top: 0;
+}
+.turn-banner::after {
+  bottom: 0;
+}
+.turn-banner-title {
+  font:
+    38px Georgia,
+    serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f3e6c4;
+  text-shadow:
+    0 2px 10px #000,
+    0 0 26px color-mix(in srgb, var(--gold) 35%, transparent);
+}
+.turn-banner-sub {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--hud-gold, #c5b180);
+}
+/* The enemy's turn speaks in the enemy colour: same motion, different owner. */
+.turn-banner[data-faction='enemy'] .turn-banner-title {
+  color: #f1c4b8;
+  text-shadow:
+    0 2px 10px #000,
+    0 0 26px color-mix(in srgb, var(--enemy) 45%, transparent);
+}
+.turn-banner[data-faction='enemy'] .turn-banner-sub {
+  color: #d99a8c;
+}
+.turn-banner[data-faction='enemy']::before,
+.turn-banner[data-faction='enemy']::after {
+  background: linear-gradient(90deg, transparent, var(--enemy), transparent);
+}
+@keyframes turn-banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.05);
+    animation-timing-function: var(--ease-enter);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    animation-timing-function: var(--ease-exit);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -56%);
+  }
+}
+@keyframes turn-banner-rule {
+  0% {
+    transform: scaleX(0);
+    animation-timing-function: var(--ease-enter);
+  }
+  34%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* ── Reduced motion: no travel, no scale; state changes stay readable as short fades ──── */
+@media (prefers-reduced-motion: reduce) {
+  .menu.is-committing {
+    animation-duration: var(--motion-fast);
+  }
+  .menu.is-committing
+    :is(.menu-header, .menu-section-title, .campaign-path, .campaign-hero, .mode-card) {
+    transform: none;
+  }
+  .menu .is-chosen {
+    animation: none;
+  }
+  .battle .painted-scenery,
+  .battle .battle-scenery,
+  .battle[data-intro-variant='full'][data-reveal~='hud']
+    :is(
+      .hero-panel,
+      .turn-panel,
+      .enemy-panel,
+      .tactical-overview,
+      .battle-utilities,
+      .hand-bar .pile,
+      .end-turn-box
+    ),
+  .battle[data-reveal~='objective'] .objective {
+    animation-name: motion-fade;
+    animation-duration: var(--motion-fast);
+    animation-delay: 0ms;
+  }
+  .battle[data-reveal~='objective'] .objective .game-icon,
+  .turn-banner::before,
+  .turn-banner::after {
+    animation: none;
+  }
+  .turn-banner {
+    animation-name: turn-banner-fade;
+    animation-duration: var(--motion-cinematic);
+  }
+}
+@keyframes motion-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes turn-banner-fade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  20%,
+  75% {
+    opacity: 1;
+  }
+}

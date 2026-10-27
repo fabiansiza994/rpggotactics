@@ -1,0 +1,116 @@
+/* Warrior: Momentum (Impulso) meter. Functional placeholder; the Codex UI pass restyles it. */
+.momentum-meter {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+.momentum-pips {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.momentum-pip {
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(255, 217, 168, 0.4);
+  background: #141b26;
+}
+.momentum-pip.is-on {
+  background: #ffa64d;
+  border-color: #ffd9a8;
+  box-shadow: 0 0 6px rgba(255, 166, 77, 0.6);
+}
+.momentum-meter[data-change='gain'] .momentum-pips {
+  animation: momentum-gain 420ms ease-out;
+}
+.momentum-meter[data-change='spend'] .momentum-pips {
+  animation: momentum-spend 420ms ease-out;
+}
+@keyframes momentum-gain {
+  0% {
+    filter: brightness(2.2);
+    transform: scale(1.15);
+  }
+  100% {
+    filter: none;
+    transform: none;
+  }
+}
+@keyframes momentum-spend {
+  0% {
+    filter: saturate(0) brightness(1.6);
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+  100% {
+    filter: none;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .momentum-meter[data-change] .momentum-pips {
+    animation: none;
+  }
+}
+@media (max-width: 960px), (max-height: 500px) {
+  .battle .momentum-meter {
+    grid-template-columns: auto 1fr auto;
+    gap: 4px;
+    margin: 1px 0;
+  }
+  .battle .momentum-pip {
+    width: 7px;
+    height: 7px;
+  }
+  .battle .momentum-meter .bar-value {
+    font-size: 11px;
+    min-width: 0;
+  }
+}
+.momentum-label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 960px), (max-height: 500px) {
+  .battle .momentum-label {
+    font-size: 10px;
+  }
+}
+/* Vanguard insignia: a filled shield notch, distinct from magical resource diamonds. */
+.momentum-pip {
+  width: 12px;
+  height: 14px;
+  transform: none;
+  clip-path: polygon(8% 0, 92% 0, 100% 65%, 50% 100%, 0 65%);
+  background: linear-gradient(135deg, #78818d, #17202c 48%, #46505e);
+  border: 0;
+  box-shadow: none;
+}
+.momentum-pip.is-on {
+  background: linear-gradient(135deg, #fff0ba, #dba35d 48%, #92632c);
+  filter: drop-shadow(0 0 3px #dba35d80);
+}
+.momentum-meter[aria-valuenow='3'] .momentum-pips {
+  filter: drop-shadow(0 0 3px #e0bc7380);
+}
+@media (max-width: 960px), (max-height: 500px) {
+  .battle .momentum-pip {
+    width: 9px;
+    height: 11px;
+  }
+}
+.hero-shield[data-kind='guard'] {
+  border-radius: 2px 2px 7px 7px;
+  border-color: #c9aa70;
+  background: linear-gradient(#435362, #152331);
+  color: #f2d6a2;
+  box-shadow:
+    inset 0 1px #e4d8b94d,
+    0 1px 5px #0009;
+}

@@ -1,0 +1,381 @@
+/* Campaign progression: live route states, Continue/New CTAs, objective progress in battle.
+   Tier (normal/elite/boss) styles live in menu.css; progress (completed/current/locked) is
+   layered on top here, so an elite can be completed, current or locked. */
+
+/* ── Route: progress states ─────────────────────────────────────────── */
+.path-count {
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+  color: var(--menu-gold);
+  letter-spacing: 0.04em;
+}
+.path-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.path-hit:focus-visible {
+  outline: 2px solid #fff6dc;
+  outline-offset: -2px;
+}
+.path-node.is-selected {
+  background-color: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(214 184 106 / 0.35);
+}
+.path-mark-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.path-objective {
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #cfe4f4;
+  background: rgb(99 201 246 / 0.1);
+  border: 1px solid rgb(99 201 246 / 0.3);
+  border-radius: 999px;
+}
+
+/* State badge on the medallion corner. */
+.path-state {
+  position: absolute;
+  right: -7px;
+  top: -5px;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  font: 800 12px/1 system-ui, sans-serif;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgb(9 16 26);
+}
+.path-state-completed {
+  color: #0d1a10;
+  background: #8fd28a;
+}
+.path-state-locked {
+  background: #2a3341;
+  border: 1px solid #6c7686;
+}
+.path-state-locked svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: #b9c2cf;
+  stroke-width: 1.3;
+}
+
+/* Completed: settled, a little quieter, trail to the next node is solid. */
+.path-node.progress-completed .path-mark {
+  filter: saturate(0.75);
+  border-color: rgb(143 210 138 / 0.75);
+}
+.path-node.progress-completed .path-name {
+  color: var(--menu-ink-dim);
+}
+.path-node.progress-completed::before {
+  background: rgb(214 184 106 / 0.8);
+}
+
+/* Current: the one place the eye should land. */
+.path-node.progress-current .path-mark-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 2px solid rgb(255 226 150 / 0.85);
+  box-shadow: 0 0 18px rgb(255 214 120 / 0.5);
+  animation: route-current 1.8s var(--ease-enter, ease-out) infinite;
+  pointer-events: none;
+}
+.path-node.progress-current .path-mark {
+  color: #fff6dc;
+  border-color: #ffe3a0;
+}
+.path-node.progress-current .path-name {
+  color: #fff3d2;
+  font-weight: 800;
+}
+@keyframes route-current {
+  0%,
+  100% {
+    opacity: 0.95;
+    scale: 1;
+  }
+  50% {
+    opacity: 0.45;
+    scale: 1.08;
+  }
+}
+
+/* Locked: dimmed but tier still legible (elite gold / boss red stay recognisable). */
+.path-node.progress-locked .path-mark {
+  filter: saturate(0.45) brightness(0.72);
+}
+.path-node.progress-locked .path-text {
+  opacity: 0.6;
+}
+
+/* Detail of the selected node (defaults to the next encounter). Tap/focus, never hover-only. */
+.path-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--menu-line);
+  font-size: 13.5px;
+  color: var(--menu-ink-dim);
+}
+.path-detail-state {
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.path-detail.progress-completed .path-detail-state {
+  color: #8fd28a;
+}
+.path-detail.progress-current .path-detail-state {
+  color: #ffe3a0;
+}
+.path-detail.progress-locked .path-detail-state {
+  color: #9aa4b2;
+}
+.path-detail-name {
+  font: 600 16px/1.2 var(--menu-display);
+  color: var(--menu-ink);
+}
+.path-detail.tier-elite .path-detail-name {
+  color: #f3d991;
+}
+.path-detail.tier-boss .path-detail-name {
+  color: #ffc9c1;
+}
+.path-detail-numeral {
+  color: var(--menu-ink-faint);
+}
+.path-detail-objective {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #cfe4f4;
+  font-weight: 600;
+}
+.path-detail-objective .game-icon {
+  width: 14px;
+  height: 14px;
+}
+.path-detail-meta {
+  color: var(--menu-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Campaign CTA: Start / Continue (+ New) / Completed ─────────────── */
+.campaign-actions {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.campaign-actions .campaign-cta {
+  margin-top: 0;
+  padding-block: 8px;
+  text-align: left;
+}
+.cta-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.1;
+}
+.cta-sub {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.78;
+}
+.campaign-secondary {
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--menu-ink);
+  background: rgb(9 16 26 / 0.6);
+  border: 1px solid rgb(234 220 187 / 0.35);
+  border-radius: 8px;
+}
+.campaign-secondary:hover {
+  border-color: rgb(234 220 187 / 0.7);
+}
+.campaign-secondary:focus-visible {
+  outline: 2px solid #fff6dc;
+  outline-offset: 3px;
+}
+.campaign-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #c9f0c4;
+  background: rgb(143 210 138 / 0.12);
+  border: 1px solid rgb(143 210 138 / 0.5);
+  border-radius: 8px;
+}
+.fact-progress strong {
+  color: #8fd28a;
+}
+
+.confirm-dialog {
+  padding: 20px 22px;
+  border-radius: 10px;
+}
+.confirm-dialog h2 {
+  margin: 0 0 6px;
+  font: 600 20px/1.2 Georgia, serif;
+}
+.confirm-dialog p {
+  margin: 0 0 16px;
+  color: #b9ab8b;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.confirm-dialog .confirm-danger {
+  border-color: #e46a5f;
+  color: #ffd9d4;
+  background: #3a1616;
+}
+.menu-reward {
+  z-index: 30;
+}
+
+/* ── Battle: live objective progress ────────────────────────────────── */
+.objective-progress {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: #fff3d2;
+  animation: objective-tick 420ms var(--ease-enter, ease-out);
+}
+.objective-completed .objective-progress {
+  color: var(--good);
+}
+@keyframes objective-tick {
+  from {
+    scale: 1.35;
+    color: #ffffff;
+  }
+}
+/* Folded HUD (touch): the objective list hides behind ⓘ, this chip keeps progress in sight. */
+.objective-chip {
+  display: none;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #f2d592;
+  border: 1px solid rgb(242 213 146 / 0.45);
+  border-radius: 999px;
+}
+.objective-chip[data-status='completed'] {
+  color: #8fd28a;
+  border-color: rgb(143 210 138 / 0.5);
+}
+@media (pointer: coarse) {
+  .battle .objective-chip {
+    display: inline-block;
+  }
+}
+
+/* Minimap: pickups (orb violet, page parchment) and exit tiles. */
+.tactical-map-cell b,
+.tactical-map-legend .unit-pickup {
+  position: absolute;
+  inset: auto auto 2px 50%;
+  width: 6px;
+  height: 6px;
+  transform: translateX(-50%) rotate(45deg);
+  background: #c49bff;
+  box-shadow: 0 0 6px #c49bff;
+}
+.tactical-map-cell.pickup-page b {
+  background: #f4e3b5;
+  box-shadow: 0 0 6px #f4d27a;
+}
+.tactical-map-legend .unit-pickup {
+  display: inline-block;
+  position: static;
+  transform: rotate(45deg);
+  width: 5px;
+  height: 5px;
+  border-radius: 0;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .path-detail {
+    padding: 6px 8px 0;
+    gap: 2px 8px;
+    font-size: 12px;
+  }
+  .path-detail-name {
+    font-size: 13.5px;
+  }
+  .path-state {
+    width: 15px;
+    height: 15px;
+    right: -6px;
+    top: -4px;
+    font-size: 10px;
+  }
+  .path-objective {
+    font-size: 10px;
+    padding: 0 4px;
+  }
+  .campaign-actions {
+    gap: 8px;
+  }
+  .campaign-secondary {
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .cta-sub {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .path-node.progress-current .path-mark-wrap::after,
+  .objective-progress {
+    animation: none;
+  }
+}
+
+.summoner-qa { border:1px solid #aa915d; padding:10px; border-radius:8px; margin:8px 0; background:#0a1725; font-size:12px; }
+.summoner-qa summary { cursor:pointer; color:#e9cd8f; }
+.summoner-qa label { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0; }
+.summoner-qa select,.summoner-qa input { max-width:65%; min-width:0; background:#101d2b; color:#f2e7cf; border:1px solid #aa915d; padding:6px; }
+.summoner-qa button { min-height:40px; background:#173147; color:#f6e1ad; border:1px solid #aa915d; border-radius:4px; padding:6px 10px; cursor:pointer; }
+.summoner-qa button:disabled { opacity:.6; cursor:wait; }

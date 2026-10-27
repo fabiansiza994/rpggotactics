@@ -1,0 +1,270 @@
+/* RPG-GO arcane-metal reflections. One shared skin, with restrained champion accents. */
+[data-premium-treatment='showcase'] :is(.fc-frame, .card-frame) {
+  border-color: var(--cp-warm);
+  box-shadow:
+    inset 0 0 0 1px #d8bb7d55,
+    0 0 12px color-mix(in srgb, var(--cp-cold) 24%, transparent);
+}
+[data-premium-treatment='showcase']:is(.db-detail-card, .db-tile) {
+  border-color: var(--cp-warm);
+  box-shadow: inset 0 0 0 1px #d8bb7d35;
+}
+[data-premium-treatment='showcase'][data-premium-family='summoner'] {
+  --cp-heat: #b85879;
+}
+.cp-cosmetic-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.2em;
+  height: 1.2em;
+  color: #f1dfb1;
+  border: 1px solid var(--cp-warm, #d2be8a);
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+  vertical-align: middle;
+}
+[data-premium-surface] {
+  --cp-x: 0;
+  --cp-y: 0;
+  --cp-rx: 0deg;
+  --cp-ry: 0deg;
+  --cp-lx: 50%;
+  --cp-ly: 50%;
+  --cp-cold: #92dcec;
+  --cp-warm: #d2be8a;
+  --cp-heat: #9e9cec;
+}
+[data-premium-family='summoner'] {
+  --cp-cold: #bd9fea;
+  --cp-warm: #b5a4d9;
+  --cp-heat: #824e91;
+}
+[data-premium-family='warrior'] {
+  --cp-cold: #c4c8ca;
+  --cp-warm: #d8bb7d;
+  --cp-heat: #ab5840;
+}
+[data-premium-motif='forge'],
+[data-premium-motif='dragon'] {
+  --cp-warm: #deb277;
+  --cp-heat: #d47440;
+}
+[data-premium-surface='large'] {
+  perspective: 1000px;
+}
+[data-premium-surface='large']:is(.db-detail-card, .shop-card-preview) {
+  transform: perspective(1000px) rotateX(var(--cp-rx)) rotateY(var(--cp-ry));
+  transition: transform 160ms ease;
+}
+[data-premium-surface='large'].feature-card .fc-frame,
+[data-premium-surface='large'].world-reward-card .world-reward-front {
+  transform: perspective(1000px) rotateX(var(--cp-rx)) rotateY(var(--cp-ry));
+  transition: transform 160ms ease;
+}
+.feature-card[data-premium-surface='large']:not(.is-leaving) {
+  pointer-events: auto;
+}
+.feature-card.is-leaving[data-premium-surface] {
+  pointer-events: none;
+}
+[data-premium-treatment='holographic'] .fc-frame,
+[data-premium-treatment='legendary'] .fc-frame {
+  border-color: #c1a479;
+  box-shadow:
+    inset 0 0 0 2px #211c26,
+    0 3px 10px #02040970;
+}
+[data-premium-motif='dragon'] .fc-frame {
+  border-color: #bba066;
+  background: linear-gradient(155deg, #28201a, #0b1423 65%);
+}
+[data-premium-surface]
+  :is(.fc-art, .card-art, .db-tile-art, .db-detail-art, .shop-card-image, .world-reward-art) {
+  position: relative;
+  isolation: isolate;
+}
+.cp-effects {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+}
+.cp-foil,
+.cp-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cp-foil {
+  opacity: 0.12;
+  background:
+    radial-gradient(ellipse at var(--cp-lx) var(--cp-ly), var(--cp-warm), transparent 55%),
+    repeating-linear-gradient(
+      125deg,
+      transparent 0 24px,
+      var(--cp-cold) 25px,
+      transparent 26px 51px
+    );
+  mix-blend-mode: screen;
+  transform: translate(calc(var(--cp-x) * 2px), calc(var(--cp-y) * 2px));
+  transition: opacity 180ms ease;
+}
+[data-premium-treatment='subtle'] .cp-foil {
+  opacity: 0.045;
+}
+[data-premium-active='true'] .cp-foil {
+  opacity: 0.22;
+}
+[data-premium-active='true'][data-premium-treatment='subtle'] .cp-foil {
+  opacity: 0.09;
+}
+[data-premium-motif='forge'] .cp-foil {
+  background:
+    radial-gradient(ellipse at var(--cp-lx) var(--cp-ly), var(--cp-warm), transparent 55%),
+    repeating-linear-gradient(
+      155deg,
+      transparent 0 33px,
+      var(--cp-heat) 34px,
+      transparent 35px 69px
+    );
+}
+.cp-sweep {
+  opacity: 0;
+  background: linear-gradient(
+    112deg,
+    transparent 35%,
+    #ead7aa33 46%,
+    #effaff66 50%,
+    transparent 63%
+  );
+  transform: translateX(-110%);
+}
+[data-premium-sweep='true'] .cp-sweep {
+  animation: cp-light-sweep 650ms ease-out both;
+}
+@keyframes cp-light-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-110%);
+  }
+  30% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(110%);
+  }
+}
+.cp-motes {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  transform: translate(calc(var(--cp-x) * 3px), calc(var(--cp-y) * 3px));
+}
+.cp-motes i {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--cp-heat);
+}
+.cp-motes i:nth-child(1) {
+  left: 22%;
+  top: 72%;
+}
+.cp-motes i:nth-child(2) {
+  left: 76%;
+  top: 23%;
+}
+.cp-motes i:nth-child(3) {
+  left: 68%;
+  top: 64%;
+}
+[data-premium-treatment='subtle'] .cp-motes,
+[data-premium-surface='grid'] .cp-motes {
+  display: none;
+}
+.cp-art-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cp-depth-background {
+  transform: translate(calc(var(--cp-x) * 1px), calc(var(--cp-y) * 1px));
+}
+.cp-depth-subject {
+  transform: translate(calc(var(--cp-x) * 3px), calc(var(--cp-y) * 3px));
+}
+.cp-depth-foreground {
+  transform: translate(calc(var(--cp-x) * 5px), calc(var(--cp-y) * 5px));
+}
+[data-premium-surface='compact'] .card-art,
+[data-premium-surface='grid'] .db-tile-art {
+  transform: perspective(800px) rotateX(var(--cp-rx)) rotateY(var(--cp-ry));
+  transition: transform 160ms ease;
+}
+[data-premium-surface] .fc-foil,
+[data-premium-surface='compact'][data-premium='true'] .card-art::after {
+  display: none;
+}
+[data-premium-active='true'] :is(.fc-gem, .world-reward-rarity, .db-rarity-label) {
+  text-shadow: 0 0 5px var(--cp-warm);
+}
+@media (pointer: coarse) {
+  [data-premium-surface='large'][data-premium-treatment='holographic'] .cp-foil {
+    animation: cp-idle 12s ease-in-out infinite alternate;
+  }
+}
+@keyframes cp-idle {
+  from {
+    opacity: 0.07;
+  }
+  to {
+    opacity: 0.12;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-premium-surface] {
+    --cp-x: 0 !important;
+    --cp-y: 0 !important;
+    --cp-rx: 0deg !important;
+    --cp-ry: 0deg !important;
+  }
+  [data-premium-surface] * {
+    transition: none !important;
+  }
+  [data-premium-surface] .cp-sweep,
+  [data-premium-surface] .cp-motes {
+    display: none;
+  }
+  [data-premium-surface] .cp-foil {
+    animation: none !important;
+    opacity: 0.1;
+    transform: none;
+  }
+}
+.world-reward-card .cp-sweep {
+  animation-delay: 1100ms;
+}
+[data-premium-treatment='holographic']:is(.db-detail-card, .shop-card-preview),
+[data-premium-treatment='legendary']:is(.db-detail-card, .shop-card-preview),
+[data-premium-treatment='holographic'] .world-reward-front {
+  border-color: #c1a479;
+  box-shadow:
+    inset 0 0 0 1px #c1a47930,
+    0 3px 10px #02040970;
+}
+/* The compact inspect dialog gives art a fixed height: constrain its intrinsic ratio to
+   the grid column so it cannot paint over the title or rules. */
+[data-premium-surface] .db-detail-art {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}

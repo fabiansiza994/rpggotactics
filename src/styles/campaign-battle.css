@@ -1,0 +1,136 @@
+/* PvE only: compact visible state, with full tactical detail one tap away. */
+.battle:not(.pvp-battle) .top-bar {
+  align-items: start;
+  pointer-events: none;
+}
+.battle:not(.pvp-battle) .top-bar button {
+  pointer-events: auto;
+}
+.battle:not(.pvp-battle) .turn-panel {
+  position: relative;
+  padding: 8px 36px 8px 10px;
+  min-width: 0;
+}
+.battle:not(.pvp-battle) .turn-title {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 10px;
+  font-size: 18px;
+}
+.battle:not(.pvp-battle) .round-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.battle:not(.pvp-battle) .turn-scenario {
+  font:
+    12px Georgia,
+    serif;
+  min-width: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.battle:not(.pvp-battle) .turn-extra {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 12px;
+}
+.battle:not(.pvp-battle) .run-progress {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.battle:not(.pvp-battle) .run-step {
+  font-size: 10px;
+  letter-spacing: 0;
+}
+.battle:not(.pvp-battle) .run-focus {
+  display: none;
+}
+.battle:not(.pvp-battle) .objective {
+  font-size: 11px;
+  margin: 0;
+}
+.battle:not(.pvp-battle) .encounter-toggle {
+  display: block;
+  position: absolute;
+  top: 4px;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.battle:not(.pvp-battle) .turn-panel.is-expanded .turn-extra {
+  display: block;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  max-height: 180px;
+  overflow: auto;
+  background: #0c1828f7;
+  border: 1px solid #9e855d;
+  pointer-events: auto;
+  z-index: 20;
+}
+.battle:not(.pvp-battle) .turn-panel.is-expanded .run-focus {
+  display: block;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .battle:not(.pvp-battle) .turn-panel {
+    height: 44px;
+    padding: 0 32px 0 0;
+    display: block;
+  }
+  .battle:not(.pvp-battle) .turn-title {
+    font-size: 12px;
+    gap: 2px 5px;
+    line-height: 1.3;
+  }
+  .battle:not(.pvp-battle) .round-label {
+    font-size: 8px;
+  }
+  .battle:not(.pvp-battle) .turn-scenario {
+    font-size: 9px;
+    max-width: 50%;
+  }
+  .battle:not(.pvp-battle) .objective-chip {
+    display: block;
+    flex-basis: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 9px;
+  }
+  .battle:not(.pvp-battle) .turn-extra {
+    display: flex;
+    gap: 0;
+  }
+  .battle:not(.pvp-battle) .turn-extra .objective {
+    display: none;
+  }
+  .battle:not(.pvp-battle) .run-step {
+    font-size: 8px;
+  }
+  .battle:not(.pvp-battle) .turn-panel.is-expanded .objective {
+    display: block;
+  }
+  .battle:not(.pvp-battle) .encounter-toggle {
+    top: 0;
+    width: 32px;
+    height: 44px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .result-card .reward-confirm {
+    transition: filter 120ms ease;
+  }
+}

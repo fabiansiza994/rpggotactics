@@ -1,0 +1,319 @@
+/* Act II: shared bronze/iron language. Flags and gameplay remain in the existing core. */
+.campaign-worlds {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin: 12px 0;
+}
+.campaign-world-choice {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  text-align: left;
+  color: #dccbb0;
+  background: linear-gradient(135deg, #17202a, #080d15);
+  border: 1px solid #776a4a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 180ms,
+    border-color 180ms;
+}
+.campaign-world-choice > span:not(.world-crest) {
+  display: grid;
+  gap: 2px;
+}
+.campaign-world-choice strong {
+  font:
+    700 clamp(13px, 1.3vw, 20px) Georgia,
+    serif;
+}
+.campaign-world-choice small {
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.campaign-world-choice b {
+  font-size: 12px;
+  color: #c6c4b8;
+}
+.world-crest {
+  font-size: 28px;
+  color: #d9bd7a;
+}
+.campaign-world-choice.world-infernal {
+  background: linear-gradient(140deg, #392018, #0d1015);
+  border-color: #8e5d36;
+}
+.campaign-world-choice.is-active {
+  border-color: #f1c574;
+  box-shadow:
+    inset 0 0 18px #ffab4a18,
+    0 0 0 1px #b7824c;
+}
+.campaign-world-choice:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.future-world {
+  display: grid;
+  align-content: center;
+  max-width: 90px;
+  color: #867d70;
+  font-size: 10px;
+  border: 1px dashed #625441;
+  padding: 6px;
+  border-radius: 8px;
+}
+.future-world small {
+  font-size: 9px;
+}
+.menu[data-world='world_2'] {
+  --menu-line: #7c5033;
+  --menu-gold: #e9b574;
+  --menu-ink-dim: #c1a791;
+}
+.menu[data-world='world_2'] .campaign-hero {
+  background: linear-gradient(100deg, #19130fea, #1712199c);
+  border-color: #af7943;
+}
+.menu[data-world='world_2'] .campaign-path {
+  background: linear-gradient(145deg, #191415ee, #090e14e8);
+  border-color: #7e543a;
+}
+.menu[data-world='world_2'] .path-mark {
+  background: radial-gradient(circle at 50% 70%, #47281c, #11151a 70%);
+  border-color: #a27547;
+  box-shadow:
+    inset 0 0 0 3px #141114,
+    0 0 0 1px #39271a;
+}
+.menu[data-world='world_2'] .path-node.progress-current .path-mark {
+  border-color: #ffb877;
+  box-shadow:
+    0 0 18px #ff84313b,
+    inset 0 0 0 3px #472719;
+}
+.menu[data-world='world_2'] .path-node.tier-boss .path-mark {
+  background: radial-gradient(circle, #783224, #211314);
+  border-color: #efad69;
+  transform: rotate(45deg);
+}
+.menu[data-world='world_2'] .path-node.tier-boss .path-mark > * {
+  transform: rotate(-45deg);
+}
+.menu[data-world='world_2'] .path-objective {
+  border-color: #875d3d;
+  background: #40271d;
+}
+.world-arrival {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  text-align: center;
+  background: radial-gradient(ellipse, #371b12ee, #03070cf5);
+  color: #f5d4a1;
+  animation: infernal-arrival 1400ms both;
+}
+.world-arrival span {
+  letter-spacing: 6px;
+  font-size: 13px;
+  color: #e2a56e;
+}
+.world-arrival strong {
+  font:
+    700 clamp(28px, 5vw, 70px) Georgia,
+    serif;
+  text-shadow: 0 0 24px #e9693355;
+}
+.world-arrival small {
+  color: #c9b298;
+}
+@keyframes infernal-arrival {
+  0% {
+    opacity: 0;
+  }
+  18%,
+  62% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.battle[data-theme='infernal_forge'] .painted-scenery {
+  filter: none;
+  background-position: center 45%;
+}
+.battle[data-theme='infernal_forge'] .battle-veil {
+  background: linear-gradient(180deg, #03070b42, #090b1050);
+}
+.battle[data-theme='infernal_forge'] .turn-panel {
+  border-color: #9b7244;
+  background: linear-gradient(180deg, #241a16ef, #080e17dd);
+}
+.infernal-legend {
+  position: absolute;
+  left: 12px;
+  bottom: 26%;
+  z-index: 3;
+  display: grid;
+  gap: 3px;
+  font-size: 10px;
+  color: #ebc5a0;
+  background: #0b101ce8;
+  border: 1px solid #946a45;
+  border-radius: 5px;
+  padding: 6px;
+  pointer-events: none;
+}
+.forge-surge {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
+  padding: 10px 24px;
+  color: #ffcc8b;
+  background: linear-gradient(90deg, transparent, #34150ced, transparent);
+  font:
+    700 18px Georgia,
+    serif;
+  animation: forge-surge 1800ms both;
+}
+@keyframes forge-surge {
+  0% {
+    opacity: 0;
+  }
+  20%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.infernal-completion {
+  border-color: #d8a45c;
+  background: radial-gradient(ellipse at top, #492317, #101620 70%);
+}
+.infernal-completion .world-trophy {
+  display: block;
+  font-size: 48px;
+  color: #efbd78;
+}
+.infernal-completion .completion-reward {
+  color: #f2cf91;
+  border: 1px solid #9b7244;
+  padding: 10px;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .campaign-worlds {
+    gap: 5px;
+    margin: 7px 0;
+  }
+  .campaign-world-choice {
+    padding: 6px;
+    gap: 5px;
+  }
+  .campaign-world-choice strong {
+    font-size: 12px;
+  }
+  .world-crest {
+    font-size: 20px;
+  }
+  .future-world {
+    max-width: 62px;
+    font-size: 8px;
+  }
+  .infernal-legend {
+    left: 5px;
+    bottom: 35%;
+    font-size: 8px;
+    padding: 4px;
+  }
+  .forge-surge {
+    top: 23%;
+    font-size: 13px;
+    padding: 5px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world-arrival {
+    animation-duration: 1ms;
+  }
+  .forge-surge {
+    animation-duration: 1ms;
+  }
+  .campaign-world-choice {
+    transition: none;
+  }
+}
+/* World cards fit the campaign copy column, including translated titles and status. */
+.campaign-worlds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.campaign-world-choice {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-content: start;
+  gap: 4px 6px;
+  overflow: hidden;
+}
+.campaign-world-choice > small {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+  font-size: 9px;
+  letter-spacing: 0.2px;
+}
+.campaign-world-choice strong {
+  font-size: clamp(12px, 1.05vw, 16px);
+  overflow-wrap: anywhere;
+}
+.future-world {
+  grid-column: 1 / -1;
+  max-width: none;
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+}
+.world-crest {
+  font-size: 22px;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .campaign-world-choice {
+    grid-template-columns: 16px minmax(0, 1fr);
+    padding: 5px;
+  }
+  .campaign-world-choice strong {
+    font-size: 11px;
+  }
+  .campaign-world-choice > small {
+    font-size: 8px;
+  }
+  .world-crest {
+    font-size: 18px;
+  }
+  .future-world {
+    max-width: none;
+  }
+}
+.result-card.won.infernal-completion {
+  border-color: #d8a45c;
+  background: radial-gradient(ellipse at top, #492317, #101620 70%);
+}
+.result-card.infernal-completion h2 {
+  font-family: Georgia, serif;
+  color: #f5d29a;
+}
+.tactical-map-cell.terrain-lava { background:repeating-linear-gradient(145deg,#5b2314,#5b2314 2px,#e29c4c 2px,#e29c4c 3px); border-color:#de9a5b; }
+.tactical-map-cell.terrain-fire { background:#763522; border-color:#bd744b; }
+.tactical-map-cell.is-boss > i { border-radius:1px; transform:rotate(45deg); border:1px solid #ffd69a; }

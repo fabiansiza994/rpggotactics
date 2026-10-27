@@ -1,0 +1,49 @@
+/* Keep focus/preview overflow from panning the entire instrument panel. The hand
+   remains its own scroll container; clip does not create a hidden scrollport. */
+.battle { overflow: clip; }
+.battle > .top-bar,
+.battle > .battle-main,
+.battle > .hand-bar,
+.battle .top-bar > * { min-width: 0; }
+
+/* The portrait belongs to the name row's layout, rather than covering its text.
+   Short landscape phones retain their existing compact portrait-only controls. */
+@media (min-height: 501px) {
+  .battle .enemy-row { padding: 6px; min-height: 44px; }
+  .battle .enemy-name { align-items: center; gap: 6px; font-size: 13px; }
+  .battle .enemy-portrait {
+    position: static;
+    flex: 0 0 22px;
+    width: 22px;
+    height: 28px;
+  }
+  .battle .enemy-label { min-width: 0; overflow-wrap: anywhere; }
+  .battle .enemy-name > .muted { flex-shrink: 0; margin-left: auto; }
+  .battle .enemy-intent { padding-left: 28px; line-height: 1.3; }
+  .battle .enemy-panel { max-height: 156px; }
+  .battle .enemy-panel[data-enemies='3'] { max-height: 208px; }
+  .battle .enemy-panel[data-enemies='4'] { max-height: 260px; }
+}
+
+/* Tablets use the full battle composition. Only the hand scrolls if necessary;
+   hero, objectives and end-turn stay anchored when a card receives focus. */
+@media (min-height: 501px) and (max-width: 1280px) {
+  .battle .top-bar {
+    grid-template-columns: minmax(190px, 225px) minmax(0, 1fr) minmax(185px, 235px);
+    gap: 10px;
+  }
+  .battle .turn-panel { padding: 6px 10px; }
+  .battle .turn-title { font-size: 21px; }
+  .battle .hand-bar { grid-template-columns: 64px minmax(0, 1fr) 136px 52px; gap: 8px; padding-inline: 12px; }
+  .battle .hand { justify-content: safe center; }
+  .battle .hand .card { width: 116px; }
+  .battle .end-turn { min-height: 52px; }
+}
+@media (pointer: coarse) and (min-height: 501px) {
+  .battle .cancel-action,
+  .battle .confirm-action,
+  .battle .encounter-toggle,
+  .battle .battle-help,
+  .battle .card-selection-cancel { min-width: 44px; min-height: 44px; }
+  .battle .card-select-surface { touch-action: manipulation; }
+}

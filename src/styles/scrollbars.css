@@ -1,0 +1,46 @@
+/* Shared native scrolling: theme all app surfaces, with opt-in axis/layout utilities. */
+:root {
+  --rpg-scroll-track: #0b1724;
+  --rpg-scroll-thumb: #677b84;
+  --rpg-scroll-hover: #c6ad73;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpg-scroll-thumb) var(--rpg-scroll-track);
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--rpg-scroll-track);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rpg-scroll-thumb);
+  border: 2px solid var(--rpg-scroll-track);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rpg-scroll-hover);
+}
+::-webkit-scrollbar-corner {
+  background: var(--rpg-scroll-track);
+}
+.rpg-scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.rpg-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.rpg-scroll-panel {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+@media (forced-colors: active) {
+  * {
+    scrollbar-color: auto;
+  }
+}

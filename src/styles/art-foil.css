@@ -1,0 +1,67 @@
+/* Shared art-only foil. The existing effect root clips to the artwork, never the card body. */
+.cp-effects[data-art-foil='prismatic'] { contain:paint; pointer-events:none; }
+.rrt-card-art > .rrt-card-cost { z-index:4; }
+.cp-effects[data-art-foil='prismatic'] > .cp-foil {
+  --art-foil-base:.16;
+  --art-foil-active:.24;
+  inset:0;
+  opacity:var(--art-foil-base);
+  background:
+    linear-gradient(115deg,transparent 33%,#a6dbe933 40%,#e4c9f077 44%,#fff6ce99 48%,#b4e3ce44 52%,transparent 62%),
+    repeating-linear-gradient(128deg,transparent 0% 8%,#8ddbea40 12%,#d8a6d842 18%,#ecd69736 23%,transparent 31% 48%);
+  background-size:230% 230%,190% 190%;
+  background-position:var(--cp-lx,50%) var(--cp-ly,50%);
+  mix-blend-mode:screen;
+  transform:none;
+  animation:none;
+  transition:opacity 180ms ease;
+}
+.cp-effects[data-art-foil='prismatic'][data-rarity-finish='ultra'] > .cp-foil { --art-foil-base:.21; --art-foil-active:.29; }
+.cp-effects[data-art-foil='prismatic'][data-rarity-finish='secret'] > .cp-foil { --art-foil-base:.25; --art-foil-active:.34; }
+.cp-effects[data-art-foil='prismatic'] > .cp-foil::after {
+  content:''; position:absolute; inset:0; opacity:.2;
+  background:radial-gradient(circle,#f5eddf 0 .45px,transparent .8px) 0 0 / 7px 9px;
+}
+[data-premium-active='true'] .cp-effects[data-art-foil='prismatic'] > .cp-foil,
+[data-premium-surface]:focus-within .cp-effects[data-art-foil='prismatic'] > .cp-foil,
+.card.is-selected .cp-effects[data-art-foil='prismatic'] > .cp-foil,
+.mission-reward-slot[data-selected='true'] .cp-effects[data-art-foil='prismatic'] > .cp-foil { opacity:var(--art-foil-active); }
+/* Small faces retain the material sheen without microtexture or autonomous animation. */
+[data-premium-surface='compact'] .cp-effects[data-art-foil='prismatic'] > .cp-foil,
+[data-premium-surface='grid'] .cp-effects[data-art-foil='prismatic'] > .cp-foil { opacity:calc(var(--art-foil-base) * .72); }
+[data-premium-surface='compact'] .cp-effects[data-art-foil='prismatic'] > .cp-foil::after,
+[data-premium-surface='grid'] .cp-effects[data-art-foil='prismatic'] > .cp-foil::after { display:none; }
+[data-premium-surface='compact']:is(:focus-within,.is-selected,[data-premium-active='true']) .cp-effects[data-art-foil='prismatic'] > .cp-foil { opacity:var(--art-foil-active); }
+@media(prefers-reduced-motion:reduce) {
+  .cp-effects[data-art-foil='prismatic'] > .cp-foil { background-position:50% 50%; transition:none; animation:none; transform:none; }
+}
+/* Arcana Secreta is a cosmetic finish, distinct from the legacy Showcase token. */
+.cp-effects[data-art-foil][data-rarity-finish='arcana-secret'] > .cp-foil {
+  --art-foil-base:.28; --art-foil-active:.37;
+  background-image:linear-gradient(115deg,transparent 29%,#a8e9ed55 39%,#eadcf9aa 44%,#fff8d9bb 48%,#b8e9d966 53%,transparent 64%),repeating-linear-gradient(135deg,transparent 0 12px,#e0e9f766 13px,transparent 14px 25px);
+}
+.cp-effects[data-art-foil][data-rarity-finish='arcana-secret'] > .cp-foil::after {
+  opacity:.48;
+  background:linear-gradient(135deg,transparent 44%,#f2f5ff99 49% 51%,transparent 56%) 0 0/17px 17px,radial-gradient(ellipse,#fff 0 .6px,transparent 1.2px) 8px 8px/17px 17px;
+}
+[data-rarity-finish='arcana-secret']:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.shop-card-preview,.free-catalog-card) {
+  outline:1px solid #d5d8bd; outline-offset:-1px; box-shadow:inset 0 0 10px #d3e8f733,0 0 8px #a8c9db22;
+}
+.mission-reward-slot[data-finish='arcana-secret'][data-phase='revealed'] .mission-reward-flipper { animation:arcana-reveal 850ms ease-out both; }
+@keyframes arcana-reveal { 0%,30% {filter:brightness(1);transform:rotateY(180deg) scale(1)} 43% {filter:brightness(1.18);transform:rotateY(180deg) scale(1.13)} 100% {filter:brightness(1);transform:rotateY(180deg) scale(1)} }
+@media(prefers-reduced-motion:reduce) {
+  .mission-reward-slot[data-finish='arcana-secret'] .mission-reward-flipper { animation:none; }
+}
+.mission-reward[data-reduced-motion='true'] .mission-reward-slot[data-finish='arcana-secret'] .mission-reward-flipper {animation:none}
+/* Specificity matches the existing type-header skin; no transparent-text fallback. */
+.feature-card[data-rarity-finish='arcana-secret'] .fc-name,
+.card[data-rarity-finish='arcana-secret'] .card-name,
+[data-rarity-finish='arcana-secret'] :is(.db-tile-name,.db-detail-name,.db-line-name) {
+  color:#eef0fa; -webkit-text-fill-color:currentColor; background:none; filter:none;
+  text-shadow:-1px 0 2px #99dce9,1px 0 2px #e4bde9,0 1px 2px #080e19;
+}
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.free-catalog-card)[data-rarity-finish='arcana-secret']:has(.card-type-visual[data-rarity-finish='arcana-secret']) :is(.card-name,.fc-name,.db-tile-name,.db-detail-name,.db-line-name) {
+  background-image:linear-gradient(110deg,#f0f2ff 10%,#a9e7ef 32%,#e8c4ef 49%,#fff0bf 65%,#e7efff 86%);
+  background-size:180% 100%; background-position:var(--cp-lx,50%) 50%;
+  background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:none;
+}

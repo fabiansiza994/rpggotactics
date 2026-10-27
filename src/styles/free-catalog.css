@@ -1,0 +1,32 @@
+.discover-rarities { margin:8px 0; border:1px solid #9b86564d; border-radius:5px; background:#101a25; padding:8px; color:#e5dcc7; }
+.discover-rarities>summary { cursor:pointer; min-height:36px; align-content:center; color:#dec68a; font-weight:700; }
+.discover-rarities>p { font-size:12px; line-height:1.4; }
+.catalog-rarity-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.free-catalog-card { min-width:0; background:linear-gradient(#18232c,#0a121b); border:1px solid #746b54; border-radius:5px; padding:9px; }
+.free-catalog-card .db-detail-art { aspect-ratio:3/2; height:auto; margin:0; position:relative; overflow:hidden; }
+.free-catalog-card .db-detail-art>img { width:100%;height:100%;object-fit:contain; }
+.free-catalog-card .db-detail-name { font:700 18px Georgia,serif; margin:7px 0; padding:5px; }
+.catalog-rules { font-size:13px; line-height:1.5; color:#e4e7df; }
+.catalog-rarity,.catalog-unlock { font-size:12px; line-height:1.45; color:#c7c6b6; }
+.catalog-ownership { font-size:12px; color:#b3a794; }
+[data-owned=true]>.catalog-ownership { color:#a0d3b6; }
+.catalog-progress { display:flex; gap:8px; align-items:center; font-size:12px; }
+.catalog-progress progress { width:100%; min-width:0; accent-color:#b9a474; }
+.catalog-catchup { color:#a4cfc6; }
+.catalog-milestone { padding:14px; margin:12px 0; border:1px solid #c0a76b; border-radius:6px; background:radial-gradient(ellipse at top,#33485255,#101725); }
+.catalog-milestone>h3 { margin:5px 0 12px; color:#eddaa4; font:700 23px Georgia,serif; }
+.catalog-milestone>.free-catalog-card { max-width:350px; margin:auto; animation:catalog-reveal 650ms ease-out both; }
+@keyframes catalog-reveal { from {opacity:0;transform:translateY(12px)} to {opacity:1;transform:none} }
+@media(max-width:1000px) { .catalog-rarity-grid {grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:520px) { .catalog-rarity-grid {grid-template-columns:1fr;} }
+@media(prefers-reduced-motion:reduce) { .catalog-milestone>.free-catalog-card {animation:none;} }
+/* Free catalog remains scrollable inside the existing builder, never pushes controls offscreen. */
+.db-screen:has(.discover-rarities[open]) { overflow-y:auto; }
+/* Ultra has its own restrained gilded lattice; Legendary retains the softer super finish. */
+.cp-effects[data-rarity-finish='ultra'] .cp-foil {
+  background:radial-gradient(ellipse at var(--cp-lx,50%) var(--cp-ly,50%),#f2d49c88,transparent 65%),
+    repeating-linear-gradient(35deg,transparent 0 39px,#f4dda5 40px,transparent 41px 80px),
+    repeating-linear-gradient(145deg,transparent 0 39px,#a1cedb88 40px,transparent 41px 80px);
+  opacity:.18;
+}
+.cp-art-pending { position:absolute;top:4px;right:4px;z-index:4;padding:2px 5px;border:1px solid #a69570;border-radius:3px;background:#0c1724e8;color:#e2d7b9;font:9px system-ui;letter-spacing:.03em;pointer-events:none; }

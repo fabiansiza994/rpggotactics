@@ -1,0 +1,66 @@
+/* Scene-local presentation; only the three offered faces and equipped reverse are rendered. */
+.result-overlay:has(.mission-reward) { background:#020713b0; backdrop-filter:blur(2px); overflow:auto; padding:10px; box-sizing:border-box; }
+:is(.battle, .menu-reward) .result-card.mission-reward { --reward-h:min(470px,calc(100dvh - 210px)); width:min(1080px,calc(100vw - 24px)); max-width:none; max-height:calc(100dvh - 12px); min-width:0; padding:18px 24px; box-sizing:border-box; border-color:#ae915b; background:radial-gradient(ellipse at 50% 10%,#26384bea,#091320eb 75%); box-shadow:0 20px 70px #0008,inset 0 0 40px #142b4055; animation:reward-panel-in 350ms ease both; }
+.mission-reward > header h2 { margin:0; color:#f3d18c; letter-spacing:.18em; }
+.mission-reward > header p { margin:4px 0; font-size:19px; }
+.mission-reward > header small,.mission-reward > footer small { color:#b9cad8; font-size:12px; }
+.mission-reward-options { display:flex; justify-content:center; align-items:start; gap:28px; margin:20px 0 8px; }
+.mission-reward-slot { --reward-glow:#9cb8c8; position:relative; width:calc(var(--reward-h) * .716); flex:0 1 calc(var(--reward-h) * .716); min-width:0; perspective:1100px; animation:reward-arrive 420ms ease both; animation-delay:calc(120ms + var(--reward-index) * 130ms); }
+.mission-reward-slot[data-finish='rare'] { --reward-glow:#76caff; }
+.mission-reward-slot[data-finish='super'] { --reward-glow:#f3cc70; }
+.mission-reward-slot[data-finish='ultra'] { --reward-glow:#bca0ff; }
+.mission-reward-flipper { height:var(--reward-h); position:relative; transform-style:preserve-3d; transition:transform 620ms cubic-bezier(.2,.65,.25,1); }
+.mission-reward-slot:not([data-phase='hidden']) .mission-reward-flipper { transform:rotateY(180deg); }
+.mission-reward-slot[data-phase='revealing'] .mission-reward-flipper { animation:reward-punch 720ms ease both; }
+.mission-reward-back,.mission-reward-front { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:12px; }
+.mission-reward-back { overflow:hidden; box-shadow:0 5px 18px #0008; }
+.mission-reward-back .card-back-face { box-sizing:border-box; width:100%; height:100%; border-radius:12px; font-size:70px; border-color:#c2a76b; }
+.mission-reward-back button { position:absolute; inset:0; width:100%; background:transparent; border:0; color:#f5dc9f; display:flex; flex-direction:column; justify-content:end; align-items:center; padding:20px 8px; cursor:pointer; font-size:17px; text-shadow:0 2px 4px #000; }
+.mission-reward-back small { font-size:11px; }
+.mission-reward-back:has(button:hover),.mission-reward-back:has(button:focus-visible) { box-shadow:0 0 20px #c5b17e88; }
+.mission-reward-front { transform:rotateY(180deg); }
+.mission-reward .mission-reward-face { display:block; position:relative; width:100%; height:100%; box-sizing:border-box; transform:none; margin:0; }
+:is(.battle, .menu-reward) .mission-reward .feature-card .fc-text { overflow:auto; scrollbar-width:thin; font-size:clamp(11px,1vw,14px); }
+.mission-reward .fc-art { min-height:0; }
+.mission-reward-select { position:absolute; inset:0; width:100%; background:transparent; border:0; border-radius:12px; cursor:pointer; }
+.mission-reward-select:focus-visible { outline:3px solid #e9d393; outline-offset:5px; }
+.mission-reward-select:disabled { cursor:default; }
+.mission-reward-status { min-height:30px; padding-top:9px; font-size:12px; color:#c6d4dc; }
+.mission-reward-slot[data-selected='true'] .mission-reward-flipper { translate:0 -5px; filter:drop-shadow(0 0 9px #e3be6480); }
+.mission-reward-slot[data-selected='true'] .mission-reward-select { border:2px solid #f8db8f; }
+.mission-reward-slot[data-selected='true'] .mission-reward-status { color:#ffe7a8; }
+.mission-reward-slot[data-muted='true'] { opacity:.72; }
+.mission-reward-sparks { pointer-events:none; position:absolute; inset:0; display:grid; place-items:center; color:var(--reward-glow); font-size:35px; opacity:0; letter-spacing:20px; }
+.mission-reward-slot[data-phase='revealing'] .mission-reward-sparks { animation:reward-sparks 720ms ease both; }
+.mission-reward-slot[data-finish='common'] .mission-reward-sparks { font-size:18px; }
+.mission-reward > footer { display:grid; justify-items:center; gap:5px; }
+.mission-reward .reward-confirm { margin-top:7px; min-height:44px; padding:9px 28px; border:1px solid #dfbd6d; border-radius:6px; background:linear-gradient(#705027,#302414); color:#fff0cf; font-weight:700; cursor:pointer; }
+.mission-reward[data-confirming='true'] .mission-reward-slot[data-selected='true'] { z-index:2; animation:reward-confirm 450ms ease both; }
+.mission-reward[data-confirming='true'] .mission-reward-slot:not([data-selected='true']) { transition:opacity 300ms,scale 300ms; opacity:0; scale:.88; }
+.mission-reward-stat { height:100%; box-sizing:border-box; display:grid; align-content:center; padding:20px; background:linear-gradient(#253c48,#101b2b); border:2px solid #c1a469; border-radius:12px; color:#e9d8ac; }
+.mission-reward-stat strong { font-size:44px; }
+@keyframes reward-panel-in { from { opacity:0; scale:.97; } to { opacity:1; scale:1; } }
+@keyframes reward-arrive { from { opacity:0; translate:0 18px; } to { opacity:1; translate:0 0; } }
+@keyframes reward-punch { 0%,100% { scale:1; } 45% { scale:1.08; } 80% { scale:1.12; } }
+@keyframes reward-sparks { 0%,40%,100% { opacity:0; } 65% { opacity:.9; text-shadow:0 0 12px var(--reward-glow); scale:1.3; } }
+@keyframes reward-confirm { to { translate:calc((var(--reward-center) - var(--reward-index)) * (100% + 28px)) 0; scale:1.1; filter:drop-shadow(0 0 14px #eed187); } }
+@media (max-height:600px), (max-width:800px) {
+  :is(.battle, .menu-reward) .result-card.mission-reward { --reward-h:clamp(180px,calc(100dvh - 122px),370px); padding:7px 12px; }
+  .mission-reward > header { display:flex; justify-content:center; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .mission-reward > header h2 { font-size:20px; }.mission-reward > header p { font-size:15px; margin:0; }.mission-reward > header small { font-size:10px; }
+  .mission-reward-options { gap:18px; margin:9px 0 0; }.mission-reward-status { min-height:19px; padding-top:4px; font-size:10px; }
+  .mission-reward > footer { grid-template-columns:1fr auto; text-align:left; gap:2px 12px; }.mission-reward > footer .reward-confirm { grid-column:2; grid-row:1 / span 2; margin:0; padding:6px 16px; }.mission-reward > footer small { font-size:10px; }
+  .mission-reward .feature-card .fc-art { height:65px; flex:0 0 65px; aspect-ratio:auto; }
+  .mission-reward .fc-head { font-size:12px; }.mission-reward .fc-name { font-size:12px; }:is(.battle, .menu-reward) .mission-reward .feature-card .fc-text { font-size:11px; line-height:1.2; }.mission-reward .fc-typeline,.mission-reward .fc-support { font-size:9px; }
+}
+/* Attribute mirrors the system preference and enables the same deterministic QA path. */
+.mission-reward[data-reduced-motion],.mission-reward[data-reduced-motion] * { animation:none!important; transition:none!important; }
+.mission-reward[data-reduced-motion] .mission-reward-flipper { transform:none!important; }
+.mission-reward[data-reduced-motion] .mission-reward-front { transform:none; }
+.mission-reward[data-reduced-motion] .mission-reward-slot[data-phase='hidden'] .mission-reward-front { visibility:hidden; }
+.mission-reward[data-reduced-motion] .mission-reward-slot:not([data-phase='hidden']) .mission-reward-back { visibility:hidden; }
+
+.mission-reward .fc-text { position:relative; z-index:1; }
+
+.mission-reward-slot[data-finish="secret"] { --reward-glow:#a8e5e9; }
+.mission-reward .fc-text:focus-visible { outline:1px solid #e1c786; outline-offset:2px; }

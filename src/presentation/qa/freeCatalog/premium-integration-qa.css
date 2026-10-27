@@ -1,0 +1,3 @@
+/* QA tools use one compact scrollable row, leaving the real board its gameplay viewport. */
+.premium-integration-qa > .final-cleanup-controls { flex-wrap:nowrap; height:42px; min-height:42px; max-height:42px; white-space:nowrap; overflow-x:auto; overflow-y:hidden; box-sizing:border-box; }
+.premium-integration-qa > .final-cleanup-controls > * { flex-shrink:0; }

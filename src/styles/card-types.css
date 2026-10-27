@@ -1,0 +1,27 @@
+/* Type is restricted to the title strip and illustration trim. Rules panels stay dark. */
+.card-type-visual { position:absolute; inset:0; pointer-events:none; z-index:2; overflow:hidden; border-radius:inherit; }
+.card-type-wash { display:none; }
+.card-type-icon { position:absolute; top:5px; right:5px; width:20px; height:20px; display:grid; place-items:center; color:var(--type-light,#e2c9f1); background:var(--type-header,#382544); border:1px solid #d8c69766; border-radius:3px; box-shadow:0 1px 3px #0008; }
+.card-type-icon .game-icon { width:14px; height:14px; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='summon']) { --type-header:#642838; --type-light:#c88075; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='attack']) { --type-header:#713620; --type-light:#e3a16a; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='effect']) { --type-header:#4b285d; --type-light:#bc8cc9; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='defense']) { --type-header:#234b65; --type-light:#83cadd; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='movement']) { --type-header:#195354; --type-light:#73d3cd; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='utility']) { --type-header:#304d36; --type-light:#9ec68c; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-type-palette='neutral']) { --type-header:#4b4538; --type-light:#bcb39a; }
+:is(.card-art,.fc-art,.db-tile-art,.db-detail-art,.db-line-art,.world-reward-art,.resolving-card-art,.shop-card-image):has(> .card-type-visual) { position:relative; isolation:isolate; box-shadow:inset 0 0 0 2px var(--type-light); outline:1px solid var(--type-light); outline-offset:-1px; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual) :is(.card-name,.fc-head,.fc-name,.db-tile-name,.db-detail-name,.db-line-name,.world-reward-front figcaption,.resolving-card-name) { background:linear-gradient(100deg,var(--type-header),color-mix(in srgb,var(--type-header) 45%,#101723)); color:#f4ebdb; }
+/* Rare gets the name finish only. Foil never covers the rules or cost. */
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-rarity-finish='rare']) :is(.card-name,.fc-head,.fc-name,.db-tile-name,.db-detail-name,.db-line-name,.world-reward-front figcaption,.resolving-card-name) { color:#eddfb8; text-shadow:0 1px 1px #000,0 0 5px #d9c99c55; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-rarity-finish='ultra']) :is(.card-name,.fc-head,.fc-name,.db-tile-name,.db-detail-name,.db-line-name,.world-reward-front figcaption,.resolving-card-name) { color:#f3d582; text-shadow:0 1px 1px #000,0 0 6px #f0bd6455; }
+:is(.card,.feature-card,.db-tile,.db-detail-card,.db-line,.world-reward-front,.resolving-card-preview,.shop-card-preview,.free-catalog-card):has(.card-type-visual[data-rarity-finish='secret']) :is(.card-name,.fc-head,.fc-name,.db-tile-name,.db-detail-name,.db-line-name,.world-reward-front figcaption,.resolving-card-name) { color:#e9dced; text-shadow:0 1px 1px #000,1px 0 3px #93d9e888,-1px 0 3px #cf9fcf77; }
+/* Solid light ink plus cool/warm refraction keeps long names readable at small sizes. */
+.cp-effects[data-rarity-finish='super'] .cp-foil { opacity:.10; }
+.cp-effects[data-rarity-finish='ultra'] .cp-foil { opacity:.17; }
+.cp-effects[data-rarity-finish='secret'] .cp-foil { opacity:.19; background:radial-gradient(ellipse at var(--cp-lx,50%) var(--cp-ly,50%),#d6c4e2,transparent 62%),repeating-linear-gradient(125deg,transparent 0 17px,#c9e3df 18px,transparent 19px 36px); }
+[data-premium-surface='grid'] .cp-effects .cp-foil { opacity:.075; }
+.db-line-art .card-type-icon { display:none; }
+.db-line-art .cp-effects .cp-foil { opacity:.08; }
+@media(max-height:500px) { .card-type-icon { width:17px; height:17px; top:3px; right:3px; } .card-type-icon .game-icon { width:12px; height:12px; } }
+@media(prefers-reduced-motion:reduce) { .card-type-visual,.cp-effects,.cp-effects * { animation:none!important; transition:none!important; } .cp-effects .cp-foil,.cp-effects .cp-motes { transform:none!important; } .cp-effects .cp-sweep { display:none; } }

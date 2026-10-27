@@ -1,0 +1,6 @@
+import {useEffect,useState} from 'react';
+export const PLAY_MODES=['hub','campaign','skirmish','stories','pvp','friends'] as const;
+export type PlayMode=typeof PLAY_MODES[number];
+export function readPlayMode():PlayMode {const mode=new URLSearchParams(location.search).get('mode');return PLAY_MODES.includes(mode as PlayMode)?mode as PlayMode:'hub';}
+export function navigatePlay(mode:PlayMode,options:{story?:string;friend?:string;queue?:'ranked'}={}){const url=new URL(location.href);if(mode==='hub')url.searchParams.delete('mode');else url.searchParams.set('mode',mode);for(const key of ['story','friend','queue'] as const){if(options[key])url.searchParams.set(key,options[key]!);else url.searchParams.delete(key);}if(url.href!==location.href)history.pushState({},'',url);window.dispatchEvent(new Event('rpggo-play-route'));}
+export function usePlayMode(){const [,setQuery]=useState(()=>location.search);useEffect(()=>{const update=()=>setQuery(location.search);window.addEventListener('popstate',update);window.addEventListener('rpggo-play-route',update);return()=>{window.removeEventListener('popstate',update);window.removeEventListener('rpggo-play-route',update);};},[]);return readPlayMode();}

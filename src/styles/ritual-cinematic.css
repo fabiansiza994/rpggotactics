@@ -1,0 +1,12 @@
+.ritual-cinematic { position:fixed; inset:0; z-index:32; pointer-events:none; display:grid; place-items:center; }
+.ritual-convergence { position:relative; width:min(80vw,650px); height:min(45vh,280px); }
+.ritual-flying-card { position:absolute; margin:0; left:calc(50% - 48px); top:10%; width:96px; height:144px; border:1px solid #d7b269; border-radius:6px; background:#171121; color:#fff0cf; overflow:hidden; box-shadow:0 0 18px #9c6bd655; animation:ritual-converge 1800ms ease-in-out both; }
+.ritual-flying-card img { width:100%; height:100%; object-fit:cover; }
+.ritual-flying-card figcaption { position:absolute; bottom:0; inset-inline:0; padding:5px; background:#130f20e8; font:11px/1.25 Georgia,serif; text-align:center; }
+.ritual-fusion { position:absolute; left:calc(50% - 28px); top:25%; font-size:56px; color:#e9d4ff; opacity:0; text-shadow:0 0 14px #a479e2; animation:ritual-fuse 2100ms ease-out both; }
+.ritual-cinematic-label { position:absolute; inset:85% 0 auto; text-align:center; color:#f0ddb4; font:12px Georgia,serif; letter-spacing:.12em; text-shadow:0 2px 5px #000; animation:ritual-label 3000ms both; }
+@keyframes ritual-converge { 0% {opacity:0;transform:translate(calc(var(--ritual-slot)*112px),35px);} 18%,38% {opacity:1;transform:translate(calc(var(--ritual-slot)*112px),0);} 75% {opacity:1;transform:translate(0,-12px) scale(.7);} 100% {opacity:0;transform:translate(0,-12px) scale(.1);} }
+@keyframes ritual-fuse { 0%,48% {opacity:0;transform:scale(.4);} 72% {opacity:1;transform:scale(1.25);} 100% {opacity:0;transform:scale(1.6);} }
+@keyframes ritual-label {0%,100% {opacity:0;} 15%,88% {opacity:1;} }
+@media(max-height:500px) {.ritual-flying-card {width:64px;height:96px;left:calc(50% - 32px);} .ritual-convergence {height:170px;} .ritual-flying-card figcaption{font-size:9px;padding:3px;} .ritual-cinematic-label {font-size:10px;} }
+@media(prefers-reduced-motion:reduce) { .ritual-flying-card {animation:ritual-still 500ms both; transform:translateX(calc(var(--ritual-slot)*76px));} .ritual-fusion {animation:ritual-label 900ms both;transform:none;text-shadow:none;} .ritual-cinematic-label {animation:ritual-label 900ms both;} @keyframes ritual-still {0%,100% {opacity:0;} 20%,70% {opacity:1;}} }

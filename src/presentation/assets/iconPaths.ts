@@ -1,0 +1,23 @@
+/** One line-engraved icon vocabulary for DOM and Pixi. Coordinates: 24 × 24. */
+export const ICON_PATHS = {
+  frost: 'M12 2v20M3 7l18 10M3 17 21 7M8 4l4 4 4-4M8 20l4-4 4 4M3 11l5-2-1-5M21 13l-5 2 1 5',
+  flame: 'M12 2Q17 8 16 11Q19 9 19 7Q24 20 13 22Q2 23 4 12Q5 8 9 6Q7 13 11 14Q14 12 12 2ZM12 15Q8 20 12 21Q17 20 12 15',
+  poison: 'M9 2h6M10 2v7L4 19q-1 3 3 3h10q4 0 3-3L14 9V2M7 15h10M9 18h1M14 19h1',
+  smoke: 'M3 20h18M6 17Q1 12 8 11Q16 11 10 5M13 17Q21 13 16 10Q12 7 19 3',
+  rebound: 'M2 19 9 5l5 14 7-14M16 5h5v5M6 5h5M11 19h5',
+  neutral: 'M8 5V3h8v2M6 5h12l2 16H4ZM7 11h10v7H7ZM9 8h6',
+  prey: 'M12 2 5 8M19 8 12 2M4 11l8 11 8-11M9 10l3 5 3-5M6 13l3 4M18 13l-3 4',
+  hp: 'M12 21 3 12Q-1 4 6 3Q10 2 12 6Q14 2 18 3Q25 4 21 12Z',
+  energy: 'M14 2 5 14h6l-1 8 9-13h-6Z',
+  move: 'M3 12h17m-6-6 6 6-6 6M3 5h5M3 19h5',
+  deck: 'M5 3h13v17H5ZM2 6v17h13M8 7h7M8 11h7',
+  discard: 'M4 6h16M8 6V3h8v3M6 6l1 16h10l1-16M10 10v8M14 10v8',
+  shield: 'M12 2 21 6l-1 9-8 7-8-7-1-9ZM12 6v11',
+  melee: 'M4 3 18 17M3 7l4-4M14 18l4-4M18 17l4 5M20 3 6 17M17 3l4 4M6 14l4 4M6 17l-4 5',
+  arcane: 'M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9ZM12 7v10M7 12h10',
+  wait: 'M5 3h14M5 21h14M7 3v4l10 10v4M17 3v4L7 17v4',
+  target: 'M12 2v5M12 17v5M2 12h5M17 12h5M12 6a6 6 0 1 1 0 12 6 6 0 1 1 0-12',
+  tile: 'M4 4h16v16H4ZM8 8h8v8H8Z',
+  cross: 'M9 2h6v7h7v6h-7v7H9v-7H2V9h7Z',
+} as const;
+export type IconName = keyof typeof ICON_PATHS;

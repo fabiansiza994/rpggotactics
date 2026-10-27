@@ -1,0 +1,190 @@
+/* One painted cosmetic asset and portrait window for every equipped/preview surface. */
+.profile-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  isolation: isolate;
+  --cosmetic-glow: #c6a1ff;
+  color: var(--cosmetic-glow);
+}
+.profile-frame[data-frame='frame_pact_grove'] {
+  --cosmetic-glow: #8de7ae;
+}
+.profile-frame[data-frame='frame_executioner_oath'] {
+  --cosmetic-glow: #e0473a;
+}
+.profile-frame-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.profile-frame-window {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 20%, #32485b, #091322);
+}
+.profile-frame-window > img,
+.profile-frame-window > .profile-frame-portrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  border-radius: 0;
+}
+.profile-frame-ornament {
+  pointer-events: none;
+}
+.profile-frame-glint {
+  opacity: 0.18;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .shop-cosmetic-art .profile-frame-glint {
+    animation: cosmetic-gem-light 7s ease-in-out infinite;
+  }
+}
+@keyframes cosmetic-gem-light {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-frame-glint {
+    animation: none;
+    opacity: 0.18;
+  }
+}
+/* The ornament has its own transparent safety margin; nothing protrudes beyond this stage. */
+.shop-cosmetic-art {
+  position: relative;
+  contain: layout paint;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 360px;
+  min-height: 0;
+  padding: 10px;
+  background: radial-gradient(ellipse, #3a2f5c66, #08121e00 72%);
+}
+.shop-cosmetic-art:has([data-frame='frame_pact_grove']) {
+  background: radial-gradient(ellipse, #1c533855, #08121e00 72%);
+}
+.shop-cosmetic-art:has([data-frame='frame_executioner_oath']) {
+  background: radial-gradient(ellipse, #6a141455, #08121e00 72%);
+}
+.shop-cosmetic-art .profile-frame {
+  box-sizing: border-box;
+  width: min(100%, 240px);
+  height: 320px;
+  max-height: 100%;
+  max-width: 100%;
+  aspect-ratio: 3/4;
+}
+.shop-offer .shop-cosmetic-art {
+  height: 200px;
+}
+.shop-offer .shop-cosmetic-art .profile-frame {
+  width: 135px;
+  height: 180px;
+}
+.shop-content-cosmetic {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.shop-content-cosmetic > span {
+  display: grid;
+  gap: 2px;
+}
+.shop-content-frame {
+  width: 54px;
+  height: 72px;
+  flex: none;
+  overflow: hidden;
+}
+.shop-content-frame .shop-cosmetic-art {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  background: none;
+}
+.shop-content-frame .shop-cosmetic-art .profile-frame {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+.lobby-portrait:has(.profile-frame) {
+  mask-image: none;
+}
+@media (max-height: 450px) and (orientation: landscape) {
+  .shop-offer .shop-cosmetic-art {
+    height: 140px;
+    padding: 8px;
+  }
+  .shop-offer .shop-cosmetic-art .profile-frame {
+    width: 93px;
+    height: 124px;
+  }
+  .shop-detail-art > .shop-cosmetic-art {
+    height: 230px;
+    padding: 6px;
+  }
+  .shop-detail-art .shop-cosmetic-art .profile-frame {
+    width: 159px;
+    height: 212px;
+  }
+  .shop-content-frame .shop-cosmetic-art .profile-frame {
+    width: 100%;
+    height: 100%;
+  }
+}
+.shop-excluded {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed #b79b6566;
+  border-radius: 8px;
+  color: #cbbd9e;
+  font-size: 14px;
+}
+.shop-excluded ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.shop-price s {
+  opacity: 0.6;
+  margin-right: 6px;
+  font-size: 0.8em;
+}
+.shop-equip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+}
+.shop-equip button {
+  min-height: 44px;
+}
+.shop-locked-note {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-left: 3px solid #c8423a;
+  border-radius: 6px;
+  background: #3a141433;
+  color: #e8d3c0;
+  font-size: 14px;
+}

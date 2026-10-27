@@ -1,0 +1,27 @@
+.campaign-selected-champion{display:flex;align-items:center;gap:10px;max-width:100%;padding:8px;border:1px solid #8b7549;border-radius:8px;background:linear-gradient(110deg,#152334eb,#080f1ce0);margin:8px 0 14px}
+.campaign-selected-champion>img{width:48px;height:60px;object-fit:cover;object-position:top;border:1px solid #b89a60;border-radius:4px;flex:none}
+.campaign-selected-champion>div{min-width:0;display:grid;gap:2px}.campaign-selected-champion strong{font:700 18px Georgia,serif;color:#f0dfb5}.campaign-selected-champion small{font-size:12px;color:#d0c7b3;line-height:1.35}
+.campaign-selected-champion button{margin-left:auto;min-height:44px;padding:6px 10px;border:1px solid #ac915c;border-radius:5px;background:#172a3b;color:#f4dfad;cursor:pointer;font:600 12px system-ui;max-width:130px}
+.campaign-story-fixed{color:#d7bb7b;font-size:11px;line-height:1.4}
+.campaign-champion-dialog{padding:0;width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 28px);border:1px solid #b49960;border-radius:12px;background:#0a1422;color:#eee5d2;box-shadow:0 22px 70px #000b;overflow:hidden}
+.campaign-champion-dialog::backdrop{background:#030811b8}
+.campaign-selector-panel{display:flex;flex-direction:column;max-height:calc(100dvh - 30px)}
+.campaign-selector-panel>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid #887345;background:linear-gradient(115deg,#203044,#0c1726);flex:none}
+.campaign-selector-panel h2{font:700 25px Georgia,serif;margin:5px 0;color:#f1dfb1}.campaign-selector-panel header span{font-size:11px;letter-spacing:.08em;color:#c5ab73}.campaign-selector-panel p{margin:0;color:#bdb6a7;font-size:12px}
+.campaign-selector-close{width:44px;height:44px;flex:none;font-size:28px;background:#142131;color:#edd8aa;border:1px solid #927d55;border-radius:50%;cursor:pointer}
+.campaign-champion-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;padding:18px;overflow:auto;overscroll-behavior:contain;min-height:0}
+.campaign-champion-option{min-width:0;display:flex;flex-direction:column;align-items:stretch;text-align:left;border:1px solid #655b49;border-radius:8px;background:linear-gradient(#1a293b,#0b1523);padding:5px;color:#f4e7c7;cursor:pointer;transition:border-color 120ms,box-shadow 120ms}
+.campaign-champion-option>img{width:100%;height:130px;object-fit:cover;object-position:50% 0%;border-radius:4px}.campaign-champion-option>span{display:grid;gap:5px;padding:9px 6px}.campaign-champion-option strong{font:700 18px Georgia,serif}.campaign-champion-option small{font-size:12px;color:#c8c6b6}.campaign-champion-option em{font-style:normal;font-size:11px;color:#a7c6d7}
+.campaign-champion-option[aria-pressed=true]{border-color:#eed08b;box-shadow:inset 0 0 0 1px #c5a05a,0 0 14px #b78c3329}.campaign-champion-option:hover:not(:disabled){border-color:#e3c080}.campaign-champion-option:disabled{opacity:.55;cursor:not-allowed}
+.campaign-champion-dialog button:focus-visible,.campaign-selected-champion button:focus-visible{outline:2px solid #8ed7ef;outline-offset:2px}
+@media(max-height:500px) and (orientation:landscape){.campaign-selector-panel>header{padding:8px 12px}.campaign-selector-panel h2{font-size:20px;margin:2px 0}.campaign-champion-grid{grid-template-columns:repeat(3,minmax(0,1fr));padding:10px;gap:8px}.campaign-champion-option{flex-direction:row;align-items:center;min-height:100px}.campaign-champion-option>img{width:60px;height:86px;flex:none}.campaign-champion-option strong{font-size:15px}.campaign-champion-option>span{padding:5px;gap:4px}.campaign-selected-champion{gap:6px;padding:6px;margin-bottom:8px}.campaign-selected-champion>img{width:36px;height:46px}.campaign-selected-champion strong{font-size:15px}.campaign-selected-champion small{font-size:11px}}
+@media(max-width:600px){.campaign-champion-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.campaign-champion-option{transition:none}}
+/* Let the action wrap rather than collide with names in the narrow campaign art column. */
+.campaign-selected-champion{flex-wrap:wrap;box-sizing:border-box}
+.campaign-selected-champion>div{flex:1;min-width:80px}
+.campaign-selected-champion button{flex-shrink:0}
+@media(max-height:500px) and (orientation:landscape){.campaign-selected-champion button{flex-basis:100%;max-width:none;margin-left:0}.campaign-story-fixed{flex-basis:100%}}
+/* Status is descriptive, not a second action inside the full-card button. */
+.campaign-champion-option em{justify-self:start;width:fit-content;font:600 9px/1.25 system-ui;letter-spacing:.06em;padding:3px 6px;border:1px solid #9c86594d;border-radius:4px;background:#101d2c;color:#c7b68d}
+.campaign-champion-option em[data-status=ACTIVO]{background:#17332f;color:#a5ddd2;border-color:#6c9c8c66}

@@ -1,0 +1,937 @@
+/* Social phase: Amigos screen, 1:1 chat, PvP challenges, in-match chat. Same ink + gold as the lobby. */
+:root {
+  --social-gold: #d7b978;
+  --social-ink: #07101a;
+  --social-panel: rgb(12 24 38 / 0.92);
+  --social-line: rgb(215 185 120 / 0.38);
+  --social-text: #efe5cf;
+  --social-muted: #a9b8c2;
+  --social-blue: #78d4ee;
+  --social-online: #6fd68a;
+  --social-pvp: #e3a64f;
+}
+
+/* ── Shared bits ───────────────────────────────────────────── */
+.social-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font: 800 11px/1 var(--font);
+  font-style: normal;
+  color: #1a1206;
+  background: #e9c46a;
+  box-shadow: 0 0 0 2px #07101a;
+}
+.menu-nav-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.social-avatar {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+}
+.social-avatar img,
+.social-avatar i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  border-radius: 8px;
+  background: #13263a;
+}
+.social-avatar .profile-frame {
+  padding: 0;
+}
+.social-presence-dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #07101a;
+  background: #5b6670;
+}
+[data-presence='ONLINE'] > .social-presence-dot {
+  background: var(--social-online);
+}
+[data-presence='IN_PVP'] > .social-presence-dot {
+  background: var(--social-pvp);
+}
+.social-error {
+  margin: 6px 0;
+  color: #ffb4a8;
+  font-size: 13px;
+}
+.social-empty {
+  margin: 12px 4px;
+  color: var(--social-muted);
+  font-size: 14px;
+}
+.social-screen button,
+.social-dialog button,
+.social-challenge-pop button,
+.match-chat button,
+.match-chat-fab {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #8e7a52;
+  border-radius: 6px;
+  color: var(--social-text);
+  background: linear-gradient(#1e3a4f, #0f2030);
+  font-weight: 700;
+  cursor: pointer;
+}
+.social-screen button:disabled,
+.social-dialog button:disabled,
+.match-chat button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.social-screen button.is-primary,
+.social-dialog button.is-primary,
+.social-challenge-pop button.is-primary {
+  border-color: var(--social-gold);
+  background: linear-gradient(#2c6077, #12364a);
+}
+.social-dialog button.is-danger {
+  border-color: #c77b6a;
+  background: linear-gradient(#5a2a26, #301513);
+}
+:is(.social-screen, .social-dialog, .match-chat) button:focus-visible,
+:is(.social-screen, .match-chat) :is(input, textarea):focus-visible {
+  outline: 2px solid var(--social-blue);
+  outline-offset: 2px;
+}
+
+/* ── Amigos screen ─────────────────────────────────────────── */
+.social-screen {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: max(14px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(14px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  color: var(--social-text);
+  background: var(--social-ink);
+  overflow: hidden;
+}
+.social-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, #07101af2 0%, #07101acc 55%, #07101af2 100%),
+    var(--social-backdrop) center / cover no-repeat;
+  filter: saturate(0.7);
+}
+.social-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(90deg, var(--social-gold), rgb(215 185 120 / 0.1) 60%, transparent)
+    1;
+}
+.social-header h1 {
+  margin: 2px 0 0;
+  font:
+    400 30px/1 Georgia,
+    serif;
+  letter-spacing: 0.02em;
+}
+.social-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--social-gold);
+}
+.social-back {
+  flex: 0 0 auto;
+}
+.social-live {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--social-muted);
+}
+.social-live i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a6d3b;
+}
+.social-live[data-live='LIVE'] i {
+  background: var(--social-online);
+}
+.social-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  gap: 18px;
+  padding-top: 14px;
+}
+.social-list,
+.social-conversation {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--social-line);
+  border-radius: 8px;
+  background: var(--social-panel);
+}
+.social-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 8px 0;
+  border-bottom: 1px solid var(--social-line);
+}
+.social-screen .social-tabs button {
+  flex: 1;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.social-screen .social-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--social-gold);
+  background: rgb(215 185 120 / 0.08);
+}
+.social-tabs span {
+  color: var(--social-muted);
+  font-weight: 600;
+}
+.social-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  overscroll-behavior: contain;
+}
+.social-friends,
+.social-results,
+.social-requests {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.social-friend {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.03);
+}
+.social-friend.is-selected {
+  border-color: var(--social-gold);
+  background: rgb(215 185 120 / 0.08);
+}
+.social-screen .social-friend-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.social-friend-main > .social-name {
+  min-width: 0;
+  display: grid;
+}
+.social-friend-main b,
+.social-results b,
+.social-requests b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.social-friend-main small {
+  color: var(--social-muted);
+  font-weight: 500;
+  font-size: 12px;
+}
+.social-friend[data-presence='ONLINE'] .social-friend-main small {
+  color: var(--social-online);
+}
+.social-friend[data-presence='IN_PVP'] .social-friend-main small {
+  color: var(--social-pvp);
+}
+.social-friend-actions {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding-right: 6px;
+}
+.social-challenge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.social-challenge .game-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--social-gold);
+}
+.social-screen .social-more {
+  padding: 0 10px;
+  font-size: 18px;
+}
+.social-menu {
+  position: absolute;
+  right: 6px;
+  top: calc(100% + 4px);
+  z-index: 5;
+  display: grid;
+  min-width: 170px;
+  padding: 4px;
+  border: 1px solid var(--social-line);
+  border-radius: 8px;
+  background: #0b1826;
+  box-shadow: 0 8px 24px #000a;
+}
+.social-screen .social-menu button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.social-screen .social-menu button:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+.social-search form {
+  display: flex;
+  gap: 6px;
+}
+.social-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #8e7a52;
+  border-radius: 6px;
+  color: var(--social-text);
+  background: #06111c;
+  font-size: 15px;
+}
+.social-results {
+  margin-top: 8px;
+}
+.social-results li,
+.social-requests li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.03);
+}
+.social-results li > b,
+.social-requests li > b {
+  flex: 1;
+  min-width: 0;
+}
+.social-results small,
+.social-requests small {
+  color: var(--social-muted);
+}
+.social-requests li > span {
+  display: flex;
+  gap: 6px;
+}
+.social-section {
+  margin: 16px 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--social-gold);
+}
+.social-invite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--social-gold);
+  border-radius: 8px;
+  background: linear-gradient(110deg, rgb(44 96 119 / 0.45), rgb(12 24 38 / 0.9));
+}
+.social-invite.is-outgoing {
+  border-style: dashed;
+  border-color: var(--social-line);
+  background: rgb(255 255 255 / 0.03);
+}
+.social-invite > .game-icon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  color: var(--social-gold);
+}
+.social-invite > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.social-invite small {
+  color: var(--social-muted);
+}
+.social-invite-actions {
+  display: flex;
+  gap: 6px;
+}
+.social-conversation-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--social-line);
+}
+.social-conversation-head > .social-name {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.social-conversation-head small {
+  color: var(--social-muted);
+}
+.social-placeholder {
+  margin: auto;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: var(--social-muted);
+}
+.social-placeholder .game-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--social-gold);
+  opacity: 0.6;
+}
+
+/* ── Chat (shared by the Amigos screen and the match panel) ── */
+.social-chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.social-chat-log {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.social-chat-empty,
+.social-chat-more,
+.social-chat-day {
+  align-self: center;
+  color: var(--social-muted);
+  font-size: 12px;
+  text-align: center;
+}
+.social-chat-day {
+  margin: 6px 0 2px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.social-msg {
+  position: relative;
+  max-width: 80%;
+  align-self: flex-start;
+  padding: 7px 10px 5px;
+  border-radius: 10px 10px 10px 3px;
+  background: #142838;
+  border: 1px solid rgb(120 212 238 / 0.18);
+}
+.social-msg.is-mine {
+  align-self: flex-end;
+  border-radius: 10px 10px 3px 10px;
+  background: #2a3a26;
+  border-color: rgb(215 185 120 / 0.3);
+}
+.social-msg p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.social-msg-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--social-muted);
+}
+.social-chat .social-msg-report {
+  min-height: 22px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--social-muted);
+  font-size: 11px;
+  opacity: 0.6;
+}
+.social-chat .social-msg-report:hover,
+.social-chat .social-msg-report:focus-visible {
+  opacity: 1;
+}
+.social-report-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.social-chat .social-report-menu button {
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.social-chat-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--social-line);
+  color: var(--social-muted);
+  font-size: 13px;
+}
+.social-chat-error {
+  margin: 0;
+  padding: 0 12px 8px;
+  color: #ffb4a8;
+  font-size: 12px;
+}
+.social-composer {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid var(--social-line);
+}
+.social-composer textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 96px;
+  padding: 9px 10px;
+  resize: none;
+  border: 1px solid #8e7a52;
+  border-radius: 6px;
+  color: var(--social-text);
+  background: #06111c;
+  font: 14px/1.35 var(--font);
+  field-sizing: content;
+}
+.social-count {
+  position: absolute;
+  right: 90px;
+  top: -18px;
+  font-size: 11px;
+  color: var(--social-muted);
+}
+.social-chat.is-compact .social-chat-log {
+  padding: 8px;
+}
+.social-chat.is-compact .social-msg {
+  max-width: 88%;
+}
+
+/* ── Dialogs, challenge pop-up and toasts ──────────────────── */
+.social-dialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--social-gold);
+  border-radius: 8px;
+  color: var(--social-text);
+  background: linear-gradient(135deg, #152638, #060d17 70%);
+  box-shadow: 0 20px 60px #000c;
+}
+.social-dialog::backdrop {
+  background: #030812c4;
+}
+.social-dialog h2 {
+  margin: 0 0 10px;
+  font:
+    400 22px Georgia,
+    serif;
+}
+.social-dialog p {
+  color: var(--social-muted);
+}
+.social-dialog fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+.social-dialog legend {
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--social-gold);
+}
+.social-dialog fieldset button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.social-dialog fieldset button[aria-pressed='true'] {
+  border-color: var(--social-gold);
+  background: linear-gradient(#2c6077, #12364a);
+}
+.social-dialog .game-icon {
+  width: 16px;
+  height: 16px;
+}
+.social-dialog footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.social-dialog-note {
+  font-size: 13px;
+}
+.social-challenge-pop {
+  position: fixed;
+  z-index: 300;
+  left: 50%;
+  top: max(12px, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 24px));
+  padding: 6px;
+  border-radius: 10px;
+  background: #07101af0;
+  box-shadow: 0 12px 40px #000c;
+  animation: social-drop 0.25s ease-out;
+}
+.social-challenge-pop .social-invite {
+  margin: 0;
+}
+.social-challenge-pop .social-pop-later {
+  display: block;
+  margin: 6px 0 0 auto;
+  min-height: 30px;
+  font-size: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--social-muted);
+}
+.social-toasts {
+  position: fixed;
+  z-index: 290;
+  left: 50%;
+  top: max(10px, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  pointer-events: none;
+}
+.social-toast {
+  pointer-events: auto;
+  max-width: min(340px, calc(100vw - 24px));
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--social-gold);
+  border-radius: 8px;
+  color: var(--social-text);
+  background: #0c1828f2;
+  box-shadow: 0 6px 20px #0009;
+  font-weight: 700;
+  text-align: left;
+  animation: social-rise 0.25s ease-out;
+}
+.social-toast.is-warn {
+  border-color: #c99a5a;
+  color: #f6d7a6;
+}
+@keyframes social-drop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+@keyframes social-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* ── In-match chat ─────────────────────────────────────────── */
+.pvp-match-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  height: 100dvh;
+  overflow: hidden;
+}
+.pvp-match-layout > .battle {
+  min-width: 0;
+}
+.match-chat.is-docked {
+  position: relative;
+  /* Above the result/reconnect overlays so friends can still talk ("gg") after the match. */
+  z-index: 120;
+  width: 300px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: var(--social-text);
+  border-left: 1px solid var(--social-line);
+  background: linear-gradient(180deg, #0c1a28, #070f18);
+}
+.match-chat.is-docked.is-collapsed {
+  width: 44px;
+}
+.match-chat button.match-chat-rail {
+  height: 100%;
+  width: 44px;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.match-chat-rail b {
+  writing-mode: vertical-rl;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.match-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--social-line);
+}
+.match-chat-head .social-avatar {
+  width: 36px;
+  height: 36px;
+}
+.match-chat-head > .social-name {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.match-chat-head b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-chat-head small {
+  color: var(--social-muted);
+  font-size: 11px;
+}
+.match-chat button.match-chat-close {
+  min-width: 40px;
+  padding: 0;
+  font-size: 18px;
+}
+/* Phones/tablets: compact button + drawer; never permanently on screen. */
+.match-chat-fab {
+  position: fixed;
+  z-index: 120;
+  left: max(8px, env(safe-area-inset-left));
+  /* Mid-left: clear of the terrain button above and the deck pile/hand below. */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 18px;
+  box-shadow: 0 4px 14px #000a;
+  -webkit-tap-highlight-color: transparent;
+}
+.match-chat-fab .social-badge {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+}
+.match-chat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  background: #03081266;
+}
+.match-chat.is-drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(360px, 62vw);
+  display: flex;
+  flex-direction: column;
+  padding-left: env(safe-area-inset-left);
+  color: var(--social-text);
+  border-right: 1px solid var(--social-gold);
+  background: #0a1724f7;
+  box-shadow: 8px 0 30px #000b;
+  animation: social-slide 0.2s ease-out;
+}
+@keyframes social-slide {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+}
+
+/* ── Phones (landscape) and narrow screens ─────────────────── */
+@media (max-width: 900px) {
+  .social-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .social-screen.has-chat .social-list,
+  .social-screen:not(.has-chat) .social-conversation {
+    display: none;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .social-screen {
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .social-header {
+    gap: 12px;
+    padding-bottom: 6px;
+  }
+  .social-header h1 {
+    font-size: 20px;
+  }
+  .social-eyebrow {
+    font-size: 8px;
+  }
+  .social-body {
+    padding-top: 8px;
+    gap: 10px;
+  }
+  .social-scroll {
+    padding: 6px;
+  }
+  .social-screen .social-friend-main {
+    min-height: 48px;
+    padding: 4px 6px;
+  }
+  .social-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  .social-conversation-head {
+    padding: 6px 10px;
+  }
+  .social-chat-log {
+    padding: 8px;
+  }
+  .social-challenge span {
+    display: none;
+  }
+  .social-challenge::after {
+    content: 'PvP';
+  }
+  .social-dialog {
+    padding: 12px;
+  }
+  .social-dialog h2 {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .social-dialog p {
+    margin: 6px 0;
+  }
+  .social-challenge-pop {
+    top: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .social-toast,
+  .social-challenge-pop,
+  .match-chat.is-drawer {
+    animation: none;
+  }
+}
+
+/* Friend identity and match history own this view; conversation stays in the global drawer. */
+.social-screen {height:auto;min-height:100dvh;overflow:visible;}
+.social-screen .social-body {align-items:start;}
+.social-screen .social-list,.social-friend-detail {min-width:0;}
+.social-screen .social-scroll {max-height:none;overflow:visible;}
+.social-friend-detail {background:var(--social-panel);border:1px solid var(--social-line);border-radius:14px;padding:20px;}
+.friend-profile-card {display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.friend-profile-card>.social-avatar {width:88px;height:88px;}
+.friend-profile-card h2 {margin:0;color:var(--social-gold);font-size:26px;}
+.friend-profile-card p {margin:6px 0;}
+.friend-profile-actions {display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+.social-avatar,.social-avatar img,.social-avatar .profile-frame {aspect-ratio:1;border-radius:50%;}
+.social-avatar img {object-position:center;}
+.social-friend-detail .pvp-history.is-embedded {height:auto;max-height:none;overflow:visible;padding:0;}
+.social-friend-detail .pvp-history-list {overflow:visible;max-height:none;}
+@media(max-width:900px){
+ .social-screen.has-chat .social-list{display:none;}
+ .social-screen:not(.has-chat) .social-friend-detail{display:none;}
+ .social-friend-detail{padding:12px;}
+ .friend-profile-card{gap:10px;}
+ .friend-profile-card>.social-avatar{width:56px;height:56px;}
+ .friend-profile-card h2{font-size:21px;}
+ .friend-profile-actions{margin-left:0;}
+ .friend-profile-actions button{min-height:40px;}
+}
+
+.social-friend-detail .pvp-history-header h1 {font-size:22px;margin:18px 0 8px;}
+.social-friend-detail .pvp-history-list button {grid-template-columns:75px 38px 18px 38px minmax(110px,1fr) 95px 95px 52px 42px;gap:8px;padding:12px;}
+.pvp-history-rival>.social-avatar {display:inline-block;width:28px;height:28px;vertical-align:middle;margin-right:5px;}
+@media(max-width:1200px){.social-friend-detail .pvp-history-list button{grid-template-columns:75px 34px 16px 34px minmax(110px,1fr);}.social-friend-detail .pvp-history-list button>span:nth-last-child(-n+4){grid-row:auto;grid-column:auto;}}
+@media(max-width:1200px){
+ .social-friend-detail .pvp-history-list button>.history-mode{grid-column:1/3;}
+ .social-friend-detail .pvp-history-list button>span:nth-last-child(3){grid-column:3/-1;}
+ .social-friend-detail .pvp-history-list button>span:nth-last-child(2){grid-column:1/3;}
+ .social-friend-detail .pvp-history-list button>span:last-child{grid-column:3/-1;}
+}

@@ -1,0 +1,137 @@
+/*
+ * Store modal hero shot (StoreHeroShot.tsx): a 3/4 angled card with depth. The base angle is
+ * added to the existing premium pointer tilt (--cp-rx / --cp-ry from useCardPremiumEffect), so
+ * hovering still reacts while the card keeps its pose. Reduced motion: no entrance animation.
+ */
+.shop-hero-shot {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 0 22px;
+  animation: shop-hero-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.shop-hero-stage {
+  perspective: 1100px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.shop-detail-art .shop-hero-stage .shop-card-preview[data-premium-surface='large'] {
+  transform: perspective(1100px) rotateY(calc(-17deg + var(--cp-ry, 0deg))) rotateX(calc(5deg + var(--cp-rx, 0deg)))
+    rotateZ(-1.5deg) translateZ(0);
+  transform-origin: 50% 60%;
+  transition: transform 220ms ease;
+  box-shadow:
+    -18px 22px 34px #000a,
+    -4px 6px 12px #0008,
+    inset 0 0 0 2px #0a101b;
+}
+.shop-detail-art .shop-hero-stage .shop-card-preview[data-premium-surface='large']:hover {
+  transform: perspective(1100px) rotateY(calc(-11deg + var(--cp-ry, 0deg))) rotateX(calc(3deg + var(--cp-rx, 0deg)))
+    rotateZ(-1deg) translateY(-4px);
+}
+.shop-hero-shot[data-showcase] .shop-card-preview {
+  border-color: #e7c77b;
+}
+.shop-hero-floor {
+  position: absolute;
+  left: 18%;
+  right: 12%;
+  bottom: 4px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #000c 0%, #0000 70%);
+  filter: blur(2px);
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+.shop-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.shop-hero-badge {
+  font: 700 11px/1 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid #a68b56;
+  background: #0d1622d9;
+  color: #e9d9b4;
+}
+.shop-hero-badge.is-star {
+  border-color: #9bd7ef;
+  color: #cdeefb;
+}
+.shop-hero-badge.is-premium {
+  border-color: #f0cf83;
+  color: #1a1206;
+  background: linear-gradient(90deg, #f3d48a, #c99b4a);
+}
+.shop-hero-badge.rarity-rare {
+  border-color: #d9b464;
+}
+.shop-hero-badge.rarity-uncommon {
+  border-color: #7fb5d6;
+}
+/* List: offers holding a Showcase Rare get a premium ribbon and a warmer border. */
+.shop-offer[data-premium-offer] {
+  position: relative;
+  border-color: #e0bd70;
+  box-shadow:
+    0 0 0 1px #e0bd7055,
+    0 10px 24px #0007;
+}
+.shop-premium-ribbon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  font: 800 10px/1 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: #1a1206;
+  background: linear-gradient(90deg, #f3d48a, #c99b4a);
+  box-shadow: 0 2px 8px #0008;
+}
+.shop-section[data-category='PREMIUM'] .shop-section-title h2 {
+  color: #f0cf83;
+}
+@keyframes shop-hero-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shop-hero-shot {
+    animation: none;
+  }
+  .shop-detail-art .shop-hero-stage .shop-card-preview[data-premium-surface='large'] {
+    transition: none;
+  }
+}
+/* Phones in landscape: a softer angle so the text stays readable in the short modal. */
+@media (max-height: 500px) {
+  .shop-detail-art .shop-hero-stage .shop-card-preview[data-premium-surface='large'] {
+    transform: perspective(900px) rotateY(calc(-10deg + var(--cp-ry, 0deg))) rotateX(calc(3deg + var(--cp-rx, 0deg)));
+  }
+  .shop-hero-shot {
+    padding-bottom: 12px;
+    gap: 6px;
+  }
+  .shop-hero-badge {
+    font-size: 9px;
+    padding: 4px 7px;
+  }
+}

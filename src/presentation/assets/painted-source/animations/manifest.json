@@ -1,0 +1,172 @@
+{
+  "mage": {
+    "sourceScale": 0.7072691552062869,
+    "frameCount": 24,
+    "columns": 3,
+    "rows": 8,
+    "frames": {
+      "idle": {
+        "start": 0,
+        "count": 6,
+        "fps": 6
+      },
+      "walk": {
+        "start": 6,
+        "count": 6,
+        "fps": 10
+      },
+      "cast": {
+        "start": 12,
+        "count": 6,
+        "fps": 12
+      },
+      "hit": {
+        "start": 18,
+        "count": 3,
+        "fps": 12
+      },
+      "death": {
+        "start": 21,
+        "count": 3,
+        "fps": 12
+      }
+    },
+    "runtimeBytes": 378634
+  },
+  "orc_warrior": {
+    "sourceScale": 0.7495029821073559,
+    "frameCount": 24,
+    "columns": 3,
+    "rows": 8,
+    "frames": {
+      "idle": {
+        "start": 0,
+        "count": 6,
+        "fps": 6
+      },
+      "walk": {
+        "start": 6,
+        "count": 6,
+        "fps": 10
+      },
+      "attack": {
+        "start": 12,
+        "count": 6,
+        "fps": 12
+      },
+      "hit": {
+        "start": 18,
+        "count": 3,
+        "fps": 12
+      },
+      "death": {
+        "start": 21,
+        "count": 3,
+        "fps": 12
+      }
+    },
+    "runtimeBytes": 436794
+  },
+  "shadow_wolf": {
+    "sourceScale": 0.5208333333333334,
+    "frameCount": 12,
+    "columns": 3,
+    "rows": 4,
+    "frames": {
+      "idle": {
+        "start": 0,
+        "count": 3,
+        "fps": 6
+      },
+      "run": {
+        "start": 3,
+        "count": 3,
+        "fps": 12
+      },
+      "attack": {
+        "start": 6,
+        "count": 3,
+        "fps": 12
+      },
+      "hit": {
+        "start": 9,
+        "count": 2,
+        "fps": 12
+      },
+      "death": {
+        "start": 11,
+        "count": 1,
+        "fps": 12
+      }
+    },
+    "runtimeBytes": 113288
+  },
+  "dark_shaman": {
+    "sourceScale": 0.7162426614481409,
+    "frameCount": 12,
+    "columns": 3,
+    "rows": 4,
+    "frames": {
+      "idle": {
+        "start": 0,
+        "count": 3,
+        "fps": 6
+      },
+      "walk": {
+        "start": 3,
+        "count": 3,
+        "fps": 10
+      },
+      "cast": {
+        "start": 6,
+        "count": 3,
+        "fps": 12
+      },
+      "hit": {
+        "start": 9,
+        "count": 2,
+        "fps": 12
+      },
+      "death": {
+        "start": 11,
+        "count": 1,
+        "fps": 12
+      }
+    },
+    "runtimeBytes": 245288
+  },
+  "stone_brute": {
+    "sourceScale": 0.7209775967413442,
+    "frameCount": 12,
+    "columns": 3,
+    "rows": 4,
+    "frames": {
+      "idle": {
+        "start": 0,
+        "count": 3,
+        "fps": 6
+      },
+      "walk_heavy": {
+        "start": 3,
+        "count": 3,
+        "fps": 12
+      },
+      "attack": {
+        "start": 6,
+        "count": 3,
+        "fps": 12
+      },
+      "hit": {
+        "start": 9,
+        "count": 2,
+        "fps": 12
+      },
+      "death": {
+        "start": 11,
+        "count": 1,
+        "fps": 12
+      }
+    },
+    "runtimeBytes": 227802
+  }
+}

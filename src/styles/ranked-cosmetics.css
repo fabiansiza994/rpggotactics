@@ -1,0 +1,49 @@
+/* Equipped Ranked Reward Track cosmetics: functional placement only (art = the track previews). */
+.ranked-crest {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  flex: none;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+.ranked-name-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-width: 0;
+}
+.ranked-victory-badge {
+  display: block;
+  width: clamp(56px, 12vmin, 96px);
+  height: auto;
+  margin: 0 auto 0.25rem;
+  filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.55));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ranked-victory-badge {
+    animation: ranked-badge-stamp 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+}
+@keyframes ranked-badge-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rrt-cosmetic-equip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.rrt-cosmetic-equip small {
+  flex-basis: 100%;
+  opacity: 0.75;
+}

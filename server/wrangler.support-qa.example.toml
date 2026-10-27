@@ -1,0 +1,27 @@
+# Template only. Placeholder database id deliberately prevents accidental production use.
+# Copy to an ignored local config, verify QA bindings and get approval before deploy/real mail.
+name = "rpggo-tactics-support-qa"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "REPLACE_WITH_ISOLATED_QA_DATABASE_NAME"
+database_id = "REPLACE_WITH_ISOLATED_QA_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[send_email]]
+name = "SUPPORT_EMAIL"
+# Add destination_address privately: the single verified administrator recipient.
+# Do not set remote=true for local tests: that can send real email.
+
+[vars]
+PUBLIC_SUPPORT_ENABLED = "0"
+SUPPORT_EMAIL_ENABLED = "0"
+SUPPORT_EMAIL_PROVIDER = "CLOUDFLARE"
+# Set ALLOWED_ORIGINS to the exact QA frontend origin.
+# Configure SUPPORT_EMAIL_TO, SUPPORT_EMAIL_FROM, PUBLIC_SUPPORT_TURNSTILE_SECRET privately.
+
+# Enable ONLY in the authorized QA deployment after checking service availability/usage.
+# [triggers]
+# crons = ["*/5 * * * *"]

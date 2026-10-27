@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <!-- PLACEHOLDER for frame_executioner_oath (vector stand-in until Codex paints the final webp).
+       Portrait window = rect x102 y148 w396 h554 rx100, left transparent. -->
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a3d44"/><stop offset=".45" stop-color="#16181d"/><stop offset="1" stop-color="#2b2e35"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2c27c"/><stop offset=".5" stop-color="#9c7434"/><stop offset="1" stop-color="#c9a35a"/>
+    </linearGradient>
+    <linearGradient id="crimson" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d0362c"/><stop offset="1" stop-color="#5e0f12"/>
+    </linearGradient>
+    <mask id="window">
+      <rect width="600" height="800" fill="#fff"/>
+      <rect x="102" y="148" width="396" height="554" rx="100" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#window)">
+    <rect x="70" y="112" width="460" height="626" rx="128" fill="url(#steel)" stroke="#0b0c0f" stroke-width="6"/>
+    <rect x="86" y="130" width="428" height="590" rx="114" fill="none" stroke="url(#crimson)" stroke-width="10"/>
+    <rect x="96" y="141" width="408" height="568" rx="106" fill="none" stroke="url(#gold)" stroke-width="4"/>
+    <!-- rune notches -->
+    <g fill="url(#gold)">
+      <path d="M78 300h14l-7 18z"/><path d="M78 430h14l-7 18z"/><path d="M78 560h14l-7 18z"/>
+      <path d="M508 300h14l-7 18z"/><path d="M508 430h14l-7 18z"/><path d="M508 560h14l-7 18z"/>
+    </g>
+  </g>
+  <!-- crest: crossed executioner blades over the oath gem -->
+  <g transform="translate(300 92)">
+    <path d="M-120 40 -22 -18 -8 -4Z" fill="url(#steel)" stroke="url(#gold)" stroke-width="3"/>
+    <path d="M120 40 22 -18 8 -4Z" fill="url(#steel)" stroke="url(#gold)" stroke-width="3"/>
+    <path d="M-56 -6 0 -64 56 -6 34 46 -34 46Z" fill="url(#steel)" stroke="url(#gold)" stroke-width="5"/>
+    <path d="M0 -40 22 0 0 40 -22 0Z" fill="url(#crimson)" stroke="#f0d79a" stroke-width="2"/>
+  </g>
+  <!-- foot plate -->
+  <g transform="translate(300 732)">
+    <path d="M-150 -14H150L128 26H-128Z" fill="url(#steel)" stroke="url(#gold)" stroke-width="4"/>
+    <path d="M-110 6H110" stroke="url(#crimson)" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

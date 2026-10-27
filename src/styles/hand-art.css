@@ -1,0 +1,64 @@
+/* Hand combat face only. Complete rules and the original composition stay in inspection. */
+.card-quick-meta { display: none; }
+.battle .hand .card,
+.battle .hand .card.is-selected { display:flex; flex-direction:column; gap:2px; }
+.battle .hand .card .card-summary,
+.battle .hand .card .card-text,
+.battle .hand .card.is-selected .card-summary,
+.battle .hand .card.is-selected .card-text { display:none; }
+.battle .hand .card .card-art,
+.battle .hand .card.is-selected .card-art {
+  position:relative;
+  inset:auto;
+  box-sizing:border-box;
+  width:calc(100% - 6px);
+  height:0;
+  flex:1 1 0;
+  min-height:36px;
+  max-height:none;
+  padding:2px;
+  margin:3px 3px 0;
+  overflow:hidden;
+  opacity:1;
+  background:radial-gradient(ellipse at center,#202b36,#080f18);
+}
+.battle .hand .card .card-art > .painted-card-art,
+.battle .hand .card:is(:hover,:focus-visible,.is-selected) .card-art > .painted-card-art {
+  display:block; width:100%; height:100%; object-fit:contain; object-position:50% 50%; transform:none;
+}
+.battle .hand .card .card-art > svg { width:100%; height:100%; transform:none; }
+.battle .hand .card .card-name {
+  flex:0 0 auto; min-height:22px; max-height:34px; margin:0 3px; padding:1px 2px;
+}
+.battle .hand .card .card-details,
+.battle .hand .card.is-selected .card-details {
+  position:relative; inset:auto; width:100%; height:54px; min-height:54px; flex:0 0 54px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+}
+.battle .hand .card .card-details .card-meta,
+.battle .hand .card.is-selected .card-meta,
+.battle .hand .card .card-category { display:none; }
+.battle .hand .card .card-quick-meta {
+  display:block; color:var(--class-tone,#c6c9c7); font-size:10px; line-height:12px; text-align:center;
+}
+.battle .hand .card .card-pattern {
+  display:block; width:38px; height:38px; flex:0 0 38px; padding:1px; margin:0 auto;
+}
+@media (orientation:landscape) and (max-height:500px) {
+  .battle .hand .card,
+  .battle .hand .card.is-selected { gap:1px; }
+  .battle .hand .card .card-art,
+  .battle .hand .card.is-selected .card-art {
+    width:100%; min-height:28px; padding:1px; margin:0; grid-column:auto; grid-row:auto;
+  }
+  .battle .hand .card .card-name,
+  .battle .hand .card.is-selected .card-name {
+    min-height:24px; max-height:26px; padding:0; font-size:12px; line-height:12px;
+  }
+  .battle .hand .card .card-details,
+  .battle .hand .card.is-selected .card-details {
+    height:34px; min-height:34px; flex-basis:34px; gap:1px;
+  }
+  .battle .hand .card .card-quick-meta { font-size:9px; line-height:10px; }
+  .battle .hand .card .card-pattern { width:23px; height:23px; flex-basis:23px; padding:0; }
+}

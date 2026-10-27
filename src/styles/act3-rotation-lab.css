@@ -1,0 +1,70 @@
+/* ACT III — ROTATING BOARD LAB (DEV only). Tools overlay the top-left; the board stays the star. */
+.act3-rotation-lab .rotation-lab-tools {
+  position: absolute;
+  left: 12px;
+  top: 92px;
+  z-index: 30;
+  width: 236px;
+  max-height: calc(100dvh - 330px);
+  overflow: auto;
+  padding: 6px 8px;
+  background: #07111bdd;
+  border: 1px solid #a58d5099;
+  border-radius: 4px;
+  color: #d9e2dc;
+  font-size: 11px;
+}
+.rotation-lab-tools summary {
+  cursor: pointer;
+  color: #eed794;
+  font-family: Georgia, serif;
+  font-size: 12px;
+}
+.rotation-lab-tools fieldset {
+  border: 1px solid #a58d5055;
+  margin: 6px 0;
+  padding: 4px 6px;
+  display: grid;
+  gap: 4px;
+}
+.rotation-lab-tools legend { color: #9fdcd5; }
+.rotation-lab-tools input { width: 44px; margin-left: 4px; }
+.rotation-lab-tools button,
+.rotation-lab-tools select,
+.rotation-lab-tools input {
+  background: #142c38;
+  color: #f3dfac;
+  border: 1px solid #a58d50;
+  border-radius: 3px;
+  min-height: 26px;
+  font: inherit;
+}
+.rotation-lab-row { display: flex; gap: 4px; }
+.rotation-lab-row select { flex: 1; min-width: 0; }
+.rotation-lab-grid { display: grid; gap: 1px; margin: 4px 0; }
+.rotation-lab-grid span {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  background: #31403f;
+  color: #fff;
+}
+.rotation-lab-grid span[data-section] { outline: 1px solid #c2a15e66; outline-offset: -1px; }
+.rotation-lab-grid span[data-kind='abyss'] { background: #04090d; }
+.rotation-lab-grid span[data-kind='wall'] { background: #8a7445; }
+.rotation-lab-grid span[data-kind='solid'] { background: #6fd8cf; color: #04090d; }
+.rotation-lab-grid span[data-kind='exit'] { background: #7a6328; color: #ffe39a; }
+.rotation-lab-grid span[data-reach] { background: #2f6f6a; }
+.rotation-lab-grid span[data-path] { background: #c99a3a; }
+.rotation-lab-grid span[data-faction='ENEMY'] { color: #ff9f86; }
+.rotation-lab-steps { display: block; color: #cbd9d3; margin-top: 4px; }
+.act3-rotation-lab .act3-nav label { color: #e7d6a4; display: flex; align-items: center; gap: 4px; }
+/* Desktop: the board gets its own column between the lab tools (left) and the mechanisms (right). */
+@media (min-width: 1100px) and (min-height: 640px) {
+  .act3-rotation-lab .board-host { margin-left: 252px !important; width: calc(100% - 500px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .act3-rotation-lab .rotation-lab-tools { top: 76px; width: 190px; max-height: calc(100dvh - 200px); }
+}

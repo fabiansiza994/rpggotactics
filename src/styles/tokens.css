@@ -1,0 +1,28 @@
+/* Design tokens (graybox). Codex owns the final skin: change values here first. */
+:root {
+  --bg: #0b0f17;
+  --surface: #151b27;
+  --surface-2: #1d2535;
+  --border: #2c3850;
+  --text: #e8ecf4;
+  --muted: #8a94a8;
+  --accent: #c58cff;
+  --hero: #3d8bff;
+  --enemy: #d8434b;
+  --good: #4fd06b;
+  --bad: #ff6b6b;
+  --energy: #5fb6ff;
+  --move: #3d8bff;
+  --gold: #f2c94c;
+
+  --el-fire: #ff7a2f;
+  --el-ice: #7fd4ff;
+  --el-arcane: #b46bff;
+  --el-force: #d9d9d9;
+  --el-shield: #f5d76e;
+  --el-teleport: #8f7bff;
+  --el-neutral: #9aa4b8;
+
+  --radius: 8px;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

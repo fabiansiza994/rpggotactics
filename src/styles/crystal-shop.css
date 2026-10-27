@@ -1,0 +1,212 @@
+/* "Comprar Cristales" + payment result — functional pass; a visual pass can restyle it freely. */
+.crystal-shop-test {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid #e0a548;
+  border-radius: 4px;
+  background: #3a2a0f;
+  color: #ffd38a !important;
+  font: 700 12px/1.2 var(--font) !important;
+  letter-spacing: 0.06em;
+}
+.crystal-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.crystal-pack {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 16px 12px;
+  border: 1px solid #8f794166;
+  border-radius: 6px;
+  background: #0b1523;
+  text-align: center;
+}
+.crystal-pack strong {
+  font: 700 26px Georgia, serif;
+  color: #e7d2a4;
+}
+.crystal-pack span {
+  color: #9fb0c2;
+  font-size: 12px;
+}
+.crystal-pack em {
+  font-style: normal;
+  font-weight: 700;
+  color: #f2e2bc;
+}
+.crystal-pack .shop-primary {
+  width: 100%;
+  min-height: 44px;
+}
+.crystal-shop-note {
+  margin: 12px 0 0;
+  color: #9fb0c2;
+  font-size: 13px;
+}
+.crystal-shop-status {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #5d7590;
+  border-radius: 6px;
+  color: #dfe8f2;
+}
+.crystal-shop-status.is-good {
+  border-color: #7fae7a;
+  color: #e3f0dc;
+}
+.crystal-shop-status.is-bad {
+  border-color: #e46a5f;
+  color: #ffd2cc;
+}
+.payment-result {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #030811e6;
+}
+.payment-result-card {
+  display: grid;
+  gap: 10px;
+  width: min(460px, 100%);
+  padding: 18px;
+  border: 1px solid #8f7941;
+  border-radius: 8px;
+  background: #0d1825;
+  color: var(--text);
+}
+/* The result page renders outside .shop-screen, so it carries its own copy of the store button. */
+.payment-result-card .shop-primary {
+  min-height: 48px;
+  border: 1px solid #d4b778;
+  border-radius: 4px;
+  background: linear-gradient(#235779, #13354e 55%, #10263b);
+  box-shadow: inset 0 0 0 3px #071521;
+  color: #f2e2bc;
+  font: 700 15px var(--font);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.payment-result-card h2 {
+  margin: 0;
+  color: #e7cb8e;
+}
+@media (max-width: 900px), (max-height: 500px) {
+  .crystal-shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .crystal-pack {
+    padding: 10px;
+  }
+}
+
+/* Phase 2: legal links, history, result facts (functional; a visual pass can restyle). */
+.crystal-shop-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9fc4e8;
+  font: 600 13px var(--font);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.crystal-shop-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+.crystal-shop-legal a {
+  color: #9fc4e8;
+}
+.crystal-shop-legal .is-pending {
+  color: #ffd38a;
+}
+.crystal-pack-bonus {
+  color: #9fd59a;
+}
+.crystal-history {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.crystal-history li {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px 110px auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #8f794144;
+  border-radius: 4px;
+  background: #0b1523;
+}
+.payment-result-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+.payment-result-facts dt {
+  color: #9fb0c2;
+}
+.payment-result-facts dd {
+  margin: 0;
+  color: #f2e2bc;
+  font-weight: 700;
+}
+.payment-result-actions {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.payment-result-actions .shop-primary {
+  width: 100%;
+}
+@media (max-width: 900px), (max-height: 500px) {
+  .crystal-history li {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.crystal-purchase-confirmation { margin-block: 1rem; padding: 1rem; border: 1px solid #bba16c; background: #101a29; color: #f1e7d0; border-radius: .5rem; line-height: 1.65; }
+.crystal-purchase-confirmation form { display: grid; gap: 1rem; }
+.crystal-purchase-confirmation label { display: block; font-size: 1rem; }
+.crystal-purchase-confirmation input[type=checkbox] { width: 1.3rem; height: 1.3rem; vertical-align: middle; margin-right: .4rem; }
+.crystal-purchase-confirmation a { color: #eac67b; text-decoration: underline; }
+
+/* Dedicated top-up surface. The virtual-goods catalog remains independent. */
+.crystal-purchase-modal{width:min(900px,calc(100vw - 28px));max-width:calc(100vw - 28px);height:auto;max-height:calc(100dvh - 24px);padding:0;border:1px solid #b49a61;border-radius:12px;background:linear-gradient(135deg,#192a3d,#091321);color:#eee4cf;box-shadow:0 20px 80px #000b;overflow:hidden;box-sizing:border-box}
+.crystal-purchase-modal[open]{display:flex;flex-direction:column}.crystal-purchase-modal::backdrop{background:#020710c9}
+.crystal-purchase-modal>header,.crystal-purchase-modal>footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #9c835444}
+.crystal-purchase-modal>header small{color:#c5aa72;font-size:10px;letter-spacing:.15em}.crystal-purchase-modal h2{margin:4px 0 0;color:#efd69e;font:700 28px Georgia,serif}.crystal-purchase-modal h3{margin:0;color:#c5d5df;font:600 17px Georgia,serif}
+.crystal-purchase-modal button{min-height:44px;cursor:pointer}.crystal-purchase-modal button:disabled{opacity:.5;cursor:not-allowed}.crystal-purchase-modal button:focus-visible{outline:2px solid #9de2ed;outline-offset:2px}
+.crystal-purchase-modal>header button{width:44px;flex:none;font-size:28px}.crystal-purchase-modal>header button,.crystal-purchase-modal>footer button,.crystal-shop-tabs button{border:1px solid #a18a5c;border-radius:6px;background:#192d40;color:#f1dfb5;padding:6px 12px}
+.crystal-modal-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 20px}.crystal-purchase-modal .crystal-shop{margin:0;padding:0;border:0}.crystal-shop-tabs{display:flex;gap:8px;margin:14px 0}.crystal-shop-tabs button[aria-pressed=true]{border-color:#edcc7c;box-shadow:inset 0 -2px #bca05e}
+.crystal-purchase-modal .crystal-pack{background:radial-gradient(ellipse at top,#27547455,transparent 80%),#0b1727;border-color:#9d8659;padding:20px 10px}.crystal-purchase-modal .crystal-pack strong{font-size:32px}.crystal-purchase-modal .crystal-pack em{font-size:18px;margin:5px 0}.crystal-purchase-modal .crystal-pack-bonus{min-height:18px;color:#c6dfa7;font-size:12px}.crystal-purchase-modal .crystal-shop-legal{font-size:12px;line-height:1.5}
+.crystal-purchase-modal>footer{border-bottom:0;border-top:1px solid #9c835444;font-size:11px;color:#a4b4c6}.crystal-purchase-modal .shop-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.crystal-purchase-modal .shop-primary{min-height:44px;border:1px solid #c3a96d;border-radius:5px;background:linear-gradient(#285c79,#122e43);color:#f7e6be;padding:8px 12px;font-weight:700}
+@media(orientation:landscape) and (max-height:500px){.crystal-purchase-modal{max-height:calc(100dvh - 12px);width:calc(100vw - 24px)}.crystal-purchase-modal>header,.crystal-purchase-modal>footer{padding:5px 12px}.crystal-purchase-modal h2{font-size:22px}.crystal-modal-body{padding:10px 12px}.crystal-purchase-modal .crystal-shop-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.crystal-purchase-modal .crystal-pack{padding:10px 6px;gap:4px}.crystal-purchase-modal .crystal-pack strong{font-size:26px}.crystal-purchase-modal .crystal-pack em{font-size:15px}.crystal-shop-tabs{margin:8px 0}.crystal-purchase-modal>footer span{max-width:55%}}
+@media(prefers-reduced-motion:reduce){.crystal-purchase-modal *{scroll-behavior:auto;transition:none}}
+.crystal-purchase-modal{height:fit-content}
+@media(orientation:landscape) and (max-height:500px){.crystal-purchase-modal .shop-section-title{margin:0;padding:0 0 6px}.crystal-purchase-modal .crystal-pack{padding:7px 6px}.crystal-purchase-modal .crystal-pack strong{font-size:24px}}
+@media(orientation:landscape) and (max-height:500px){.crystal-purchase-modal .shop-section-title h3{display:none}.crystal-purchase-modal .crystal-shop-tabs{margin:4px 0}.crystal-modal-body{padding:6px 12px}.crystal-purchase-modal .crystal-pack{gap:3px;padding:6px}.crystal-purchase-modal .crystal-pack em{margin:2px 0}.crystal-purchase-modal>header button{padding:0;height:44px;line-height:1}.crystal-purchase-modal .crystal-pack>span{font-size:11px}}
+
+.earn-crystals .crystal-modal-body {color:#cdd8e4;line-height:1.6;font-size:16px}
+.earn-crystals section {margin:18px 0;padding:14px;border:1px solid #78633c;background:linear-gradient(125deg,#172b3c,#0c1522)}
+.earn-crystals h3 {color:#e8d39d;font-size:18px;margin:0 0 8px}
+.earn-crystals p {margin:8px 0}.earn-crystals header button {min-width:44px;min-height:44px}
+@media(max-height:430px){.earn-crystals .crystal-modal-body {font-size:14px}.earn-crystals section{margin:12px 0;padding:10px}.earn-crystals h3{font-size:16px}}
+.crystal-modal-backdrop {position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:16px;background:rgb(2 6 12 / .83)}
+.earn-crystals {width:min(760px,100%);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;border:1px solid #b99a5c;border-radius:8px;background:linear-gradient(145deg,#152437,#080f1a);box-shadow:0 16px 50px #0009;color:#eadcb9;overflow:hidden}
+.earn-crystals>header {display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid #78633c;flex-shrink:0}
+.earn-crystals h2{font-family:Georgia,serif;margin:5px 0;font-size:25px}.earn-crystals small{font-size:11px;letter-spacing:.12em;color:#c5ab71}.earn-crystals .crystal-modal-body{padding:0 20px 16px;overflow-y:auto;min-height:0}
+@media(max-height:430px){.crystal-modal-backdrop{padding:8px}.earn-crystals{max-height:calc(100dvh - 16px)}.earn-crystals>header{padding:8px 14px}.earn-crystals h2{font-size:20px}.earn-crystals .crystal-modal-body{padding:0 14px 10px}}

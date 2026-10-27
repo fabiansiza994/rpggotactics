@@ -1,0 +1,40 @@
+import { PRIMORDIAL_LEGACY_CARD_ART } from './primordialLegacyCards';
+/** Project-owned generated card art; registration never releases the champion. */
+export const SHAPESHIFTER_NEW_ART_IDS = [
+  'qa_primal_instinct',
+  'qa_wild_strike',
+  'qa_hunter_step',
+  'qa_bark_skin',
+  'qa_mend_spirit',
+  'qa_ancestral_trace',
+  'qa_wild_vigor',
+  'qa_shed_curse',
+  'qa_bear_claw',
+  'qa_protective_roar',
+  'qa_bear_maul',
+  'qa_bear_roots',
+  'qa_bear_recovery',
+  'qa_bear_counter',
+  'qa_bear_guard',
+  'qa_bear_lure',
+  'qa_bear_shove',
+  'qa_brutal_charge',
+  'qa_axe_sweep',
+  'qa_horn_strike',
+  'qa_iron_cleave',
+  'qa_broken_guard',
+  'qa_blood_stride',
+  'qa_horn_pull',
+  'qa_iron_wake',
+  'qa_war_breath',
+  'qa_form_memory',
+  'qa_ancestral_link',
+] as const;
+export const SHAPESHIFTER_CARD_ART: Readonly<Record<string, string>> = {
+  ...PRIMORDIAL_LEGACY_CARD_ART,
+  qa_bear_form: '/art/qa-shapeshifter/bear-card.webp',
+  qa_minotaur_form: '/art/qa-shapeshifter/minotaur-card.webp',
+  ...Object.fromEntries(
+    SHAPESHIFTER_NEW_ART_IDS.map((id) => [id, `/art/shapeshifter-cards/${id}.webp`]),
+  ),
+};

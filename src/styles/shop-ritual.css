@@ -1,0 +1,662 @@
+/*
+ * Ritual pack (Dragón Primordial) — premium store presentation. Everything is scoped to the
+ * ritual offer (`[data-ritual-offer]` on the tile, Destacado banner and dialog; `.ritual-*`
+ * components), so no other offer changes. Palette: obsidian, old gold, crimson/violet ember.
+ * Motion is slow and transform/opacity-only; prefers-reduced-motion turns it off.
+ * Final creature painting shares the same stage as its four ritual seals.
+ */
+:root {
+  --ritual-gold: #e8c77d;
+  --ritual-crimson: #d23a5a;
+  --ritual-violet: #8b3dff;
+  --ritual-obsidian: #0c0710;
+}
+
+/* ── Stage: rays, haze, sigil, creature, ground, embers ─────────────────────────────────── */
+.ritual-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  isolation: isolate;
+  overflow: hidden;
+}
+.ritual-stage > * {
+  grid-area: 1 / 1;
+}
+.ritual-rays {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background: repeating-conic-gradient(from 0deg at 50% 46%, #ffcf8a14 0 4deg, transparent 4deg 14deg);
+  mask: radial-gradient(circle at 50% 46%, #000 0 22%, transparent 62%);
+  animation: ritual-spin 90s linear infinite;
+}
+.ritual-haze {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 78%, #6d1f3a55, transparent 70%),
+    radial-gradient(ellipse 55% 35% at 72% 72%, #4a1c7a55, transparent 70%),
+    radial-gradient(circle at 50% 46%, #ff6a3d26, transparent 45%);
+  filter: blur(8px);
+  animation: ritual-drift 14s ease-in-out infinite alternate;
+}
+.ritual-sigil {
+  position: relative;
+  z-index: 1;
+  width: 92%;
+  height: 92%;
+  filter: drop-shadow(0 0 6px #e8c77d55);
+}
+.ritual-sigil-outer {
+  transform-origin: 100px 100px;
+  animation: ritual-spin 80s linear infinite;
+}
+.ritual-sigil-inner {
+  transform-origin: 100px 100px;
+  animation: ritual-spin 120s linear infinite reverse;
+}
+.ritual-core {
+  position: relative;
+  z-index: 1;
+  width: 56%;
+  height: 56%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff5a4a55 0%, #8b3dff33 45%, transparent 70%);
+  filter: blur(10px);
+  animation: ritual-pulse 4.8s ease-in-out infinite;
+}
+.ritual-creature {
+  position: relative;
+  z-index: 2;
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  translate: 0 -3%;
+  /* Rim light (gold above, crimson below) + deep cast shadow. */
+  filter: drop-shadow(0 -2px 0 #f3d38a66) drop-shadow(0 3px 2px #d23a5a55) drop-shadow(0 22px 24px #000d)
+    drop-shadow(0 0 28px #8b3dff88);
+  animation: ritual-breathe 6s ease-in-out infinite;
+}
+.ritual-ground {
+  position: absolute;
+  z-index: 1;
+  left: 22%;
+  right: 22%;
+  bottom: 9%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #ff7a4a66, #d23a5a22 45%, transparent 70%);
+  filter: blur(4px);
+}
+.ritual-embers {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.ritual-embers i {
+  position: absolute;
+  left: var(--x);
+  bottom: 12%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffc27a;
+  box-shadow: 0 0 6px #ff7a3a;
+  opacity: 0;
+  animation: ritual-ember 6.5s linear infinite;
+  animation-delay: var(--d);
+}
+.ritual-embers i:nth-child(3n) {
+  background: #d7a8ff;
+  box-shadow: 0 0 6px #8b3dff;
+}
+
+@keyframes ritual-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ritual-breathe {
+  50% {
+    transform: translateY(-5px) scale(1.012);
+  }
+}
+@keyframes ritual-pulse {
+  50% {
+    opacity: 0.6;
+    transform: scale(1.06);
+  }
+}
+@keyframes ritual-drift {
+  to {
+    transform: translate3d(2%, -2%, 0) scale(1.04);
+  }
+}
+@keyframes ritual-ember {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), -230px) scale(0.4);
+  }
+}
+
+/* ── Offer tile + Destacado banner ──────────────────────────────────────────────────────── */
+.shop-ritual-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 42%, #3a1036 0%, #170a1e 48%, var(--ritual-obsidian) 78%) !important;
+}
+.shop-ritual-art .ritual-stage {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  /* The panel clips; the rays and haze bleed to its edges instead of showing a square. */
+  overflow: visible;
+}
+.shop-ritual-art .ritual-rays {
+  inset: -60%;
+}
+.ritual-seal-row {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  gap: 8px;
+  z-index: 4;
+}
+.ritual-seal-chip {
+  width: 34px;
+  height: 34px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid var(--ritual-gold);
+  box-shadow:
+    0 0 0 2px #0c0710,
+    0 0 12px #8b3dffaa;
+  background: #160a1f;
+}
+.ritual-seal-chip > * {
+  width: 100%;
+  height: 100%;
+}
+.shop-screen .shop-offer[data-ritual-offer] {
+  border-color: var(--ritual-gold);
+  background: linear-gradient(#1d0e22, #0a0610);
+  box-shadow:
+    inset 0 0 0 3px #12071a,
+    inset 0 0 0 4px #e8c77d33,
+    0 10px 30px #000a,
+    0 0 26px #8b3dff33;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+.shop-screen .shop-offer[data-ritual-offer]:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 0 0 3px #12071a,
+    inset 0 0 0 4px #e8c77d55,
+    0 16px 40px #000c,
+    0 0 36px #b04cff55;
+}
+.shop-offer[data-ritual-offer] h3 {
+  color: #f6e2b0;
+}
+.shop-offer[data-ritual-offer] .shop-premium-ribbon {
+  background: linear-gradient(90deg, #f3d48a, #c4873e);
+  color: #1a0c06;
+}
+.shop-featured[data-ritual-offer] {
+  border-color: var(--ritual-gold);
+  background:
+    radial-gradient(ellipse at 78% 45%, #5a1a4a66, transparent 60%),
+    linear-gradient(120deg, #170c1d, #0a0610 55%, #120713);
+  box-shadow:
+    inset 0 0 0 5px #0b0510,
+    inset 0 0 0 6px #e8c77d3d,
+    0 18px 50px #000b,
+    0 0 50px #8b3dff22;
+}
+.shop-featured[data-ritual-offer] h2 {
+  background: linear-gradient(180deg, #fff1cc 10%, #e8c77d 55%, #b98a45);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 10px #8b3dff55);
+}
+.shop-featured[data-ritual-offer] .shop-label,
+.shop-featured[data-ritual-offer]::after {
+  color: var(--ritual-gold);
+}
+.shop-featured[data-ritual-offer] > .shop-ritual-art {
+  border-left: 1px solid #e8c77d33;
+}
+.ritual-tagline {
+  margin: -4px 0 0;
+  font: italic 16px/1.4 Georgia, serif;
+  color: #e1c9e8 !important;
+}
+
+/* ── Dialog: the ritual offer's own composition ─────────────────────────────────────────── */
+.shop-dialog[data-ritual-offer] {
+  width: min(1180px, 96vw);
+  border-color: var(--ritual-gold);
+  background:
+    radial-gradient(ellipse at 28% 40%, #3a0f33 0%, #16091c 45%, transparent 70%),
+    linear-gradient(120deg, #130a18, #0a0610 60%, #0e0812);
+  box-shadow:
+    inset 0 0 0 4px #0b0510,
+    inset 0 0 0 5px #e8c77d33,
+    0 30px 120px #000,
+    0 0 80px #8b3dff22;
+}
+.shop-dialog[data-ritual-offer][open] {
+  animation: ritual-dialog-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes ritual-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+.shop-dialog[data-ritual-offer] .shop-detail {
+  grid-template-columns: 54% 46%;
+}
+.shop-dialog[data-ritual-offer] .shop-detail-art {
+  position: relative;
+  padding: 22px;
+  background: none;
+}
+.shop-dialog[data-ritual-offer] .shop-detail-info h2 {
+  background: linear-gradient(180deg, #fff1cc 10%, #e8c77d 55%, #b98a45);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(28px, 3vw, 40px);
+}
+.shop-dialog[data-ritual-offer] .shop-detail-content > p:first-of-type {
+  font: italic 15.5px/1.45 Georgia, serif;
+  color: #ead6ef;
+}
+.shop-dialog[data-ritual-offer] .shop-label {
+  color: var(--ritual-gold);
+}
+
+/* Hero shot */
+.ritual-hero-shot {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 40%, #44123c 0%, #1c0b22 50%, var(--ritual-obsidian) 80%);
+  border: 1px solid #e8c77d66;
+  box-shadow:
+    inset 0 0 0 1px #0b0510,
+    inset 0 0 80px #8b3dff2a,
+    inset 0 -60px 80px #000a,
+    0 18px 40px #0009;
+  animation: shop-hero-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Corner filigree: gold brackets fading toward the middle of each edge. */
+.ritual-hero-shot::before,
+.ritual-hero-shot::after {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  z-index: 4;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-image: linear-gradient(135deg, #f3d48a, transparent 22%, transparent 78%, #f3d48a) 1;
+}
+.ritual-hero-shot::after {
+  border-image: linear-gradient(45deg, #f3d48a, transparent 22%, transparent 78%, #f3d48a) 1;
+}
+.ritual-hero-shot .shop-hero-badges {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  z-index: 5;
+}
+.ritual-hero-shot .ritual-stage {
+  margin-top: 26px;
+  width: min(100%, 470px);
+}
+.ritual-hero-shot figcaption {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 0 18px 22px;
+  margin-top: -34px;
+  text-align: center;
+}
+.ritual-eyebrow {
+  font: 700 11px/1 system-ui, sans-serif;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #d9a7c8;
+}
+.ritual-hero-shot figcaption strong {
+  font: 700 clamp(28px, 3.2vw, 42px)/1.05 Georgia, serif;
+  letter-spacing: 0.01em;
+  background: linear-gradient(180deg, #fff3d1 10%, #e8c77d 55%, #a9793a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 14px #b04cff77);
+}
+.ritual-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid #e8c77d44;
+  background: #0b0510cc;
+  font-size: 12.5px;
+  color: #d7c6e2;
+}
+.ritual-stats b {
+  color: #fff0c8;
+}
+.ritual-stats i {
+  font-style: normal;
+  color: #e8c77d88;
+}
+.ritual-note {
+  max-width: 34ch;
+  font: italic 13px/1.4 Georgia, serif;
+  color: #c7aecf;
+}
+
+/* Recipe: four sockets converge on the creature */
+.ritual-recipe {
+  margin: 12px 0 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e8c77d3d;
+  background: linear-gradient(160deg, #1d0d23cc, #0c0710cc);
+}
+.ritual-explainer {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #e2d3e8;
+}
+.ritual-explainer strong {
+  color: #f6e2b0;
+}
+.ritual-sequence {
+  position: relative;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) 1.25fr;
+  gap: 6px;
+  align-items: start;
+}
+/* The thread that ties the seals to the creature. */
+.ritual-sequence::before {
+  content: '';
+  position: absolute;
+  left: 9%;
+  right: 11%;
+  top: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, #e8c77d22, #e8c77d99 70%, #ff7a5a);
+}
+.ritual-sequence li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  text-align: center;
+  min-width: 0;
+}
+.ritual-socket {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--ritual-gold);
+  background: #14081a;
+  box-shadow:
+    0 0 0 3px #0c0710,
+    0 0 14px #8b3dff77;
+}
+.ritual-socket > :first-child {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.ritual-socket em {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font: 700 10px/1 system-ui, sans-serif;
+  font-style: normal;
+  color: #1a0c06;
+  background: var(--ritual-gold);
+}
+.ritual-socket.is-result {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-top: -4px;
+  font-size: 22px;
+  color: #fff0c8;
+  background: radial-gradient(circle, #d23a5a, #5a1250 60%, #1a0a1e);
+  box-shadow:
+    0 0 0 3px #0c0710,
+    0 0 22px #ff6a5a99;
+  animation: ritual-pulse 4.8s ease-in-out infinite;
+}
+.ritual-piece-name {
+  font: 700 12.5px/1.15 Georgia, serif;
+  color: #f1dfb9;
+  overflow-wrap: anywhere;
+}
+.ritual-sequence small {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b9a3c4;
+}
+.ritual-sequence li[data-state='owned'] {
+  opacity: 0.62;
+}
+.ritual-sequence li[data-state='result'] .ritual-piece-name {
+  color: #ffd9a8;
+}
+.ritual-howto {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #cdbcd6;
+}
+.ritual-howto strong {
+  color: #f6e2b0;
+}
+.ritual-value {
+  display: block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: #cdbcd6;
+}
+.ritual-value s {
+  opacity: 0.7;
+}
+.ritual-value b {
+  color: #fff0c8;
+}
+
+/* Included pieces + premium seal cards (angled showcase object) */
+.shop-dialog[data-ritual-offer] .shop-contents button {
+  border-color: #e8c77d55;
+  background: linear-gradient(100deg, #24102a, #0e0814);
+}
+.shop-dialog[data-ritual-offer] .shop-contents button[aria-pressed='true'] {
+  border-color: var(--ritual-gold);
+  box-shadow: 0 0 16px #8b3dff55;
+}
+.shop-dialog[data-ritual-offer] .shop-contents strong {
+  color: #f6e2b0;
+}
+.shop-dialog[data-ritual-offer] .shop-hero-shot {
+  padding-top: 44px;
+}
+.shop-dialog[data-ritual-offer] .shop-hero-stage {
+  perspective: 900px;
+}
+.shop-dialog[data-ritual-offer] .shop-hero-stage .shop-card-preview[data-premium-surface='large'] {
+  border-color: var(--ritual-gold);
+  transform: perspective(900px) rotateY(calc(-19deg + var(--cp-ry, 0deg))) rotateX(calc(6deg + var(--cp-rx, 0deg)))
+    rotateZ(-2deg) translateZ(0);
+  transition:
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 320ms ease;
+  box-shadow:
+    -26px 30px 44px #000c,
+    -6px 8px 14px #000a,
+    0 0 0 1px #e8c77d66,
+    0 0 34px #8b3dff55,
+    inset 0 0 0 2px #0a0610;
+}
+.shop-dialog[data-ritual-offer] .shop-hero-stage .shop-card-preview[data-premium-surface='large']:hover {
+  transform: perspective(900px) rotateY(calc(-9deg + var(--cp-ry, 0deg))) rotateX(calc(3deg + var(--cp-rx, 0deg)))
+    rotateZ(-1deg) translateY(-10px) translateZ(20px);
+  box-shadow:
+    -30px 42px 56px #000c,
+    -6px 10px 16px #000a,
+    0 0 0 1px #e8c77d99,
+    0 0 48px #b04cff77,
+    inset 0 0 0 2px #0a0610;
+}
+.shop-dialog[data-ritual-offer] .shop-hero-floor {
+  background: radial-gradient(ellipse at center, #8b3dff55 0%, #000c 35%, #0000 72%);
+}
+
+/* CTA */
+.shop-dialog[data-ritual-offer] .shop-purchase-area .shop-primary,
+.shop-featured[data-ritual-offer] .shop-primary {
+  border-color: var(--ritual-gold);
+  background: linear-gradient(#7a1f3e, #4a1030 55%, #2a0a20);
+  box-shadow:
+    inset 0 0 0 3px #1a0612,
+    inset 0 1px 0 #ffb3a855,
+    0 8px 24px #0009,
+    0 0 22px #d23a5a44;
+  color: #fff0d0;
+}
+.shop-dialog[data-ritual-offer] .shop-purchase-area .shop-primary:hover:not(:disabled),
+.shop-featured[data-ritual-offer] .shop-primary:hover {
+  box-shadow:
+    inset 0 0 0 3px #1a0612,
+    inset 0 1px 0 #ffb3a877,
+    0 10px 28px #000a,
+    0 0 30px #ff5a6a66;
+}
+
+/* Back to the dragon after inspecting a seal */
+.ritual-back {
+  font: inherit;
+  font-size: 13px;
+  color: #f0dfb4;
+  background: #1a0f24e6;
+  border: 1px solid #e8c77d88;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.shop-detail-art .ritual-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 6;
+}
+
+/* ── Compact layouts ─────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px), (max-height: 450px) and (orientation: landscape) {
+  .shop-dialog[data-ritual-offer] .shop-detail {
+    grid-template-columns: 46% 54%;
+  }
+  .shop-dialog[data-ritual-offer] .shop-detail-art {
+    padding: 12px;
+  }
+  .ritual-hero-shot .ritual-stage {
+    margin-top: 20px;
+    width: min(100%, 300px);
+  }
+  .ritual-hero-shot figcaption {
+    margin-top: -26px;
+    padding-bottom: 14px;
+  }
+  .ritual-hero-shot figcaption strong {
+    font-size: 24px;
+  }
+  .ritual-stats {
+    font-size: 11px;
+  }
+  .ritual-note {
+    display: none;
+  }
+  .ritual-socket {
+    width: 36px;
+    height: 36px;
+  }
+  .ritual-sequence::before {
+    top: 18px;
+  }
+  .ritual-piece-name {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ritual-rays,
+  .ritual-haze,
+  .ritual-sigil-outer,
+  .ritual-sigil-inner,
+  .ritual-core,
+  .ritual-creature,
+  .ritual-socket.is-result,
+  .ritual-hero-shot,
+  .shop-dialog[data-ritual-offer][open] {
+    animation: none;
+  }
+  .ritual-embers {
+    display: none;
+  }
+  .shop-screen .shop-offer[data-ritual-offer],
+  .shop-dialog[data-ritual-offer] .shop-hero-stage .shop-card-preview[data-premium-surface='large'] {
+    transition: none;
+  }
+}

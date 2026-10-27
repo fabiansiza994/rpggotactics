@@ -1,0 +1,48 @@
+{
+  "available": true,
+  "testMode": true,
+  "legal": {
+    "termsUrl": null,
+    "refundUrl": null,
+    "privacyUrl": null,
+    "taxNote": null
+  },
+  "packages": [
+    {
+      "id": "qa_0",
+      "displayName": "QA",
+      "baseCrystals": 500,
+      "bonusCrystals": 0,
+      "crystals": 500,
+      "priceCOP": 9900,
+      "sortOrder": 0
+    },
+    {
+      "id": "qa_1",
+      "displayName": "QA",
+      "baseCrystals": 1000,
+      "bonusCrystals": 200,
+      "crystals": 1200,
+      "priceCOP": 19900,
+      "sortOrder": 1
+    },
+    {
+      "id": "qa_2",
+      "displayName": "QA",
+      "baseCrystals": 2000,
+      "bonusCrystals": 700,
+      "crystals": 2700,
+      "priceCOP": 39900,
+      "sortOrder": 2
+    },
+    {
+      "id": "qa_3",
+      "displayName": "QA",
+      "baseCrystals": 4000,
+      "bonusCrystals": 2000,
+      "crystals": 6000,
+      "priceCOP": 79900,
+      "sortOrder": 3
+    }
+  ]
+}

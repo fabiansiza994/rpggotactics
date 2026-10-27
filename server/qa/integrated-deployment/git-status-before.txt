@@ -1,0 +1,230 @@
+ M ../.gitignore
+ M ../e2e/smoke.spec.ts
+ M ../eslint.config.js
+ M ../index.html
+ M ../package-lock.json
+ M ../package.json
+ M ../playwright.config.ts
+ M ../src/game/data/cards.ts
+ M ../src/game/data/index.ts
+ M ../src/game/data/rules.ts
+ M ../src/game/data/scenarios.ts
+ M ../src/game/data/units.ts
+ M ../src/game/domain/ai/ai.ts
+ M ../src/game/domain/board/board.ts
+ M ../src/game/domain/cards/card.ts
+ M ../src/game/domain/cards/deck.ts
+ M ../src/game/domain/cards/effects.ts
+ M ../src/game/domain/cards/play-card.ts
+ M ../src/game/domain/cards/targeting.ts
+ M ../src/game/domain/combat/damage.ts
+ M ../src/game/domain/combat/movement.ts
+ M ../src/game/domain/content.ts
+ M ../src/game/domain/entities/unit.ts
+ M ../src/game/domain/events.ts
+ M ../src/game/domain/objectives/objective-rules.ts
+ M ../src/game/domain/objectives/objective.ts
+ M ../src/game/domain/result.ts
+ M ../src/game/domain/scenario.ts
+ M ../src/game/domain/state.ts
+ M ../src/game/domain/terrain/terrain-rules.ts
+ M ../src/game/domain/terrain/terrain.ts
+ M ../src/game/domain/turn/turn-flow.ts
+ M ../src/game/engine/GameEngine.ts
+ M ../src/game/engine/commands.ts
+ M ../src/game/engine/setup.ts
+ M ../src/game/index.ts
+ M ../src/main.tsx
+ M ../src/presentation/assets/manifest.ts
+ M ../src/presentation/pixi/BattleCanvas.ts
+ M ../src/presentation/pixi/palette.ts
+ M ../src/presentation/pixi/viewModel.ts
+ M ../src/presentation/react/App.tsx
+ M ../src/presentation/react/components/BoardView.tsx
+ M ../src/presentation/react/components/CardView.tsx
+ M ../src/presentation/react/components/Hud.tsx
+ M ../src/presentation/react/format.ts
+ M ../src/presentation/react/screens/BattleScreen.tsx
+ M ../src/presentation/react/screens/MainMenu.tsx
+ M ../src/presentation/react/useBoardViewModel.ts
+ M ../src/presentation/store/battleStore.ts
+ M ../src/presentation/vfx/grayboxVfx.ts
+ M ../src/presentation/vfx/vfxRegistry.ts
+ M ../src/styles/globals.css
+ M ../tests/engine.test.ts
+ M ../tests/support/bot.ts
+ M ../tsconfig.json
+ M ../tsconfig.test.json
+?? ../.DS_Store
+?? ../.env.production
+?? ../BASELINE_CODEX_PHASE1.md
+?? ../CHARACTER_RENDER_CONTRACT.md
+?? ../CHECKPOINT_VISUAL_01.md
+?? ../CHECKPOINT_VISUAL_02.md
+?? ../CHECKPOINT_VISUAL_03.md
+?? ../CHECKPOINT_VISUAL_04.md
+?? ../CHECKPOINT_VISUAL_05.md
+?? ../CHECKPOINT_VISUAL_06.md
+?? ../CHECKPOINT_VISUAL_07.md
+?? ../android/
+?? ../capacitor.config.json
+?? ../e2e/account.spec.ts
+?? ../e2e/animation-capture.spec.ts
+?? ../e2e/animation-check.mjs
+?? ../e2e/campaign.spec.ts
+?? ../e2e/champions.spec.ts
+?? ../e2e/checkpoint06-capture.mjs
+?? ../e2e/core-fatigue-ui.spec.ts
+?? ../e2e/core-summons.spec.ts
+?? ../e2e/create-reference-comparison.mjs
+?? ../e2e/deckbuilder.spec.ts
+?? ../e2e/identity-check.mjs
+?? ../e2e/magic-check.mjs
+?? ../e2e/menu-check.mjs
+?? ../e2e/menu-interaction-check.mjs
+?? ../e2e/painted-check.mjs
+?? ../e2e/prepare-character-animations.mjs
+?? ../e2e/prepare-painted-assets.mjs
+?? ../e2e/presentation-check.mjs
+?? ../e2e/projection-check.mjs
+?? ../e2e/pvp.spec.ts
+?? ../e2e/responsive.spec.ts
+?? ../e2e/roster-animation-capture.spec.ts
+?? ../e2e/social.spec.ts
+?? ../e2e/store-visual.spec.ts
+?? ../e2e/store.spec.ts
+?? ../e2e/support/
+?? ../e2e/touch-targeting.spec.ts
+?? ../e2e/visual-polish.spec.ts
+?? ../e2e/wizard-cast-check.mjs
+?? ../e2e/wizard-cast.spec.ts
+?? ../e2e/wizard-facing.spec.ts
+?? ../playwright.account.config.ts
+?? ../playwright.pvp.config.ts
+?? ../playwright.social.config.ts
+?? ../playwright.store-visual.config.ts
+?? ../playwright.store.config.ts
+?? ../public/
+?? ../qa/
+?? ./
+?? ../src/game/collection/
+?? ../src/game/data/encounters.ts
+?? ../src/game/data/store-catalog.ts
+?? ../src/game/domain/board/board-size.ts
+?? ../src/game/domain/entities/collectible.ts
+?? ../src/game/domain/objectives/collect-rules.ts
+?? ../src/game/domain/scenario-validation.ts
+?? ../src/game/domain/summons/
+?? ../src/game/engine/replay.ts
+?? ../src/game/pvp/
+?? ../src/game/run/
+?? ../src/game/store/
+?? ../src/presentation/assets/champions.ts
+?? ../src/presentation/assets/characterDefinitions.ts
+?? ../src/presentation/assets/iconPaths.ts
+?? ../src/presentation/assets/painted-source/
+?? ../src/presentation/assets/paintedAssets.ts
+?? ../src/presentation/assets/statusLabels.ts
+?? ../src/presentation/assets/visualIdentity.ts
+?? ../src/presentation/cloud/
+?? ../src/presentation/input/
+?? ../src/presentation/motion/
+?? ../src/presentation/pixi/BoardOverlays.ts
+?? ../src/presentation/pixi/CameraController.ts
+?? ../src/presentation/pixi/CharacterAnimator.ts
+?? ../src/presentation/pixi/CollectibleView.ts
+?? ../src/presentation/pixi/EncounterAmbience.ts
+?? ../src/presentation/pixi/GridDash.ts
+?? ../src/presentation/pixi/GridProjection.ts
+?? ../src/presentation/pixi/GridWalk.ts
+?? ../src/presentation/pixi/UnitView.ts
+?? ../src/presentation/pixi/arenaArt.ts
+?? ../src/presentation/pixi/characterAnimations.ts
+?? ../src/presentation/pixi/idleBreathing.ts
+?? ../src/presentation/pixi/paintedTextures.ts
+?? ../src/presentation/pixi/renderContract.ts
+?? ../src/presentation/pixi/summonMotion.ts
+?? ../src/presentation/pixi/unitArt.ts
+?? ../src/presentation/pixi/wizardCast.ts
+?? ../src/presentation/pixi/wizardFacing.ts
+?? ../src/presentation/pixi/wizardSpriteScale.ts
+?? ../src/presentation/pvp/
+?? ../src/presentation/react/card/
+?? ../src/presentation/react/components/Account.tsx
+?? ../src/presentation/react/components/BattleScenery.tsx
+?? ../src/presentation/react/components/CardPattern.tsx
+?? ../src/presentation/react/components/CharacterPortrait.tsx
+?? ../src/presentation/react/components/GameIcon.tsx
+?? ../src/presentation/react/components/RunPanels.tsx
+?? ../src/presentation/react/components/SpellArt.tsx
+?? ../src/presentation/react/components/TacticalOverview.tsx
+?? ../src/presentation/react/components/VisualQaPanel.tsx
+?? ../src/presentation/react/deckbuilder/
+?? ../src/presentation/react/screens/ChampionSelect.tsx
+?? ../src/presentation/react/screens/DeckBuilder.tsx
+?? ../src/presentation/responsive/
+?? ../src/presentation/shop/
+?? ../src/presentation/social/
+?? ../src/presentation/store/battleSeed.ts
+?? ../src/presentation/store/campaignStorage.ts
+?? ../src/presentation/vfx/ElementEffects.ts
+?? ../src/presentation/vfx/VfxDirector.ts
+?? ../src/presentation/vfx/VisualQueue.ts
+?? ../src/presentation/vfx/spellTimeline.ts
+?? ../src/presentation/vfx/visualProjection.ts
+?? ../src/presentation/vfx/visualSettings.ts
+?? ../src/styles/account.css
+?? ../src/styles/battle.css
+?? ../src/styles/campaign.css
+?? ../src/styles/champions.css
+?? ../src/styles/cosmetics.css
+?? ../src/styles/deckbuilder.css
+?? ../src/styles/identity.css
+?? ../src/styles/menu.css
+?? ../src/styles/motion.css
+?? ../src/styles/painted.css
+?? ../src/styles/polish.css
+?? ../src/styles/premium.css
+?? ../src/styles/pvp-lobby.css
+?? ../src/styles/pvp.css
+?? ../src/styles/responsive.css
+?? ../src/styles/shop.css
+?? ../src/styles/social.css
+?? ../tests/account-errors.test.ts
+?? ../tests/battleFit.test.ts
+?? ../tests/battleIntro.test.ts
+?? ../tests/campaign.test.ts
+?? ../tests/cardPattern.test.ts
+?? ../tests/champions.test.ts
+?? ../tests/characterIdle.test.ts
+?? ../tests/cloud.test.ts
+?? ../tests/collectibles.test.ts
+?? ../tests/core-fatigue.test.ts
+?? ../tests/deck.test.ts
+?? ../tests/dominion.test.ts
+?? ../tests/encounters.test.ts
+?? ../tests/input.test.ts
+?? ../tests/pvp.test.ts
+?? ../tests/rewards.test.ts
+?? ../tests/run.test.ts
+?? ../tests/server.test.ts
+?? ../tests/shuffle.test.ts
+?? ../tests/skirmish-progression.test.ts
+?? ../tests/social-store.test.ts
+?? ../tests/social.test.ts
+?? ../tests/store-art.test.ts
+?? ../tests/store-content.test.ts
+?? ../tests/store-presentation.test.ts
+?? ../tests/store.test.ts
+?? ../tests/summon-motion.test.ts
+?? ../tests/summon-survival.test.ts
+?? ../tests/summoner-roster.test.ts
+?? ../tests/summoner.test.ts
+?? ../tests/support/d1.ts
+?? ../tests/support/drops.ts
+?? ../tests/terrain-maps.test.ts
+?? ../tests/wizardCast.test.ts
+?? ../tests/wizardFacing.test.ts
+?? ../tests/wizardSpriteScale.test.ts
+?? ../tsconfig.server.json
+?? ../wrangler.pages.toml

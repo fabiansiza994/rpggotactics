@@ -1,0 +1,456 @@
+.mechanism-controls {
+  position: absolute;
+  z-index: 24;
+  right: 12px;
+  top: 180px;
+  width: 220px;
+  max-height: calc(100dvh - 430px);
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #a18b58;
+  background: linear-gradient(135deg, #192b35f5, #07111bf5);
+  box-shadow: 0 6px 20px #0008;
+  color: #ecdfbb;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.mechanism-controls header {
+  position: sticky;
+  top: -10px;
+  z-index: 1;
+  padding: 5px 0;
+  background: #14252f;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #dbbf77;
+  letter-spacing: 0.1em;
+}
+.mechanism-controls button {
+  color: #f2dfac;
+  background: linear-gradient(#284c50, #101f2b);
+  border: 1px solid #9d8959;
+  border-radius: 3px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.mechanism-controls header button {
+  min-height: 32px;
+  width: 32px;
+}
+.mechanism-budget {
+  display: block;
+  color: #9ed7d0;
+  margin: 6px 0;
+}
+.mechanism-instruction {
+  line-height: 1.4;
+  margin: 6px 0;
+}
+.mechanism-action {
+  width: 100%;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  box-shadow: inset 0 0 0 2px #c5ad6322;
+}
+.mechanism-action small {
+  display: block;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.mechanism-option {
+  margin: 6px 0;
+}
+.mechanism-option > small,
+.mechanism-option > span {
+  display: block;
+  margin: 3px 0;
+}
+.mechanism-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.mechanism-controls button:focus-visible {
+  outline: 2px solid #91ece3;
+  outline-offset: 2px;
+}
+.mechanism-list {
+  display: grid;
+  gap: 4px;
+}
+.mechanism-list button {
+  text-align: left;
+  padding: 4px 7px;
+}
+.mechanism-list small {
+  display: block;
+}
+.mechanism-list [aria-pressed='true'] {
+  border-color: #9fe7df;
+  box-shadow: inset 3px 0 #9fe7df;
+}
+.mechanism-list [data-state='active'],
+.mechanism-list [data-state='locked'] {
+  color: #f7d985;
+}
+.mechanism-connections {
+  display: block;
+  color: #a7d5d5;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+.mechanism-feedback {
+  color: #f2d99b;
+  line-height: 1.4;
+  margin: 6px 0 0;
+  animation: mechanism-notice 0.3s ease-out;
+}
+@keyframes mechanism-notice {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.act3-qa {
+  height: 100dvh !important;
+  min-height: 0 !important;
+  display: block !important;
+  background: radial-gradient(ellipse at 45% 35%, #223c43, #050b13 75%);
+}
+.act3-qa > .act3-nav {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  position: relative;
+  z-index: 60;
+  background: #101e29;
+  border-bottom: 1px solid #a58d50;
+}
+.act3-nav strong {
+  font-family: Georgia, serif;
+  color: #eed794;
+}
+.act3-nav button,
+.act3-nav select {
+  min-height: 36px;
+  background: #142c38;
+  color: #f3dfac;
+  border: 1px solid #a58d50;
+  border-radius: 3px;
+}
+.act3-qa .board-host {
+  height: calc(100dvh - 272px);
+  width: calc(100% - 244px);
+  margin: 0 !important;
+}
+.act3-qa .hand-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 220px;
+  min-height: 0;
+}
+.act3-qa .mechanism-controls {
+  top: 60px;
+  max-height: calc(100dvh - 300px);
+}
+.act3-objective {
+  position: absolute;
+  left: 16px;
+  top: 56px;
+  z-index: 20;
+  background: #06111cbb;
+  border-left: 2px solid #d4b164;
+  padding: 6px 10px;
+  font-size: 12px;
+  max-width: calc(100% - 280px);
+  pointer-events: none;
+}
+.act3-status {
+  position: absolute;
+  left: 16px;
+  bottom: 225px;
+  z-index: 21;
+  background: #07111dda;
+  color: #e9d49d;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.act3-qa .hero-panel {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .mechanism-controls {
+    top: 92px;
+    width: 180px;
+    max-height: calc(100dvh - 240px);
+    font-size: 11px;
+    padding: 7px;
+  }
+  .act3-qa > .act3-nav {
+    height: 44px;
+    font-size: 11px;
+    padding: 2px 8px;
+    gap: 5px;
+  }
+  .act3-nav strong {
+    max-width: 120px;
+  }
+  .act3-nav button,
+  .act3-nav select {
+    min-height: 36px;
+    max-width: 145px;
+  }
+  .act3-qa .board-host {
+    height: calc(100dvh - 158px);
+    width: calc(100% - 200px);
+  }
+  .act3-qa .hand-bar {
+    height: 112px;
+  }
+  .act3-qa .mechanism-controls {
+    top: 48px;
+    right: 5px;
+    width: 190px;
+    max-height: calc(100dvh - 166px);
+    box-sizing: border-box;
+  }
+  .act3-objective {
+    top: 48px;
+    left: 8px;
+    max-width: calc(100% - 224px);
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  .act3-status {
+    bottom: 115px;
+    left: 8px;
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+  .mechanism-controls details {
+    margin-top: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mechanism-feedback {
+    animation: none;
+  }
+}
+.temple-guardian-status,.temple-carrier-status,.temple-stage{margin:7px 0;padding:6px;border-left:2px solid #a69671;background:#07111c;color:#d8d6bd;line-height:1.4}
+.temple-guardian-status[data-state='EXPOSED']{color:#ffe59c;border-color:#f3cc71;background:#503e192d}
+.temple-stage{color:#86d6d2;font-size:11px}.temple-stage strong{display:block;color:#e7ddb9;font-size:12px}
+
+.act3-animation-tools button,.act3-animation-tools select {
+  background:#182938;color:#f2e4bf;border:1px solid #958253;border-radius:3px;
+  min-height:28px;padding:3px 7px;font:inherit;
+}
+.act3-animation-tools button:focus-visible {outline:2px solid #70ded8;outline-offset:2px;}
+.puzzle-onboarding h3{font-family:Georgia,serif;font-size:15px;color:#ead29a;margin:8px 0}
+.puzzle-onboarding p{line-height:1.45;margin:6px 0;color:#cad8da}
+.puzzle-progress{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-block:1px solid #b7a26a55;color:#f4dfab}
+.puzzle-progress strong{font-size:19px;white-space:nowrap}
+.puzzle-guardian-steps{display:grid;gap:4px;font-size:10px;margin:8px 0;color:#aab7be}
+.puzzle-guardian-steps [data-active=true]{color:#f6d778}
+.puzzle-onboarding .puzzle-attack-now{padding:7px;border:1px solid #e8c56e;color:#ffe4a0;background:#755e2433;font-weight:700}
+.mechanism-affordance{color:#9cddd7;line-height:1.4;border-left:2px solid #668c8c;padding-left:7px}
+@media(max-height:500px){.puzzle-onboarding h3{font-size:12px}.puzzle-onboarding p{font-size:11px}.puzzle-progress strong{font-size:16px}}
+/* QA tools scroll inside their own bar; never squeeze puzzle controls off the viewport. */
+.act3-qa > .act3-nav { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.act3-nav > * { flex-shrink: 0; white-space: nowrap; }
+.puzzle-legend p { margin: 5px 0; line-height: 1.4; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .act3-nav strong { font-size: 10px; }
+  .act3-nav button { padding-inline: 7px; }
+}
+.act3-qa { overflow: clip; }
+
+/* Private Act III stage: one cave atmosphere from the field through the hand. */
+.act3-qa {
+  background: radial-gradient(ellipse at 68% 34%, #35413b66, transparent 52%),
+    linear-gradient(180deg, #090f13, #182320 58%, #0a1215);
+}
+.act3-qa::before {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  transform: none;
+  box-shadow: none;
+  mask-image: none;
+  opacity: 0.26;
+  background: linear-gradient(180deg, #111b16aa, #081012cc),
+    url('/art/temple/environment/floor-earth.webp') center / 480px repeat;
+}
+.act3-qa::after { display: none; }
+.act3-qa .board-host { filter: none; }
+.act3-qa .board-host canvas {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 38px), transparent);
+}
+.act3-qa .hand-bar {
+  background: radial-gradient(ellipse at 50% 0, #5b75691a, transparent 65%),
+    linear-gradient(180deg, transparent, #08101380 72%);
+}
+.act3-qa .act3-animation-tools {
+  left: auto !important;
+  right: 252px;
+}
+.act3-qa .act3-objective {
+  color: #f5e3b5;
+  border-left-width: 3px;
+  background: linear-gradient(90deg, #0a161ae8, #0a161a80);
+  font-weight: 600;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .act3-qa .act3-animation-tools { right: 204px; }
+  .act3-qa .board-host canvas {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+  }
+}
+/* Keep laboratory utilities in the toolbar, never over the relic chamber or objective. */
+.act3-qa > .act3-nav { padding-right: 154px; }
+.act3-qa .act3-animation-tools {
+  top: 2px !important;
+  right: 8px;
+  max-height: calc(100dvh - 8px);
+  overflow: auto;
+}
+
+/* ACT III DIRECTION RESET — floating tactical board over the temple abyss. One dark stage from the
+   field down through the hand: abyss depth, soft cave mist drifting at the edges, edge vignette. */
+.act3-qa {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 42%, #18383a55, transparent 70%),
+    radial-gradient(ellipse 120% 80% at 50% 38%, #0b1a1d, #03070a 78%);
+}
+.act3-qa::before {
+  opacity: 1;
+  background: radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, #010304d9 100%);
+  pointer-events: none;
+}
+.act3-qa::after {
+  display: block;
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+  background:
+    radial-gradient(ellipse 38% 22% at 12% 70%, #6f9c9a1f, transparent 70%),
+    radial-gradient(ellipse 34% 20% at 88% 30%, #6f9c9a1a, transparent 70%),
+    radial-gradient(ellipse 50% 18% at 50% 92%, #5e86851c, transparent 72%);
+  animation: act3-mist 42s ease-in-out infinite alternate;
+}
+@keyframes act3-mist {
+  from { transform: translateX(-2.5%); }
+  to { transform: translateX(2.5%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .act3-qa::after { animation: none; }
+}
+/* Publicly activated card: compact right-side feedback, never an opponent hand preview. */
+.act3-qa .resolving-card-preview {
+  position: fixed; right: 12px; bottom: 236px; z-index: 24;
+  width: 220px; height: 82px; box-sizing: border-box;
+  display: grid; grid-template-columns: 68px 1fr; gap: 9px; align-items: center;
+  padding: 7px; border: 1px solid #b9a571; border-radius: 5px;
+  background: linear-gradient(120deg,#192b32,#0b141c); color:#eee1bb;
+  box-shadow: 0 5px 15px #0008; pointer-events: none;
+  animation: public-cast-in 180ms ease-out both;
+}
+.resolving-card-art { overflow: hidden; height: 64px; }
+.resolving-card-art > * { width: 100%; height: 100%; object-fit: contain; }
+.resolving-card-preview strong,.resolving-card-preview small,.resolving-card-preview span {display:block;}
+.resolving-card-preview strong {font-family:Georgia,serif;font-size:15px;line-height:1.15;margin:5px 0;}
+.resolving-card-preview small {font-size:9px;color:#a9d5db;letter-spacing:.06em;}
+.resolving-card-preview span {font-size:11px;color:#d6c7a0;}
+.act3-qa:has(.resolving-card-preview) .mechanism-controls {max-height:calc(100dvh - 400px);}
+/* Remove the preview area's divider, preserving the card's own illustrated frame. */
+.act3-qa .card-feature-stage {border:0;box-shadow:none;background:none;}
+.act3-qa .card-feature-stage::before,.act3-qa .card-feature-stage::after {content:none;}
+.act3-qa .act3-objective {border-left:0;padding-left:0;}
+@keyframes public-cast-in {from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@media(orientation:landscape) and (max-height:500px) {
+  .act3-qa .resolving-card-preview {right:5px;bottom:126px;width:190px;height:66px;grid-template-columns:48px 1fr;gap:6px;padding:5px;}
+  .resolving-card-art {height:52px;}
+  .resolving-card-preview strong {font-size:12px;margin:3px 0;}
+  .resolving-card-preview small {font-size:8px;}
+  .act3-qa:has(.resolving-card-preview) .mechanism-controls {max-height:calc(100dvh - 246px);}
+}
+@media(prefers-reduced-motion:reduce){.resolving-card-preview{animation:none!important;}}
+/* Final Act III hierarchy: window first, compact supporting instructions below. */
+.guardian-window {border:1px solid #648e8e;background:linear-gradient(130deg,#11262c,#091319);padding:10px;border-radius:4px;margin:8px 0;color:#b6cdce;}
+.guardian-window>small{display:block;font-size:9px;letter-spacing:.13em;color:#a7b6a6;}
+.guardian-window>strong{display:block;font:700 17px Georgia,serif;margin-top:5px;color:#d3e4dd;}
+.guardian-window p{font-size:12px;line-height:1.35;margin:6px 0;}
+.guardian-window[data-exposed=true]{border-color:#d3b772;background:linear-gradient(125deg,#3b3021,#101d22);}
+.guardian-window[data-exposed=true]>strong{color:#f5db91;}
+.guardian-window[data-closing=true]{border-color:#e5a27b;box-shadow:inset 0 0 14px #d17a2918;}
+.guardian-window-count{display:flex;align-items:center;gap:8px;color:#f5db91;margin-top:4px;}
+.guardian-window-count b{font:700 30px Georgia,serif;}.guardian-window-count span{font-size:12px;}
+.guardian-live-control{display:block;border-top:1px solid #bba26644;padding-top:5px;font-size:11px;color:#8ee0d6;}
+.act3-qa .mechanism-controls .puzzle-onboarding h3{font-size:14px;}
+.act3-qa .resolving-card-preview strong{overflow-wrap:anywhere;}
+.act3-qa .resolving-card-preview{height:auto;min-height:82px;}
+@media(orientation:landscape) and (max-height:500px){
+ .guardian-window{padding:6px;margin:5px 0;}.guardian-window>strong{font-size:14px;}
+ .guardian-window-count b{font-size:23px;}.guardian-window p{font-size:11px;}
+ .act3-qa .resolving-card-preview{min-height:66px;}
+}
+.public-action-sigil{display:grid;place-items:center;align-self:stretch;font-size:32px;color:#e8b98e;border:1px solid #b38d5c66;background:radial-gradient(ellipse,#78583244,transparent);}
+.resolving-enemy-action{border-color:#ad805c!important;}
+.rotation-key{border:1px solid #83bfb944;background:#10262a88;border-radius:3px;padding:7px;font-size:11px;line-height:1.4;color:#a6d8d5;}
+.rotation-key b,.rotation-key span{display:block;}.rotation-key b{color:#e2c580;font-size:10px;letter-spacing:.03em;}
+
+/* Compact goal and contextual actions occupy one protected HUD lane. */
+.battle .mechanism-controls-compact {
+  z-index: 45;
+  box-sizing: border-box;
+  width: 220px;
+  padding: 8px;
+  pointer-events: auto;
+  isolation: isolate;
+  scrollbar-width: thin;
+}
+.mechanism-goal h3 { margin:0 0 5px; font:700 14px Georgia,serif; color:#edd7a4; }
+.mechanism-goal p { margin:0 0 5px; line-height:1.35; color:#c4d4d6; font-size:12px; }
+.mechanism-goal-progress { display:block; color:#a5dfd6; margin:5px 0; font-size:12px; }
+.mechanism-goal-progress[data-exposed=true] { color:#ffe39d; }
+.mechanism-context-actions { position:sticky; top:0; z-index:3; display:grid; gap:5px; background:#101e27; padding:4px 0; }
+.mechanism-context-actions .mechanism-action { position:relative; z-index:1; min-height:44px; touch-action:manipulation; pointer-events:auto; }
+.mechanism-inspection { margin-top:6px; font-size:11px; }
+.mechanism-inspection summary { cursor:pointer; min-height:30px; display:flex; align-items:center; color:#abbebc; }
+.mechanism-inspection summary::before { content:'▸'; margin-right:5px; }
+.mechanism-inspection[open] summary::before { content:'▾'; }
+.mechanism-feedback { font-size:11px; }
+/* Read-only visual layers never intercept the contextual controls underneath. */
+.battle :is(.resolving-card-preview,.card-feature-stage,.act3-objective,.act3-status)::before,
+.battle :is(.resolving-card-preview,.act3-objective,.act3-status) { pointer-events:none; }
+.battle:has(.mechanism-context-actions) .card-feature-stage { pointer-events:none; }
+@media (orientation:landscape) and (max-height:500px) {
+  .battle .mechanism-controls-compact { width:190px; padding:6px; }
+  .mechanism-goal h3 { font-size:12px; margin-bottom:3px; }
+  .mechanism-goal p { font-size:11px; }
+  .mechanism-goal-progress { font-size:11px; margin:3px 0; }
+  .mechanism-controls-compact .mechanism-inspection:not([open]) summary { min-height:24px; }
+}
+/* Keep the overview beside, rather than beneath, the mechanism action lane. */
+@media(min-width:1600px) {
+  .battle:has(.mechanism-controls-compact) .tactical-overview { right:252px; pointer-events:none; }
+}
+.battle:has(.mechanism-controls-compact) .log-panel .log { right:252px; }
+@media(orientation:landscape) and (max-height:500px) {
+  .battle:not(.act3-qa) .mechanism-controls-compact { top:88px; max-height:calc(100dvh - 210px); }
+  .battle:not(.act3-qa):has(.resolving-card-preview) .mechanism-controls-compact { max-height:calc(100dvh - 210px); }
+  .battle:has(.mechanism-controls-compact) .log-panel .log { right:204px; max-width:calc(100vw - 220px); }
+}
+@media(min-height:501px) {
+  .battle:not(.act3-qa):has(.enemy-panel[data-enemies='3']) .mechanism-controls-compact { top:196px; }
+  .battle:not(.act3-qa):has(.enemy-panel[data-enemies='4']) .mechanism-controls-compact { top:220px; }
+}

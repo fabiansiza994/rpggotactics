@@ -1,0 +1,177 @@
+[
+  {
+    "asset": "characters/crystal.png",
+    "sourceBytes": 1947903,
+    "runtimeBytes": 64684,
+    "width": 384,
+    "height": 512
+  },
+  {
+    "asset": "characters/dark_shaman.png",
+    "sourceBytes": 1936008,
+    "runtimeBytes": 80146,
+    "width": 411,
+    "height": 512
+  },
+  {
+    "asset": "characters/mage.png",
+    "sourceBytes": 2482240,
+    "runtimeBytes": 59950,
+    "width": 341,
+    "height": 512
+  },
+  {
+    "asset": "characters/orc_warrior.png",
+    "sourceBytes": 2140043,
+    "runtimeBytes": 86484,
+    "width": 427,
+    "height": 512
+  },
+  {
+    "asset": "characters/shadow_wolf.png",
+    "sourceBytes": 2181854,
+    "runtimeBytes": 53876,
+    "width": 512,
+    "height": 341
+  },
+  {
+    "asset": "characters/stone_brute.png",
+    "sourceBytes": 2903579,
+    "runtimeBytes": 114512,
+    "width": 512,
+    "height": 468
+  },
+  {
+    "asset": "cards/arcane_burst.png",
+    "sourceBytes": 3082846,
+    "runtimeBytes": 101480,
+    "width": 640,
+    "height": 360
+  },
+  {
+    "asset": "cards/arcane_surge.png",
+    "sourceBytes": 2652938,
+    "runtimeBytes": 83874,
+    "width": 640,
+    "height": 384
+  },
+  {
+    "asset": "cards/barrier.png",
+    "sourceBytes": 2727692,
+    "runtimeBytes": 85822,
+    "width": 640,
+    "height": 360
+  },
+  {
+    "asset": "cards/blink.png",
+    "sourceBytes": 2989336,
+    "runtimeBytes": 92810,
+    "width": 640,
+    "height": 360
+  },
+  {
+    "asset": "cards/dispel.png",
+    "sourceBytes": 2882991,
+    "runtimeBytes": 89594,
+    "width": 640,
+    "height": 360
+  },
+  {
+    "asset": "cards/fireball.png",
+    "sourceBytes": 2647971,
+    "runtimeBytes": 87410,
+    "width": 640,
+    "height": 384
+  },
+  {
+    "asset": "cards/flame_tile.png",
+    "sourceBytes": 2468639,
+    "runtimeBytes": 87886,
+    "width": 640,
+    "height": 384
+  },
+  {
+    "asset": "cards/force_push.png",
+    "sourceBytes": 3060592,
+    "runtimeBytes": 100262,
+    "width": 640,
+    "height": 384
+  },
+  {
+    "asset": "cards/frost_nova.png",
+    "sourceBytes": 3314356,
+    "runtimeBytes": 111016,
+    "width": 640,
+    "height": 360
+  },
+  {
+    "asset": "cards/ice_wall.png",
+    "sourceBytes": 3173404,
+    "runtimeBytes": 108076,
+    "width": 640,
+    "height": 384
+  },
+  {
+    "asset": "cards/magic_missile.png",
+    "sourceBytes": 2504747,
+    "runtimeBytes": 70742,
+    "width": 640,
+    "height": 427
+  },
+  {
+    "asset": "cards/phase_step.png",
+    "sourceBytes": 2747398,
+    "runtimeBytes": 84506,
+    "width": 640,
+    "height": 360
+  },
+  {
+    "asset": "environments/duel.png",
+    "sourceBytes": 2280857,
+    "runtimeBytes": 239786,
+    "width": 1672,
+    "height": 941
+  },
+  {
+    "asset": "environments/fracture.png",
+    "sourceBytes": 2126769,
+    "runtimeBytes": 179584,
+    "width": 1672,
+    "height": 941
+  },
+  {
+    "asset": "environments/sanctuary.png",
+    "sourceBytes": 2521307,
+    "runtimeBytes": 290658,
+    "width": 1672,
+    "height": 941
+  },
+  {
+    "asset": "materials/ice_obstacle.png",
+    "sourceBytes": 1896829,
+    "runtimeBytes": 119526,
+    "width": 640,
+    "height": 572
+  },
+  {
+    "asset": "materials/pillar.png",
+    "sourceBytes": 1771052,
+    "runtimeBytes": 94866,
+    "width": 616,
+    "height": 640
+  },
+  {
+    "asset": "materials/rubble.png",
+    "sourceBytes": 2468938,
+    "runtimeBytes": 73546,
+    "width": 640,
+    "height": 427
+  },
+  {
+    "asset": "materials/stone.png",
+    "sourceBytes": 3455164,
+    "runtimeBytes": 143632,
+    "width": 640,
+    "height": 640
+  }
+]

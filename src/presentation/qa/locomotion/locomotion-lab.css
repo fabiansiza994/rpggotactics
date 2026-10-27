@@ -1,0 +1,84 @@
+.locomotion-lab {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+  background: #080f19;
+  color: #ebddbe;
+  overflow: hidden;
+}
+.locomotion-lab header,
+.locomotion-lab footer {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid #8e794a;
+}
+.locomotion-lab nav,
+.locomotion-lab-controls {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px;
+  flex-wrap: wrap;
+}
+.locomotion-lab button,
+.locomotion-lab a {
+  background: #142434;
+  color: #eee0ba;
+  border: 1px solid #9b8450;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.locomotion-lab button[aria-pressed='true'] {
+  background: #314657;
+  box-shadow: inset 0 0 0 1px #dbc17c;
+}
+.locomotion-lab button:disabled {
+  opacity: 0.5;
+}
+.locomotion-lab-board {
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.locomotion-lab-board canvas {
+  display: block;
+  touch-action: none;
+}
+.locomotion-lab-controls label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+.locomotion-lab footer {
+  font-size: 12px;
+  border-bottom: 0;
+  border-top: 1px solid #685937;
+}
+@media (max-height: 450px) {
+  .locomotion-lab header {
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+  .locomotion-lab nav,
+  .locomotion-lab-controls {
+    padding: 3px 8px;
+    gap: 4px;
+  }
+  .locomotion-lab button,
+  .locomotion-lab a {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .locomotion-lab footer {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  .locomotion-lab footer span {
+    display: none;
+  }
+}

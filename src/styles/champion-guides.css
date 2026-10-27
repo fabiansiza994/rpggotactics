@@ -1,0 +1,222 @@
+.champion-guides {
+  scroll-margin-top: 100px;
+}
+.guide-roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 32px 0 72px;
+}
+.guide-roster article,
+.guide-cards article {
+  min-width: 0;
+  background: linear-gradient(145deg, #152333, #090f19);
+  border: 1px solid #756140;
+  border-radius: 5px;
+  padding: 16px;
+}
+.guide-roster img {
+  width: 100%;
+  height: 210px;
+  object-fit: contain;
+  object-position: bottom;
+  background: radial-gradient(ellipse at bottom, #35404b, transparent 70%);
+}
+.guide-roster h3 {
+  margin: 12px 0;
+  font-size: 27px;
+}
+.guide-roster p {
+  font-size: 15px;
+}
+.guide-roster small {
+  display: block;
+  color: #b9c9d5;
+  line-height: 1.6;
+}
+.champion-guides a {
+  color: #ead090;
+  text-underline-offset: 5px;
+}
+.guide-roster a {
+  display: block;
+  margin-top: 20px;
+}
+.champion-guide {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.75fr) minmax(0, 1.5fr);
+  gap: 48px;
+  padding: 48px 0;
+  border-top: 1px solid #76613c;
+  scroll-margin-top: 100px;
+}
+.champion-guide:nth-of-type(even) .guide-identity {
+  order: 2;
+}
+.guide-identity > img {
+  width: 100%;
+  height: 390px;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 14px 20px #0008);
+}
+.guide-identity h3 {
+  font-size: 44px;
+  margin: 12px 0;
+}
+.champion-guide h4 {
+  font-size: 22px;
+  color: #ecd49c;
+  margin: 25px 0 14px;
+}
+.champion-guide h5 {
+  font-size: 18px;
+  margin: 0 0 8px;
+  color: #f0dfba;
+}
+.champion-guide p,
+.champion-guide li {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #c4d0db;
+}
+.guide-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  border-block: 1px solid #76613c;
+  padding: 16px 0;
+}
+.guide-stats dt {
+  font-size: 13px;
+  color: #b6c4d0;
+}
+.guide-stats dd {
+  margin: 5px 0 0;
+  font-size: 23px;
+  color: #efd79c;
+}
+.guide-mechanic {
+  display: flex;
+  gap: 14px;
+  margin: 20px 0;
+}
+.guide-mechanic > svg {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: #d7b76e;
+  stroke-width: 1.5;
+}
+.guide-mechanic p {
+  margin: 0;
+}
+.guide-fact,
+.guide-tip {
+  background: #142638;
+  border-left: 2px solid #be9e60;
+  padding: 16px;
+}
+.guide-loop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  list-style-position: inside;
+}
+.guide-loop li {
+  background: #172c3d;
+  border: 1px solid #425565;
+  padding: 10px;
+  font-size: 13px;
+  flex: 1 1 100px;
+}
+.guide-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.guide-cards p {
+  font-size: 14px;
+}
+.guide-card-art {
+  height: 125px;
+  margin: -16px -16px 14px;
+  overflow: hidden;
+}
+.guide-card-art img,
+.guide-card-art svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.guide-cards small {
+  color: #b8c7d5;
+}
+.guide-arrows summary {
+  padding: 12px 0;
+  cursor: pointer;
+  color: #ecd49c;
+}
+.guide-tip {
+  margin: 25px 0;
+}
+.ch-guide-link {
+  display: inline-block;
+  color: #d9c38e;
+  font-size: 14px;
+  text-underline-offset: 4px;
+  margin: 0 0 12px;
+}
+.ch-guide-link:focus-visible,
+.champion-guides a:focus-visible,
+.guide-arrows summary:focus-visible {
+  outline: 2px solid #8ddbed;
+  outline-offset: 5px;
+}
+@media (max-width: 760px) {
+  .champion-guide {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 30px 0;
+  }
+  .champion-guide:nth-of-type(even) .guide-identity {
+    order: 0;
+  }
+  .guide-identity > img {
+    height: 290px;
+  }
+  .guide-roster {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .guide-roster article {
+    padding: 12px;
+  }
+  .guide-roster img {
+    height: 160px;
+  }
+  .guide-roster h3 {
+    font-size: 23px;
+  }
+  .guide-cards {
+    gap: 10px;
+  }
+  .guide-cards article {
+    padding: 12px;
+  }
+  .guide-card-art {
+    margin: -12px -12px 12px;
+  }
+  .guide-identity h3 {
+    font-size: 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .champion-guides * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

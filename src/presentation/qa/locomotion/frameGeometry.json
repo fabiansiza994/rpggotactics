@@ -1,0 +1,240 @@
+{
+  "summoner": {
+    "masterHeight": 768,
+    "masterVisibleHeight": 760,
+    "masterBottom": 763,
+    "gaitVisibleHeight": 208,
+    "referenceVisibleHeight": 208,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 17,
+        "bottom": 223
+      },
+      {
+        "top": 16,
+        "bottom": 223
+      },
+      {
+        "top": 17,
+        "bottom": 222
+      },
+      {
+        "top": 41,
+        "bottom": 223
+      },
+      {
+        "top": 33,
+        "bottom": 223
+      },
+      {
+        "top": 38,
+        "bottom": 222
+      }
+    ]
+  },
+  "chicken": {
+    "masterHeight": 768,
+    "masterVisibleHeight": 759,
+    "masterBottom": 766,
+    "gaitVisibleHeight": 208,
+    "referenceVisibleHeight": 208,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 16,
+        "bottom": 223
+      },
+      {
+        "top": 18,
+        "bottom": 222
+      },
+      {
+        "top": 21,
+        "bottom": 222
+      },
+      {
+        "top": 38,
+        "bottom": 222
+      },
+      {
+        "top": 57,
+        "bottom": 223
+      },
+      {
+        "top": 37,
+        "bottom": 222
+      }
+    ]
+  },
+  "fox": {
+    "masterHeight": 768,
+    "masterVisibleHeight": 748,
+    "masterBottom": 755,
+    "gaitVisibleHeight": 159,
+    "referenceVisibleHeight": 208,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 68,
+        "bottom": 222
+      },
+      {
+        "top": 64,
+        "bottom": 222
+      },
+      {
+        "top": 69,
+        "bottom": 222
+      },
+      {
+        "top": 93,
+        "bottom": 222
+      },
+      {
+        "top": 94,
+        "bottom": 222
+      },
+      {
+        "top": 82,
+        "bottom": 222
+      }
+    ]
+  },
+  "turtle": {
+    "masterHeight": 768,
+    "masterVisibleHeight": 699,
+    "masterBottom": 736,
+    "gaitVisibleHeight": 206,
+    "referenceVisibleHeight": 208,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 19,
+        "bottom": 222
+      },
+      {
+        "top": 17,
+        "bottom": 222
+      },
+      {
+        "top": 17,
+        "bottom": 222
+      },
+      {
+        "top": 28,
+        "bottom": 222
+      },
+      {
+        "top": 26,
+        "bottom": 222
+      },
+      {
+        "top": 25,
+        "bottom": 222
+      }
+    ]
+  },
+  "raven": {
+    "masterHeight": 768,
+    "masterVisibleHeight": 730,
+    "masterBottom": 750,
+    "gaitVisibleHeight": 187,
+    "referenceVisibleHeight": 208,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 36,
+        "bottom": 222
+      },
+      {
+        "top": 94,
+        "bottom": 223
+      },
+      {
+        "top": 52,
+        "bottom": 223
+      },
+      {
+        "top": 81,
+        "bottom": 222
+      },
+      {
+        "top": 142,
+        "bottom": 222
+      },
+      {
+        "top": 65,
+        "bottom": 222
+      }
+    ]
+  },
+  "wolf": {
+    "masterHeight": 683,
+    "masterVisibleHeight": 682,
+    "masterBottom": 682,
+    "gaitVisibleHeight": 187,
+    "referenceVisibleHeight": 208,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 36,
+        "bottom": 222
+      },
+      {
+        "top": 61,
+        "bottom": 222
+      },
+      {
+        "top": 41,
+        "bottom": 222
+      },
+      {
+        "top": 50,
+        "bottom": 222
+      },
+      {
+        "top": 83,
+        "bottom": 222
+      },
+      {
+        "top": 46,
+        "bottom": 222
+      }
+    ]
+  },
+  "primordial_dragon": {
+    "masterHeight": 683,
+    "masterVisibleHeight": 675,
+    "masterBottom": 679,
+    "gaitVisibleHeight": 207,
+    "referenceVisibleHeight": 157,
+    "groundY": 224,
+    "frameBounds": [
+      {
+        "top": 44,
+        "bottom": 222
+      },
+      {
+        "top": 60,
+        "bottom": 222
+      },
+      {
+        "top": 17,
+        "bottom": 223
+      },
+      {
+        "top": 69,
+        "bottom": 222
+      },
+      {
+        "top": 67,
+        "bottom": 222
+      },
+      {
+        "top": 50,
+        "bottom": 223
+      }
+    ]
+  }
+}

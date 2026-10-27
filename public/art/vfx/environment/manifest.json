@@ -1,0 +1,26 @@
+{
+  "id": "environment",
+  "version": 1,
+  "layout": {
+    "columns": 4,
+    "rows": 4,
+    "frames": 16,
+    "paddingPixelsAt1024": 4
+  },
+  "variants": [
+    "environment-v1-1024.webp",
+    "environment-v1-512.webp"
+  ],
+  "alpha": true,
+  "frames": {
+    "0-3": "organic flame",
+    "4-7": "frost surface",
+    "8-11": "residual smoke",
+    "12": "warm ground light",
+    "13": "embers",
+    "14": "ice crystals",
+    "15": "cold mist"
+  },
+  "source": "Original generated transparent artwork; packed per cell into existing PaintedEffectPool format",
+  "usage": "Presentation only; permanent torch groups and temporary authoritative FIRE/ICE terrain"
+}

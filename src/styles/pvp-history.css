@@ -1,0 +1,463 @@
+.pvp-history {
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow: auto;
+  padding: clamp(14px, 3vw, 42px);
+  color: #e8e1cf;
+  background:
+    radial-gradient(ellipse at 20% 0%, #17334a88, transparent 60%),
+    linear-gradient(#080f1bef, #080e18f5),
+    url('/art/checkpoint05/environments/duel.webp') center/cover;
+}
+.pvp-history > * {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.pvp-history-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid #ac8d505c;
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+}
+.pvp-history-header h1 {
+  font:
+    bold clamp(24px, 3vw, 38px) Georgia,
+    serif;
+  color: #f1dfb3;
+  margin: 0;
+}
+.pvp-history button {
+  font: inherit;
+  color: inherit;
+  background: linear-gradient(135deg, #192b3c, #0c1622);
+  border: 1px solid #9a804d88;
+  border-radius: 5px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    background 0.18s,
+    box-shadow 0.18s;
+}
+.pvp-history button:hover {
+  border-color: #d8b972;
+  background-color: #233d50;
+  box-shadow: inset 0 0 20px #b99b6010;
+}
+.pvp-history button:focus-visible,
+.friend-history button:focus-visible {
+  outline: 2px solid #84d8ef;
+  outline-offset: 3px;
+}
+.pvp-history-stats {
+  padding: 20px 24px;
+  background: linear-gradient(120deg, #152333e8, #0b1521);
+  border: 1px solid #ac8d505c;
+  box-shadow:
+    inset 0 0 0 3px #070d1666,
+    0 8px 24px #0003;
+  border-radius: 6px;
+}
+.history-totals {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  color: #abbac8;
+  font-size: 13px;
+}
+.history-totals b {
+  display: block;
+  font:
+    30px Georgia,
+    serif;
+  color: #f1dfb3;
+  margin-bottom: 3px;
+}
+.history-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+.history-tabs button {
+  font-size: 13px;
+  padding: 7px 14px;
+}
+.history-tabs [aria-pressed='true'] {
+  border-color: #d8b972;
+  color: #f6df9f;
+  background: #a78b4827;
+}
+.history-summary {
+  font-size: 13px;
+  color: #a7b9c9;
+  margin-bottom: 0;
+}
+.pvp-history-stats ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  margin-bottom: 0;
+}
+.pvp-history-stats li {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-left: 2px solid #a88b4a;
+}
+.pvp-history-stats li span {
+  color: #a7b9c9;
+}
+.pvp-history-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.pvp-history-list button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 94px 48px 22px 48px minmax(130px, 1fr) 140px 155px 65px 48px;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  min-height: 92px;
+  padding: 14px 18px;
+  box-shadow: inset 0 0 0 3px #070d1644;
+}
+.pvp-history-list [data-result='WIN'] {
+  border-left: 3px solid #6cabaa;
+  background: linear-gradient(100deg, #1a42433d, #101d2c 40%);
+}
+.pvp-history-list [data-result='LOSS'] {
+  border-left: 3px solid #9c5b60;
+}
+.pvp-history-result {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #c6bdac;
+}
+[data-result='WIN'] .pvp-history-result,
+.pvp-history-detail[data-result='WIN'] h2 {
+  color: #8edac4;
+}
+[data-result='LOSS'] .pvp-history-result,
+.pvp-history-detail[data-result='LOSS'] h2 {
+  color: #e69b97;
+}
+.history-portrait {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 58px;
+  overflow: hidden;
+  border: 1px solid #ad925a;
+  border-radius: 4px;
+  background: radial-gradient(#304357, #101825);
+  box-shadow: inset 0 0 12px #000;
+}
+.history-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 16%;
+}
+.history-vs {
+  font:
+    12px Georgia,
+    serif;
+  color: #b99b60;
+  text-align: center;
+}
+.pvp-history-rival {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.pvp-history-rival small,
+.history-versus small {
+  display: block;
+  font-weight: 400;
+  font-size: 12px;
+  color: #9aafc2;
+  margin-top: 5px;
+}
+.pvp-history-list button > span:not(.history-portrait):not(.pvp-history-rival) {
+  font-size: 12px;
+  color: #afbdca;
+}
+.history-mode i {
+  font-style: normal;
+  color: #d1b16b;
+  margin-right: 5px;
+}
+.pvp-history-detail {
+  max-width: 800px;
+  padding: 32px;
+  border: 1px solid #b59a5a88;
+  border-radius: 8px;
+  background: linear-gradient(125deg, #182c3d, #0b1420);
+  box-shadow:
+    inset 0 0 0 4px #080f1866,
+    0 20px 70px #0006;
+}
+.history-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #c6ac71;
+}
+.pvp-history-detail h2 {
+  font:
+    42px Georgia,
+    serif;
+  margin: 12px 0 26px;
+}
+.history-versus {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-block: 1px solid #b99b6044;
+  padding: 22px 0;
+  margin-bottom: 24px;
+  overflow-wrap: anywhere;
+}
+.history-versus > b {
+  color: #b99b60;
+  font:
+    20px Georgia,
+    serif;
+  margin: auto;
+}
+.history-versus .history-portrait {
+  width: 70px;
+  height: 84px;
+  flex-shrink: 0;
+}
+.pvp-history-detail dl {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px 20px;
+  font-size: 14px;
+}
+.pvp-history-detail dt {
+  color: #99afc0;
+}
+.pvp-history-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pvp-history-note {
+  color: #8b9cac;
+  font-size: 12px;
+  margin-top: 22px;
+}
+.pvp-history-empty {
+  text-align: center;
+  padding: 56px 20px;
+  border: 1px solid #9a804d44;
+  background: #13223288;
+  font:
+    20px Georgia,
+    serif;
+  color: #ccbd97;
+}
+.pvp-history-error {
+  color: #e69b97;
+}
+.friend-history {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-block: 1px solid #b99b6044;
+  padding: 12px 18px;
+  background: linear-gradient(100deg, #203c4a66, #0c1623);
+  font-size: 12px;
+  color: #b9c8d4;
+}
+.friend-history strong {
+  color: #e8d4a3;
+  font:
+    18px Georgia,
+    serif;
+}
+.friend-history button {
+  margin-left: auto;
+  color: #ecd79e;
+  background: #15283a;
+  border: 1px solid #b99b6077;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 1200px) {
+  .pvp-history-list button {
+    grid-template-columns: 84px 40px 16px 40px minmax(120px, 1fr) 120px 100px;
+    gap: 8px;
+  }
+  .history-portrait {
+    width: 40px;
+    height: 50px;
+  }
+  .pvp-history-list button > span:nth-last-child(-n + 2) {
+    grid-row: 2;
+  }
+  .pvp-history-list button > span:nth-last-child(2) {
+    grid-column: 5;
+  }
+  .pvp-history-list button > span:last-child {
+    grid-column: 6;
+  }
+  .pvp-history-list button > span:nth-last-child(3) {
+    font-size: 10px;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  .pvp-history {
+    padding: 12px 22px;
+  }
+  .pvp-history-header {
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    gap: 16px;
+  }
+  .pvp-history-header h1 {
+    font-size: 24px;
+  }
+  .pvp-history-stats {
+    padding: 12px 16px;
+  }
+  .history-totals b {
+    font-size: 23px;
+  }
+  .history-tabs {
+    margin-top: 10px;
+  }
+  .history-summary {
+    margin-top: 8px;
+  }
+  .pvp-history-list {
+    margin-top: 14px;
+    gap: 8px;
+  }
+  .pvp-history-list button {
+    grid-template-columns: 76px 34px 14px 34px minmax(100px, 1fr) 100px 80px;
+    padding: 10px;
+    min-height: 76px;
+    gap: 6px;
+  }
+  .history-portrait {
+    width: 34px;
+    height: 44px;
+  }
+  .pvp-history-rival {
+    font-size: 12px;
+  }
+  .pvp-history-rival small {
+    font-size: 10px;
+  }
+  .pvp-history-detail {
+    padding: 20px;
+  }
+  .pvp-history-detail h2 {
+    font-size: 30px;
+    margin: 8px 0;
+  }
+  .history-versus {
+    padding: 12px 0;
+    margin-bottom: 12px;
+  }
+  .history-versus .history-portrait {
+    height: 66px;
+    width: 54px;
+  }
+  .pvp-history-detail dl {
+    gap: 8px;
+    font-size: 13px;
+  }
+}
+@media (max-width: 600px) {
+  .history-totals {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pvp-history-list button {
+    grid-template-columns: 70px 32px 12px 32px 1fr;
+  }
+  .pvp-history-list .history-mode {
+    grid-column: 2/6;
+  }
+  .pvp-history-list button > span:nth-last-child(3) {
+    grid-column: 1/4;
+  }
+  .pvp-history-list button > span:nth-last-child(2) {
+    grid-column: 4/6;
+  }
+  .pvp-history-list button > span:last-child {
+    grid-column: 1/3;
+    grid-row: auto;
+  }
+  .history-versus {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pvp-history-detail {
+    padding: 16px;
+  }
+  .pvp-history-detail dl {
+    grid-template-columns: 85px 1fr;
+  }
+  .pvp-history-stats {
+    padding: 14px;
+  }
+  .history-tabs button {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-history * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* Keep lobby navigation alongside each other instead of wrapping History below Menu. */
+.lobby-header .lobby-history {
+  flex-shrink: 0;
+  color: #e9d39b;
+  background: #14283b;
+  border: 1px solid #b99b6088;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .lobby-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+  }
+  .lobby-header .lobby-back {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .lobby-header .lobby-history {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .lobby-header > div {
+    grid-column: 1/3;
+    grid-row: 2;
+  }
+  .lobby-header .lobby-network {
+    grid-column: 3;
+    grid-row: 2;
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,25 @@
+.card-back-face { display:inline-grid; place-items:center; position:relative; width:26px; height:36px; flex-shrink:0; border:1px solid #839db4; border-radius:3px; color:#a9c8e1; background:#081321; box-shadow:inset 0 0 0 3px #091321; }
+.card-back-face[data-card-back='cardback_premium_arcane_circle'] { border-color:#d8b86d; color:#f1d391; background:radial-gradient(circle,#305471,#101b30 70%); box-shadow:inset 0 0 0 3px #11223b,inset 0 0 0 4px #ac925c; }
+.card-back-face small {position:absolute;right:1px;bottom:0;font:7px system-ui;}
+.card-cosmetic-picker {margin:14px 0;padding:14px;border:1px solid #b1945b66;border-radius:7px;background:#0d1b2c;}
+.card-cosmetic-picker p,.card-cosmetic-picker small{font-size:12px;color:#b5c8d6;}
+.card-cosmetic-picker button {display:inline-flex;gap:12px;align-items:center;min-height:44px;margin:6px;padding:8px 12px;background:#1b2c40;border:1px solid #7f8b9d;border-radius:5px;color:#ecd6a1;cursor:pointer;text-align:left;}
+.card-cosmetic-picker button[aria-pressed='true']{outline:2px solid #d8b86d;outline-offset:1px;}
+.card-cosmetic-picker small{display:block;}
+.pair-target-controls{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;grid-column:1/-1;padding:6px 10px;background:#101e32;border:1px solid #b49565;color:#e9dbbb;font-size:12px;}
+.pair-target-controls button{min-height:44px;padding:6px 12px;background:#26374c;border:1px solid #c2a16c;color:#fff0cb;border-radius:5px;}
+.card-cost[data-discounted]{color:#c7f3da;box-shadow:0 0 0 2px #8dd9bc;}
+.pair-target-controls { position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); z-index:12; width:max-content; max-width:calc(100% - 16px); box-sizing:border-box; border-radius:6px; box-shadow:0 4px 16px #0009; }
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Reserve the action row inside the hand: it must never cover a legal board target. */
+  .battle:has(.pair-target-controls) { grid-template-rows:44px minmax(0,1fr) 0px calc(var(--mobile-hand-height) + 64px); }
+  .battle:has(.pair-target-controls) .hand-bar { height:calc(var(--mobile-hand-height) + 64px); padding-top:64px; box-sizing:border-box; }
+  .battle .pair-target-controls { top:0; bottom:auto; left:6px; transform:none; width:calc(100% - 12px); max-width:none; min-height:58px; }
+  .battle.final-cleanup-qa:has(.pair-target-controls) { grid-template-rows:auto minmax(0,1fr) 176px; }
+  .battle.final-cleanup-qa:has(.pair-target-controls) > .hand-bar { height:100%; }
+}
+
+.card-back-face > img { width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+
+/* Preserve the full official 5:7 engraving, including safe ornamental corners. */
+.card-back-face[data-card-back="default"] > img { object-fit:contain; }

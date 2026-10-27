@@ -1,0 +1,25 @@
+/* Combat-only information budget; preview rules and card dimensions remain intact. */
+.archer-forecast .action-availability {display:grid;grid-template-columns:12px 1fr;column-gap:4px;row-gap:0;color:#cbd5df;font-size:12px;line-height:1.35;}
+.action-availability>small {grid-column:2;display:block;color:#b4c1ce;font-size:11px;}
+.action-availability[data-availability=BLOCKED] {color:#ffaaa6;}
+.action-availability[data-availability=BONUS_AVAILABLE] {color:#b4e1c2;}
+.battle .cancel-secondary {background:transparent!important;border-color:transparent!important;box-shadow:none!important;color:#d3d6dc;font-size:11px;min-height:40px;text-decoration:underline;}
+.battle .hand .card .card-quick-meta {font-size:11px!important;line-height:13px!important;color:#e3e9ee!important;}
+.pattern-origin {fill:#ffd384;stroke:#101e2a;stroke-width:.6;}
+.pattern-direction {stroke:#ffd384;stroke-width:1;fill:none;}
+.battle .hand .card .card-pattern {color:#d1e0f0;}
+@media(orientation:landscape) and (max-height:500px){
+ .battle .hand .card .card-name {font-size:12px!important;line-height:12px!important;}
+ .battle .hand .card .card-details {height:37px!important;min-height:37px!important;flex-basis:37px!important;}
+ .battle .hand .card .card-quick-meta {font-size:11px!important;line-height:12px!important;white-space:normal;}
+ .battle .hand .card .card-pattern {width:22px;height:22px;flex-basis:22px;}
+ .battle .bar-value,.battle .status-chip {font-size:11px!important;}
+ .battle .card-cost {font-size:14px!important;}
+}
+.mechanism-linked-action {position:fixed;z-index:34;width:136px;pointer-events:auto;background:#122332;border:1px solid #b8a66d;box-shadow:0 3px 10px #0009;border-radius:6px;padding:5px;color:#efe1bc;}
+.mechanism-linked-action strong,.mechanism-linked-action small {display:block;font-size:11px;line-height:13px;}
+.mechanism-linked-action button {width:100%;min-height:44px;margin-top:3px;font-size:12px;}
+.mechanism-action-leader {position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:33;}
+
+.battle .card-quick-meta>.game-icon {width:12px;height:12px;display:inline-block;vertical-align:middle;}
+@media(orientation:landscape) and (max-height:500px){.battle .hand .card .hand-role{display:none}.battle .hand .card .card-quick-meta{white-space:nowrap!important;}.battle .hand .card .card-quick-meta>svg{width:12px;height:12px;vertical-align:middle;}}

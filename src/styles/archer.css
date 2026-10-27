@@ -1,0 +1,125 @@
+/* Archer HUD: hunter identity (moss green + mystic violet + a gold rim when the shot is ready). */
+:root {
+  --hunter-moss: #4f7a43;
+  --hunter-moss-dark: #13241a;
+  --hunter-violet: #b58cf2;
+  --hunter-violet-light: #eadbff;
+  --hunter-gold: #e2c27a;
+}
+
+.portrait-archer img { width: 100%; left: 0; top: 0; }
+
+.focus-meter {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+.focus-label { color: var(--muted); font-size: 12px; letter-spacing: 0.04em; }
+.focus-pips { display: flex; gap: 5px; align-items: center; }
+.focus-pip { width: 12px; height: 16px; overflow: visible; }
+.focus-pip path:first-child { fill: var(--hunter-moss-dark); stroke: var(--hunter-moss); stroke-width: 1.1; }
+.focus-pip path:last-child { stroke: var(--hunter-moss); stroke-width: 1.2; }
+.focus-pip.is-on path:first-child { fill: var(--hunter-violet); stroke: var(--hunter-violet-light); }
+.focus-pip.is-on path:last-child { stroke: #8a6a3e; }
+.focus-value { font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.focus-ready {
+  margin-left: 6px;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--hunter-gold);
+  border: 1px solid #e2c27a88;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+.focus-meter[data-full] .focus-pip path:first-child { stroke: var(--hunter-gold); }
+.focus-meter[data-full] .focus-pips { filter: drop-shadow(0 0 3px #c8a6ffaa); }
+.focus-meter[data-change='gain'] .focus-pips { animation: focus-gain 380ms ease-out; }
+.focus-meter[data-change='spend'] .focus-pips { animation: focus-spend 380ms ease-out; }
+@keyframes focus-gain { 0% { filter: brightness(1.9); transform: translateY(-2px); } 100% { filter: none; transform: none; } }
+@keyframes focus-spend { 0% { filter: saturate(0) brightness(1.4); } 100% { filter: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .focus-meter[data-change] .focus-pips { animation: none; }
+}
+
+.archer-prey-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #b7a9cf;
+  min-width: 0;
+}
+.archer-prey-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.archer-prey-chip[data-on='true'] { color: var(--hunter-violet-light); }
+.archer-prey-chip b { color: var(--hunter-gold); font-weight: 600; }
+.prey-sight { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--hunter-violet); stroke-width: 1.3; }
+.prey-sight path { stroke: var(--hunter-gold); }
+.prey-sight .dot { fill: var(--hunter-gold); stroke: none; }
+.prey-status.hunter-prey { color: var(--hunter-violet-light); border-color: #c8a6ff99; background: #1d1430e0; }
+
+/* Card-selection forecast: anchored above the end-turn area, never over the header/HUD. */
+.archer-forecast {
+  position: fixed;
+  right: 24px;
+  bottom: 290px;
+  z-index: 40;
+  width: 252px;
+  pointer-events: none;
+  padding: 8px 10px;
+  border: 1px solid #8f73c4;
+  border-radius: 6px;
+  background: linear-gradient(#171d27f2, #0e141cf2);
+  box-shadow: inset 0 1px 0 #eadbff22, 0 4px 14px #0009;
+  color: #e7e1d3;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.archer-forecast header { font-weight: 700; color: var(--hunter-violet-light); margin-bottom: 4px; letter-spacing: 0.02em; }
+.archer-forecast p { margin: 2px 0; }
+.archer-forecast ul { list-style: none; margin: 4px 0; padding: 0; display: grid; gap: 1px; }
+.archer-forecast li small { color: #a99fbe; }
+.af-mark { display: inline-block; width: 14px; font-weight: 700; color: #8b8697; }
+.archer-forecast li[data-ok='true'] .af-mark { color: #9fd17d; }
+.archer-forecast li[data-ok='false'] .af-mark { color: #e08a86; }
+.archer-forecast li[data-ok='false'] { color: #b9b2c2; }
+.af-boost { color: var(--hunter-violet-light); }
+.af-result { border-top: 1px solid #ffffff1a; padding-top: 3px; }
+.af-result b { color: var(--hunter-gold); }
+.af-focus { color: var(--hunter-violet-light); }
+.af-hint { color: #a99fbe; font-style: italic; }
+
+@media (max-width: 960px), (max-height: 500px) {
+  .battle .focus-meter { grid-template-columns: auto 1fr auto; gap: 4px; margin: 1px 0; }
+  .battle .focus-label { font-size: 10px; }
+  .battle .focus-pip { width: 9px; height: 12px; }
+  .battle .focus-value { font-size: 11px; }
+}
+/* Mobile landscape: the meter joins the vitals row; the Presa reads on the board and enemy strip. */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* The Archer's vitals carry a 4th value: give the hero cell room instead of clipping it. */
+  .battle .top-bar:has(.focus-meter) { grid-template-columns: 258px minmax(0, 1fr) minmax(140px, 180px); }
+  /* Name row: "Arquero ▲▲▲ 3/3"; HP / energy / move keep their row below. */
+  .battle .hero-vitals:has(.focus-meter) .panel-title { grid-column: 1 / 3; }
+  .battle .hero-vitals .focus-meter { grid-row: 1; grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 2px; margin: 0; }
+  .battle .focus-value { font-size: 10px; }
+  .battle .focus-pips { gap: 1px; }
+  .battle .focus-pip { width: 7px; height: 10px; }
+  .battle .enemy-row .hunter-prey-text { display: none; }
+  .battle .enemy-row .prey-status.hunter-prey { padding: 0 2px; font-size: 10px; }
+  .battle .focus-label, .battle .focus-ready, .battle .archer-prey-chip { display: none; }
+  .battle .focus-meter[data-full] .focus-value { color: var(--hunter-gold); }
+  .archer-forecast {
+    top: 50px;
+    bottom: auto;
+    right: 6px;
+    width: min(188px, 24vw);
+    padding: 5px 7px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .archer-forecast header { margin-bottom: 2px; }
+}

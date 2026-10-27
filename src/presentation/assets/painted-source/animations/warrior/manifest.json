@@ -1,0 +1,194 @@
+{
+  "front": {
+    "sourceScale": 0.7322834645669292,
+    "neighborFragmentPixelsRemoved": 12300,
+    "frames": 44,
+    "clips": {
+      "idle": {
+        "start": 0,
+        "count": 6
+      },
+      "walk": {
+        "start": 6,
+        "count": 6
+      },
+      "attack": {
+        "start": 12,
+        "count": 6
+      },
+      "bash": {
+        "start": 18,
+        "count": 5
+      },
+      "charge": {
+        "start": 23,
+        "count": 4
+      },
+      "charge_stop": {
+        "start": 27,
+        "count": 2
+      },
+      "guard": {
+        "start": 29,
+        "count": 5
+      },
+      "ability": {
+        "start": 34,
+        "count": 4
+      },
+      "hit": {
+        "start": 38,
+        "count": 3
+      },
+      "death": {
+        "start": 41,
+        "count": 3
+      }
+    },
+    "runtimeBytes": 688488
+  },
+  "back": {
+    "sourceScale": 0.7864693446088795,
+    "neighborFragmentPixelsRemoved": 5721,
+    "frames": 44,
+    "clips": {
+      "idle": {
+        "start": 0,
+        "count": 6
+      },
+      "walk": {
+        "start": 6,
+        "count": 6
+      },
+      "attack": {
+        "start": 12,
+        "count": 6
+      },
+      "bash": {
+        "start": 18,
+        "count": 5
+      },
+      "charge": {
+        "start": 23,
+        "count": 4
+      },
+      "charge_stop": {
+        "start": 27,
+        "count": 2
+      },
+      "guard": {
+        "start": 29,
+        "count": 5
+      },
+      "ability": {
+        "start": 34,
+        "count": 4
+      },
+      "hit": {
+        "start": 38,
+        "count": 3
+      },
+      "death": {
+        "start": 41,
+        "count": 3
+      }
+    },
+    "runtimeBytes": 697032
+  },
+  "right": {
+    "sourceScale": 0.7530364372469636,
+    "neighborFragmentPixelsRemoved": 11744,
+    "frames": 44,
+    "clips": {
+      "idle": {
+        "start": 0,
+        "count": 6
+      },
+      "walk": {
+        "start": 6,
+        "count": 6
+      },
+      "attack": {
+        "start": 12,
+        "count": 6
+      },
+      "bash": {
+        "start": 18,
+        "count": 5
+      },
+      "charge": {
+        "start": 23,
+        "count": 4
+      },
+      "charge_stop": {
+        "start": 27,
+        "count": 2
+      },
+      "guard": {
+        "start": 29,
+        "count": 5
+      },
+      "ability": {
+        "start": 34,
+        "count": 4
+      },
+      "hit": {
+        "start": 38,
+        "count": 3
+      },
+      "death": {
+        "start": 41,
+        "count": 3
+      }
+    },
+    "runtimeBytes": 669216
+  },
+  "left": {
+    "sourceScale": 0.7322834645669292,
+    "neighborFragmentPixelsRemoved": 40666,
+    "frames": 44,
+    "clips": {
+      "idle": {
+        "start": 0,
+        "count": 6
+      },
+      "walk": {
+        "start": 6,
+        "count": 6
+      },
+      "attack": {
+        "start": 12,
+        "count": 6
+      },
+      "bash": {
+        "start": 18,
+        "count": 5
+      },
+      "charge": {
+        "start": 23,
+        "count": 4
+      },
+      "charge_stop": {
+        "start": 27,
+        "count": 2
+      },
+      "guard": {
+        "start": 29,
+        "count": 5
+      },
+      "ability": {
+        "start": 34,
+        "count": 4
+      },
+      "hit": {
+        "start": 38,
+        "count": 3
+      },
+      "death": {
+        "start": 41,
+        "count": 3
+      }
+    },
+    "runtimeBytes": 671276
+  }
+}

@@ -1,0 +1,588 @@
+/* Selected is a persistent preparation state; casting is an accepted-event overlay. */
+.battle .hand .card .card-selection-aura {
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(125deg, #dce9ff, #70ddff 24%, #a997ef 55%, #f0d496 82%, #70ddff);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  z-index: 6;
+}
+.battle .hand .card.is-selected[data-state='selected'] {
+  border-color: #b7eaff;
+  z-index: 10;
+  transform: translateY(-12px) rotate(0deg);
+  box-shadow:
+    inset 0 0 0 1px #c5eaff99,
+    0 0 0 1px #d0beed,
+    0 0 9px #72d6ff80,
+    0 0 18px #9577ce4d,
+    0 10px 18px #000b;
+}
+.battle .hand .card[data-state='selected'] .card-selection-aura {
+  opacity: 1;
+  animation: card-aura-breathe 2100ms ease-in-out infinite;
+}
+.battle .hand .card.is-unplayable[data-state='selected'] {
+  border-color: #caa574;
+  box-shadow:
+    inset 0 0 0 1px #caa574,
+    0 0 7px #caa57455;
+}
+.battle .hand .card.is-unplayable .card-selection-aura {
+  animation: none;
+  opacity: 0.3;
+}
+@keyframes card-aura-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.battle .hand.card-activation-layer {
+  position: fixed;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  gap: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 40;
+  transform-origin: center;
+  animation: card-activation-flight 360ms ease-out forwards;
+}
+.battle .hand.card-activation-layer .card.card-activation {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  transform: none;
+  animation: none;
+  pointer-events: none;
+  box-shadow: 0 0 13px #8cddff99;
+}
+.card-activation .card-cast-flash {
+  position: absolute;
+  inset: 4px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 35%, #e3fbffb3, transparent 70%);
+  z-index: 9;
+  animation: card-cast-flash 180ms ease-out forwards;
+}
+.card-activation .card-cast-ring {
+  position: absolute;
+  inset: 3px;
+  border: 2px solid #bfefff;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 8px #94cfff;
+  animation: card-cast-ring 260ms ease-out forwards;
+}
+.card-activation .card-cast-rune {
+  position: absolute;
+  top: 23%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 38px;
+  line-height: 1;
+  color: #effaff;
+  text-shadow: 0 0 8px #58cfff;
+  pointer-events: none;
+  z-index: 10;
+  animation: card-cast-flash 210ms ease-out forwards;
+}
+@keyframes card-cast-flash {
+  0% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes card-cast-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+@keyframes card-activation-flight {
+  0%,
+  22% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--cast-x), var(--cast-y)) scale(0.15);
+  }
+}
+.battle .hand.card-activation-layer.is-reduced {
+  animation: card-activation-reduced 160ms ease-out forwards;
+}
+.battle .hand.card-activation-layer.is-reduced .card-cast-ring,
+.battle .hand.card-activation-layer.is-reduced .card-cast-rune {
+  display: none;
+}
+.battle .hand.card-activation-layer.is-reduced .card-cast-flash {
+  animation: none;
+  opacity: 0.35;
+}
+@keyframes card-activation-reduced {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1023px) {
+  .battle .hand .card.is-selected[data-state='selected'] {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 1px #c5eaffcc,
+      0 0 0 1px #d0beed,
+      0 0 6px #72d6ff88,
+      0 3px 7px #0009;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .hand .card.is-selected[data-state='selected'] {
+    transform: none;
+  }
+  .battle .hand .card[data-state='selected'] .card-selection-aura {
+    animation: none;
+    opacity: 1;
+  }
+}
+/* Ritual visual QA: presentation states remain independent of game commands. */
+.battle .hand .card[data-state='selected'] {
+  outline: 1px solid #e4d3a4;
+  outline-offset: 2px;
+}
+.battle .hand .card[data-target-mode='true'] .card-class-icon {
+  color: #b8f3ff;
+  text-shadow: 0 0 6px #63cfff;
+}
+@media (hover: hover) {
+  .battle .hand .card:not(.is-selected):hover {
+    border-color: #c8bb91;
+    box-shadow: 0 0 8px #bfcae544;
+  }
+}
+.battle .hand .card[data-premium='true'] {
+  border-color: #e5c47a;
+  box-shadow:
+    inset 0 0 0 1px #b98f43,
+    0 0 10px #be994d44;
+}
+.battle .hand .card[data-premium='true'] .card-rarity-slot {
+  display: block;
+  color: #e8d5a4;
+  font-size: 9px;
+  line-height: 12px;
+  letter-spacing: 0.12em;
+}
+.battle .hand .card[data-premium='true'] .card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    #d6c4ff33 45%,
+    #fff2c244 50%,
+    #86dfff22 55%,
+    transparent 70%
+  );
+  background-size: 300% 100%;
+  animation: premium-card-foil 7s ease-in-out infinite;
+}
+@keyframes premium-card-foil {
+  0%,
+  70% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+.battle .card-activation-layer[data-cast-kind='summon'] .card-cast-ring {
+  border-color: #d5e8b5;
+  box-shadow: 0 0 12px #a9d9ab;
+}
+.battle .card-activation-layer[data-cast-kind='ritual'] .card-cast-ring {
+  border-color: #dec1ff;
+  box-shadow: 0 0 12px #b48bef;
+  border-radius: 50%;
+}
+.battle .card-activation-layer[data-cast-kind='ritual'] .card-cast-rune {
+  color: #f0d9a4;
+}
+.battle .altar-panel {
+  border-color: #a38b61;
+  box-shadow:
+    inset 0 0 0 1px #050d18,
+    0 3px 12px #0008;
+}
+.battle .altar-turn-seals {
+  display: block;
+  color: #b7c6d6;
+  margin: 3px 0;
+}
+.battle .ritual-status {
+  color: #ccac99;
+  font-size: 11px;
+}
+.battle .ritual-status[data-ready='true'] {
+  color: #bfdfaf;
+  font-weight: 700;
+}
+.battle .ritual-sacrifice {
+  color: #e0c48c;
+  font-size: 10px;
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .battle .hand .card.is-selected[data-state='selected'] {
+    box-shadow:
+      inset 0 0 0 1px #c5eaff,
+      0 0 0 2px #b998da,
+      0 0 9px #8bdcff88;
+  }
+  .battle .hand .card.is-selected .card-art > :is(img, svg) {
+    object-fit: contain;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .hand .card[data-premium='true'] .card-art::after {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+.battle .ritual-name-reveal {
+  display: block;
+  padding: 5px;
+  margin: 4px 0;
+  border: 1px solid #c6a3eb;
+  background: linear-gradient(90deg, #362443, #172238);
+  color: #f4dfb1;
+  font:
+    700 13px Georgia,
+    serif;
+  animation: ritual-reveal 280ms ease-out both;
+}
+.battle .ritual-name-reveal .ritual-glyph {
+  width: 17px;
+  height: 17px;
+  vertical-align: middle;
+}
+@keyframes ritual-reveal {
+  from {
+    opacity: 0.3;
+    box-shadow: 0 0 16px #b391ed88;
+  }
+  to {
+    opacity: 1;
+    box-shadow: 0 0 4px #b391ed33;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .ritual-name-reveal {
+    animation: none;
+  }
+}
+.battle .hand .card[data-premium='true'] .card-rarity-slot {
+  position: absolute;
+  top: 6px;
+  right: 24px;
+  bottom: auto;
+  left: auto;
+  width: auto;
+  height: auto;
+  transform: none;
+  padding: 2px 4px;
+  border: 1px solid #bba05e;
+  border-radius: 3px;
+  background: #111a29e6;
+  font-size: 8px;
+  line-height: 11px;
+  letter-spacing: 0.04em;
+  z-index: 7;
+}
+.battle .hand .card .card-name {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.12;
+}
+@media (orientation: landscape) and (max-width: 1000px) and (max-height: 500px) {
+  .battle .hand .card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .battle .hand .card .card-art {
+    flex: 0 0 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+  .battle .hand .card .card-name {
+    flex-shrink: 0;
+    font-size: 9px;
+    line-height: 10px;
+    max-height: 20px;
+  }
+  .battle .hand .card .card-summary {
+    flex-shrink: 0;
+    font-size: 8px;
+    line-height: 10px;
+    max-height: 20px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .battle .hand .card .card-details {
+    display: none;
+  }
+}
+@media (orientation: landscape) and (max-width: 1000px) and (max-height: 500px) {
+  .battle .hand .card.is-selected .card-art {
+    position: relative;
+    inset: auto;
+    opacity: 1;
+    width: 100%;
+    flex: 0 0 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+  .battle .hand .card.is-selected .card-name {
+    padding: 0;
+    min-height: 20px;
+    font-size: 9px;
+    line-height: 10px;
+    max-height: 20px;
+  }
+  .battle .hand .card.is-selected .card-text,
+  .battle .hand .card.is-selected .card-details {
+    display: none;
+  }
+}
+@media (orientation: landscape) and (max-width: 1000px) and (max-height: 500px) {
+  .battle .hand .card.is-selected .card-summary {
+    display: none;
+  }
+  .battle .hand .card.is-selected .card-text {
+    position: relative;
+    display: block;
+    flex: 1;
+    min-height: 0;
+    font-size: 10px;
+    line-height: 12px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    background: #07111d99;
+    touch-action: pan-y;
+  }
+}
+/* One presentation tier across battle, collection and product detail; rarity remains RARE. */
+[data-premium='true'] {
+  --premium-frame: #dfc17e;
+}
+.db-tile[data-premium='true'],
+.db-line[data-premium='true'],
+.db-detail-card[data-premium='true'] .db-detail-art,
+.shop-card-preview[data-premium='true'] {
+  border-color: var(--premium-frame);
+  box-shadow:
+    inset 0 0 0 1px #ae8b43,
+    0 0 8px #c29c4633;
+}
+.premium-tier-label {
+  color: #e9d49e;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 1000px), (max-height: 500px) {
+}
+/* The preview trigger must stay outside the footer grid, including while hidden on desktop. */
+.mobile-card-zoom-button {
+  display: none;
+}
+.card-zoom-close {
+  min-height: 44px;
+  padding: 5px 12px;
+  color: #ecd9ae;
+  border: 1px solid #b39964;
+  background: #172638;
+}
+@media (max-width: 1000px), (max-height: 500px) {
+  .battle .mobile-card-zoom-button {
+    display: block;
+    position: absolute;
+    right: 160px;
+    top: 0;
+    z-index: 12;
+    min-height: 44px;
+    padding: 4px 9px;
+    border: 1px solid #ac925b;
+    border-radius: 4px;
+    color: #e8d8b4;
+    background: #0b1727ee;
+    font-size: 11px;
+  }
+}
+.battle .hand .card[data-premium='true'] .card-art > :is(img, svg),
+.db-tile[data-premium='true'] .db-tile-art > :is(img, svg),
+.db-detail-card[data-premium='true'] .db-detail-art > :is(img, svg),
+.shop-card-preview[data-premium='true'] .shop-card-image > :is(img, svg) {
+  object-fit: contain;
+}
+
+/* Sibling controls: the cancel action is never nested inside the play/select button. */
+.battle .hand .card-select-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  cursor: inherit;
+}
+.battle .hand .card:has(.card-select-surface:focus-visible) {
+  outline: 2px solid #b7eaff;
+  outline-offset: 3px;
+}
+.battle .hand .card[data-disabled='true'] {
+  cursor: default;
+}
+.hand-bar[aria-busy='true'] .card[data-disabled='true'] {
+  opacity: 0.55;
+}
+.battle .hand .card-selection-cancel {
+  position: absolute;
+  top: -52px;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid #e2ae80;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, #bd4448, #7c1729 65%, #3b0c1b);
+  color: #fff1df;
+  box-shadow:
+    inset 0 0 0 2px #25091288,
+    0 3px 9px #000d,
+    0 0 8px #bd334b55;
+  font:
+    32px/1 Georgia,
+    serif;
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: card-cancel-enter 150ms ease-out;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.battle .hand .card-selection-cancel:hover {
+  transform: scale(1.06);
+  box-shadow:
+    inset 0 0 0 2px #25091288,
+    0 3px 10px #000e,
+    0 0 12px #ed667b88;
+}
+.battle .hand .card-selection-cancel:active {
+  transform: scale(0.94);
+}
+.battle .hand .card-selection-cancel:focus-visible {
+  outline: 2px solid #fff1df;
+  outline-offset: 3px;
+}
+.battle .hand.card-activation-layer .card-selection-cancel {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .hand .card-selection-cancel {
+    animation: none;
+    transition: none;
+  }
+  .battle .hand .card-selection-cancel:is(:hover, :active) {
+    transform: none;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1023px) {
+  /* Extend only the transparent scroll window: card size and its bottom anchor stay unchanged. */
+  .battle .hand:not(.card-activation-layer):has(.card-selection-cancel) {
+    height: calc(100% + 64px);
+    margin-top: -64px;
+    padding-top: 64px;
+  }
+  /* Inspection sits above the deck pile, clear of both card cancellation and target controls. */
+  .battle .mobile-card-zoom-button {
+    left: max(6px, env(safe-area-inset-left));
+    right: auto;
+  }
+}
+
+/* E3: preserve E2 lock chips and selected feedback; improve compact reading hierarchy. */
+@media(min-height:501px) {
+ .battle .hand .card .card-text {font-size:12px;line-height:1.4;color:#f2e8d4;}
+ .battle .hand .card .card-name {line-height:1.2;}
+}
+@media(max-height:500px) and (orientation:landscape) {
+ .battle .hand .card.is-selected .card-text {font-size:11px;line-height:1.35;}
+}
+
+@media (orientation:landscape) and (max-height:500px) and (max-width:1023px) {
+ .battle .mobile-card-zoom-button {left:max(var(--zoom-safe-left,6px),env(safe-area-inset-left));}
+}
+
+/* The contextual action sits fully above its own card, not on top of the painting.
+   Extend only the transparent scroll window; empty space must still pass board input through. */
+.battle .hand:not(.card-activation-layer):has(.card-selection-cancel) {pointer-events:none;}
+.battle .hand:not(.card-activation-layer):has(.card-selection-cancel) .card:not([data-disabled='true']) {pointer-events:auto;}
+@media (min-height:501px) {
+ .battle .hand:not(.card-activation-layer):has(.card-selection-cancel) {
+  height:calc(100% + 96px);margin-top:-96px;padding-top:96px;
+ }
+}
+@keyframes card-cancel-enter {
+ from {opacity:0;transform:translateY(4px) scale(.9);}
+ to {opacity:1;transform:translateY(0) scale(1);}
+}

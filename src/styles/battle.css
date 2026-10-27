@@ -1,0 +1,833 @@
+/* Battle composition: a stage, floating instruments, and an illustrated hand. */
+.battle-scenery {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.8;
+}
+.battle {
+  grid-template-columns: minmax(0, 1fr);
+  isolation: isolate;
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  grid-template-rows: 104px minmax(280px, 1fr) 26px 220px;
+  background:
+    radial-gradient(ellipse at 50% 42%, #31506455, transparent 58%),
+    radial-gradient(ellipse at 4% 63%, #b0672526, transparent 25%),
+    radial-gradient(ellipse at 97% 63%, #b0672526, transparent 25%),
+    linear-gradient(180deg, #070c14, #112333 48%, #070b12 88%);
+}
+.battle::before,
+.battle::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: 20%;
+  height: 87%;
+  top: 0;
+  border: 1px solid #81929621;
+  background: repeating-linear-gradient(
+    90deg,
+    #050910 0 19px,
+    #243746 20px 24px,
+    #101a24 26px 56px,
+    #52616b30 57px 60px,
+    #08111c 61px 80px
+  );
+  box-shadow:
+    inset -25px 0 70px #000,
+    20px 25px 60px #0009;
+  transform: perspective(650px) rotateY(24deg) rotate(-7deg);
+  mask-image: linear-gradient(#000, #0009 70%, transparent);
+}
+.battle::before {
+  left: -9%;
+}
+.battle::after {
+  right: -9%;
+  transform: perspective(650px) rotateY(-24deg) rotate(7deg);
+}
+.battle .top-bar {
+  z-index: 3;
+  grid-template-columns: minmax(245px, 310px) minmax(200px, 1fr) minmax(230px, 290px);
+  align-items: start;
+  gap: 20px;
+  padding: 14px 26px 0;
+}
+.battle .panel {
+  border-radius: 2px;
+  background: linear-gradient(120deg, #090e16ed, #0d1821df);
+  border: 1px solid #a28a5359;
+  box-shadow:
+    0 9px 24px #0005,
+    inset 0 0 0 3px #070b1250;
+}
+.hero-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px !important;
+}
+.hero-portrait {
+  width: 67px;
+  height: 83px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid #a99462;
+  clip-path: polygon(0 10%, 15% 0, 85% 0, 100% 10%, 100% 90%, 85% 100%, 15% 100%, 0 90%);
+}
+.hero-portrait svg {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.hero-vitals {
+  flex: 1;
+  min-width: 0;
+}
+.battle .panel-title {
+  font:
+    600 17px Georgia,
+    serif;
+  color: #e4d4b0;
+  margin-bottom: 6px;
+}
+.battle .bar {
+  grid-template-columns: 28px 1fr auto;
+  gap: 5px;
+  margin: 5px 0;
+}
+.battle .bar-label {
+  font-size: 10px;
+}
+.battle .bar-value {
+  font-size: 10px;
+  min-width: 27px;
+}
+.battle .bar-track {
+  height: 7px;
+  border-radius: 1px;
+  box-shadow: 0 0 0 1px #8c978926;
+}
+.battle .bar-hp .bar-fill {
+  background: linear-gradient(#ba6460, #7c2629);
+}
+.battle .bar-energy .bar-fill {
+  background: linear-gradient(#87d9f5, #2876b5);
+}
+.battle .bar-move .bar-fill {
+  background: linear-gradient(#e5d79b, #9a7d47);
+}
+.battle .turn-panel {
+  background: none;
+  box-shadow: none;
+  border: 0;
+  padding: 0;
+}
+.turn-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font:
+    24px Georgia,
+    serif;
+  color: #f0e9d9;
+  text-shadow: 0 2px 8px #000;
+}
+.round-label {
+  font: 10px system-ui;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #b8a57b;
+}
+.battle .scenario-name {
+  margin: 5px 0;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.battle .objective {
+  font:
+    13px Georgia,
+    serif;
+  color: #e2c990;
+}
+.battle .enemy-panel {
+  max-height: 112px;
+  padding: 8px 10px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.battle .enemy-panel[data-enemies='3'] {
+  max-height: 166px;
+}
+.battle .enemy-panel[data-enemies='4'] {
+  max-height: 190px;
+}
+.battle .enemy-panel .panel-title {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.battle .enemy-row {
+  padding: 4px 0 4px 8px;
+  margin: 0;
+  border-radius: 0;
+  border-left: 2px solid #a26160;
+  background: none;
+}
+.battle .enemy-row + .enemy-row {
+  border-top: 1px solid #bca37715;
+}
+.battle .enemy-name {
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.battle .enemy-name .muted {
+  font-size: 10px;
+  font-weight: 400;
+}
+.battle .enemy-intent {
+  font-size: 10px;
+  color: #c9a9a4;
+}
+.battle .statuses {
+  margin-top: 2px;
+}
+.battle .status-chip {
+  font-size: 9px;
+}
+.battle .battle-main {
+  display: flex;
+  padding: 0 2%;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+}
+.battle .board-column {
+  flex: 1;
+}
+.battle .board-host {
+  min-height: 0;
+  /* Checkpoint 06: the canvas bleeds under the utilities/hand rows so the platform's fascia,
+     supports and fog can fall away below the framed board. BattleCanvas reads this margin and
+     frames the playable surface above it; the hand stays on top (z-index) and keeps its input. */
+  margin-bottom: -112px;
+  overflow: visible;
+  border-radius: 0;
+  filter: drop-shadow(0 22px 18px #000b);
+}
+.battle .notice {
+  z-index: 5;
+  top: auto;
+  bottom: 10px;
+  max-width: 85%;
+  font-size: 12px;
+}
+.battle-utilities {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 28px;
+  font-size: 10px;
+  color: #acb3bc;
+}
+.battle .top-actions {
+  flex-direction: row;
+  gap: 12px;
+}
+.battle .top-actions button {
+  border: 0;
+  background: none;
+  padding: 2px;
+  color: #acb3bc;
+  font-size: 10px;
+}
+.battle summary {
+  cursor: pointer;
+  list-style: none;
+}
+.battle summary::marker {
+  display: none;
+}
+.battle .battle-help .help {
+  position: absolute;
+  bottom: 32px;
+  left: 24px;
+  width: 290px;
+  background: #101923f5;
+  border: 1px solid #9e855d;
+  padding: 12px;
+  font-size: 12px;
+  box-shadow: 0 8px 25px #000;
+}
+.battle .log-panel {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: none;
+  flex: initial;
+}
+.battle .log-panel summary {
+  display: flex;
+  gap: 12px;
+}
+.battle .log-panel .log {
+  position: absolute;
+  right: 28px;
+  bottom: 32px;
+  width: 300px;
+  max-height: 230px;
+  padding: 14px;
+  background: #0b1420f7;
+  border: 1px solid #9e855d;
+  box-shadow: 0 8px 30px #000;
+}
+.battle .hand-bar {
+  position: relative;
+  z-index: 4;
+  grid-template-columns: 65px minmax(0, 1fr) 140px 60px;
+  gap: 12px;
+  padding: 0 26px 12px;
+  align-items: end;
+  background: linear-gradient(transparent, #04070dbb 50%);
+}
+.battle .hand {
+  height: 220px;
+  align-items: end;
+  padding: 18px 10px 8px;
+  gap: 9px;
+  scrollbar-width: thin;
+  scrollbar-color: #8c794c55 transparent;
+}
+.battle .card {
+  width: 154px;
+  min-height: 0;
+  height: 190px;
+  padding: 0 7px 7px;
+  gap: 4px;
+  border: 1px solid #9a8358;
+  border-radius: 7px 7px 3px 3px;
+  background: linear-gradient(130deg, #1e2832, #070d16 65%);
+  box-shadow:
+    0 6px 14px #000a,
+    inset 0 0 0 3px #b69b5622;
+  transform-origin: 50% 100%;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+.battle .card:nth-child(odd) {
+  transform: rotate(-2deg);
+}
+.battle .card:nth-child(even) {
+  transform: rotate(2deg);
+}
+.battle .card:hover,
+.battle .card:focus-visible {
+  transform: translateY(-10px);
+  z-index: 3;
+  box-shadow:
+    0 8px 25px #000,
+    0 0 15px #b7a36e66;
+}
+.battle .card.is-selected {
+  transform: translateY(-14px);
+  border-color: #cbb1ff;
+  box-shadow:
+    0 0 0 1px #a480dc,
+    0 0 22px #9873b74d;
+  z-index: 4;
+}
+.battle .card-art {
+  display: block;
+  height: 78px;
+  flex: 0 0 78px;
+  margin: 4px -3px 0;
+  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid #b59a59;
+}
+.card-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.battle .card-cost {
+  width: 28px;
+  height: 31px;
+  top: 0;
+  left: -5px;
+  z-index: 2;
+  background: linear-gradient(135deg, #123957, #4087b4, #10213d);
+  color: #e7f8ff;
+  border: 1px solid #9ad8f0;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px #000;
+  font:
+    700 20px Georgia,
+    serif;
+}
+.battle .card-hotkey {
+  z-index: 2;
+  top: 8px;
+  right: 9px;
+  background: #080c18ac;
+  border-radius: 3px;
+  padding: 0 3px;
+  color: #d0c9b7;
+}
+.battle .card-name {
+  font:
+    600 15px Georgia,
+    serif;
+  text-align: center;
+  margin: 0;
+  color: #eadcbb;
+  white-space: nowrap;
+}
+.battle .card-meta {
+  font-size: 9px;
+  text-align: center;
+  color: #adbbcd;
+}
+.battle .card-text {
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+  color: #d2d5d8;
+}
+.battle .card.is-unplayable {
+  opacity: 0.6;
+  filter: saturate(0.45);
+}
+.battle .pile {
+  height: 80px;
+  border: 1px solid #87764980;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, #152131 0 6px, #121c2a 6px 7px);
+  box-shadow:
+    3px -3px 0 #0d1522,
+    4px -4px 0 #766745,
+    7px -7px 0 #0b1320;
+}
+.battle .pile-count {
+  font:
+    24px Georgia,
+    serif;
+  color: #dbcfb0;
+}
+.battle .pile-label {
+  font:
+    11px Georgia,
+    serif;
+}
+.battle .end-turn-box {
+  padding-bottom: 8px;
+  gap: 12px;
+}
+.battle .end-turn {
+  order: -1;
+  border: 1px solid #c1a86b;
+  background: linear-gradient(#234557, #112639);
+  border-radius: 2px;
+  padding: 13px 9px;
+  font:
+    600 14px Georgia,
+    serif;
+  box-shadow:
+    inset 0 0 0 3px #080e18,
+    0 4px 14px #000;
+}
+.battle .end-turn:hover:not(:disabled) {
+  background: linear-gradient(#376279, #1a364e);
+}
+.battle .end-turn kbd {
+  font-size: 9px;
+}
+.battle .pip {
+  width: 11px;
+  height: 11px;
+  box-shadow: 0 0 6px #5cbdff33;
+}
+.battle .draw-feedback {
+  top: 0;
+  z-index: 5;
+}
+.battle button:focus-visible,
+.battle summary:focus-visible,
+.battle .enemy-row:focus-visible {
+  outline: 2px solid #d5b982;
+  outline-offset: 3px;
+}
+@media (min-width: 1500px) and (min-height: 850px) {
+  .battle {
+    grid-template-rows: 110px minmax(280px, 1fr) 26px 244px;
+  }
+  .battle .hand,
+  .battle .hand-bar {
+    height: 244px;
+  }
+  .battle .card {
+    width: 176px;
+    height: 216px;
+  }
+  .battle .card-art {
+    height: 96px;
+    flex-basis: 96px;
+  }
+  .battle .card-text {
+    font-size: 11px;
+  }
+  .battle .hand-bar {
+    grid-template-columns: 80px minmax(0, 1fr) 180px 80px;
+  }
+}
+@media (max-width: 1050px) {
+  .battle .top-bar {
+    grid-template-columns: 235px 1fr 235px;
+    gap: 10px;
+    padding: 10px 14px 0;
+  }
+  .hero-portrait {
+    width: 48px;
+    height: 74px;
+  }
+  .battle .hero-panel {
+    gap: 7px;
+  }
+  .battle .battle-main {
+    padding: 0 1%;
+  }
+  .battle .hand-bar {
+    grid-template-columns: 44px minmax(0, 1fr) 114px 44px;
+    gap: 8px;
+    padding: 0 14px 10px;
+  }
+  .battle .card {
+    width: 139px;
+  }
+  .battle .hand {
+    gap: 7px;
+  }
+}
+@media (max-width: 760px) {
+  .battle {
+    min-height: 750px;
+    grid-template-rows: auto minmax(290px, 1fr) 30px 218px;
+  }
+  .battle .top-bar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+  .battle .turn-panel {
+    align-self: center;
+  }
+  .battle .turn-title {
+    font-size: 19px;
+  }
+  .battle .objective {
+    font-size: 11px;
+  }
+  .battle .enemy-panel {
+    grid-column: 1/-1;
+    display: flex;
+    gap: 10px;
+    max-height: 78px;
+    padding: 5px 8px;
+  }
+  .battle .enemy-panel[data-enemies='3'],
+  .battle .enemy-panel[data-enemies='4'] { max-height: 78px; }
+  .battle .enemy-panel .panel-title {
+    font-size: 11px;
+    flex: 0 0 58px;
+  }
+  .battle .enemy-row {
+    flex: 0 0 165px;
+  }
+  .battle .enemy-name {
+    display: block;
+  }
+  .battle .enemy-name .muted {
+    margin-left: 5px;
+  }
+  .battle .hand-bar {
+    grid-template-columns: 34px minmax(0, 1fr) 88px;
+    gap: 5px;
+    padding: 0 7px 8px;
+  }
+  .battle .hand-bar > .pile:last-child {
+    position: absolute;
+    right: 7px;
+    bottom: 8px;
+    width: 88px;
+    height: 26px;
+    flex-direction: row;
+    gap: 6px;
+    box-shadow: none;
+    background: #111b28;
+  }
+  .battle .hand-bar > .pile:last-child .pile-count {
+    font-size: 14px;
+  }
+  .battle .hand {
+    height: 218px;
+    gap: 8px;
+  }
+  .battle .end-turn {
+    font-size: 12px;
+  }
+  .battle .end-turn-box {
+    gap: 9px;
+    padding-bottom: 40px;
+  }
+  .battle .energy-pips {
+    gap: 4px;
+  }
+  .battle .pip {
+    width: 9px;
+    height: 9px;
+  }
+  .battle-utilities {
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .battle .log-panel .log {
+    right: 12px;
+    width: min(300px, 90vw);
+  }
+}
+@media (min-width: 761px) and (max-width: 1599px) {
+  .battle .enemy-panel[data-enemies='3'] { max-height: 150px; }
+  .battle .enemy-panel[data-enemies='4'] { max-height: 174px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .card {
+    transition: none;
+  }
+  .battle .card:hover {
+    transform: none;
+  }
+}
+.battle .hand::-webkit-scrollbar,
+.battle .enemy-panel::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.battle .hand::-webkit-scrollbar-thumb,
+.battle .enemy-panel::-webkit-scrollbar-thumb {
+  background: #887955;
+  border-radius: 3px;
+}
+.battle .hand::-webkit-scrollbar-track,
+.battle .enemy-panel::-webkit-scrollbar-track {
+  background: #111a25;
+}
+@media (min-width: 761px) and (max-height: 800px) {
+  .battle {
+    grid-template-rows: 96px minmax(280px, 1fr) 24px 194px;
+  }
+  .battle .hand {
+    height: 194px;
+  }
+  .battle .card {
+    height: 167px;
+  }
+  .battle .card-art {
+    height: 56px;
+    flex-basis: 56px;
+  }
+  .battle .card-text {
+    font-size: 9.5px;
+  }
+}
+
+/* Keep recycling rules and the close action visible; only the card list scrolls. */
+.pile-dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
+.pile-dialog h2 { margin: 0 0 8px; }
+.pile-dialog p { margin: 4px 0; font-size: 12px; line-height: 1.35; flex-shrink: 0; }
+.pile-dialog ul { min-height: 0; overflow-y: auto; margin: 10px 0; }
+.pile-dialog button { flex-shrink: 0; align-self: flex-start; }
+
+/* Ritual altar — functional placeholder until the Codex altar/progress pass. */
+.battle .altar-panel {
+  position: absolute;
+  right: 26px;
+  /* Clear the 26px utilities row (log / controls) that sits right above the hand. */
+  bottom: calc(100% + 30px);
+  z-index: 6;
+  max-width: min(320px, calc(100vw - 32px));
+  max-height: 46vh;
+  overflow: auto;
+  padding: 6px 10px;
+  border: 1px solid #8d79b8;
+  border-radius: 6px;
+  background: #0d0b18ee;
+  color: #e6dcf5;
+  font-size: 12px;
+}
+.battle .altar-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #d8c6ff;
+}
+.battle .altar-panel .altar-rival {
+  color: #f0a58c;
+  font-weight: 400;
+}
+.battle .altar-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+.battle .altar-slots li {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 3px 6px;
+  border: 1px solid #6c5a96;
+  border-radius: 4px;
+  background: #241d3a;
+}
+.battle .altar-slots li.is-empty {
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+  color: #6c5a96;
+}
+.battle .altar-slots button {
+  padding: 0 4px;
+  min-height: 0;
+  font-size: 12px;
+}
+.battle .altar-commit,
+.battle .ritual-activate {
+  display: block;
+  width: 100%;
+  margin: 6px 0 2px;
+  font-size: 12px;
+}
+.battle .ritual-activate.is-selected {
+  outline: 2px solid #d8c6ff;
+}
+.battle .ritual-progress {
+  display: grid;
+  gap: 2px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #3a3058;
+}
+.battle .ritual-progress[data-complete='true'] strong {
+  color: #ffd98a;
+}
+.battle .ritual-missing {
+  color: #c9a7a7;
+}
+.battle .ritual-text {
+  color: #a99cc4;
+  font-size: 11px;
+}
+.battle .altar-panel button {
+  border: 1px solid #8d79b8;
+  border-radius: 4px;
+  background: #2b2147;
+  color: #efe6ff;
+  font: inherit;
+  cursor: pointer;
+}
+.battle .altar-panel button:disabled {
+  background: #1a1528;
+  color: #8c80a6;
+  cursor: not-allowed;
+}
+.battle .altar-panel .ritual-activate:not(:disabled) {
+  background: linear-gradient(#6a4fb0, #3e2b78);
+  border-color: #ffd98a;
+  color: #fff6dc;
+  font-weight: 600;
+}
+@media (max-height: 500px) {
+  .battle .altar-panel {
+    max-width: 260px;
+    max-height: 58vh;
+    font-size: 11px;
+  }
+  .battle .altar-panel .ritual-text {
+    display: none;
+  }
+}
+
+/* Carved altar: four sockets, linked ritual families, presentation-only states. */
+.ritual-glyph { width:20px; height:20px; flex-shrink:0; vertical-align:middle; color:#b6d39b; }
+.ritual-glyph[data-family='MAJOR'] { color:#c7afe6; }
+.ritual-glyph[data-family='LEGENDARY'] { color:#d4b570; }
+.battle .altar-panel { border-color:#8b8764; border-radius:14px 4px; background:radial-gradient(ellipse at top,#263b2dcc,transparent 70%),linear-gradient(145deg,#171725f5,#090e15f5); box-shadow:inset 0 0 0 3px #0c1118,inset 0 0 0 4px #70684955,0 6px 18px #0009; }
+.battle .altar-panel summary { padding:3px 0; }
+.battle .altar-slots { grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+.battle .altar-slots li { position:relative; display:flex; flex-direction:column; align-items:center; padding:7px 2px 3px; min-width:0; border-radius:50% 50% 8px 8px; background:radial-gradient(circle,#304335,#101722 70%); border-color:#8b8764; font-size:9px; text-align:center; }
+.battle .altar-slots li span { width:100%; overflow-wrap:anywhere; }
+.battle .altar-piece-art { width:34px; height:34px; object-fit:cover; border-radius:50%; border:1px solid #bcaf83; }
+.battle .altar-slots li:not(.is-empty) > .ritual-glyph { position:absolute; top:3px; width:46px; height:46px; opacity:.55; pointer-events:none; }
+.battle .altar-slots li.is-empty { min-height:62px; border-style:solid; opacity:.5; }
+.battle .altar-slots button { min-height:28px; min-width:28px; margin-top:3px; }
+.battle .altar-ready-label { color:#e6ce88; font-size:10px; }
+.battle .altar-panel[data-state='ready'] { border-color:#dec780; box-shadow:inset 0 0 0 3px #121921,0 0 14px #b4db8544; }
+.battle .altar-panel[data-state='sealed'] .altar-slots li:not(.is-empty) { animation:ritual-socket-in .42s ease-out; }
+.battle .altar-panel[data-state='released'] .altar-slots { animation:ritual-release .42s ease-out; }
+.battle .altar-panel[data-state='activating'] { animation:ritual-altar-activate 1.1s ease-out; }
+.battle .ritual-progress[data-complete='true'] { border-color:#c0aa68; background:linear-gradient(90deg,#45644833,transparent); }
+.battle .ritual-progress strong { line-height:1.4; }
+.battle .ritual-piece-actions { display:grid; gap:4px; margin-top:7px; }
+.battle .ritual-piece-actions small { color:#b7b1c2; }
+.battle .altar-use { min-height:32px; background:#163443; }
+.battle .altar-commit { min-height:34px; background:linear-gradient(#3f4a34,#232e25); }
+.battle .ritual-activate { min-height:36px; }
+.card[data-ritual-piece='true'] .card-class-icon { color:#bfdfac; }
+@keyframes ritual-socket-in { from { box-shadow:0 0 22px #c2e99c; } to { box-shadow:0 0 3px #c2e99c44; } }
+@keyframes ritual-release { 50% { opacity:.4; filter:saturate(.2); } }
+@keyframes ritual-altar-activate { 30% { box-shadow:0 0 24px #c6b2ee99; } 65% { border-color:#f0db9b; } }
+@media (prefers-reduced-motion:reduce) { .battle .altar-panel,.battle .altar-slots,.battle .altar-slots li { animation:none!important; } }
+/* The open altar reserves hand space instead of floating over playable cells. */
+.battle .hand-bar:has(.altar-panel) { --altar-width:230px; }
+.battle .hand-bar:has(.altar-panel) .hand { margin-left:var(--altar-width); }
+.battle .hand-bar .altar-panel { left:103px; right:auto; bottom:12px; width:var(--altar-width); max-width:var(--altar-width); max-height:calc(100% - 16px); box-sizing:border-box; }
+@media (max-height:500px) and (orientation:landscape) {
+  .battle .hand-bar:has(.altar-panel) { --altar-width:180px; }
+  .battle .hand-bar .altar-panel { left:114px; bottom:4px; max-height:calc(100% - 8px); padding:4px 7px; }
+  .battle .altar-panel summary { font-size:10px; }
+  .battle .altar-slots li { font-size:9px; }
+  .battle .altar-panel .ritual-text { display:block; }
+}
+.battle .altar-panel[data-state='activating'] .altar-piece-art { animation:ritual-piece-consume 1.1s ease-in forwards; }
+@keyframes ritual-piece-consume { 30% { filter:brightness(1.8); transform:scale(1.06); } 75%,100% { opacity:0; transform:scale(.5); } }
+@media (prefers-reduced-motion:reduce) { .battle .altar-piece-art { animation:none!important; } }
+.battle .hand-bar .altar-panel { overflow:hidden; }
+.battle .altar-panel .altar-body { overflow:auto; max-height:170px; scrollbar-width:thin; }
+.battle .altar-panel summary { position:relative; z-index:1; background:#141b21; }
+@media (max-height:500px) and (orientation:landscape) {
+  .battle .altar-panel .altar-body { max-height:calc(var(--mobile-hand-height) - 52px); }
+}
+.ritual-transfer { position:fixed; inset:0; width:100vw; height:100dvh; z-index:14; pointer-events:none; color:#b7dca1; filter:drop-shadow(0 0 4px #ad91da); }
+.ritual-transfer path { stroke-dasharray:5 5; animation:ritual-trace .42s ease-out forwards; }
+.ritual-transfer circle { animation:ritual-travel .4s ease-out forwards; }
+.ritual-transfer.is-release { color:#968ba6; }
+@keyframes ritual-travel { from {offset-distance:0%;} to {offset-distance:100%;opacity:0;} }
+@keyframes ritual-trace { from {opacity:.8;stroke-dashoffset:24;} to {opacity:0;stroke-dashoffset:0;} }
+@media (prefers-reduced-motion:reduce) { .ritual-transfer {display:none;} }
+.ritual-emblem { width:25px; height:25px; vertical-align:middle; margin-right:3px; }
+.battle .altar-panel[data-state='ready'] summary > .ritual-glyph { animation:ritual-ready-pulse 1.8s ease-in-out infinite; }
+@keyframes ritual-ready-pulse { 50% {opacity:.6;filter:drop-shadow(0 0 3px #badd9a);} }
+@media (prefers-reduced-motion:reduce) { .battle .altar-panel .ritual-glyph {animation:none!important;} }

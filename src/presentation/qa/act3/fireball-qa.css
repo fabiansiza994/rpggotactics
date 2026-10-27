@@ -1,0 +1,9 @@
+.resolution-qa > header {right:8px;display:flex;flex-wrap:wrap;align-items:center;gap:4px;max-height:108px;overflow:auto;font-size:11px;border:1px solid #45586a;border-radius:5px;}
+.resolution-qa > header label {display:inline-flex;align-items:center;gap:3px;}
+.resolution-qa > header button,.resolution-qa > header select {background:#152536;color:#e8dfc5;border:1px solid #6d6552;border-radius:3px;padding:3px;font:inherit;}
+.resolution-qa > header button:disabled,.resolution-qa > header select:disabled {opacity:.5;}
+.resolution-qa > header output[aria-label='Métricas visuales QA'] {flex-basis:100%;color:#c5d8df;}
+@media(max-height:500px){.resolution-qa > header{max-height:72px;font-size:10px;}}
+/* This fixture has no mechanism sidebar. Give the renderer the real remaining viewport. */
+.resolution-qa.act3-qa .board-host {position:absolute;top:82px;left:0;width:100%;height:calc(100dvh - 250px);margin:0!important;}
+@media(orientation:landscape) and (max-height:500px){.resolution-qa.act3-qa .board-host{top:78px;width:100%;height:calc(100dvh - 178px);}}

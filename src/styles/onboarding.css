@@ -1,0 +1,139 @@
+/* Champion onboarding, milestone unlocks and the guest invitation. Functional layout only:
+   the visual pass (art, motion) comes later. Works at desktop, 844x390 and 740x360. */
+
+.onboarding-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 24px);
+  padding: 18px 20px;
+  border-radius: 10px;
+  overflow-y: auto;
+}
+.onboarding-dialog[open] { display: block; }
+.onboarding-dialog h2 { margin: 2px 0 6px; font: 600 22px/1.2 Georgia, serif; color: #f4e7c6; }
+.onboarding-dialog p { margin: 0 0 10px; color: #b9ab8b; font-size: 13px; line-height: 1.4; }
+.onboarding-dialog button { align-self: auto; }
+.onb-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #d8b56a; }
+
+.onb-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 10px 0 14px; }
+.onb-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  text-align: left;
+  color: inherit;
+  border: 1px solid rgb(169 148 98 / 0.45);
+  border-radius: 8px;
+  background: rgb(20 32 48 / 0.85);
+}
+button.onb-card { cursor: pointer; }
+button.onb-card:hover, button.onb-card:focus-visible { border-color: #d8b56a; }
+.onb-card.is-selected { border-color: #8fd28a; box-shadow: 0 0 0 2px rgb(143 210 138 / 0.35); }
+.onb-portrait { width: 64px; height: 64px; object-fit: cover; object-position: top; border-radius: 6px; }
+.onb-card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.onb-name { font: 600 17px/1.1 Georgia, serif; color: #fff3d0; }
+.onb-role { font-size: 11px; color: #d8b56a; }
+.onb-tagline { font-size: 12px; color: #b9ab8b; }
+.onb-identity, .ch-identity { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0; }
+.onb-identity em, .ch-identity em {
+  font-style: normal;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #eadcbb;
+  background: rgb(127 184 255 / 0.14);
+  border: 1px solid rgb(127 184 255 / 0.35);
+}
+
+.onb-confirm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin: 8px 0 10px; }
+.onb-deck h3 { margin: 0 0 6px; font-size: 13px; color: #f4e7c6; }
+.onb-deck ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-size: 12px; }
+.onb-note { font-size: 12px; }
+
+.ch-requirement { margin: 6px 0 0; padding: 6px 10px; border-radius: 6px; font-size: 13px; color: #f4e7c6; background: rgb(58 22 22 / 0.55); border: 1px solid rgb(228 106 95 / 0.45); }
+.ch-badge.is-unlocked { color: #cfe4ff; }
+
+.guest-gate-benefits { margin: 4px 0 14px; padding-left: 18px; color: #eadcbb; font-size: 13px; line-height: 1.5; }
+.account-notice { cursor: default; }
+
+@media (max-height: 430px) {
+  .onboarding-dialog { padding: 12px 14px; }
+  .onboarding-dialog h2 { font-size: 18px; }
+  .onb-cards { gap: 6px; margin: 6px 0 8px; }
+  .onb-card { grid-template-columns: 48px 1fr; padding: 7px; gap: 8px; }
+  .onb-portrait { width: 48px; height: 48px; }
+  .onb-tagline { display: none; }
+}
+@media (max-width: 760px) {
+  .onb-confirm { grid-template-columns: 1fr; }
+}
+.onb-signin { margin-right: auto; }
+/* The invitation scrolls as a whole on short landscape screens (no clipped list or buttons). */
+.guest-gate[open] { display: block; max-height: calc(100dvh - 24px); overflow-y: auto; }
+.guest-gate .guest-gate-benefits { overflow: visible; min-height: auto; flex-shrink: 0; }
+@media (max-height: 430px) {
+  .guest-gate { padding: 12px 16px; }
+  .guest-gate h2 { font-size: 18px; margin-bottom: 4px; }
+  .guest-gate p { margin-bottom: 6px; }
+  .guest-gate .guest-gate-benefits { margin: 2px 0 8px; font-size: 12px; line-height: 1.35; }
+  .guest-gate .account-entry-actions { gap: 6px; }
+  .guest-gate .account-entry-actions button { min-height: 36px; padding-block: 6px; }
+}
+
+/* Shared relic framing: portrait-led choice, readable touch selection and brief reveals. */
+.onboarding-dialog {
+  width: min(1040px, calc(100vw - 32px));
+  padding: 28px;
+  border: 1px solid #bd9953;
+  background: radial-gradient(ellipse at 50% 0%, #243b55 0%, #101a29 48%, #080e17 100%);
+  box-shadow: inset 0 0 0 5px #0b1422, inset 0 0 0 6px #bd995333, 0 24px 90px #000b;
+}
+.onboarding-dialog::backdrop { background: #020812da; backdrop-filter: blur(6px); }
+.onboarding-dialog h2 { font-size: clamp(24px, 3vw, 38px); }
+.onboarding-dialog > p { max-width: 740px; }
+.onb-cards { gap: 18px; padding: 8px 4px; }
+.onb-card {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; gap: 0; padding: 0;
+  min-width: 0; border-radius: 4px; border-color: #af945e88;
+  background: linear-gradient(145deg, #20364b, #0a1421);
+  box-shadow: inset 0 0 0 3px #0004, 0 10px 22px #0007;
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.onb-portrait { width: 100%; height: 240px; object-fit: contain; object-position: center; border-radius: 0; background: radial-gradient(ellipse, #54749a44, transparent 70%); }
+.onb-card-text { padding: 15px; gap: 6px; width: 100%; box-sizing: border-box; background: linear-gradient(#0c1722dd, #0a111d); }
+.onb-name { font-size: 25px; }
+.onb-role { font-size: 13px; }
+.onb-tagline { display: block; line-height: 1.4; }
+.onb-card.is-selected { transform: translateY(-4px); border-color: #bceeff; box-shadow: 0 0 0 1px #cba653, 0 0 26px #58c9ff55, inset 0 0 25px #77bfff22; }
+.onb-card.is-selected::after { content: ''; position: absolute; inset: 0; pointer-events: none; border: 2px solid #8cdcff66; animation: onb-aura 2.8s ease-in-out infinite; }
+.onb-selected { color: #bcefff; font-size: 11px; letter-spacing: .09em; text-transform: uppercase; }
+.onb-card:focus-visible, .onboarding-dialog button:focus-visible { outline: 3px solid #b6e8ff; outline-offset: 3px; }
+.onboarding-dialog button { min-height: 44px; }
+.onb-confirm .onb-card { max-width: 360px; }
+.onb-deck { padding: 16px; border: 1px solid #ac905544; background: #050c1680; border-radius: 4px; }
+.onb-deck li { padding-block: 3px; color: #cad9e8; }
+.onb-deck b { color: #d7b979; }
+.onb-unlock[open] { animation: onb-reveal .35s ease-out; }
+.onb-unlock .onb-portrait { background: radial-gradient(ellipse, #d4ae5544, transparent 68%); }
+.onb-preserved { padding: 10px 12px; border: 1px solid #8bbfb055; background: #173d3344; color: #d7f3df !important; }
+.guest-gate { border-color: #bc9957; background: radial-gradient(ellipse at top, #253b50, #0b1420 70%); }
+.guest-gate-benefits li { margin-block: 6px; }
+@keyframes onb-aura { 50% { opacity: .4; } }
+@keyframes onb-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (max-height: 500px) and (min-width: 600px) {
+  .onboarding-dialog { padding: 16px; }
+  .onboarding-dialog h2 { font-size: 24px; }
+  .onb-cards { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 4px 12px; gap: 12px; }
+  .onb-cards .onb-card { flex: 0 0 min(460px, 82vw); scroll-snap-align: center; flex-direction: row; align-items: center; min-height: 175px; }
+  .onb-portrait { width: 38%; height: 175px; flex-shrink: 0; }
+  .onb-card-text { padding: 12px; }
+  .onb-name { font-size: 22px; }
+  .onb-tagline { display: block; }
+  .onb-confirm { grid-template-columns: 1fr 1fr; }
+  .onb-confirm .onb-card { flex-direction: row; }
+  .onb-confirm .onb-portrait { height: 170px; }
+}
+@media (max-width: 599px) { .onboarding-dialog { padding: 18px; } .onb-portrait { height: 190px; } }
+@media (prefers-reduced-motion: reduce) { .onb-card, .onb-unlock[open] { transition: none; animation: none; } .onb-card.is-selected::after { animation: none; } }

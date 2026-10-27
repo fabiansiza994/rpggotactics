@@ -1,0 +1,3 @@
+.pile-dialog { color: #eadcbb; background: #0d1825; border: 1px solid #a99462; width: min(420px, 90dvw); max-height: 80dvh; overflow: auto; }
+.pile-dialog::backdrop { background: #030812bb; }
+.pile-dialog button, .cancel-action, .confirm-action { min-height: 44px; padding: 6px 12px; background: #142b40; border: 1px solid #9e855d; color: #eadcbb; }

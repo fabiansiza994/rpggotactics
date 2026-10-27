@@ -1,0 +1,89 @@
+/* Hand rule HUD + end-of-turn discard picker (HandLimitControls.tsx). Small, additive. */
+.hand-limit-count {
+  display: block;
+  max-width: 150px;
+  margin: 0 auto;
+  text-align: center;
+  line-height: 1.15;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+/* The warning sits on its own line so it never clips in the narrow end-turn column. */
+.hand-limit-hint {
+  display: block;
+  font-size: 0.64rem;
+}
+.hand-limit-count.is-over {
+  color: var(--warning, #f0b35a);
+  opacity: 1;
+}
+.hand-discard-bar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(14, 16, 24, 0.92);
+  border: 1px solid var(--warning, #f0b35a);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.hand-discard-text {
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hand-discard-bar button {
+  min-height: 34px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+.hand-discard-confirm {
+  background: var(--warning, #f0b35a);
+  color: #1a1206;
+  border: none;
+}
+.hand-discard-confirm:disabled {
+  opacity: 0.45;
+}
+.hand-discard-cancel {
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+/* Every hand card is eligible; the picked one is the card marked .is-selected. */
+.hand.is-discarding .card {
+  outline: 1px dashed rgba(240, 179, 90, 0.7);
+  outline-offset: 2px;
+}
+.hand.is-discarding .card.is-selected {
+  outline: 2px solid var(--warning, #f0b35a);
+  filter: saturate(0.6) brightness(0.85);
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .hand-limit-count {
+    font-size: 0.62rem;
+  }
+  .hand-limit-hint {
+    font-size: 0.56rem;
+  }
+  .hand-discard-bar {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  .hand-discard-text {
+    font-size: 0.74rem;
+    max-width: 38vw;
+  }
+}

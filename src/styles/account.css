@@ -1,0 +1,616 @@
+/* Account: a subtle header chip, sign-in/import dialogs and the cloud status banner.
+   Same ink / gold / navy as the menu; deliberately quiet — the game stays in front. */
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #eadcbb;
+  background: rgb(9 16 26 / 0.6);
+  border: 1px solid rgb(234 220 187 / 0.25);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.menu-header .account-chip {
+  margin-left: auto;
+  align-self: center;
+}
+.menu-header .account-chip + .menu-nav-champions {
+  margin-left: 0;
+}
+button.account-chip:hover {
+  border-color: rgb(234 220 187 / 0.6);
+}
+.account-chip.is-disabled {
+  color: rgb(234 220 187 / 0.5);
+  border-style: dashed;
+}
+.account-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a94a8;
+}
+.account-chip.is-ready .account-dot {
+  background: #9fe0a8;
+  box-shadow: 0 0 6px #9fe0a8;
+}
+.account-chip.is-offline .account-dot {
+  background: #f2b8a8;
+}
+.account-chip.is-connecting .account-dot,
+.account-chip.is-needs_import .account-dot {
+  background: #7fb8ff;
+  animation: account-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes account-pulse {
+  to {
+    opacity: 0.3;
+  }
+}
+
+.account-dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px 22px;
+  border-radius: 10px;
+}
+.account-dialog h2 {
+  margin: 0 0 8px;
+  font:
+    600 22px/1.2 Georgia,
+    serif;
+  color: #f4e7c6;
+}
+.account-dialog p {
+  margin: 0 0 12px;
+  color: #b9ab8b;
+}
+.account-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.account-tabs button[aria-selected='true'] {
+  color: #fff3d0;
+  border-color: #7fb8ff;
+  background: linear-gradient(180deg, rgb(70 98 140 / 0.55), rgb(24 40 64 / 0.75));
+}
+.account-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.account-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b9ab8b;
+}
+.account-form input {
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #eadcbb;
+  background: rgb(4 9 16 / 0.85);
+  border: 1px solid rgb(158 133 93 / 0.5);
+  border-radius: 8px;
+}
+.account-form input:focus-visible {
+  outline: 2px solid #fff6dc;
+  outline-offset: 1px;
+}
+.account-note {
+  font-size: 12px;
+}
+.account-error {
+  color: #ff9a8a !important;
+}
+.turnstile-slot {
+  min-height: 65px;
+}
+.recovery-code {
+  display: block;
+  margin: 0 0 14px;
+  padding: 12px;
+  font:
+    700 18px/1.3 ui-monospace,
+    monospace;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: #f4e7c6;
+  background: rgb(4 9 16 / 0.85);
+  border: 1px dashed #d6b86a;
+  border-radius: 8px;
+  user-select: all;
+}
+.import-summary {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: #eadcbb;
+}
+
+.cloud-banner {
+  position: fixed;
+  z-index: 60;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  translate: -50% 0;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+  font-size: 13px;
+  color: #eadcbb;
+  background: #0d1825f2;
+  border: 1px solid rgb(127 184 255 / 0.5);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px #000a;
+}
+.cloud-banner.is-error {
+  border-color: #e46a5f;
+}
+.cloud-banner .game-icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: #7fb8ff;
+}
+.cloud-banner.is-error .game-icon {
+  color: #ff9a8a;
+}
+.cloud-banner button {
+  min-height: 32px;
+  padding: 0 10px;
+  color: #eadcbb;
+  background: #142b40;
+  border: 1px solid #9e855d;
+  border-radius: 999px;
+}
+.cloud-sync {
+  font-size: 13px;
+  color: #7fb8ff;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .menu-header .account-chip {
+    min-height: 32px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-dot {
+    animation: none !important;
+  }
+}
+
+/* Account portal uses the same ink, metal and arcane light as the game. */
+.account-chip,
+.menu-header .account-chip {
+  min-height: 44px;
+}
+.account-premium.account-dialog {
+  width: min(900px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid #ad8b4f;
+  border-radius: 5px;
+  color: #eadcbb;
+  background: linear-gradient(135deg, #152638, #060d17 70%);
+  box-shadow:
+    0 0 0 4px #070d14,
+    0 0 0 5px #ad8b4f55,
+    0 25px 80px #000d,
+    inset 0 0 28px #78baf00a;
+  overflow: auto;
+}
+.account-premium[open] {
+  display: grid;
+  grid-template-columns: 36% 64%;
+}
+.account-premium::backdrop {
+  background: #020711d9;
+  backdrop-filter: blur(4px);
+}
+.account-art {
+  position: relative;
+  min-height: 480px;
+  overflow: hidden;
+  border-right: 1px solid #b99a5b66;
+  background:
+    radial-gradient(ellipse at 50% 35%, #4683a855, #04101b55 65%),
+    url('/art/checkpoint05/environments/sanctuary.webp') center/cover;
+}
+.account-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #030913 5%, transparent 75%);
+  pointer-events: none;
+}
+.account-art img {
+  position: absolute;
+  width: 115%;
+  height: 82%;
+  object-fit: contain;
+  left: -8%;
+  top: 0;
+}
+.account-art > div:last-child {
+  position: absolute;
+  z-index: 1;
+  bottom: 30px;
+  left: 24px;
+  right: 16px;
+}
+.account-art span,
+.account-eyebrow {
+  color: #c9ab6a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.account-art h2 {
+  font-size: 30px;
+  margin: 12px 0;
+}
+.account-art p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.account-art-rune {
+  position: absolute;
+  z-index: 1;
+  left: 24px;
+  top: 24px;
+  color: #8fd6fa;
+  font-size: 28px;
+}
+.account-content {
+  padding: 26px 32px;
+  min-width: 0;
+}
+.account-content h2 {
+  font-size: 28px;
+  margin: 14px 0 16px;
+}
+.account-content p {
+  line-height: 1.5;
+}
+.account-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.account-premium button {
+  min-height: 44px;
+  font:
+    600 14px/1.2 Georgia,
+    serif;
+  cursor: pointer;
+  color: #e8dcb9;
+  border-radius: 3px;
+}
+.account-heading button {
+  width: 44px;
+  font: 24px/1 sans-serif;
+  background: #060f19;
+  border: 1px solid #ba995c66;
+}
+.account-premium button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.account-premium :is(button, input):focus-visible {
+  outline: 2px solid #99dcff;
+  outline-offset: 3px;
+}
+.account-primary,
+.account-secondary {
+  padding: 12px 18px;
+  width: 100%;
+  border: 1px solid #b89a57;
+  background: linear-gradient(#22516c, #102438);
+  box-shadow:
+    inset 0 0 0 3px #080e1755,
+    0 3px 10px #0005;
+}
+.account-secondary {
+  background: linear-gradient(#1b2837, #0b1421);
+  border-color: #9d804a99;
+}
+.account-primary:hover:not(:disabled),
+.account-secondary:hover:not(:disabled) {
+  border-color: #f3d494;
+  filter: brightness(1.15);
+}
+.account-entry-actions {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 18px;
+}
+.account-link {
+  background: none;
+  border: 0;
+  color: #a6d7f1 !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.account-form fieldset {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  border: 0;
+}
+.account-form label {
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 13px;
+}
+.account-form input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 3px;
+}
+.account-form .account-note {
+  font-size: 12px;
+  margin: -4px 0 0;
+}
+.account-password {
+  display: flex;
+  position: relative;
+}
+.account-password input {
+  padding-right: 84px;
+}
+.account-password button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background: transparent;
+  color: #a6d7f1;
+  border: 0;
+  font: 12px sans-serif;
+}
+.account-form-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.account-ack {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+  min-height: 44px;
+  color: #eadcbb;
+  font-size: 14px;
+}
+.account-ack input {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  accent-color: #81c6ea;
+}
+.account-premium .recovery-code {
+  margin: 24px 0 16px;
+  padding: 18px 8px;
+  font-size: clamp(14px, 2.3vw, 19px);
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+  border: 1px solid #bca466;
+  border-radius: 3px;
+  box-shadow: inset 0 0 18px #56bfff17;
+}
+.account-copy-feedback {
+  display: block;
+  min-height: 18px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #a4dbb3;
+}
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
+  padding: 18px;
+  background: #050f1bd9;
+  border: 1px solid #b99a5b55;
+}
+.account-identity > span {
+  color: #88d9fb;
+  font-size: 32px;
+}
+.account-identity strong {
+  display: block;
+  font:
+    24px Georgia,
+    serif;
+  overflow-wrap: anywhere;
+}
+.account-identity small {
+  display: block;
+  color: #a2c9de;
+  margin-top: 6px;
+}
+.account-content .account-error {
+  margin-top: 14px;
+  padding: 10px;
+  background: #421c2466;
+  border-left: 2px solid #df8977;
+  font-size: 13px;
+}
+.cloud-banner button {
+  min-height: 44px;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .account-premium.account-dialog {
+    max-height: calc(100dvh - 20px);
+    width: min(850px, calc(100vw - 24px));
+  }
+  .account-premium[open] {
+    grid-template-columns: 29% 71%;
+  }
+  .account-art {
+    min-height: 320px;
+    position: sticky;
+    top: 0;
+    height: calc(100dvh - 24px);
+  }
+  .account-art h2 {
+    font-size: 23px;
+  }
+  .account-art > div:last-child {
+    bottom: 16px;
+    left: 16px;
+  }
+  .account-content {
+    padding: 14px 22px;
+  }
+  .account-content h2 {
+    font-size: 23px;
+    margin: 8px 0 10px;
+  }
+  .account-entry-actions {
+    margin: 12px 0;
+    gap: 8px;
+  }
+  .account-heading {
+    min-height: 44px;
+  }
+  .account-premium .recovery-code {
+    margin: 12px 0;
+  }
+}
+@media (max-width: 550px) and (orientation: portrait) {
+  .account-premium[open] {
+    grid-template-columns: 1fr;
+  }
+  .account-art {
+    display: none;
+  }
+  .account-content {
+    padding: 20px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .account-premium[open] {
+    animation: account-arrival 0.18s ease-out;
+  }
+  @keyframes account-arrival {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+.account-premium.account-dialog[open] {
+  overflow: hidden;
+}
+.account-premium .account-content {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.account-premium.account-dialog .account-primary {
+  background: linear-gradient(#22516c, #102438);
+  border-color: #b89a57;
+}
+.account-premium.account-dialog .account-secondary {
+  background: linear-gradient(#1b2837, #0b1421);
+  border-color: #9d804a99;
+}
+.account-premium.account-dialog .account-link {
+  background: none;
+  border: 0;
+}
+.account-premium.account-dialog .account-password button {
+  background: transparent;
+  border: 0;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .account-premium .account-content {
+    max-height: calc(100dvh - 20px);
+  }
+}
+.account-premium .account-heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #0c1622;
+}
+.account-premium .account-content {
+  scroll-padding: 54px 0 14px;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .account-premium .account-art {
+    min-height: 0;
+  }
+}
+@media (max-height: 260px) {
+  .account-premium .account-art > div:last-child {
+    display: none;
+  }
+}
+.account-bootstrap {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  color: #eadcbb;
+  text-align: center;
+  background:
+    linear-gradient(#040c15dd, #040c15f2),
+    url('/art/checkpoint05/environments/sanctuary.webp') center/cover;
+}
+.account-bootstrap > div {
+  padding: 28px;
+  border: 1px solid #ad8b4f66;
+  background: #0b1626c9;
+  box-shadow: inset 0 0 0 4px #02091155;
+}
+.account-bootstrap h1 {
+  font:
+    28px Georgia,
+    serif;
+}
+.account-bootstrap p {
+  color: #a6c7dd;
+}
+.account-loading-rune {
+  display: block;
+  color: #8fdbff;
+  font-size: 48px;
+  margin: 20px;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .account-bootstrap > div {
+    padding: 16px;
+  }
+  .account-loading-rune {
+    margin: 6px;
+  }
+}

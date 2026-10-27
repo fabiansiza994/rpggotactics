@@ -1,0 +1,264 @@
+/* Store gifts — minimal functional pass (Codex owns the visual pass). Same ink + gold as the store. */
+:root {
+  --gift-gold: #d7b978;
+  --gift-text: #efe5cf;
+  --gift-muted: #a9b8c2;
+  --gift-panel: rgb(12 24 38 / 0.96);
+  --gift-error: #f0a493;
+}
+
+.gift-notice button,
+.gift-modal button,
+.gift-panel button,
+.gift-open,
+.gift-history .gift-tabs button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #8e7a52;
+  border-radius: 6px;
+  color: var(--gift-text);
+  background: linear-gradient(#1e3a4f, #0f2030);
+  font: inherit;
+  cursor: pointer;
+}
+:is(.gift-notice, .gift-modal, .gift-panel) button.shop-primary,
+.gift-open {
+  border-color: var(--gift-gold);
+  background: linear-gradient(#2c6077, #12364a);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+:is(.gift-notice, .gift-modal, .gift-panel, .gift-history) button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+:is(.gift-notice, .gift-modal, .gift-panel, .gift-history) button:focus-visible,
+.gift-open:focus-visible,
+.gift-field input:focus-visible {
+  outline: 2px solid var(--gift-gold);
+  outline-offset: 2px;
+}
+
+.gift-open {
+  width: 100%;
+  margin-top: 8px;
+}
+.gift-guest,
+.gift-muted {
+  color: var(--gift-muted);
+  font-size: 14px;
+}
+.gift-error {
+  color: var(--gift-error);
+  font-size: 14px;
+}
+.gift-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gift-lines {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--gift-text);
+  font-size: 14px;
+}
+
+/* ── Sender: panel inside the product sheet ── */
+.gift-panel {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgb(215 185 120 / 0.38);
+  border-radius: 8px;
+  background: rgb(5 12 20 / 0.6);
+  display: grid;
+  gap: 10px;
+}
+.gift-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.gift-pick,
+.gift-confirm,
+.gift-sent {
+  display: grid;
+  gap: 10px;
+}
+.gift-friends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gift-panel .gift-friend {
+  min-height: 36px;
+  padding: 0 12px;
+}
+.gift-panel .gift-friend[aria-pressed='true'] {
+  border-color: var(--gift-gold);
+  background: linear-gradient(#2c6077, #12364a);
+}
+.gift-field {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--gift-muted);
+}
+.gift-field input {
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid #5d6f7d;
+  border-radius: 6px;
+  color: var(--gift-text);
+  background: #08131e;
+  font: inherit;
+}
+
+/* ── Recipient: notice + modal ── */
+.gift-notice {
+  position: fixed;
+  z-index: 295;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(460px, calc(100vw - 32px));
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--gift-gold);
+  border-radius: 10px;
+  color: var(--gift-text);
+  background: var(--gift-panel);
+  box-shadow: 0 12px 40px #000a;
+  animation: gift-notice-in 0.25s ease-out;
+}
+.gift-notice-icon {
+  font-size: 28px;
+  grid-row: span 2;
+}
+@keyframes gift-notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gift-notice {
+    animation: none;
+  }
+}
+
+.gift-modal {
+  width: min(480px, calc(100vw - 32px));
+  max-height: 92dvh;
+  padding: 0;
+  border: 1px solid var(--gift-gold);
+  border-radius: 10px;
+  color: var(--gift-text);
+  background: radial-gradient(ellipse at 50% 20%, #244460, #0b1420 65%);
+  box-shadow: 0 25px 100px #000;
+  overflow: auto;
+}
+.gift-modal::backdrop {
+  background: #02070dce;
+}
+.gift-modal-body {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 20px 16px;
+  text-align: center;
+}
+.gift-modal-body h2 {
+  margin: 0;
+  font:
+    700 20px Georgia,
+    serif;
+}
+.gift-modal-art {
+  width: min(260px, 70vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.gift-modal-art > * {
+  width: 100%;
+  height: 100%;
+}
+.gift-modal-product {
+  margin: 0;
+  font-size: 18px;
+  color: var(--gift-gold);
+}
+.gift-message {
+  margin: 0;
+  font-style: italic;
+  color: var(--gift-muted);
+}
+.gift-claimed {
+  margin: 0;
+  color: #9fe0b0;
+}
+.gift-modal .gift-actions {
+  justify-content: center;
+}
+/* Short landscape phones: art beside the text so the whole gift fits without scrolling. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .gift-modal {
+    width: min(640px, calc(100vw - 32px));
+  }
+  .gift-modal-body {
+    grid-template-columns: 190px 1fr;
+    column-gap: 20px;
+    justify-items: start;
+    align-items: center;
+    padding: 16px;
+    text-align: left;
+  }
+  .gift-modal-art {
+    grid-column: 1;
+    grid-row: 1 / span 7;
+    width: 190px;
+  }
+  .gift-modal-body > :not(.gift-modal-art) {
+    grid-column: 2;
+  }
+  .gift-modal .gift-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ── Store: Regalos history ── */
+.gift-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.gift-history .gift-tabs button[aria-selected='true'] {
+  border-color: var(--gift-gold);
+}
+.gift-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.gift-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgb(215 185 120 / 0.25);
+  border-radius: 6px;
+  font-size: 14px;
+}
+.gift-list li em {
+  color: var(--gift-muted);
+  font-style: normal;
+  white-space: nowrap;
+}

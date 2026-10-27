@@ -1,0 +1,42 @@
+{
+  "veil_beast": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.125
+  },
+  "veil_cover": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.3515625
+  },
+  "veil_brambles": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.35546875
+  },
+  "veil_camp": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.13671875
+  },
+  "veil_stalker": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.080078125
+  },
+  "veil_tree": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.080078125
+  },
+  "veil_relic": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.080078125
+  },
+  "veil_guardian": {
+    "anchorX": 0.5,
+    "anchorY": 0.919921875,
+    "topY": 0.080078125
+  }
+}

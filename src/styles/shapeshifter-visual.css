@@ -1,0 +1,416 @@
+/* Private QA only. Raster sprites + existing motion token timing; no gameplay waits. */
+.shapeshifter-lab .qa-champion-portrait {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  float: right;
+  border: 2px solid #b59c62;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px #0008;
+  margin: 0 0 16px 24px;
+}
+.shapeshifter-lab header {
+  min-height: 170px;
+}
+.qa-active-form-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 10px;
+  background: #152a28;
+  border: 1px solid #a9b47b;
+  border-radius: 50%;
+}
+.qa-board-wrap {
+  max-width: 900px;
+  padding: 28px 8px 34px;
+  background:
+    linear-gradient(#0c1724bb, #08121bde),
+    url('/art/checkpoint05/environments/duel.webp') center/cover;
+  border: 1px solid #8e8559;
+}
+.shapeshifter-lab .qa-painted-board {
+  position: relative;
+  max-width: none;
+  isolation: isolate;
+}
+.shapeshifter-lab .qa-painted-board > button {
+  min-height: 90px;
+  background:
+    linear-gradient(#1c303533, #11222e66),
+    url('/art/checkpoint05/materials/stone.webp') center/cover;
+  border-color: #617378;
+  box-shadow: inset 0 0 0 1px #0b161d;
+}
+.shapeshifter-lab .qa-painted-board > button.is-legal {
+  border: 2px solid #80dcca;
+  box-shadow: inset 0 0 16px #4da99344;
+}
+.shapeshifter-lab .qa-painted-board > button:hover:not(:disabled) {
+  outline: 2px solid #e0c085;
+  outline-offset: -5px;
+}
+.qa-painted-board > button > span {
+  color: #8d9ba755;
+}
+.qa-obstacle {
+  height: 80px;
+  max-width: 100%;
+  object-fit: contain;
+}
+.qa-actor-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.qa-unit-anchor {
+  position: absolute;
+  aspect-ratio: 1;
+  transform: translate(-50%, -94%);
+  transition:
+    left var(--motion-normal, 240ms) ease,
+    top var(--motion-normal, 240ms) ease;
+  pointer-events: none;
+}
+.qa-form-actor {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.qa-form-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(var(--facing, 1)) scale(var(--form-scale, 1));
+  transform-origin: 50% 94%;
+}
+.qa-form-current,
+.qa-form-body {
+  position: absolute;
+  inset: 0;
+}
+.qa-form-body {
+  transform-origin: 50% 94%;
+  animation: qa-idle-mantle 3.4s ease-in-out infinite;
+}
+.qa-form-actor[data-idle='heavy'] .qa-form-body {
+  animation: qa-idle-heavy 4.5s ease-in-out infinite;
+}
+.qa-form-actor[data-idle='axe'] .qa-form-body {
+  animation: qa-idle-axe 3.2s ease-in-out infinite;
+}
+.qa-form-stage img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+.qa-ground-ring {
+  position: absolute;
+  bottom: 3%;
+  left: 25%;
+  width: 50%;
+  height: 13%;
+  border-radius: 50%;
+  background: #0008;
+  border: 1px solid var(--form-accent);
+  box-shadow: 0 0 6px #0009;
+}
+.qa-unit-anchor[data-selected='true'] .qa-ground-ring {
+  border: 2px solid #e7c278;
+  box-shadow: 0 0 7px #bfa55f77;
+}
+.qa-unit-vitals {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 1px 5px;
+  font: 600 10px/1.4 system-ui;
+  color: #e5f3ed;
+  background: #09151ef2;
+  border: 1px solid #7e946f;
+  border-radius: 3px;
+}
+.qa-enemy-art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px #0008);
+}
+.qa-form-action {
+  opacity: 0;
+}
+.qa-form-previous {
+  opacity: 0;
+  pointer-events: none;
+}
+.qa-form-actor[data-motion='transform'] .qa-form-previous {
+  animation: qa-old-form var(--form-reveal-ms, 600ms) ease-out both;
+}
+.qa-form-actor[data-motion='transform'] .qa-form-current {
+  animation: qa-reveal var(--form-reveal-ms, 600ms) cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.qa-rune-ring {
+  position: absolute;
+  left: 9%;
+  bottom: 3%;
+  width: 82%;
+  height: 32%;
+  border: 2px solid var(--form-accent);
+  border-radius: 50%;
+  color: var(--form-accent);
+  font-size: clamp(10px, 1.2vw, 18px);
+  text-align: center;
+  box-shadow: 0 0 10px var(--form-accent);
+  opacity: 0;
+  animation: qa-rune-reveal var(--form-reveal-ms, 600ms) ease-out both;
+}
+.qa-form-impact {
+  position: absolute;
+  left: 15%;
+  bottom: 1%;
+  width: 70%;
+  height: 22%;
+  border: 2px solid var(--form-secondary);
+  border-radius: 50%;
+  opacity: 0;
+  animation: qa-impact var(--form-reveal-ms, 600ms) ease-out both;
+}
+.qa-form-actor[data-reveal='earth'] .qa-rune-ring {
+  border-width: 3px;
+  border-style: double;
+}
+.qa-form-actor[data-reveal='iron'] .qa-form-impact {
+  border-style: dashed;
+}
+.qa-form-actor:is([data-motion='attack'], [data-motion='hurt']) .qa-form-action {
+  animation: qa-pose-window var(--motion-emphasis, 380ms) linear both;
+}
+.qa-form-actor:is([data-motion='attack'], [data-motion='hurt']) .qa-form-idle {
+  animation: qa-idle-return var(--motion-emphasis, 380ms) linear both;
+}
+.qa-form-actor[data-motion='attack'] .qa-form-current {
+  animation: qa-attack var(--motion-emphasis, 380ms) ease-out both;
+}
+.qa-form-actor[data-motion='hurt'] .qa-form-current {
+  animation: qa-hurt var(--motion-normal, 240ms) ease-out both;
+}
+.qa-form-actor[data-motion='death'] .qa-form-idle {
+  display: none;
+}
+.qa-form-actor[data-motion='death'] .qa-form-action {
+  opacity: 1;
+  animation: qa-death 600ms ease-out both;
+}
+.qa-form-actor[data-motion='death'] .qa-form-body {
+  animation: none;
+}
+.qa-form-actor[data-motion='death'] .qa-ground-ring {
+  opacity: 0.2;
+}
+.shapeshifter-lab [data-transform-card] {
+  border-color: var(--form-accent);
+  background: linear-gradient(145deg, #18352f, #18232c 60%, #37291d);
+}
+.qa-transform-editor-art {
+  width: 100%;
+  height: 145px;
+  object-fit: cover;
+  object-position: center 42%;
+  border-bottom: 1px solid var(--form-accent);
+  margin-bottom: 10px;
+}
+.qa-transform-hand-art {
+  width: 100%;
+  height: 115px;
+  object-fit: cover;
+  object-position: center 42%;
+  border: 1px solid var(--form-accent);
+}
+.qa-transform-badge {
+  font-size: 9px !important;
+  letter-spacing: 0.12em;
+  color: var(--form-accent);
+}
+@keyframes qa-idle-mantle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  50% {
+    transform: translateY(-1.5px) rotate(0.4deg);
+  }
+}
+@keyframes qa-idle-heavy {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.018) rotate(0.5deg);
+  }
+}
+@keyframes qa-idle-axe {
+  0%,
+  100% {
+    transform: rotate(-0.6deg);
+  }
+  50% {
+    transform: rotate(0.6deg) translateY(-1px);
+  }
+}
+@keyframes qa-old-form {
+  0%,
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  55%,
+  100% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+@keyframes qa-reveal {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.07);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes qa-rune-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  25%,
+  55% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+@keyframes qa-impact {
+  0%,
+  25% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  55% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+@keyframes qa-pose-window {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes qa-idle-return {
+  0%,
+  85% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes qa-attack {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(9%) rotate(-3deg);
+  }
+}
+@keyframes qa-hurt {
+  0%,
+  100% {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+  25% {
+    transform: translateX(-4%);
+    filter: brightness(1.6);
+  }
+  70% {
+    transform: translateX(2%);
+  }
+}
+@keyframes qa-death {
+  from {
+    opacity: 1;
+    transform: translateY(-3%);
+  }
+  to {
+    opacity: 0.65;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 900px) {
+  .shapeshifter-lab .qa-painted-board > button {
+    min-height: 66px;
+  }
+  .qa-unit-vitals {
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+  .qa-obstacle {
+    height: 58px;
+  }
+  .qa-board-wrap {
+    padding-top: 24px;
+  }
+  .qa-champion-portrait {
+    max-width: 120px;
+    max-height: 120px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shapeshifter-lab .qa-unit-anchor,
+  .shapeshifter-lab .qa-form-stage * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .qa-form-previous,
+  .qa-rune-ring,
+  .qa-form-impact {
+    display: none !important;
+  }
+  .qa-form-current {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .qa-form-actor:is([data-motion='attack'], [data-motion='hurt']) .qa-form-idle {
+    opacity: 1;
+  }
+  .qa-form-actor:is([data-motion='attack'], [data-motion='hurt']) .qa-form-action {
+    opacity: 0;
+  }
+  .qa-form-actor[data-motion='death'] .qa-form-action {
+    opacity: 0.65;
+  }
+}

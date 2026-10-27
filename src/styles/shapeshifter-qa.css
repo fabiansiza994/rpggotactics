@@ -1,0 +1,128 @@
+.shapeshifter-lab {
+  max-width: 1200px;
+  margin: auto;
+  padding: 24px;
+  color: #eee2cb;
+  background: #0a1420;
+  min-height: 100dvh;
+  font: 15px/1.6 system-ui;
+}
+.shapeshifter-lab h1,
+.shapeshifter-lab h2 {
+  color: #dfbf7b;
+}
+.shapeshifter-lab section {
+  margin: 24px 0;
+  border: 1px solid #89734d;
+  padding: 20px;
+}
+.shapeshifter-lab button {
+  background: #1a2b40;
+  border: 1px solid #927e54;
+  min-height: 44px;
+  padding: 8px 14px;
+}
+.shapeshifter-lab button[aria-pressed='true'] {
+  outline: 2px solid #c68cf0;
+}
+.shapeshifter-lab :focus-visible {
+  outline: 3px solid #88ddff;
+  outline-offset: 3px;
+}
+.lab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+.lab-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.lab-editor article {
+  padding: 14px;
+  background: #122033;
+  border: 1px solid #443955;
+}
+.lab-editor h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.lab-editor p {
+  font-size: 13px;
+}
+.lab-editor small {
+  display: block;
+  color: #c9afd9;
+}
+.lab-editor output {
+  display: inline-block;
+  min-width: 24px;
+  text-align: center;
+}
+.lab-board {
+  max-width: 700px;
+  display: grid;
+  gap: 4px;
+}
+.lab-board button {
+  min-height: 60px;
+  padding: 5px;
+  background: #293541;
+}
+.lab-board button.is-legal {
+  border: 2px solid #83d9e9;
+  background: #173748;
+}
+.lab-board strong,
+.lab-board small {
+  display: block;
+}
+.lab-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.lab-hand button {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  text-align: left;
+}
+.lab-hand small {
+  font-size: 12px;
+}
+.lab-hand em {
+  color: #edbb94;
+  font-style: normal;
+  font-size: 12px;
+}
+.lab-notice {
+  position: sticky;
+  bottom: 0;
+  padding: 16px;
+  background: #231a35;
+  border: 1px solid #a98ac8;
+}
+.shapeshifter-lab a {
+  color: #bddcfa;
+}
+@media (max-width: 600px) {
+  .shapeshifter-lab {
+    padding: 12px;
+  }
+  .shapeshifter-lab section {
+    padding: 12px;
+  }
+  .lab-hand button {
+    width: calc(50% - 5px);
+  }
+  .lab-board button {
+    min-width: 0;
+    padding: 2px;
+    font-size: 10px;
+  }
+}

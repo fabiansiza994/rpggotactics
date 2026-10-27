@@ -1,0 +1,729 @@
+/* Champion Select: a character-select screen, not a settings page. Champion list (left) and a
+   large presentation (right) on desktop; a champion strip over a two-column detail on phone
+   landscape; stacked in portrait. Same ink / gold / navy language as the menu and Deck Builder. */
+.champions {
+  --menu-ink: #eadcbb;
+  --menu-ink-dim: #b9ab8b;
+  --menu-gold: #d6b86a;
+  --menu-line: rgb(158 133 93 / 0.4);
+  --ch-blue: #7fb8ff;
+  --ch-border: rgb(214 184 106 / 0.42);
+  --ch-display: Georgia, 'Times New Roman', serif;
+  --ch-gutter: clamp(12px, 1.8vw, 28px);
+
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: max(var(--ch-gutter), env(safe-area-inset-top)) max(var(--ch-gutter), env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(var(--ch-gutter), env(safe-area-inset-left));
+  overflow: hidden;
+  color: var(--menu-ink);
+  -webkit-tap-highlight-color: transparent;
+  background:
+    radial-gradient(ellipse 55% 70% at 72% 40%, rgb(74 118 182 / 0.22), transparent 70%),
+    linear-gradient(180deg, #0a1220, #060b14 70%);
+}
+.champions button:focus-visible {
+  outline: 2px solid #fff6dc;
+  outline-offset: 2px;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+.ch-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(90deg, var(--menu-gold), rgb(214 184 106 / 0.15) 55%, transparent) 1;
+}
+.ch-title {
+  display: grid;
+  gap: 2px;
+}
+.ch-title .menu-eyebrow {
+  color: var(--menu-ink-dim);
+}
+.ch-title h1 {
+  margin: 0;
+  font: 700 clamp(22px, 2.2vw, 30px) / 1.1 var(--ch-display);
+  color: #f4e7c6;
+}
+.ch-scope {
+  margin: 0 0 0 auto;
+  max-width: 46ch;
+  font-size: 13px;
+  color: var(--menu-ink-dim);
+  text-align: right;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+.ch-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: clamp(12px, 1.4vw, 22px);
+}
+.ch-list {
+  min-height: 0;
+  overflow-y: auto;
+}
+.ch-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  display: grid;
+  gap: 10px;
+}
+.ch-item {
+  position: relative;
+  width: 100%;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  text-align: left;
+  color: var(--menu-ink);
+  border: 1px solid rgb(189 161 107 / 0.45);
+  border-radius: 10px;
+  background: linear-gradient(120deg, rgb(24 36 55 / 0.92), rgb(9 15 24 / 0.94) 70%);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.4);
+  transition:
+    border-color var(--motion-fast, 120ms),
+    box-shadow var(--motion-fast, 120ms),
+    translate var(--motion-fast, 120ms) var(--ease-enter, ease-out);
+}
+@media (hover: hover) {
+  .ch-item:not(.is-locked):hover {
+    border-color: #ecdcac;
+    translate: 3px 0;
+  }
+}
+.ch-item.is-viewing {
+  border-color: #f4e7c6;
+  background: linear-gradient(120deg, rgb(52 70 98 / 0.95), rgb(12 20 32 / 0.95) 70%);
+}
+/* The chosen champion: blue frame + glow + badge, readable at a glance. */
+.ch-item.is-selected {
+  border-color: var(--ch-blue);
+  box-shadow:
+    0 0 0 1px rgb(127 184 255 / 0.5),
+    0 0 18px rgb(127 184 255 / 0.35),
+    0 8px 20px rgb(0 0 0 / 0.4);
+}
+.ch-item.is-locked {
+  cursor: not-allowed;
+  filter: grayscale(0.9) brightness(0.6);
+}
+.ch-item-art {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid #bda16b;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 30%, #34516b, #07101a);
+  box-shadow: inset 0 0 0 2px #050b14;
+}
+.ch-item-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+}
+.ch-item-text {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.ch-item-name {
+  font: 700 18px/1.1 var(--ch-display);
+  color: #f4e7c6;
+}
+.ch-item-role {
+  font-size: 12px;
+  color: var(--menu-ink-dim);
+}
+.ch-badge {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #06101d;
+  background: linear-gradient(180deg, #b9dcff, var(--ch-blue));
+  border: 1px solid #e3f1ff;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.5);
+}
+.ch-badge.is-locked {
+  color: #d9ccb0;
+  background: #2a2a2a;
+  border-color: #6d6252;
+}
+
+/* ── Detail ──────────────────────────────────────────────────────────── */
+.ch-detail {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 34%) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid var(--ch-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse 65% 85% at 18% 30%, rgb(74 118 182 / 0.28), transparent 70%),
+    linear-gradient(160deg, rgb(24 36 55 / 0.94), rgb(9 15 24 / 0.96) 70%);
+  box-shadow:
+    0 18px 44px rgb(0 0 0 / 0.5),
+    inset 0 1px 0 rgb(255 240 200 / 0.1);
+}
+.ch-detail.is-selected {
+  border-color: rgb(127 184 255 / 0.7);
+}
+.ch-hero-art {
+  position: relative;
+  grid-row: 1 / -1;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid rgb(214 184 106 / 0.2);
+}
+.ch-hero-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 15%;
+  mask-image: linear-gradient(90deg, #000 70%, transparent);
+}
+.ch-art-note {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim);
+  background: rgb(5 10 18 / 0.8);
+  border: 1px solid var(--menu-line);
+  border-radius: 4px;
+}
+.ch-info {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: clamp(14px, 1.8vw, 26px);
+}
+.ch-role {
+  color: var(--ch-blue);
+}
+.ch-name {
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font: 700 clamp(30px, 3.2vw, 46px) / 1 var(--ch-display);
+  color: #f4e7c6;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.7);
+}
+.ch-current {
+  padding: 3px 10px;
+  font: 800 12px/1.4 system-ui, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #06101d;
+  background: linear-gradient(180deg, #b9dcff, var(--ch-blue));
+  border-radius: 999px;
+}
+.ch-tagline {
+  margin: 6px 0 0;
+  font: italic 16px/1.3 var(--ch-display);
+  color: var(--menu-ink-dim);
+}
+.ch-desc {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.ch-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ch-stats li {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  min-width: 92px;
+  padding: 6px 12px;
+  background: rgb(4 9 16 / 0.6);
+  border: 1px solid rgb(234 220 187 / 0.16);
+  border-radius: 8px;
+}
+.ch-stats .game-icon {
+  grid-row: span 2;
+  width: 20px;
+  height: 20px;
+  color: var(--menu-gold);
+}
+.ch-stats strong {
+  font: 700 18px/1 var(--ch-display);
+  color: #f4e7c6;
+}
+.ch-stats span {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim);
+}
+.ch-mechanic {
+  padding: 12px 14px;
+  background: linear-gradient(90deg, rgb(47 95 156 / 0.25), rgb(4 9 16 / 0.4));
+  border: 1px solid rgb(127 184 255 / 0.35);
+  border-left: 3px solid var(--ch-blue);
+  border-radius: 0 8px 8px 0;
+}
+.ch-mechanic h3 {
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 17px/1.2 var(--ch-display);
+  color: #dcecff;
+}
+.ch-mechanic .game-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--ch-blue);
+}
+.ch-mechanic p {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.ch-mechanic ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--menu-ink-dim);
+}
+.ch-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.ch-columns h3,
+.ch-subtitle {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ch-good {
+  color: #9fe0a8;
+}
+.ch-bad {
+  color: #f2b8a8;
+}
+.ch-subtitle {
+  color: var(--menu-ink-dim);
+}
+.ch-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.ch-points li {
+  position: relative;
+  padding-left: 18px;
+}
+.ch-points li::before {
+  position: absolute;
+  left: 0;
+  font-weight: 800;
+}
+.ch-points.is-good li::before {
+  content: '+';
+  color: #9fe0a8;
+}
+.ch-points.is-bad li::before {
+  content: '−';
+  color: #f2b8a8;
+}
+.ch-ratings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px 18px;
+}
+.ch-rating {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+.ch-rating-pips {
+  display: inline-flex;
+  gap: 4px;
+}
+.ch-pip {
+  width: 18px;
+  height: 7px;
+  border-radius: 2px;
+  background: rgb(234 220 187 / 0.14);
+  border: 1px solid rgb(234 220 187 / 0.25);
+}
+.ch-pip.is-on {
+  background: linear-gradient(90deg, #d6b86a, #f4e2a8);
+  border-color: #f4e2a8;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────── */
+.ch-actions {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px clamp(14px, 1.8vw, 26px);
+  border-top: 1px solid rgb(214 184 106 / 0.25);
+  background: rgb(5 10 18 / 0.7);
+}
+.ch-deck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+.ch-deck .game-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--menu-gold);
+}
+.ch-deck > span {
+  display: grid;
+  font-size: 13px;
+}
+.ch-deck strong {
+  font: italic 700 15px/1.2 var(--ch-display);
+  color: #f4e7c6;
+}
+.ch-deck-ok {
+  color: #9fe0a8;
+}
+.ch-deck-bad {
+  color: #f2b8a8;
+}
+.ch-select {
+  min-width: 170px;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ch-select.is-selected {
+  color: #06101d;
+  background: linear-gradient(180deg, #b9dcff, var(--ch-blue));
+  border-color: #e3f1ff;
+  box-shadow: 0 0 14px rgb(127 184 255 / 0.45);
+  cursor: default;
+}
+
+/* ── Menu: header entry + Skirmish loadout ───────────────────────────── */
+.menu-nav-champions {
+  margin-left: auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f4e7c6;
+  background: linear-gradient(180deg, rgb(70 98 140 / 0.55), rgb(24 40 64 / 0.75));
+  border: 1px solid var(--menu-gold, #d6b86a);
+  border-radius: 8px;
+}
+.menu-nav-champions .game-icon {
+  width: 18px;
+  height: 18px;
+  color: #7fb8ff;
+}
+.menu-nav-champions:hover {
+  border-color: #f4e2a8;
+}
+.menu-header .menu-nav-champions + .menu-version {
+  margin-left: 0;
+}
+.skirmish-loadout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 12px 0;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid rgb(127 184 255 / 0.45);
+  border-radius: 10px;
+  background: linear-gradient(120deg, rgb(24 36 55 / 0.9), rgb(9 15 24 / 0.9) 70%);
+}
+.loadout-art {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 1px solid #bda16b;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 30%, #34516b, #07101a);
+}
+.loadout-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+}
+.loadout-text {
+  display: grid;
+  gap: 1px;
+}
+.loadout-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim, #b9ab8b);
+}
+.loadout-name,
+.loadout-deck {
+  font: 700 18px/1.1 Georgia, serif;
+  color: #f4e7c6;
+}
+.loadout-role {
+  font-size: 12px;
+  color: #7fb8ff;
+}
+.loadout-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.loadout-actions .campaign-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.loadout-actions .game-icon {
+  width: 16px;
+  height: 16px;
+  color: #d6b86a;
+}
+
+/* ── Compact desktop ─────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .ch-detail {
+    grid-template-columns: minmax(180px, 30%) minmax(0, 1fr);
+  }
+  .ch-columns {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* ── Phone landscape: champion strip over a two-column detail ─────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .champions {
+    gap: 6px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .ch-header {
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+  }
+  .ch-title .menu-eyebrow {
+    display: none;
+  }
+  .ch-title h1 {
+    font-size: 20px;
+  }
+  .ch-scope {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .ch-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+  }
+  .ch-list {
+    overflow: visible;
+  }
+  .ch-list ul {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-top: 8px;
+  }
+  .ch-item {
+    width: auto;
+    min-height: 52px;
+    padding: 4px 14px 4px 4px;
+    gap: 8px;
+  }
+  .ch-item-art {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+  .ch-item-name {
+    font-size: 16px;
+  }
+  .ch-item-role {
+    display: none;
+  }
+  .ch-badge-text {
+    display: none;
+  }
+  .ch-detail {
+    grid-template-columns: clamp(150px, 26vw, 220px) minmax(0, 1fr);
+  }
+  .ch-info {
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .ch-name {
+    font-size: 26px;
+  }
+  .ch-tagline {
+    font-size: 14px;
+  }
+  .ch-desc {
+    font-size: 14px;
+  }
+  .ch-stats li {
+    min-width: 0;
+    padding: 4px 10px;
+  }
+  .ch-actions {
+    padding: 8px 14px;
+    flex-wrap: nowrap;
+  }
+  .ch-deck > span {
+    font-size: 12px;
+  }
+  .ch-select {
+    min-width: 140px;
+    font-size: 14px;
+  }
+}
+
+/* ── Portrait: stack list → detail → actions ───────────────────────── */
+@media (orientation: portrait) and (max-width: 720px) {
+  .ch-scope {
+    margin-left: 0;
+    text-align: left;
+  }
+  .ch-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .ch-list ul {
+    display: flex;
+    overflow-x: auto;
+    padding-top: 8px;
+  }
+  .ch-item {
+    width: auto;
+  }
+  .ch-detail {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .ch-hero-art {
+    display: none;
+  }
+  .ch-info {
+    background:
+      linear-gradient(180deg, rgb(9 15 24 / 0.55), rgb(9 15 24 / 0.95) 260px),
+      var(--ch-art) center 10% / cover no-repeat;
+    padding-top: 150px;
+  }
+  .ch-columns {
+    grid-template-columns: 1fr;
+  }
+  .ch-actions {
+    grid-column: 1;
+  }
+  .ch-deck {
+    flex-basis: 100%;
+  }
+  .ch-actions .db-btn {
+    flex: 1;
+  }
+  .ch-select {
+    min-width: 0;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-item {
+    transition: none;
+  }
+}
+
+.ch-guide-link {display:inline-block;color:#d9c38e;font-size:14px;text-underline-offset:4px;margin-bottom:12px}.ch-guide-link:focus-visible {outline:2px solid #8ddbed;outline-offset:4px}
+/* One card = one hit target and one quiet status, independent of the detail action. */
+.ch-list li{min-width:0}.ch-item{padding:12px;gap:12px;min-height:112px;box-shadow:0 5px 14px #0003}.ch-item-art{flex-basis:66px;width:66px;height:82px;border-color:#9b7b4c88}.ch-item-text{flex:1;gap:6px}.ch-item-name{font-size:19px;line-height:1.15}.ch-item-role{line-height:1.35;font-size:11px;color:#b9c5d0}
+.champions .ch-badge{position:static;display:inline-flex;align-items:center;justify-content:center;justify-self:start;align-self:start;width:fit-content;max-width:100%;padding:3px 7px;border-radius:4px;border:1px solid #9b855b66;box-shadow:none;background:#182637;color:#cbb78e;font:600 9px/1.2 system-ui;letter-spacing:.09em;white-space:nowrap}
+.champions .ch-badge[data-status=ACTIVO]{color:#a7dfd6;background:#14302e;border-color:#6ba89a88}.champions .ch-badge[data-status=GRATIS]{color:#e3c37c;background:#30291a;border-color:#bc9c595c}.champions .ch-badge[data-status=BLOQUEADO]{color:#b5b5b3;background:#202832;border-color:#68707c55}
+.ch-item.is-selected{border-color:#948163;box-shadow:none}.ch-item.is-viewing{border-color:#e2ba71;background:linear-gradient(110deg,#273542,#101c2b);box-shadow:inset 3px 0 #d7ad63,0 0 0 1px #b78d3d33}.ch-item.is-locked{cursor:pointer;filter:none;opacity:.78}.ch-item:focus-visible{outline:2px solid #9dd6e9;outline-offset:2px}.ch-detail.is-selected{border-color:#b89559}.ch-detail-status{margin-top:10px}.ch-info .ch-name{margin-top:5px}.ch-info .ch-role{font-size:11px;letter-spacing:.1em;color:#b7c8d9}.ch-headline .ch-tagline{margin-top:12px}
+.ch-actions{gap:12px;align-items:center}.ch-deck{min-width:0;gap:9px}.ch-deck>span{min-width:0;overflow-wrap:anywhere}.ch-actions .ch-deck-btn{border-color:transparent;background:transparent;box-shadow:none;font-size:12px;color:#bfceda;min-height:44px;padding:8px}.ch-actions .ch-deck-btn:hover{border-color:#937b4b66;background:#20324266}.ch-actions .ch-select{min-width:190px;min-height:44px;padding:10px 18px;border:1px solid #e1b86c;border-radius:6px;background:linear-gradient(#bd8b42,#745020);color:#fff0d1;box-shadow:inset 0 1px #f4dca77a;font:700 16px/1.2 Georgia,serif;letter-spacing:0;text-transform:none}.ch-actions .ch-select:hover:not(:disabled){filter:brightness(1.13)}.ch-actions .ch-select:disabled{background:#26313e;border-color:#6c6c63;color:#b7b8b5;box-shadow:none}
+/* Rectangular illustrations stay inside a deliberate gallery frame, not a fake cutout. */
+.ch-detail[data-art-mode=framedArtwork] .ch-hero-art{margin:14px 0 14px 14px;border:1px solid #b08d535c;border-radius:10px;background:radial-gradient(ellipse at 50% 40%,#283547,#07121c);box-shadow:inset 0 0 25px #0008}
+.ch-detail[data-art-mode=framedArtwork] .ch-hero-art img{object-fit:cover;object-position:var(--champion-art-position);mask-image:linear-gradient(180deg,#000 85%,#000a)}
+.ch-detail[data-art-mode=framedArtwork] .ch-hero-art:after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(90deg,#06101a33,transparent 20%,transparent 80%,#06101a44);box-shadow:inset 0 0 20px #02060b80}
+@media(orientation:landscape) and (max-height:500px){
+ .ch-header .ch-scope{max-width:48ch;font-size:10px}.ch-list ul{padding:2px 2px 6px;gap:8px;scroll-snap-type:x proximity}.ch-list li{flex:0 0 205px;scroll-snap-align:start}.ch-list .ch-item{width:100%;min-height:76px;padding:7px 9px;gap:9px}.ch-item-art{flex-basis:44px;width:44px;height:58px}.ch-item-text{gap:3px}.ch-item-name{font-size:15px}.ch-list .ch-item-role{display:block;font-size:9px;line-height:1.2;max-height:23px;overflow:hidden}.champions .ch-badge{font-size:8px;padding:2px 5px;letter-spacing:.05em}.ch-body{gap:6px}.ch-info{gap:8px;padding:10px 14px}.ch-info .ch-name{font-size:25px}.ch-detail-status{margin-top:6px}.ch-headline .ch-tagline{margin-top:7px}.ch-actions{gap:8px;padding:7px 12px}.ch-actions .ch-select{min-width:155px;max-width:210px;font-size:13px;padding:7px 12px;flex:none}.ch-actions .ch-deck-btn{font-size:11px;padding:6px}.ch-deck>span{font-size:10px}.ch-deck strong{font-size:12px}.ch-deck>.game-icon{display:none}.ch-detail[data-art-mode=framedArtwork] .ch-hero-art{margin:8px 0 8px 8px;border-radius:7px}
+}
+@media(max-width:760px) and (orientation:landscape){.ch-scope{display:none}.ch-list li{flex-basis:190px}.ch-actions .ch-select{min-width:145px;max-width:175px;font-size:12px}.ch-actions .ch-deck-btn{font-size:10px}.ch-actions{gap:6px}.ch-deck strong{font-size:11px}}
+@media(orientation:portrait) and (max-width:720px){.ch-list .ch-item{min-width:190px}.ch-detail[data-art-mode=framedArtwork] .ch-hero-art{margin:12px;min-height:250px}.ch-actions .ch-select{width:100%}}
+@media(prefers-reduced-motion:reduce){.ch-item{transition:none;translate:none!important}}
+.champions .ch-header .db-back{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border:1px solid #9b7b4c;border-radius:6px;background:linear-gradient(#1d3041,#0a1522);color:#eddbb5;font:600 13px system-ui;text-decoration:none}
+.champions .ch-header .db-back:hover{border-color:#ddba78;background:#24384a}
+/* Keep intrinsic strip/button widths from stretching the detail beyond the viewport. */
+.ch-body,.ch-list,.ch-detail,.ch-actions{min-width:0}
+.ch-actions{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(170px,230px)}
+.ch-actions .ch-select{min-width:0;max-width:none;width:100%}.ch-actions .ch-deck-btn{white-space:nowrap}
+@media(orientation:landscape) and (max-height:500px){.ch-body{grid-template-columns:minmax(0,1fr)}.ch-list{overflow-x:hidden;overflow-y:hidden}.ch-list ul{width:100%;max-width:100%;align-items:stretch}.ch-list .ch-item{height:100%}.ch-actions{grid-template-columns:minmax(0,1fr) auto minmax(145px,190px)}}
+@media(orientation:portrait) and (max-width:720px){.ch-actions{grid-template-columns:1fr auto}.ch-actions .ch-select{grid-column:1/-1}}

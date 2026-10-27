@@ -1,0 +1,114 @@
+/* Shared brass / sapphire chrome. These treatments do not reserve additional layout space. */
+.battle {
+  --ui-gold: #b99a61;
+  --ui-gold-light: #ecdcac;
+  --ui-ink: #07111d;
+  --ui-frame: inset 0 0 0 1px #030811, inset 0 0 0 3px #b99a6124, inset 0 1px 0 #f1dfad55, 0 5px 14px #0008;
+}
+.battle .hero-panel, .battle .enemy-panel, .battle .tactical-overview,
+.battle .pile-dialog, .battle .mobile-menu-content {
+  border: 1px solid var(--ui-gold);
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(135deg, #253449ed, #0b1422f5 40%, #070e18f5);
+  box-shadow: var(--ui-frame);
+}
+.battle .hero-portrait {
+  border-color: var(--ui-gold-light);
+  background: radial-gradient(ellipse at top, #34516b, #07101a);
+  box-shadow: inset 0 0 0 2px #07101a, 0 0 8px #c2a36922;
+}
+.battle .panel-title { color: var(--ui-gold-light); text-shadow: 0 2px 3px #000; }
+.battle .bar-track { border: 1px solid #cfb77f44; height: 8px; background: #030913; box-shadow: inset 0 2px 3px #000; }
+.battle .bar-fill { box-shadow: inset 0 1px 0 #fff5, 0 0 5px currentColor; }
+.battle .bar-value { color: #ece9de; font-variant-numeric: tabular-nums; }
+.battle .enemy-row { border-left-color: #ba7468; border-radius: 2px; background: linear-gradient(90deg, #97524816, transparent 75%); }
+.battle .enemy-row:hover, .battle .enemy-row:focus-visible { background: linear-gradient(90deg, #c391642c, #c3916407); }
+.battle .enemy-name { color: #eadfca; }
+.battle .enemy-intent { color: #cab6ae; }
+.battle .enemy-portrait { border: 1px solid #bda06d88; border-radius: 2px; }
+.battle .turn-title { color: #f3e5c3; text-shadow: 0 2px 8px #000; }
+.battle .round-label, .battle .scenario-name { color: #bcc9d3; }
+.battle .objective { color: #f2d592; text-shadow: 0 1px 4px #000; }
+.battle .turn-banner { border-color: #d3b36a; box-shadow: inset 0 1px 0 #fff2, inset 0 -1px 0 #030913, 0 6px 22px #0008; }
+.battle .tactical-overview-title { color: var(--ui-gold-light); }
+.battle .tactical-map { border-color: #bda06d66; box-shadow: inset 0 0 8px #0008; }
+.battle .pile { border-color: var(--ui-gold); background: linear-gradient(135deg, #22354a, #08121f 65%); box-shadow: var(--ui-frame); }
+.battle .pile-count { color: #f0dfb4; text-shadow: 0 2px 2px #000; }
+.battle .pile-label { color: #c4cfd6; }
+.battle .end-turn, .battle .confirm-action, .battle .cancel-action,
+.battle .mobile-battle-menu > summary {
+  border: 1px solid var(--ui-gold);
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(#315b75, #173448 48%, #0d2034);
+  box-shadow: var(--ui-frame);
+  color: #f1e5c7;
+  text-shadow: 0 1px 3px #000;
+}
+.battle .cancel-action { background: linear-gradient(#283548, #101c2a); }
+.battle .end-turn:disabled { opacity: 0.55; }
+.battle .end-turn:hover:not(:disabled), .battle .confirm-action:hover:not(:disabled) { border-color: #f0d99f; background: linear-gradient(#3d708a, #1b4056 55%, #132b3e); }
+.battle .end-turn:active:not(:disabled), .battle .confirm-action:active:not(:disabled) { box-shadow: inset 0 2px 7px #0009, inset 0 0 0 2px #b99a6133; }
+.battle .pip { border-color: #9bdff0; box-shadow: 0 0 5px #63cbff44; }
+
+/* The category crest identifies a real card category, not invented rarity. */
+.battle .card { --class-tone: #b3cbd4; border-color: #bda16b; border-radius: 9px 9px 4px 4px; background: linear-gradient(125deg, #766044, #172536 12%, #080f1b 70%, #453c2d); box-shadow: inset 0 0 0 2px #050b14, inset 0 0 0 3px #d2b57545, inset 0 1px 0 #f8e8b688, 0 5px 12px #000b; }
+.battle .card[data-category='ATTACK'] { --class-tone: #e5a18c; }
+.battle .card[data-category='MOVEMENT'] { --class-tone: #9dc9f3; }
+.battle .card[data-category='DEFENSE'] { --class-tone: #e6cd8c; }
+.battle .card[data-category='CONTROL'] { --class-tone: #acdacd; }
+.battle .card[data-category='TERRAIN'] { --class-tone: #91d5de; }
+.battle .card[data-category='UTILITY'] { --class-tone: #c5abe3; }
+.battle .card::after { content: ''; position: absolute; inset: 4px; border-top: 1px solid #f0d49377; border-bottom: 1px solid var(--class-tone); border-radius: 5px 5px 2px 2px; opacity: 0.6; pointer-events: none; }
+.battle .card-art { border: 1px solid #c4aa7377; border-radius: 5px 5px 2px 2px; box-shadow: 0 2px 5px #0007; }
+.battle .painted-card-art { object-fit: cover; object-position: center; }
+.battle .card-cost { border: 1px solid #edd89e; border-radius: 50%; background: radial-gradient(circle at 35% 25%, #70b9d0, #265778 45%, #0b2138 80%); box-shadow: inset 0 0 0 2px #0d223c, inset 0 0 0 3px #f3dfa66b, 0 2px 5px #000b; color: #fff3d4; text-shadow: 0 2px 2px #07121f; }
+.battle .card-class-icon { position: absolute; z-index: 2; top: 7px; right: 6px; width: 19px; height: 19px; display: grid; place-items: center; border: 1px solid #c6ae7788; border-radius: 4px; background: #071422e8; color: var(--class-tone); pointer-events: none; }
+.battle .card-class-icon .game-icon { width: 12px; height: 12px; }
+.battle .card-hotkey { top: 30px; right: 7px; }
+.battle .card-name { color: #f2e2b9; text-shadow: 0 2px 2px #000; }
+.battle .card-meta, .battle .card-category { color: var(--class-tone); }
+.battle .card-pattern { background: #050d1880; border: 1px solid #c4aa7344; border-radius: 3px; padding: 1px; }
+.battle .card-summary, .battle .card-text { color: #e2e5e7; }
+.battle .hand .card.is-selected { border-color: #f4df9d; box-shadow: inset 0 0 0 2px #050b14, inset 0 0 0 3px #e6cc83aa, 0 0 0 1px var(--card-tone), 0 0 12px color-mix(in srgb, var(--card-tone) 35%, transparent), 0 6px 16px #000b; }
+.battle .hand .card:active:not(:disabled) { border-color: #f4df9d; }
+@media (min-height: 501px) {
+  .battle .card-art { height: clamp(72px, 10dvh, 104px); flex-basis: clamp(72px, 10dvh, 104px); }
+  .battle .card-name { font-size: 14px; line-height: 17px; }
+  .battle .card-summary { font-size: 11px; line-height: 1.25; }
+  .battle .hand .card.is-selected .card-summary { display: none; }
+  .battle .hand .card.is-selected .card-text { display: block; min-height: 0; overflow-y: auto; font-size: 11px; line-height: 1.25; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .battle .hand .card:hover:not(:disabled) { border-color: #e9cf92; box-shadow: inset 0 0 0 2px #050b14, inset 0 0 0 3px #d2b57566, 0 8px 20px #000b, 0 0 9px color-mix(in srgb, var(--card-tone) 24%, transparent); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .battle .hero-panel, .battle .enemy-panel { box-shadow: inset 0 0 0 2px #b99a6124, inset 0 1px 0 #f1dfad33, 0 3px 8px #0005; }
+  .battle .hand .card-class-icon { top: 5px; right: 5px; width: 15px; height: 15px; }
+  .battle .card-class-icon .game-icon { width: 10px; height: 10px; }
+  .battle .hand .card::after { inset: 3px; }
+  .battle .hand .card.is-selected { transform: none; }
+  .battle .pile { box-shadow: inset 0 0 0 2px #b99a6124; }
+  .battle .hand .card-category { color: var(--class-tone); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Inspection stays a portrait card inside the hand, instead of widening into a banner.
+     Full rules scroll on the card face; the source painting remains a quiet backdrop. */
+  .battle .hand .card.is-selected { width: max(var(--mobile-card-width), 98px); display: flex; flex-direction: column; }
+  .battle .hand .card.is-selected .card-art { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); opacity: 0.16; pointer-events: none; }
+  .battle .hand .card.is-selected .card-name { position: relative; flex-shrink: 0; padding: 0 18px; min-height: 26px; text-align: center; }
+  .battle .hand .card.is-selected .card-details { display: none; }
+  .battle .hand .card.is-selected .card-text { position: relative; display: block; flex: 1; min-height: 0; font-size: 12px; line-height: 1.25; padding: 2px; background: #07111dc9; border-top: 1px solid #d3b57877; text-align: left; touch-action: pan-y; }
+}
+@media (min-height: 501px) {
+  .battle .card-cost { height: 28px; }
+  .battle .card-details .card-meta { font-size: 9px; line-height: 1.25; }
+}
+@media (min-height: 501px) {
+  .battle .card-summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; min-height: 2.5em; max-height: 2.5em; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .battle .hand .card.is-selected .card-name { align-self: stretch; width: 100%; padding: 0 20px 0 25px; font-size: 11px; }
+}
+
+/* Summoner foundation: compact class/loadout controls and capacity, no new art pass. */
+.battle .summon-capacity { font-family: inherit; font-size: 0.65em; color: #b4dba2; white-space: nowrap; }

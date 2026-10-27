@@ -1,0 +1,83 @@
+/* Bounded friends column: tabs remain fixed, only the list scrolls. */
+.social-screen .social-list {position:sticky;top:12px;height:calc(100dvh - 104px);min-height:180px;overflow:hidden;}
+.social-screen .social-list>.social-scroll {min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;}
+.friend-profile-stats {display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0 10px;}
+.friend-profile-stats article {display:flex;flex-direction:column;gap:7px;padding:14px;background:linear-gradient(135deg,#122334,#0a1521);border:1px solid var(--social-line);border-radius:9px;}
+.friend-profile-stats small {color:var(--social-gold);font-size:10px;letter-spacing:.08em;}
+.friend-profile-stats span {font-size:12px;color:var(--social-muted);}
+.friend-stat-champion {display:flex;gap:8px;align-items:center;}
+.friend-stat-champion img {width:32px;height:32px;object-fit:cover;border-radius:6px;}
+.friend-profile-stats progress {width:100%;accent-color:var(--social-gold);}
+.friend-full-history {display:block;margin:12px auto 0;}
+@media(max-width:900px){.social-screen .social-list{position:static;height:calc(100dvh - 90px);}.friend-profile-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.friend-profile-stats article{padding:10px;}}
+
+/* Compact the profile's recent matches only; full history keeps its own spacing. */
+.social-friend-detail .pvp-history-header {padding-bottom:8px;margin-bottom:10px;}
+.social-friend-detail .pvp-history-header h1 {margin:0;}
+.social-friend-detail .pvp-history.is-embedded[data-view='list']>.history-eyebrow,
+.social-friend-detail .pvp-history.is-embedded[data-view='list']>.pvp-history-note {display:none;}
+.social-friend-detail .pvp-history-list {margin:0;gap:10px;}
+.social-friend-detail .friend-full-history {margin-top:10px;}
+
+/* Player dossier: quiet metals, a single hero surface, no extra information bars. */
+.social-friend-detail {
+ padding:22px;border-color:#b99c5a66;border-radius:16px;
+ background:radial-gradient(ellipse at 10% 0%,#29425955,transparent 55%),linear-gradient(150deg,#101f30,#08121f 80%);
+ box-shadow:inset 0 1px #e5ce8c1a,0 12px 36px #02060c55;
+}
+.friend-profile-card {gap:20px;min-height:116px;padding:4px 0 18px;}
+.friend-profile-card>.social-avatar {width:96px;height:96px;filter:drop-shadow(0 0 12px #ac8d5026);}
+.friend-profile-card h2 {font-family:Georgia,serif;font-size:clamp(25px,2.5vw,34px);letter-spacing:.01em;color:#f1dfb3;overflow-wrap:anywhere;}
+.friend-profile-card p {font-size:14px;margin:7px 0;color:#d0dfdf;}
+.friend-profile-card small {font-size:12px;color:#a9b8c2;}
+.friend-profile-actions {align-items:center;gap:10px;}
+.friend-profile-actions button {min-height:42px;padding:10px 16px;border-color:#b99c5a88;}
+.friend-profile-actions .is-primary {background:linear-gradient(160deg,#554a2e,#25303a);box-shadow:inset 0 1px #e5ce8c33;}
+.friend-profile-stats {gap:10px;margin:2px 0 18px;align-items:stretch;}
+.friend-profile-stats article {padding:14px;min-height:132px;border-color:#b99c5a30;border-radius:10px;background:linear-gradient(145deg,#1b304266,#0b172599);box-shadow:inset 0 1px #d9bd8312;}
+.friend-profile-stats small {min-height:24px;line-height:1.4;letter-spacing:.09em;color:#c5ac79;font-weight:700;}
+.friend-profile-stats strong {font-size:15px;line-height:1.35;color:#e5e5dc;}
+.friend-profile-stats article>span {line-height:1.45;}
+.friend-profile-stats .friend-stat-champion {font-size:15px;font-weight:600;color:#e5e5dc;gap:10px;}
+.social-champion-headshot {display:inline-grid;place-items:center;flex:0 0 auto;width:46px;height:46px;overflow:hidden;border-radius:10px;border:1px solid #b99c5a66;background:#0a1422;box-shadow:0 2px 8px #0005;}
+.social-champion-headshot img {display:block;width:100%;height:100%;object-fit:cover;object-position:50% 18%;transform:scale(1.5);transform-origin:50% 20%;}
+.friend-profile-stats .friend-stat-champion .social-champion-headshot {color:#c5ac79;}
+.friend-profile-stats progress {height:5px;margin-top:auto;}
+.social-screen .social-friend {transition:background-color .15s,border-color .15s;}
+.social-screen .social-friend:hover {border-color:#b99c5a66;background:#233b4d55;}
+.social-screen .social-friend.is-selected {border-color:#d7b978;background:linear-gradient(90deg,#66583440,#1c31494d);box-shadow:inset 3px 0 #cdb276;}
+.social-screen .social-friend-main {gap:10px;}
+.social-screen .social-friend-main .social-avatar {width:40px;height:40px;}
+.social-screen .social-friend-actions .social-challenge {padding:8px;}
+.social-screen .social-friend-actions .social-challenge span {font-size:11px;}
+.social-friend-detail .pvp-history-header {border-bottom-color:#b99c5a30;padding:0 0 10px;margin:0 0 12px;}
+.social-friend-detail .pvp-history-header h1 {font-size:23px;}
+.social-friend-detail .pvp-history-list {gap:9px;}
+.social-friend-detail .pvp-history-list button {grid-template-columns:76px 46px 18px 46px minmax(105px,1fr) 84px 94px 52px 42px;gap:8px;min-height:78px;padding:12px;border-radius:9px;background:linear-gradient(115deg,#192d3c88,#0c192988);box-shadow:none;border-color:#8395a530;}
+.social-friend-detail .pvp-history-result {font-size:11px;letter-spacing:.07em;}
+.social-friend-detail .pvp-history-rival {font-size:13px;min-width:0;}
+.social-friend-detail .pvp-history-rival>.social-avatar {display:none;}
+.social-friend-detail .pvp-history-rival small {line-height:1.4;color:#a9b8c2;}
+.social-friend-detail .pvp-history-list button>span:not(.social-champion-headshot):not(.pvp-history-rival) {font-size:11px;line-height:1.4;}
+.social-friend-detail .friend-full-history {padding:10px 22px;margin-top:14px;font-size:12px;letter-spacing:.04em;border-color:#b99c5a77;}
+@media(max-width:1250px){
+ .social-friend-detail .pvp-history-list button {grid-template-columns:76px 38px 16px 38px minmax(100px,1fr);}
+ .social-friend-detail .pvp-history-list .social-champion-headshot {width:38px;height:38px;}
+ .social-friend-detail .pvp-history-list button>.history-mode{grid-column:1/3;}
+ .social-friend-detail .pvp-history-list button>span:nth-last-child(3){grid-column:3/-1;}
+ .social-friend-detail .pvp-history-list button>span:nth-last-child(2){grid-column:1/3;}
+ .social-friend-detail .pvp-history-list button>span:last-child{grid-column:3/-1;}
+}
+@media(max-width:900px){
+ .social-friend-detail {padding:14px;border-radius:12px;}
+ .friend-profile-card {gap:14px;min-height:88px;padding-bottom:14px;}
+ .friend-profile-card>.social-avatar {width:66px;height:66px;}
+ .friend-profile-card h2 {font-size:25px;}
+ .friend-profile-actions {margin-left:auto;gap:8px;}
+ .friend-profile-actions button {padding:8px 12px;}
+ .friend-profile-stats {margin-bottom:14px;}
+ .friend-profile-stats article {min-height:116px;padding:12px;}
+ .friend-profile-stats small {min-height:14px;}
+ .social-champion-headshot {width:40px;height:40px;}
+}
+@media(prefers-reduced-motion:reduce){.social-screen .social-friend{transition:none;}}

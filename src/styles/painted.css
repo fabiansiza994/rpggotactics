@@ -1,0 +1,250 @@
+/* Painted art carries the detail; UI materials frame it without changing the layout. */
+.painted-scenery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.86;
+}
+.painted-scenery::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(#03081066, transparent 30%, #02050c22 65%, #02050cd9),
+    radial-gradient(ellipse at center, transparent 34%, #03060b44);
+}
+.painted-portrait {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 25%, #45607a, #09111b 75%);
+}
+.painted-portrait img {
+  position: absolute;
+  width: 225%;
+  max-width: none;
+  height: auto;
+  left: -59%;
+  top: -10%;
+}
+.portrait-orc_warrior img {
+  width: 250%;
+  left: -100%;
+  top: -5%;
+}
+.portrait-shadow_wolf img {
+  width: 330%;
+  left: -225%;
+  top: -32%;
+}
+.portrait-dark_shaman img {
+  width: 230%;
+  left: -72%;
+  top: -22%;
+}
+.portrait-stone_brute img {
+  width: 230%;
+  left: -84%;
+  top: -10%;
+}
+.painted-card-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 160ms ease;
+}
+.battle .card {
+  border: 1px solid #af9863;
+  border-radius: 8px 8px 5px 5px;
+  background: linear-gradient(110deg, #514430, #101722 14%, #070d16 82%, #443925);
+  box-shadow:
+    0 6px 15px #000c,
+    inset 0 0 0 2px #0a0e16,
+    inset 0 0 0 3px #b79b6355;
+}
+.battle .card::before {
+  border-color: #d9ba7644;
+}
+.battle .card-art {
+  margin: 3px 3px 0;
+  width: calc(100% - 6px);
+  border-radius: 4px 4px 0 0;
+  border: 1px solid #c3a46988;
+  border-bottom: 0;
+}
+.battle .card-name {
+  margin: 0 3px;
+  padding: 3px 1px;
+  border-top: 1px solid #d1b67999;
+  border-bottom: 1px solid #8c734c88;
+  background: linear-gradient(90deg, #13161d, #29251e 48%, #11141b);
+  color: #f2e4c4;
+}
+.battle .card-cost {
+  border-radius: 50% 50% 43% 43%;
+  background: radial-gradient(circle at 34% 23%, #d9f9ff 0%, #569bc1 18%, #1c4b73 46%, #0a1c36 75%);
+  border: 2px solid #c5b07c;
+  box-shadow:
+    0 1px 5px #000,
+    inset 0 0 0 1px #cbe9ff88;
+  text-shadow: 0 1px 3px #031423;
+}
+.battle .card-meta {
+  color: #baa889;
+  margin-top: 4px;
+}
+.battle .card-text {
+  color: #d8d9dc;
+  line-height: 1.3;
+}
+.battle .card-rarity-slot {
+  border-color: #b9a36f;
+  background: linear-gradient(130deg, #6b634d, #111a23 55%);
+}
+.battle .hand .card:hover .painted-card-art,
+.battle .hand .card:focus-visible .painted-card-art {
+  transform: scale(1.035);
+}
+.battle .panel {
+  background: linear-gradient(120deg, #161d26f2, #070c14f5);
+  border-top-color: #c0a66c99;
+  box-shadow:
+    0 5px 18px #000b,
+    inset 0 0 0 3px #c5a56412;
+}
+.battle .bar-fill {
+  box-shadow:
+    inset 0 1px 1px #ffffff55,
+    inset 0 -2px 3px #0008;
+}
+.battle .pile {
+  background: linear-gradient(135deg, #34342f, #0e1723 25%, #080e17 78%, #3b3327);
+  border-color: #a9915e99;
+}
+.battle .turn-panel {
+  position: relative;
+  align-self: start;
+  justify-self: center;
+  width: min(560px, 100%);
+  padding: 7px 18px 9px;
+  background: linear-gradient(90deg, transparent, #0a111be8 18%, #111d2be8 50%, #0a111be8 82%, transparent);
+  border: 0;
+  box-shadow: none;
+}
+.battle .turn-panel::before {
+  content: '';
+  position: absolute;
+  inset: 3px 9%;
+  border-top: 1px solid #c5a86b66;
+  border-bottom: 1px solid #c5a86b44;
+  pointer-events: none;
+}
+.battle .turn-title,
+.battle .scenario-name,
+.battle .objective {
+  position: relative;
+}
+.battle .card-art {
+  height: 84px;
+  flex-basis: 84px;
+}
+.battle .card-summary {
+  display: block;
+  min-height: 2.45em;
+  max-height: 2.45em;
+  overflow: hidden;
+  color: #d8d9dc;
+  font-size: 9.5px;
+  line-height: 1.22;
+  text-align: center;
+}
+.battle .card-text {
+  display: none;
+}
+.tactical-overview {
+  display: none;
+}
+@media (min-width: 1600px) {
+  .tactical-overview {
+    position: absolute;
+    z-index: 2;
+    top: 132px;
+    right: 26px;
+    display: block;
+    width: 178px;
+    padding: 8px;
+    color: #e5dbc4;
+    border: 1px solid #a8906255;
+    background: linear-gradient(145deg, #090f19e8, #101a25e8);
+    box-shadow: 0 8px 24px #0009, inset 0 0 0 2px #05091088;
+    pointer-events: auto;
+  }
+  .battle:has(.enemy-panel[data-enemies='3']) .tactical-overview { top: 178px; }
+  .battle:has(.enemy-panel[data-enemies='4']) .tactical-overview { top: 202px; }
+  .tactical-overview-title {
+    margin-bottom: 6px;
+    color: #d9c491;
+    font: 11px Georgia, serif;
+    letter-spacing: 0.7px;
+    text-align: center;
+  }
+  .tactical-map {
+    display: grid;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid #82919a55;
+    background: #050a11;
+  }
+  .tactical-map-cell {
+    position: relative;
+    aspect-ratio: 1.65;
+    background: linear-gradient(135deg, #394854, #202d39);
+    border: 1px solid #75818b45;
+  }
+  .tactical-map-cell.terrain-fire { background: #71341f; }
+  .tactical-map-cell.terrain-ice { background: #28627c; }
+  .tactical-map-cell.terrain-blocked { background: #070b10; }
+  .tactical-map-cell.terrain-objective { background: #584a2e; }
+  .tactical-map-cell.has-obstacle { box-shadow: inset 0 0 0 2px #b4b6b4; }
+  .tactical-map-cell i,
+  .tactical-map-legend i {
+    position: absolute;
+    inset: 2px auto auto 50%;
+    width: 6px;
+    height: 6px;
+    transform: translateX(-50%);
+    border: 1px solid #f0e5cc;
+    border-radius: 50%;
+    background: #63c9f6;
+    box-shadow: 0 0 5px currentColor;
+  }
+  .tactical-map-cell.unit-enemy i,
+  .tactical-map-legend .unit-enemy { background: #d95d55; color: #d95d55; }
+  .tactical-map-cell.unit-objective i,
+  .tactical-map-legend .unit-objective { background: #f0ca6d; color: #f0ca6d; }
+  .tactical-map-legend {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 8px;
+  }
+  .tactical-map-legend span { display: inline-flex; align-items: center; gap: 3px; }
+  .tactical-map-legend i { position: static; inset: auto; width: 5px; height: 5px; transform: none; }
+}
+@media (min-width: 1500px) and (min-height: 850px) {
+  .battle .card-art { height: 104px; flex-basis: 104px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .painted-card-art {
+    transition: none;
+  }
+  .battle .hand .card:hover .painted-card-art,
+  .battle .hand .card:focus-visible .painted-card-art {
+    transform: none;
+  }
+}

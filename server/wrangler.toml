@@ -1,0 +1,59 @@
+# RPG-GO Tactics production API Worker; shared auth Worker remains separate.
+name = "rpggo-tactics-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+[[durable_objects.bindings]]
+name = "PVP_ROOMS"
+class_name = "PvPMatchRoom"
+
+[[durable_objects.bindings]]
+name = "SOCIAL_HUBS"
+class_name = "SocialHub"
+
+[[migrations]]
+tag = "v1-pvp"
+new_sqlite_classes = ["PvPMatchRoom"]
+
+# Social phase: one hub per user for chat/notification sockets (separate from PvP rooms).
+[[migrations]]
+tag = "v2-social"
+new_sqlite_classes = ["SocialHub"]
+
+# The EXISTING D1 database of the RPG-GO account Worker (dark-recipe-a184). Reused on purpose:
+# Tactics accounts ARE RPG-GO accounts. This Worker only reads `users`/`sessions` and owns the
+# `tactics_*` tables (migrations/). Do NOT `wrangler d1 create` a new one.
+[[d1_databases]]
+binding = "DB"
+database_name = "rpggo-auth"
+database_id = "1655f189-a9ba-41ae-98e4-9a4738c2f79f"
+migrations_dir = "migrations"
+
+[vars]
+ALLOWED_ORIGINS = "https://rpg-go-tactics.com,https://www.rpg-go-tactics.com,https://summoner-qa.rpggo-tactics.pages.dev,https://rpggo-tactics.pages.dev,https://localhost,capacitor://localhost,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
+ARCHER_CAMPAIGN_ENABLED = "1"
+ARCHER_CAMPAIGN_QA = "0"
+ARCHER_ENABLED = "1"
+ARCHER_QA = "0"
+ARSENAL_CARDS_ENABLED = "1"
+FREE_CATALOG_ENABLED = "1"
+MASTERY_ENABLED = "1"
+MASTERY_QA = "0"
+PRIMORDIAL_DRAGON_ENABLED = "1"
+RANKED_PREMIUM_ENABLED = "0"
+RANKED_PREMIUM_QA = "1"
+RANKED_PRESEASON_ENABLED = "1"
+RANKED_PRESEASON_QA = "0"
+REAL_MONEY_PURCHASES_ENABLED = "0"
+SHAPESHIFTER_ENABLED = "1"
+SHAPESHIFTER_QA = "0"
+STORE_SHOWCASE_ENABLED = "1"
+SUMMONER_CAMPAIGN = "1"
+SUMMONER_CAMPAIGN_QA = "1"
+SUMMONER_RITUALS_ENABLED = "1"
+TACTICAL_CARDS_ENABLED = "1"
+WARRIOR_ENABLED = "1"
+WORLD_2_ENABLED = "1"
+WORLD_2_QA = "0"
+WORLD_3_ENABLED = "1"
+WORLD_3_QA = "0"

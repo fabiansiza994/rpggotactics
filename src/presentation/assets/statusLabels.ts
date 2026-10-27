@@ -1,0 +1,27 @@
+import type { StatusId } from '../../game';
+
+export const STATUS_LABEL: Record<StatusId, string> = {
+  BURNING: 'Ardiendo',
+  LAST_STAND: 'Último Bastión',
+  FORM_DANCE: 'Danza de las Formas',
+  ROOTED: 'Enraizado',
+  STUNNED: 'Aturdido',
+  RIPOSTE: 'Contraataque',
+  PACK_FURY: 'Furia de la manada',
+  MARKED_PREY: 'Presa marcada',
+  PREY: 'Presa',
+  SEALED: 'Sellado',
+  CHALLENGED: 'Desafiado',
+  SMOKE_SCREEN: 'Humo',
+  UNLEASHED_HUNT: 'Cacería +2 MOV',
+  HUNT_PURSUIT: '+1 MOV preparado',
+  PACK_CALL: 'Llamado',
+  ALPHA_INSTINCT: 'Instinto Alfa',
+  SLOWED: 'Ralentizado',
+  WALL_PATIENCE: 'Paciencia',
+  FORTIFIED: 'Blindado',
+  RELIC_BURDEN: 'Carga de reliquia',
+  POISONED: 'Envenenado',
+  STALKER_HOBBLE: 'Acechado −1 MOV',
+  PRIMAL_CHARGE: 'Embestida',
+};

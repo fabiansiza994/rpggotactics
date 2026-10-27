@@ -1,0 +1,30 @@
+/* Public event preview, above the hand and below the enemy roster. */
+.resolving-card-preview {
+  position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: 236px;
+  z-index: 24; width: 220px; max-width: calc(100vw - 24px); box-sizing: border-box;
+  display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 9px; align-items: center;
+  padding: 7px; border: 1px solid #b9a571; border-radius: 5px;
+  background: linear-gradient(120deg,#192b32,#0b141c); color: #eee1bb;
+  box-shadow: 0 5px 15px #0008; pointer-events: none;
+  animation: resolution-enter 180ms ease-out both;
+}
+.resolving-card-preview strong { overflow-wrap: anywhere; }
+.resolving-card-art { height: 64px; overflow: hidden; }
+.resolving-card-art > * { width: 100%; height: 100%; object-fit: contain; }
+.resolving-card-preview strong, .resolving-card-preview small, .resolving-card-preview span { display: block; }
+.resolving-card-preview strong { font: bold 15px/1.15 Georgia,serif; margin: 5px 0; }
+.resolving-card-preview small { font-size: 10px; color: #a9d5db; }
+.resolving-card-preview span { font-size: 11px; color: #d6c7a0; }
+@keyframes resolution-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@media (max-height: 500px) {
+  .resolving-card-preview { right: max(5px, env(safe-area-inset-right)); bottom: 126px; width: 190px; grid-template-columns: 48px minmax(0,1fr); gap: 6px; padding: 5px; }
+  .resolving-card-art { height: 48px; }
+  .resolving-card-preview strong { font-size: 12px; margin: 3px 0; }
+}
+@media (prefers-reduced-motion: reduce) { .resolving-card-preview { animation: none; } }
+/* Reserve a separate right-hand slot for public resolution; do not stack inspections. */
+.battle:has(.resolving-card-preview) .card-feature-stage { visibility:hidden; }
+.battle:not(.act3-qa):has(.resolving-card-preview) .mechanism-controls { box-sizing:border-box; max-height:calc(100dvh - 520px); }
+@media(orientation:landscape) and (max-height:500px) {
+ .battle:not(.act3-qa):has(.resolving-card-preview) .mechanism-controls { max-height:calc(100dvh - 306px); }
+}

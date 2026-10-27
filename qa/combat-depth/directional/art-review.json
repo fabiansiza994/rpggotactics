@@ -1,0 +1,46 @@
+{
+  "mage": {
+    "backMirrors": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "reason": "Keep staff in anatomical left hand in authored rear views."
+  },
+  "summoner": {
+    "backMirrors": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ],
+    "reason": "Rear run sheet changed staff hand; canonical rear view keeps it on screen left."
+  },
+  "dark_shaman": {
+    "backMirrors": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ],
+    "reason": "Keep crystal staff in the same anatomical hand across walk/run."
+  },
+  "qa_form_humanoid": {
+    "backMirrors": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ],
+    "reason": "Keep shaman staff in the same anatomical hand."
+  }
+}
