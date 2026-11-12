@@ -1,6 +1,6 @@
 import { catalogBatch, confirmedAttackFamily, familyRecipe, usesPhysicalArrow, type CatalogRecipe, type PremiumFamily } from './catalogRecipes';
 import { mageRecipeEnabled } from './mageRecipes';
-import { damageReaction, REACTION_COLOR, universalReactionsEnabled } from './hitReactions';
+import { damageReaction, REACTION_COLOR, universalReactionsEnabled, hitReactionPilot, springOffset } from './hitReactions';
 import { presentPublicRitual } from '../cards/publicCast';
 import { bondCompanion, attackingMarkedPrey } from '../cards/tacticalPresentation';
 import { motionCues } from '../motion/motionCues';
@@ -83,6 +83,8 @@ export class VfxDirector {
   ownsPosition(id: string): boolean {
     return this.moving.has(id);
   }
+  /** Per-scene A/B override; cosmetic only, never persisted. */
+  reactionSpring = true;
   constructor(
     readonly effects: ElementEffects,
     private readonly host: DirectorHost,
@@ -675,6 +677,7 @@ export class VfxDirector {
         if (e.hpLost) this.hit(e.unitId, e.sourceId, reduced, thunder ? 0xb3eaff : universal ? REACTION_COLOR[reaction] : 0xffc3aa);
         const defender = this.host.unit(e.unitId);
         if (reaction !== 'none') defender?.playAnimation(!e.hpLost ? 'block' : 'hit');
+        if (e.hpLost > 0 && !reduced && this.reactionSpring && hitReactionPilot.spring && universal) defender?.holdAnimation?.(40);
         if (reaction !== 'none') defender?.pulseLight(thunder && e.hpLost > 0 ? 0xb3eaff : universal ? REACTION_COLOR[reaction] : e.hpLost && e.damageType === 'FIRE' ? 0xff6045 : lightColor(family(e.damageType)), reduced ? 90 : 150);
         break;
       }
@@ -935,12 +938,16 @@ export class VfxDirector {
     const x = body.x,
       y = body.y,
       tint = body.tint;
-    const angle = source ? Math.atan2(pos.y - source.y, pos.x - source.x) : 0;
+    const targetScreen = this.effects.lift(pos, .45);
+    const sourceScreen = source ? this.effects.lift(source, .45) : targetScreen;
+    const spring = this.reactionSpring && hitReactionPilot.spring && universalReactionsEnabled() && !reduced;
+    const angle = spring ? Math.atan2(targetScreen.y - sourceScreen.y, targetScreen.x - sourceScreen.x)
+      : source ? Math.atan2(pos.y - source.y, pos.x - source.x) : 0;
     const cancel = this.effects.animate(
-      120,
+      spring ? 240 : 120,
       (t) => {
         if (body.destroyed) return;
-        const recoil = reduced ? 0 : Math.sin(t * Math.PI) * 4;
+        const recoil = reduced ? 0 : spring ? springOffset(t) : Math.sin(t * Math.PI) * 4;
         body.position.set(x + Math.cos(angle) * recoil, y + Math.sin(angle) * recoil);
         body.tint = t < 0.35 && !reduced ? color : tint;
       },
