@@ -1,3 +1,4 @@
+import { elementalReactionDuration, elementalReactionEnvelope } from './elementalReactionTiming';
 import type { Container, Sprite } from 'pixi.js';
 import type { Pos } from '../../game';
 import type { FxGeometry } from './ElementEffects';
@@ -63,17 +64,34 @@ export class FireballEffects extends PaintedEffectPool {
   }
   clearReaction(id: string): void { this.clearGroup('hit:' + id); }
   /** Brief cosmetic flames, never the BURNING status; refreshed instead of stacked per victim. */
-  reaction(id: string, position: () => Pos | undefined): void {
+  reaction(id: string, position: () => Pos | undefined, layered = false, adjusted = true): void {
     this.clearReaction(id);
     const p = position(); if (!p) return;
     const at = this.lifted(p, .38), scale = this.geometry.footprint(p).w / 96;
-    this.sprite(recipe.frames.core, at, (this.reduced ? 42 : 70) * scale, this.reduced ? 140 : 380, (t, s) => {
+    this.sprite(recipe.frames.core, at, (this.reduced ? 42 : 70) * scale, this.reduced ? 140 : elementalReactionDuration('fire',layered&&adjusted), (t, s) => {
       const current = position(); if (!current) { s.alpha = 0; return; }
       const ground = this.geometry.center(current), body = this.lifted(current, .38);
       s.position.set(body.x, body.y - (this.reduced ? 0 : t * 9 * scale));
       s.width = (this.reduced ? 42 : 62 - t * 12) * scale; s.height = s.width * 1.25;
-      s.alpha = (this.reduced ? .22 : .52) * (1 - t); s.zIndex = this.geometry.depth(ground) + 3;
+      s.alpha = (this.reduced ? .22 : .52) * (layered&&adjusted&&!this.reduced?elementalReactionEnvelope(t):1-t); s.zIndex = this.geometry.depth(ground) + 3;
     }, false, true, 'hit:' + id);
+    if (!layered || this.reduced) return;
+    // Existing illustrated core/embers, attached to the victim rather than the projectile.
+    const group='hit:'+id;
+    if(!this.mobile)this.sprite(recipe.frames.core,at,43*scale,adjusted?550:340,(t,s)=>{
+      const current=position();if(!current){s.alpha=0;return;}
+      const body=this.lifted(current,.27);
+      s.position.set(body.x+Math.sin(t*5)*6*scale,body.y-t*16*scale);
+      s.width=(39-12*t)*scale;s.height=s.width*1.4;s.alpha=.33*(adjusted?elementalReactionEnvelope(t):1-t);
+      s.zIndex=this.geometry.depth(this.geometry.center(current))+3;
+    },false,true,group);
+    for(let i=0;i<2;i++)this.sprite(recipe.frames.ember,at,9*scale,adjusted?650:320+i*40,(t,s)=>{
+      const current=position();if(!current){s.alpha=0;return;}
+      const body=this.lifted(current,.4);
+      s.position.set(body.x+(i?1:-1)*(12+8*t)*scale,body.y-(8+24*t)*scale);
+      s.alpha=.65*(adjusted?elementalReactionEnvelope(t):(1-t)*(1-t));s.rotation=i+t;
+      s.zIndex=this.geometry.depth(this.geometry.center(current))+3;
+    },false,true,group);
   }
   override clear(): void { super.clear(); this.angle = 0; }
 }

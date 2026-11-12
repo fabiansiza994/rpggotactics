@@ -854,6 +854,8 @@ export class BattleCanvas {
       { key: 'bastion_blow', effect: this.effects.bastion },
       { key: 'summon_pact_golem', effect: this.effects.pactSummon },
     ].filter(r => r.effect.requested && events.some(e => e.type === 'CARD_PLAYED' && vm.content.cards[e.cardId]?.presentation.visualKey === r.key && (r.effect !== this.effects.mage || mageRecipeEnabled(r.key)) || (r.key === 'fireball' && universalReactionsEnabled() && e.type === 'UNIT_DAMAGED' && e.damageType === 'FIRE' && e.hpLost > 0)));
+    if(this.effects.elementalHits && universalReactionsEnabled() && events.some(e=>e.type==='UNIT_DAMAGED'&&e.hpLost>0&&(e.damageType==='ICE'||e.damageType==='ARCANE')) && this.effects.mage.requested && !recipes.some(r=>r.effect===this.effects.mage))
+      recipes.push({key:'magic_missile',effect:this.effects.mage});
     const catalog=this.effects.catalog.requested?catalogEventRecipes(events,id=>vm.content.cards[id]):[];
     const forms=events.filter((e):e is Extract<GameEvent,{type:'FORM_CHANGED'}>=>e.type==='FORM_CHANGED');
     if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length)

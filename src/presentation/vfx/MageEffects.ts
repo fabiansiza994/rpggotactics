@@ -1,3 +1,4 @@
+import { elementalReactionDuration, elementalReactionEnvelope } from './elementalReactionTiming';
 import type { Container } from 'pixi.js';
 import type { Pos } from '../../game';
 import type { FxGeometry } from './ElementEffects';
@@ -14,6 +15,36 @@ export class MageEffects extends PaintedEffectPool {
   }
   handles(key: string): key is MageRecipeKey {
     return this.ready && mageRecipeEnabled(key);
+  }
+
+  clearReaction(id: string): void { this.clearGroup('hit:'+id); }
+  /** Target-bound atlas layers, on the same bounded pool and presentation clock. */
+  reaction(id: string, position: () => Pos | undefined, kind: 'ice' | 'arcane', adjusted = true): void {
+    this.clearReaction(id);
+    const p=position();if(!p)return;
+    const scale=this.geometry.footprint(p).w/96,at=this.lifted(p,.4),group='hit:'+id;
+    const reduced=this.reduced,duration=reduced?140:elementalReactionDuration(kind,adjusted);
+    this.sprite(kind==='ice'?frames.mist:frames.arcaneCharge,at,64*scale,duration,(t,s)=>{
+      const pos=position();if(!pos){s.alpha=0;return;}
+      const body=this.lifted(pos,.4);s.position.set(body.x,body.y);
+      const envelope=adjusted&&!reduced?elementalReactionEnvelope(t):Math.min(1,t*7)*(1-t);
+      s.width=(reduced?46:kind==='ice'?61+7*t:42+25*t)*scale;
+      s.height=s.width*(kind==='ice'?1.05:.72);
+      s.alpha=(reduced?.16:kind==='ice'?.24:.34)*envelope;
+      s.tint=kind==='ice'?0xb9eeff:0xc8a4ff;
+      s.zIndex=this.geometry.depth(this.geometry.center(pos))+3;
+    },false,kind==='arcane',group);
+    if(reduced)return;
+    const count=this.mobile?2:3;
+    for(let i=0;i<count;i++)this.sprite(kind==='ice'?frames.iceShard:frames.mote,at,(kind==='ice'?19:10)*scale,(adjusted?duration:300+i*25),(t,s)=>{
+      const pos=position();if(!pos){s.alpha=0;return;}
+      const body=this.lifted(pos,.4),a=i*2.39996;
+      const r=15+12*t;
+      s.position.set(body.x+Math.cos(a)*r*scale,body.y+Math.sin(a)*r*.65*scale-(kind==='ice'?0:9*t*scale));
+      s.alpha=.6*(adjusted?elementalReactionEnvelope(t):Math.min(1,t*9)*(1-t));s.rotation=a+(kind==='ice'?t*.5:t);
+      s.tint=kind==='ice'?0xd9f7ff:i%2?0x88eff3:0xc8a4ff;
+      s.zIndex=this.geometry.depth(this.geometry.center(pos))+3;
+    },false,kind==='arcane',group);
   }
 
   charge(key: MageRecipeKey, from: Pos, duration: number, origin?: { x: number; y: number }): void {

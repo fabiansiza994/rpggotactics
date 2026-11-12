@@ -18,7 +18,7 @@ it('universal rollout remains local and has an explicit original fallback',()=>{
 it.each([false,true])('reuses the bounded graphics pool, replaces attached layers and clears death/scene effects (reduced=%s)',reduced=>{
  const above=new Container(),actors=new Container(),ground=new Container(),fx=new ElementEffects(above,actors,p=>({x:p.x*96,y:p.y*96}),ground);fx.reduced=reduced;
  const position=()=>({x:2,y:2});
- for(const kind of ['physical','fire','ice','arcane','force','block','heal'] as const){for(let i=0;i<10;i++)fx.unitReaction('same-victim',position,kind);expect(fx.reactionSnapshot.attached).toBe(1);expect(actors.children).toHaveLength(1);fx.tick(400);expect(fx.reactionSnapshot.attached).toBe(0);}
+ for(const kind of ['physical','fire','ice','arcane','force','block','heal'] as const){for(let i=0;i<10;i++)fx.unitReaction('same-victim',position,kind);expect(fx.reactionSnapshot.attached).toBe(1);expect(actors.children).toHaveLength(1);fx.tick(750);expect(fx.reactionSnapshot.attached).toBe(0);}
  for(let i=0;i<100;i++)fx.unitReaction('victim-'+i,position,'ice');expect(fx.reactionSnapshot.attached).toBeLessThanOrEqual(48);fx.clearUnitReaction('victim-0');expect(fx.reactionSnapshot.attached).toBeLessThanOrEqual(47);fx.clear();expect(fx.reactionSnapshot.attached).toBe(0);expect(actors.children).toHaveLength(0);fx.destroy();
 });
 it('reaction follows current victim anchor, keeps depth and cannot intercept input',()=>{const actors=new Container(),fx=new ElementEffects(new Container(),actors,p=>({x:p.x*96,y:p.y*96}),new Container());let pos={x:1,y:1};fx.unitReaction('victim',()=>pos,'ice');const g=actors.children[0]!;const x=g.x;pos={x:2,y:2};fx.tick(60);expect(g.x).toBeGreaterThan(x);expect(g.eventMode).toBe('none');fx.clearUnitReaction('victim');expect(actors.children).toHaveLength(0);fx.destroy();});
@@ -43,6 +43,6 @@ it('illustrated fire switches to ice without duplicate victim layers; a zero-res
  vi.mocked(loadSharedTexture).mockResolvedValue(new Texture({source:new TextureSource({width:1024,height:1024})}));
  const actors=new Container(),fx=new ElementEffects(new Container(),actors,p=>({x:p.x*96,y:p.y*96}),new Container());
  await fx.fireball.prepare();fx.fireball.beginBatch();
- const pos=()=>({x:2,y:2});fx.unitReaction('victim',pos,'fire');expect(fx.fireball.snapshot.active).toBe(1);fx.unitReaction('victim',pos,'none');expect(fx.fireball.snapshot.active).toBe(1);
+ const pos=()=>({x:2,y:2});fx.unitReaction('victim',pos,'fire');expect(fx.fireball.snapshot.active).toBe(4);fx.unitReaction('victim',pos,'none');expect(fx.fireball.snapshot.active).toBe(4);
  fx.unitReaction('victim',pos,'ice');expect(fx.fireball.snapshot.active).toBe(0);expect(fx.reactionSnapshot.attached).toBe(1);fx.clearUnitReaction('victim');expect(fx.reactionSnapshot.attached).toBe(0);expect(actors.children).toHaveLength(0);fx.destroy();
 });

@@ -1,3 +1,4 @@
+import { elementalReactionDuration, elementalReactionEnvelope } from './elementalReactionTiming';
 import { CatalogEffects } from './CatalogEffects';
 import { MageEffects } from './MageEffects';
 import { REACTION_COLOR, type HitReaction } from './hitReactions';
@@ -79,6 +80,9 @@ type Particle = {
 
 /** Shared animation clock, bounded Graphics/Text pools and 96 recycled particle records. */
 export class ElementEffects {
+  /** Presentation-only A/B fallback; never persisted or sent to the server. */
+  elementalHits = true;
+  elementalReadability = true;
   readonly catalog: CatalogEffects;
   readonly fireball: FireballEffects;
   readonly mage: MageEffects;
@@ -1130,19 +1134,28 @@ export class ElementEffects {
     this.reactionCancels.get(id)?.();
     this.reactionCancels.delete(id);
     this.fireball.clearReaction(id);
+    this.mage.clearReaction(id);
   }
   get reactionSnapshot() { return { attached: this.reactionCancels.size, particles: this.particles.filter(p => p.alive).length }; }
   unitReaction(id: string, position: () => Pos | undefined, kind: HitReaction): void {
     if (kind === 'none') return;
     this.clearUnitReaction(id);
-    if (kind === 'fire' && this.fireball.ready) { this.fireball.reduced = this.reduced; this.fireball.reaction(id, position); return; }
+    if (kind === 'fire' && this.fireball.ready) {
+      this.fireball.reduced = this.reduced;
+      this.fireball.reaction(id, position, this.elementalHits, this.elementalReadability);
+      if (!this.elementalHits) return;
+    }
+    if (this.elementalHits && (kind === 'ice' || kind === 'arcane') && this.mage.ready) {
+      this.mage.reduced = this.reduced;
+      this.mage.reaction(id, position, kind, this.elementalReadability);
+    }
     const initial = position(); if (!initial) return;
     const g = this.graphic(this.projectiles); if (!g) return;
     g.eventMode = 'none';
     const reduced = this.reduced;
     const mobile = typeof matchMedia !== 'undefined' && matchMedia('(max-height: 500px), (pointer: coarse)').matches;
     const count = reduced ? 1 : mobile ? 3 : 5;
-    const duration = reduced ? 120 : kind === 'heal' ? 380 : 280;
+    const duration = reduced ? 120 : kind === 'heal' ? 380 : this.elementalHits && (kind === 'ice' || kind === 'arcane' || kind === 'fire') ? elementalReactionDuration(kind, this.elementalReadability) : 280;
     const color = REACTION_COLOR[kind];
     let cancel = () => {};
     cancel = this.animate(duration, (t) => {
@@ -1150,7 +1163,8 @@ export class ElementEffects {
       if (!pos) { g.alpha = 0; return; }
       const ground = this.center(pos), at = this.lift(pos, .44), scale = this.surface(pos).sx;
       g.position.set(at.x, at.y); g.scale.set(scale); g.zIndex = this.geometry.depth(ground) + 3;
-      g.alpha = (reduced ? .35 : .68) * (1-t);
+      const elementalTail = this.elementalHits && this.elementalReadability && !reduced && (kind === 'fire' || kind === 'ice' || kind === 'arcane');
+      g.alpha = (reduced ? .35 : .68) * (elementalTail ? elementalReactionEnvelope(t) : 1-t);
       if (kind === 'physical' || kind === 'force' || kind === 'block') {
         const r = kind === 'block' ? 12 : 8;
         g.moveTo(-r,-5).lineTo(r,5).moveTo(-r,5).lineTo(r,-5).stroke({color,width:kind==='block'?1.7:2.2});
@@ -1159,10 +1173,17 @@ export class ElementEffects {
           g.moveTo(Math.cos(a)*r,Math.sin(a)*r).lineTo(Math.cos(a)*(r+4),Math.sin(a)*(r+4)).stroke({color,width:1.2});
         }
       } else if (kind === 'fire') {
-        // Fallback only: existing premium illustrated fire is preferred when its atlas is ready.
+        // The illustrated core is complemented by small organic tongues at the body edges.
         for(let i=0;i<count;i++) {
           const x=(i-(count-1)/2)*7;
           g.moveTo(x+4,14).bezierCurveTo(x-10,-2,x+12,-8,x,-20-(reduced?0:8*t)).stroke({color,width:2.6});
+          if(this.elementalHits) {
+            const sway=reduced?0:Math.sin(i*2.3+t*8)*4,top=-15-(i%2)*8-8*t;
+            g.moveTo(x-5,15).bezierCurveTo(x-12,3,x+sway-6,top+8,x+sway,top)
+              .bezierCurveTo(x+sway-1,top+13,x+12,6,x+5,15).fill({color:0xff792d,alpha:.7});
+            g.moveTo(x+2,13).bezierCurveTo(x-7,2,x+7,-5,x,-14-6*t).stroke({color:0xffedb1,width:1.3});
+            if(!reduced)g.circle(x+Math.sin(i*2.4+t*3)*5,-12-t*22,1.1).fill({color:0xffc56a,alpha:1-t});
+          }
         }
       } else if (kind === 'ice') {
         for(let i=0;i<count;i++) {
@@ -1170,6 +1191,11 @@ export class ElementEffects {
           g.poly([x,y-9,x+3,y,x,y+5,x-3,y]).fill({color,alpha:.6}).stroke({color:0xe8f7ff,width:1.2});
         }
         g.moveTo(-16,13).lineTo(-9,9).lineTo(-4,14).lineTo(4,10).lineTo(12,14).lineTo(17,10).stroke({color,width:1.4});
+        if(this.elementalHits) {
+          // Broken veins frame the torso; never an opaque fill over the character or HP.
+          const form=Math.min(1,t*6),fade=elementalTail?elementalReactionEnvelope(t):1-t;
+          for(const side of [-1,1])g.moveTo(side*12,15).lineTo(side*(12+4*form),1).lineTo(side*10,-5).lineTo(side*15,-20*form).stroke({color:0xd9f8ff,width:1.1,alpha:fade*.75});
+        }
       } else {
         // Ascending light motes for healing; short violet runic strokes for confirmed arcane damage.
         for(let i=0;i<count;i++) {
@@ -1177,6 +1203,13 @@ export class ElementEffects {
           g.moveTo(x-3,y).lineTo(x+3,y).moveTo(x,y-4).lineTo(x,y+4).stroke({color,width:1.5});
         }
         if(kind==='arcane')g.moveTo(-14,7).quadraticCurveTo(0,-13,14,7).stroke({color,width:1.2});
+        if(kind==='arcane'&&this.elementalHits) {
+          for(let i=0;i<(reduced?1:3);i++) {
+            const a=i*Math.PI*2/3+(reduced?0:t*.6),r=19+7*t;
+            const x=Math.cos(a)*r,y=Math.sin(a)*r*.65;
+            g.moveTo(x-2,y+4).lineTo(x+2,y-4).lineTo(x+5,y).stroke({color:i%2?0x88e9ef:0xd6bdff,width:1.2});
+          }
+        }
       }
     }, () => {
       this.release(g);
