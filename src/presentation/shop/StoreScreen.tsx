@@ -1,3 +1,4 @@
+import { ThunderNews, THUNDER_NEWS_IDS } from './ThunderNews';
 import { EarnCrystalsModal } from './EarnCrystalsModal';
 import { realMoneyPurchasesEnabled } from './paymentAvailability';
 import { StoreNewsCarousel, type StoreNewsItem } from './StoreNewsCarousel';
@@ -292,6 +293,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
       {isPremiumOffer(offer) && (
         <span className="shop-premium-ribbon">{offer.ritualPreview ? '✦ Ritual Premium' : '✦ Premium'}</span>
       )}
+      {offer.contents.some(item=>item.kind==='CARD'&&THUNDER_NEWS_IDS.includes(item.cardId))&&<span className="shop-thunder-new">NUEVO · TRUENO</span>}
       <StoreArt offer={offer} heroId={champion} />
       <div className="shop-offer-body">
         <span className="shop-label">
@@ -360,6 +362,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
             Abriendo el grimorio de ofertas…
           </p>
         )}
+        <ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={open} />
         <StoreNewsCarousel items={[
           ...(shapeshifterBuildEnabled() && (!session || serverHasShapeshifter) ? [{id:'shapeshifter',label:'Cambiaformas gratis',content:
             <ShapeshifterNews owned={isChampionUnlocked(profile,'shapeshifter')} busy={claimBusy||busy}

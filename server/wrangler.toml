@@ -30,6 +30,10 @@ database_id = "1655f189-a9ba-41ae-98e4-9a4738c2f79f"
 migrations_dir = "migrations"
 
 [vars]
+# Stage safely; clear maintenance only after Pages and private smoke are ready.
+RELEASE2_MAINTENANCE = "1"
+RELEASE2_CLIENT_REQUIRED = "1"
+RELEASE2_QA_USERS = "tactics_qa_a,tactics_qa_b"
 ALLOWED_ORIGINS = "https://rpg-go-tactics.com,https://www.rpg-go-tactics.com,https://summoner-qa.rpggo-tactics.pages.dev,https://rpggo-tactics.pages.dev,https://localhost,capacitor://localhost,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
 ARCHER_CAMPAIGN_ENABLED = "1"
 ARCHER_CAMPAIGN_QA = "0"

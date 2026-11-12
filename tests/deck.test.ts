@@ -157,7 +157,7 @@ describe('collection', () => {
     // Without the «Recursos tácticos» neutrals (their origin filter: tests/neutral-cards.test.ts)
     // and the Act III temple rewards (exclusive sources: tests/act3-completion.test.ts).
     // Also without the free catalog's new cards (exclusive milestone grants: free-catalog-phase-a).
-    const pool = cardsForHero(CONTENT, 'mage').filter((c) => c.expansion !== TACTICAL_EXPANSION && !c.tags.includes('temple-reward') && !c.tags.includes('free-catalog'));
+    const pool = cardsForHero(CONTENT, 'mage').filter((c) => c.expansion !== TACTICAL_EXPANSION && !c.tags.includes('temple-reward') && !c.tags.includes('free-catalog') && !c.tags.includes('mage-elements'));
     const lookup = (id: string) => ownedCard(profile, 'mage', id, CONTENT);
     const ids = (q: Partial<typeof EMPTY_QUERY>) => browseCollection(pool, lookup, { ...EMPTY_QUERY, ...q }).map((c) => c.id);
     expect(ids({ text: 'METEÓRO' })).toEqual(['meteor']);

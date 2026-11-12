@@ -1,3 +1,4 @@
+import { CONTENT_RELEASE } from '../cloud/contentRelease';
 import { create } from 'zustand';
 import { CLOUD_CONFIG } from '../cloud/config';
 import type { CloudResult } from '../cloud/http';
@@ -152,6 +153,7 @@ export const useSocialStore = create<SocialState>((set, get) => {
       return schedule();
     }
     const url = new URL(CLOUD_CONFIG.apiUrl + '/api/tactics/social/socket');
+      url.searchParams.set('clientRelease', CONTENT_RELEASE);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     url.searchParams.set('hub', res.data.hub);
     url.searchParams.set('ticket', res.data.ticket);

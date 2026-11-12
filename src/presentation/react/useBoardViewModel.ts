@@ -65,7 +65,7 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
         } else preview = result.valid
           ? {
               element: engine.content.cards[state.player.hand.find(c => c.uid === selectedCardUid)?.cardId ?? '']?.presentation?.element,
-              tiles: result.resolved?.affectedTiles ?? [],
+              tiles: [...(result.resolved?.affectedTiles ?? []), ...result.predictedEvents.filter(e => e.type === 'ARROW_REBOUNDED').map(e => e.pos)],
               valid: true,
               impact: result.resolved?.impact ?? null,
               predicted: predictionLabels(result.predictedEvents),

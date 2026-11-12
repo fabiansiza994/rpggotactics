@@ -11,6 +11,8 @@ export interface Trap {
   ownerId: string;
   pos: Pos;
   damage: number;
+  damageType?: import('../combat/damage-types').DamageType;
+  rootOnTrigger?: boolean;
   /** Board rounds left while untriggered (ticks with temporary terrain). */
   turnsLeft: number;
   /** Red del Cazador: traps placed by one cast share it; the first one sprung removes the rest. */

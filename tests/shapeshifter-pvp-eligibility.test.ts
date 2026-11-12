@@ -38,8 +38,8 @@ describe('released champions share PvP eligibility',()=>{
 });
 
 // Release boundary: these local expansions must never ride along with the eligibility fix.
-it('preserves the published catalogue and excludes pending Mage expansions',()=>{
- const excluded=['thunder_discharge','chain_lightning','arcane_overload','paralyzing_pulse','tempest_judgment','fulminating_spear','voltaic_armor','lightning_step','storm_orb','conductive_mark','thunder_hammer','static_field','electric_frenzy','lightning_wall','storm_avatar','grasping_roots','venom_thorns','vital_sap','entangled_forest','rebirth_bloom'];
+it('preserves Release 1 and excludes pending Nature expansion',()=>{
+ const excluded=['grasping_roots','venom_thorns','vital_sap','entangled_forest','rebirth_bloom'];
  for(const id of excluded)expect(PVP_CONTENT.cards[id]).toBeUndefined();
  expect(PVP_CONTENT.cards.arcane_surge!.heroId).toBe('mage');
  expect(PVP_CONTENT.qaCombatDepth).toBeUndefined();

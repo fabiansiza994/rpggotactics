@@ -1,3 +1,6 @@
+import { MAGE_THUNDER_CORE } from './mage-thunder-core';
+import { MAGE_THUNDER_EXPANSION } from './mage-thunder-expansion';
+import { PRICE_LADDER } from '../store/store';
 import { PREMIUM_CURRENCY_ID, type CosmeticDef, type CurrencyPackage, type StoreOffer } from '../store/store';
 
 /**
@@ -115,6 +118,7 @@ const frame = (cosmeticId: string, title: string, sortOrder: number): StoreOffer
 });
 
 export const STORE_CATALOG: readonly StoreOffer[] = [
+
   // ── Summoner bundles ──
   {
     id: 'pack_summoner_shadow_pack',
@@ -326,6 +330,10 @@ export const STORE_CATALOG: readonly StoreOffer[] = [
   frame('frame_arcane_gilt', 'Marco Áureo Arcano', 40),
   frame('frame_pact_grove', 'Marco del Pacto Silvestre', 41),
   frame('frame_executioner_oath', 'Marco del Juramento', 42),
+  // Release 2: normal one-copy offers using the existing rarity ladder and transaction flow.
+  // Free campaign acquisition remains unchanged; no bundle, currency, starter or login grant.
+  ...[...MAGE_THUNDER_CORE, ...MAGE_THUNDER_EXPANSION].filter(c => c.id !== 'storm_avatar').map((definition, i) =>
+    card(definition.id, 'mage', definition.name, PRICE_LADDER.card[definition.rarity ?? 'COMMON'], 100 + i, ['thunder', 'thunder-release-2'])),
 ];
 
 const NOT_LISTED = { WEB: null, APPLE: null, GOOGLE: null } as const;

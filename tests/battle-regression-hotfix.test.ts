@@ -65,7 +65,7 @@ describe('atomic rotating section presentation',()=>{
   const director=new VfxDirector(fx,host);director.sync(f.before);
   const events:GameEvent[]=[{type:'TURN_STARTED',faction:'ENEMY',round:1},...f.events.filter(x=>x.type!=='UNIT_TELEPORTED')];
   const timeline=compileTimeline(events,x=>x,reduced);const cue=timeline.cues.find(c=>c.event.type==='MECHANISM_CHANGED'&&c.event.cue==='SECTION_ROTATED')!;
-  expect(cue.at).toBeGreaterThan(0);director.enqueue(events,f.after,reduced);director.tick(cue.at-1);expect(layer.busy).toBe(false);expect(geometry(shown)).toEqual(geometry(f.before));
+  expect(cue.duration).toBe(reduced ? 0 : SECTION_SPIN_MS);expect(cue.at).toBeGreaterThan(0);director.enqueue(events,f.after,reduced);director.tick(cue.at-1);expect(layer.busy).toBe(false);expect(geometry(shown)).toEqual(geometry(f.before));
   director.tick(1);expect(geometry(shown)).toEqual(geometry(f.after));expect(layer.busy).toBe(!reduced);
   layer.tick(SECTION_SPIN_MS,reduced);director.tick(timeline.duration);
   if(!reduced){for(const u of f.after.units){const anchor=proj.getUnitAnchor(u.pos);expect(roots.get(u.id)!.x).toBeCloseTo(anchor.x,5);expect(roots.get(u.id)!.y).toBeCloseTo(anchor.y,5);}for(const o of f.after.mechanisms!.objects.filter(o=>o.def.id!=='section')){const anchor=proj.getUnitAnchor(o.pos);expect(objects.get(o.def.id)!.x).toBeCloseTo(anchor.x,5);expect(objects.get(o.def.id)!.y).toBeCloseTo(anchor.y,5);}}

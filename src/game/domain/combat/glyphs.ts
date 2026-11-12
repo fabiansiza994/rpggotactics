@@ -12,8 +12,10 @@ import { dealDamage } from './damage';
  * A glyph whose owner left the board fizzles.
  */
 
-export function placeGlyph(ctx: RuleContext, owner: Unit, tiles: readonly Pos[], glyphId: string, damage: number, damageType: DamageType): void {
+export function placeGlyph(ctx: RuleContext, owner: Unit, tiles: readonly Pos[], glyphId: string, damage: number, damageType: DamageType, activations?: number, maxTargets?: number, origin?: Pos): void {
   if (!tiles.length) return;
+  // One persistent instance per owner/kind; recasting replaces, never accumulates.
+  if (activations !== undefined) ctx.state.glyphs = (ctx.state.glyphs ?? []).filter(g => g.ownerId !== owner.id || g.glyphId !== glyphId);
   (ctx.state.glyphs ??= []).push({
     id: `glyph-${ctx.state.nextId++}`,
     glyphId,
@@ -21,6 +23,9 @@ export function placeGlyph(ctx: RuleContext, owner: Unit, tiles: readonly Pos[],
     tiles: tiles.map((p) => ({ ...p })).sort(comparePos),
     damage,
     damageType,
+    ...(origin ? {origin: {...origin}} : {}),
+    ...(activations !== undefined ? { activationsLeft: Math.max(1, Math.min(2, activations)) } : {}),
+    ...(maxTargets !== undefined ? { maxTargets: Math.max(1, Math.min(8, maxTargets)) } : {}),
   });
 }
 
@@ -31,13 +36,16 @@ export function resolveGlyphs(ctx: RuleContext, faction: Faction): void {
   for (const glyph of [...glyphs]) {
     const owner = unitById(ctx.state, glyph.ownerId);
     if (owner && owner.faction !== faction) continue;
-    ctx.state.glyphs = ctx.state.glyphs!.filter((g) => g !== glyph);
+    if (glyph.activationsLeft !== undefined) glyph.activationsLeft -= 1;
+    if (!owner || glyph.activationsLeft === undefined || glyph.activationsLeft <= 0) ctx.state.glyphs = ctx.state.glyphs!.filter((g) => g !== glyph);
     if (!owner) continue;
     const area = new Set(glyph.tiles.map(posKey));
     const hit = ctx.state.units
       .filter((u) => area.has(posKey(u.pos)) && areHostile(owner, u))
       .sort((a, b) => comparePos(a.pos, b.pos));
-    for (const u of hit) dealDamage(ctx, u, glyph.damage, owner.id, glyph.damageType);
+    const targets = hit.slice(0, glyph.maxTargets ?? hit.length);
+    if (glyph.activationsLeft !== undefined) ctx.emit({type:'GLYPH_ACTIVATED', glyphId:glyph.id, kind:glyph.glyphId, ownerId:owner.id, origin:glyph.origin ?? glyph.tiles[0]!, targets:targets.map(u=>({unitId:u.id,pos:{...u.pos}})), remaining:glyph.activationsLeft});
+    for (const u of targets) dealDamage(ctx, u, glyph.damage, owner.id, glyph.damageType);
   }
   if (!ctx.state.glyphs!.length) delete ctx.state.glyphs;
 }

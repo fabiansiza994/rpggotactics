@@ -98,5 +98,5 @@ export function onUnitHit(
   if (riposte) removeStatus(ctx, unit, riposte.id, 'CONSUMED');
   if (passive) unit.qaCounterRound = ctx.state.round;
   ctx.emit({ type: 'COUNTER_ATTACK', unitId: unit.id, targetId: source.id, amount });
-  dealDamage(ctx, source, amount, unit.id, 'PHYSICAL', 'COUNTER');
+  dealDamage(ctx, source, amount, unit.id, riposte ? ctx.content.statuses[riposte.id].counterDamageType ?? 'PHYSICAL' : 'PHYSICAL', 'COUNTER');
 }

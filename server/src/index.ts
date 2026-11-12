@@ -1,3 +1,4 @@
+import { contentTransition } from './contentTransition';
 import {profileAvatarRoute} from './profileAvatar';
 import { creditedRewards, victoryCrystalStatements, type CrystalReward } from './economy';
 import { walletView } from './store';
@@ -231,11 +232,13 @@ export async function handle(
   const cors = corsHeaders(request.headers.get('Origin'), env.ALLOWED_ORIGINS);
   const socketUrl = new URL(request.url);
   if (socketUrl.pathname === '/api/tactics/pvp/socket') {
+    const blocked = contentTransition(request, env);
+    if (blocked) return blocked;
     const origin = request.headers.get('Origin');
     if (origin && !(env.ALLOWED_ORIGINS ?? '').split(',').includes(origin)) return error(403, 'FORBIDDEN', 'Origen no permitido.');
     const code = (socketUrl.searchParams.get('code') ?? '').toUpperCase();
     if (!env.PVP_ROOMS || !/^[A-Z2-9]{8}$/.test(code) || request.headers.get('Upgrade') !== 'websocket') return error(400, 'BAD_REQUEST', 'Conexión inválida.');
-    return env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code)).fetch(new Request('https://room/socket?ticket=' + encodeURIComponent(socketUrl.searchParams.get('ticket') ?? ''), request));
+    return env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code)).fetch(new Request('https://room/socket?ticket=' + encodeURIComponent(socketUrl.searchParams.get('ticket') ?? '') + '&clientRelease=' + encodeURIComponent(socketUrl.searchParams.get('clientRelease') ?? ''), request));
   }
   if (socketUrl.pathname === '/api/tactics/social/socket') {
     // The user's own social hub (chat/notifications). Separate from every PvP room.
@@ -271,6 +274,8 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   const publicPayment = (await epaycoWebhookRoute(request, env, { now, newId })) ?? (await realMoneyPublicRoute(request, env));
   if (publicPayment) return publicPayment;
   const caller = await resolveCaller(request, env.DB, now);
+  const transition = contentTransition(request, env, caller?.username);
+  if (transition) return transition;
   if (!caller) return error(401, 'UNAUTHENTICATED', 'Sesión inválida o vencida.');
   if (path === '/api/tactics/qa/summoner/setup' && !summonerQaAllowed(env, caller.username)) return error(403, 'FORBIDDEN', 'Acceso QA no autorizado.');
   const avatarResponse = await profileAvatarRoute(request, env.DB, caller.userId, now);

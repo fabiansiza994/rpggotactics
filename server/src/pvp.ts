@@ -37,13 +37,14 @@ interface RoomContext {
 }
 interface Socket extends WebSocket {
   serializeAttachment(value: unknown): void;
-  deserializeAttachment(): { seat: number };
+  deserializeAttachment(): { seat: number; clientRelease?: string };
 }
 export interface RoomNamespace {
   idFromName(name: string): unknown;
   get(id: unknown): { fetch(request: Request): Promise<Response> };
 }
 interface Member {
+  clientRelease?: string;
   id: number;
   name: string;
   loadout: Loadout;
@@ -58,6 +59,7 @@ interface Member {
   badgeId?: string | null;
 }
 export interface Room {
+  contentRelease?: string;
   mode?: PvpMode;
   mapId?: string;
   matchId: string;
@@ -78,6 +80,8 @@ export interface Room {
   /** Ranked Preseason room (created only by the queue): RP per seat at match start + applied result. */
   ranked?: { rp: [number, number]; outcome: (RankedSeatOutcome | null)[] | null };
 }
+export const compatibleReadySeats = (members: readonly {clientRelease?: string}[]): boolean => members.length === 2 && members.every(m => m.clientRelease === 'thunder-release-2');
+
 const response = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 export const randomCode = () =>
@@ -160,6 +164,7 @@ export async function pvpRoute(
     body.crestId = own.crestId;
     body.badgeId = own.badgeId;
   }
+  headers.set('X-Pvp-Client-Release', new URL(request.url).searchParams.get('clientRelease') ?? '');
   const room = env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code));
   return room.fetch(
     new Request('https://room/' + path.split('/').pop(), {
@@ -306,7 +311,8 @@ export class PvPMatchRoom {
   }
   private broadcast(events: GameEvent[] = []) {
     for (const ws of this.ctx.getWebSockets()) {
-      const seat = ws.deserializeAttachment().seat;
+      const attachment = ws.deserializeAttachment(), seat = attachment.seat;
+      if (this.room?.contentRelease && attachment.clientRelease !== this.room.contentRelease) {ws.close(1008,'CLIENT_UPDATE_REQUIRED');continue;}
       try {
         ws.send(JSON.stringify({ type: 'snapshot', ...this.view(seat, events) }));
       } catch {
@@ -541,9 +547,16 @@ export class PvPMatchRoom {
           member.loadout = loadout;
           for (const m of r.members) m.ready = false;
         }
+        member.clientRelease = request.headers.get('X-Pvp-Client-Release') ?? undefined;
         member.ready = path === '/ready';
         r.version++;
         if (r.members.length === 2 && r.members.every((m) => m.ready && m.offlineAt === null)) {
+          if (this.env.RELEASE2_CLIENT_REQUIRED === '1' && !compatibleReadySeats(r.members)) {
+            for (const m of r.members) if (m.clientRelease !== 'thunder-release-2') m.ready = false;
+            await this.save(); this.broadcast();
+            return response({error:{code:'CLIENT_UPDATE_REQUIRED',message:'Ambos jugadores deben recargar el juego y confirmar Listo.'}},409);
+          }
+          if (this.env.RELEASE2_CLIENT_REQUIRED === '1') r.contentRelease = 'thunder-release-2';
           r.game = createDuel(
             r.members.map((m) => m.loadout) as [Loadout, Loadout],
             crypto.getRandomValues(new Uint32Array(1))[0]!,
@@ -638,7 +651,7 @@ export class PvPMatchRoom {
     ).WebSocketPair();
     const ws = pair[1];
     this.ctx.acceptWebSocket(ws, [String(t.seat)]);
-    ws.serializeAttachment({ seat: t.seat });
+    ws.serializeAttachment({ seat: t.seat, clientRelease: new URL(request.url).searchParams.get('clientRelease') ?? undefined });
     r.members[t.seat]!.offlineAt = null;
     r.version++;
     await this.save();
@@ -647,7 +660,8 @@ export class PvPMatchRoom {
   }
   webSocketMessage(ws: Socket, message: string | ArrayBuffer): Promise<void> {
     return this.serial(async () => {
-      const seat = ws.deserializeAttachment().seat;
+      const attachment = ws.deserializeAttachment(), seat = attachment.seat;
+      if (this.room?.contentRelease && attachment.clientRelease !== this.room.contentRelease) {ws.close(1008,'CLIENT_UPDATE_REQUIRED');return;}
       try {
         if (typeof message !== 'string' || message.length > 4096) throw Error('BAD_COMMAND');
         const action = JSON.parse(message);

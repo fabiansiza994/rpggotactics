@@ -6,7 +6,7 @@ import type { FxGeometry } from './ElementEffects';
 import { PaintedEffectPool } from './PaintedEffectPool';
 
 export const targetingColors: Record<VisualElement, number> = {
-  FIRE: 0xff7635, ICE: 0x85dcff, ARCANE: 0xc486ff, FORCE: 0xeeb95c,
+  NATURE: 0x43d78c, THUNDER: 0x93cfff, FIRE: 0xff7635, ICE: 0x85dcff, ARCANE: 0xc486ff, FORCE: 0xeeb95c,
   SHIELD: 0x7bd9e5, TELEPORT: 0xa89aff, NEUTRAL: 0xc9c1a5,
 };
 /** Pure presentation: consumes the resolved footprint, never computes targeting. */

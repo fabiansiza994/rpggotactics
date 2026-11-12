@@ -301,7 +301,7 @@ const ARQUITECTO: EncounterDef = {
     ],
   },
   objectives: [{ type: 'DEFEAT_TARGET', targetUnitId: 'architect' }],
-  rewards: { pool: 'BOSS', choices: 3 },
+  rewards: { pool: 'BOSS', choices: 3, cards: ['storm_avatar'] },
   next: null,
   defaultSeed: 310,
 };

@@ -1,4 +1,5 @@
 import { SECTION_SPIN_MS } from '../motion/sectionTiming';
+import { isThunderAddition } from './thunderExpansionRecipe';
 import type { GameEvent } from '../../game';
 import { resolutionTiming } from './resolutionProfiles';
 import { TURN } from '../motion/tokens.ts';
@@ -37,7 +38,10 @@ export function compileTimeline(
   const add = (at: number, kind: CueKind, event: GameEvent, duration = 0, key = spell?.key ?? '') =>
     cues.push({ at, kind, event, duration, key });
   for (const event of events) {
-    if (event.type === 'COUNTER_ATTACK') {
+    if (event.type === 'GLYPH_ACTIVATED') {
+      cursor=Math.max(cursor,recoveryUntil);add(cursor,'event',event);
+      cursor+=reduced?60:180;effectAt=cursor;
+    } else if (event.type === 'COUNTER_ATTACK') {
       // Reactions are separate visual actions, not another simultaneous hit.
       // The authoritative event sequence/payload remains untouched.
       const start = Math.max(cursor, effectAt, lastDamageAt + (reduced ? 100 : 220));
@@ -79,7 +83,9 @@ export function compileTimeline(
       add(cursor, 'cast', event, cast);
       // LINE cards emit PROJECTILE_LAUNCHED themselves; UNIT shots need the cue here.
       const lineShot = event.direction !== null && event.affectedTiles.length > 1;
-      if (((key === 'magic_missile' || key === 'fireball') && !ownEvents.some(e => e.type === 'PROJECTILE_LAUNCHED')) || (isArrowVisual(key) && !lineShot)) add(cursor + cast, 'projectile', event, travel);
+      if (((['magic_missile', 'fireball', 'thunder_discharge', 'chain_lightning', 'tempest_judgment'].includes(key)) && !ownEvents.some(e => e.type === 'PROJECTILE_LAUNCHED')) || (isArrowVisual(key) && !lineShot)) add(cursor + cast, 'projectile', event, travel);
+      if (isThunderAddition(key) && !ownEvents.some(e=>e.type==='PROJECTILE_LAUNCHED')) add(cursor+cast,'projectile',event,travel);
+      if (key==='paralyzing_pulse') add(cursor+cast,'projectile',event,travel);
       add(spell.impact, 'spellImpact', event, key === 'magic_missile' || isArrowVisual(key) ? 130 : 220);
     } else if (event.type === 'ARROW_REBOUNDED') {
       // Each authoritative hop flies before its damage is projected. No invented recipients.

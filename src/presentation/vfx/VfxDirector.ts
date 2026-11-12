@@ -344,7 +344,7 @@ export class VfxDirector {
       this.host.unit(e.casterId)?.pulseLight(lightColor(f), reduced ? 140 : 220);
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
-        fx.catalog.charge(catalog,from,cue.duration,caster?.castOrigin()??undefined);
+        fx.catalog.charge(catalog,from,cue.duration,caster?.castOrigin()??undefined,e.impact,e.affectedTiles);
         if(catalog.style==='volley')fx.catalog.volley(catalog,e.affectedTiles,cue.duration);
         return;
       }
@@ -392,7 +392,8 @@ export class VfxDirector {
     }
     if (cue.kind === 'projectile') {
       if (e.type === 'ARROW_REBOUNDED') {
-        fx.specialArrow(e.fromPos, e.pos, 'rebound_arrow', cue.duration);
+        if (e.element === 'THUNDER' && fx.catalog) fx.catalog.projectile({...familyRecipe('arcane','projectile'),mageElement:'thunder',bank:'mage-elements',tint:0xa5dfff},e.fromPos,e.pos,cue.duration);
+        else fx.specialArrow(e.fromPos, e.pos, 'rebound_arrow', cue.duration);
         return;
       }
       // Snap the gesture to its release beat before emitting the existing projectile.
@@ -461,6 +462,7 @@ export class VfxDirector {
       if(fx.catalog?.handles?.(catalog)) {
         if(cue.key==='magma_fissure')fx.magmaFissure(e.affectedTiles,'impact');
         fx.catalog.impact(catalog,this.position(e.casterId)??e.impact,e.impact,e.affectedTiles);
+        if (catalog.bank === 'thunder-premium') this.host.impulse(cue.key === 'tempest_judgment' ? 'MEDIUM' : 'LIGHT', reduced);
         return;
       }
       if (isArrowVisual(cue.key) && caster?.defId === ARCHER_VISUAL_ID) {
@@ -594,8 +596,14 @@ export class VfxDirector {
     let deferCommit = false;
     // Read the pre-event position for removals / shield responses before projection commits.
     switch (e.type) {
+      case 'GLYPH_ACTIVATED': {
+        const recipe=this.catalogActions.get(e);
+        if(recipe&&fx.catalog?.handles?.(recipe))for(const target of e.targets)fx.catalog.projectile(recipe,e.origin,target.pos,reduced?60:180);
+        break;
+      }
       case 'ARROW_REBOUNDED':
-        fx.specialArrowImpact(e.pos, 'rebound_arrow');
+        if (e.element === 'THUNDER') fx.catalog?.impact({...familyRecipe('arcane'),mageElement:'thunder',bank:'mage-elements',tint:0xa5dfff},e.fromPos,e.pos,[e.pos]);
+        else fx.specialArrowImpact(e.pos, 'rebound_arrow');
         break;
       case 'ENEMY_ACTION_ENDED':
         this.host.enemyAction?.(null);
@@ -625,6 +633,7 @@ export class VfxDirector {
         break;
       }
       case 'TURN_STARTED':
+        fx.catalog?.advanceRound?.(e.round);
         this.host.turnBanner(e.faction, e.round);
         break;
       case 'BACKSTAB':
@@ -633,6 +642,8 @@ export class VfxDirector {
       case 'UNIT_DAMAGED': {
         const catalog=this.catalogActions.get(e);
         if(catalog?.contactOnDamage)fx.catalog?.contact?.(catalog.family,this.position(e.sourceId)??e.pos,e.pos);
+        const thunder = (catalog?.bank === 'thunder-premium' || catalog?.variant === 'paralyzing_pulse') && !!fx.catalog?.handles?.(catalog);
+        if (thunder && (e.hpLost > 0 || e.shieldAbsorbed > 0 || e.armorMitigated > 0)) fx.catalog?.thunderTarget(catalog!, e.pos);
         const reaction = damageReaction(e), universal = universalReactionsEnabled();
         if(e.damageType==='PHYSICAL' && (e.hpLost || e.shieldAbsorbed))this.host.groundImpact?.(e.unitId,e.pos,e.hpLost>=3);
         const source = this.host.unit(e.sourceId),
@@ -661,10 +672,10 @@ export class VfxDirector {
           fx.number(e.unitId, e.pos, e.armorMitigated, 'armor');
         if (universal) fx.unitReaction?.(e.unitId, () => this.position(e.unitId), reaction);
         else fx.sparksAt(fx.lift(e.pos, .45).x, fx.lift(e.pos, .45).y, family(e.damageType), reduced ? 1 : 5, 24);
-        if (e.hpLost) this.hit(e.unitId, e.sourceId, reduced, universal ? REACTION_COLOR[reaction] : 0xffc3aa);
+        if (e.hpLost) this.hit(e.unitId, e.sourceId, reduced, thunder ? 0xb3eaff : universal ? REACTION_COLOR[reaction] : 0xffc3aa);
         const defender = this.host.unit(e.unitId);
         if (reaction !== 'none') defender?.playAnimation(!e.hpLost ? 'block' : 'hit');
-        if (reaction !== 'none') defender?.pulseLight(universal ? REACTION_COLOR[reaction] : e.hpLost && e.damageType === 'FIRE' ? 0xff6045 : lightColor(family(e.damageType)), reduced ? 90 : 150);
+        if (reaction !== 'none') defender?.pulseLight(thunder && e.hpLost > 0 ? 0xb3eaff : universal ? REACTION_COLOR[reaction] : e.hpLost && e.damageType === 'FIRE' ? 0xff6045 : lightColor(family(e.damageType)), reduced ? 90 : 150);
         break;
       }
       case 'UNIT_DEFEATED': {
@@ -764,6 +775,10 @@ export class VfxDirector {
         break;
       }
       case 'STATUS_APPLIED':
+        if(cue.key==='paralyzing_pulse'&&e.status==='SLOWED'&&oldPosition){
+          const recipe=this.catalogActions.get(e);
+          if(recipe&&fx.catalog?.handles?.(recipe)){fx.catalog.pulseStatus(recipe,oldPosition,e.turnsLeft);break;}
+        }
         if(oldPosition&&!['UNLEASHED_HUNT','HUNT_PURSUIT','MARKED_PREY','PREY'].includes(e.status))fx.catalog?.pulse?.('tactic',oldPosition);
         if(e.status==='UNLEASHED_HUNT'&&oldPosition){fx.unleashedHunt(oldPosition);if(!reduced)this.host.unit(e.unitId)?.pulseLight(0xc296ed,200);}
         if(e.status==='HUNT_PURSUIT'&&oldPosition){fx.unleashedHunt(oldPosition,true);if(!reduced)this.host.unit(e.unitId)?.pulseLight(0xdc94bc,120);}
@@ -774,10 +789,12 @@ export class VfxDirector {
         if (oldPosition) fx.focusTick(oldPosition, e.reason !== 'SPENT', e.to === e.max);
         break;
       case 'TRAP_PLACED':
-        fx.trapSet(e.pos);
+        if(e.kind==='lightning_wall') { const recipe=this.catalogActions.get(e);if(recipe&&fx.catalog?.handles?.(recipe))fx.catalog.impact(recipe,e.pos,e.pos,[e.pos]); }
+        else fx.trapSet(e.pos);
         break;
       case 'TRAP_TRIGGERED':
-        fx.trapSprung(e.pos);
+        if(e.kind==='lightning_wall') { const recipe=this.catalogActions.get(e);if(recipe&&fx.catalog?.handles?.(recipe))fx.catalog.impact(recipe,e.pos,e.pos,[e.pos]); }
+        else fx.trapSprung(e.pos);
         this.host.impulse('LIGHT', reduced);
         break;
       case 'STATUS_REMOVED':

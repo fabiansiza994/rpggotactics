@@ -39,14 +39,14 @@ export function cutPathAtTrap(ctx: Pick<RuleContext, 'state'>, unit: Unit, path:
   return i < 0 ? [...path] : path.slice(0, i + 1);
 }
 
-export function placeTrap(ctx: RuleContext, owner: Unit, pos: Pos, kind: string, damage: number, rounds: number): void {
+export function placeTrap(ctx: RuleContext, owner: Unit, pos: Pos, kind: string, damage: number, rounds: number, damageType?: Trap['damageType'], rootOnTrigger?: boolean): void {
   const traps = (ctx.state.traps ??= []);
   const old = trapAt(ctx.state, pos);
   if (old) {
     ctx.state.traps = traps.filter((t) => t !== old);
     ctx.emit({ type: 'TRAP_REMOVED', trapId: old.id, kind: old.trapId, pos: old.pos, reason: 'REPLACED' });
   }
-  const trap: Trap = { id: `trap-${ctx.state.nextId++}`, trapId: kind, ownerId: owner.id, pos, damage, turnsLeft: rounds };
+  const trap: Trap = { id: `trap-${ctx.state.nextId++}`, trapId: kind, ownerId: owner.id, pos, damage, turnsLeft: rounds, ...(damageType ? {damageType} : {}), ...(rootOnTrigger !== undefined ? {rootOnTrigger} : {}) };
   ctx.state.traps!.push(trap);
   ctx.emit({ type: 'TRAP_PLACED', trapId: trap.id, kind, ownerId: owner.id, pos, turnsLeft: rounds });
 }
@@ -64,6 +64,8 @@ export function placeTrapNet(
   damage: number,
   rounds: number,
   net?: { preyFocus: number },
+  damageType?: Trap['damageType'],
+  rootOnTrigger?: boolean,
 ): void {
   if (net)
     for (const old of (ctx.state.traps ?? []).filter((t) => t.netId && t.ownerId === owner.id && t.trapId === kind)) {
@@ -72,7 +74,7 @@ export function placeTrapNet(
     }
   const netId = net ? `net-${ctx.state.nextId++}` : undefined;
   for (const pos of tiles) {
-    placeTrap(ctx, owner, pos, kind, damage, rounds);
+    placeTrap(ctx, owner, pos, kind, damage, rounds, damageType, rootOnTrigger);
     if (!net) continue;
     const trap = ctx.state.traps!.at(-1)!;
     trap.netId = netId;
@@ -95,8 +97,8 @@ export function springTrap(ctx: RuleContext, unit: Unit): boolean {
   // Decided before the hit (catching the Presa counts even if the trap finishes it).
   const owner = trap.preyFocus ? unitById(ctx.state, trap.ownerId) : undefined;
   const preyCaught = !!owner && isPreyOf(unit, owner.id);
-  dealDamage(ctx, unit, trap.damage, trap.ownerId, 'PHYSICAL');
-  if (ctx.state.units.includes(unit))
+  dealDamage(ctx, unit, trap.damage, trap.ownerId, trap.damageType ?? 'PHYSICAL');
+  if (trap.rootOnTrigger !== false && ctx.state.units.includes(unit))
     applyStatus(ctx, unit, 'ROOTED', unit.faction === ctx.state.activeFaction ? 2 : 1, trap.ownerId);
   if (preyCaught && ctx.state.units.includes(owner!)) gainFocus(ctx, owner!, trap.preyFocus!);
   return true;

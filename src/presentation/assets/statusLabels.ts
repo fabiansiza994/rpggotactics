@@ -1,6 +1,11 @@
 import type { StatusId } from '../../game';
 
 export const STATUS_LABEL: Record<StatusId, string> = {
+  VOLTAIC_ARMOR: 'Armadura de Voltios',
+  CONDUCTIVE_MARK: 'Marca Conductora',
+  ELECTRIC_FRENZY: 'Frenesí: +1 ataque / +1 daño recibido',
+  STORM_AVATAR: 'Avatar: +1 eléctrico',
+  OVERCHARGED: 'Sobrecarga',
   BURNING: 'Ardiendo',
   LAST_STAND: 'Último Bastión',
   FORM_DANCE: 'Danza de las Formas',

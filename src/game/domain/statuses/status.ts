@@ -1,6 +1,11 @@
 import type { DamageType } from '../combat/damage-types';
 
 export type StatusId =
+  | 'VOLTAIC_ARMOR'
+  | 'CONDUCTIVE_MARK'
+  | 'ELECTRIC_FRENZY'
+  | 'STORM_AVATAR'
+  | 'OVERCHARGED'
   | 'BURNING'
   | 'ROOTED'
   | 'STUNNED'
@@ -44,6 +49,7 @@ export interface StatusDef {
   negative: boolean;
   tick: StatusTiming;
   tickDamage?: number;
+  nextElectricalDamage?: number;
   tickDamageType?: DamageType;
   stacking: StatusStacking;
   /** Unit cannot perform normal (walking) movement. Teleports/pushes still work. */
@@ -55,6 +61,13 @@ export interface StatusDef {
    * damage, then the status is consumed. Counter damage never triggers another counter.
    */
   counterDamage?: number;
+  counterDamageType?: DamageType;
+  /** Attack-only buffs; never apply to counter/hazard damage. */
+  outgoingDamageBonus?: number;
+  incomingDamageBonus?: number;
+  electricalDamageBonus?: number;
+  /** Target-side charge consumed only by electrical card damage. */
+  receivedElectricalBonus?: number;
   /** Removed at the start of the owner's next turn instead of counting down (covers exactly the opponent's turn). */
   expiresAtOwnerTurnStart?: boolean;
   /** Summons only: extra damage on their automatic attack while the status lasts. */

@@ -195,6 +195,8 @@ export type EffectDef =
        * deterministic order). Same damage type / attack kind as the main hit.
        */
       rebound?: { bounces: number; amount: number };
+      /** Consumes one pending electrical charge for this entire damage effect. */
+      electrical?: boolean;
       /** Only units on the impact tile (an area card whose damage is not area damage: Flecha de Humo). */
       impactOnly?: boolean;
       /**
@@ -249,6 +251,8 @@ export type EffectDef =
       type: 'PLACE_TRAP';
       trapId: string;
       damage: number;
+      damageType?: DamageType;
+      rootOnTrigger?: boolean;
       rounds: number;
       /**
        * AREA: one trap on every free tile of the area (no unit, obstacle or blocked terrain).
@@ -297,7 +301,7 @@ export type EffectDef =
    * Delayed, public area (Runa de Ignición): marks the affected tiles; at the START of the caster's
    * next turn every hostile unit still inside takes `damage`, then the glyph is gone.
    */
-  | { type: 'PLACE_GLYPH'; glyphId: string; damage: number; damageType: DamageType }
+  | { type: 'PLACE_GLYPH'; glyphId: string; damage: number; damageType: DamageType; activations?: number; maxTargets?: number }
   | { type: 'SUMMON'; summonId: string }
   /**
    * Vínculo Prohibido: the caster loses floor(current HP × `percentOfCurrent` / 100) HP. A cost,
@@ -315,7 +319,7 @@ export type EffectType = EffectDef['type'];
 
 export type CostDiscountScope = 'SPELL' | 'TRANSFORM';
 
-export type VisualElement = 'FIRE' | 'ICE' | 'ARCANE' | 'FORCE' | 'SHIELD' | 'TELEPORT' | 'NEUTRAL';
+export type VisualElement = 'NATURE' | 'THUNDER' | 'FIRE' | 'ICE' | 'ARCANE' | 'FORCE' | 'SHIELD' | 'TELEPORT' | 'NEUTRAL';
 
 /**
  * Presentation hints. NEVER read by the domain. The VFX registry (presentation layer) maps

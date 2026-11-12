@@ -138,6 +138,15 @@ type Handler<K extends EffectType> = (
 /**
  * One handler per effect PRIMITIVE (never per card). Adding a card = composing these in data.
  */
+/** New thunder charges apply to each confirmed electrical recipient, including rebound hops. */
+function consumeElectricalTargetBonus(e: EffectContext, target: Unit, electrical: boolean | undefined): number {
+  if (!electrical) return 0;
+  const mark = target.statuses.find(s => e.ctx.content.statuses[s.id].receivedElectricalBonus);
+  const marked = mark ? e.ctx.content.statuses[mark.id].receivedElectricalBonus ?? 0 : 0;
+  if (mark) removeStatus(e.ctx, target, mark.id, 'CONSUMED');
+  return marked + e.caster.statuses.reduce((n,s) => n + (e.ctx.content.statuses[s.id].electricalDamageBonus ?? 0), 0);
+}
+
 const HANDLERS: { [K in EffectType]: Handler<K> } = {
   TRANSFORM: (e, fx) => transform(e.ctx, e.caster, fx.formId),
   DAMAGE: (e, fx) => {
@@ -146,6 +155,9 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     const guardReward = highGuard && e.caster.shield >= highGuard.atLeast ? highGuard : null;
     const charge = nextAttackPush(e);
     let focus = 0;
+    const electrical = fx.electrical ? e.caster.statuses.find(s => e.ctx.content.statuses[s.id].nextElectricalDamage) : undefined;
+    const electricalBonus = electrical ? e.ctx.content.statuses[electrical.id].nextElectricalDamage ?? 0 : 0;
+    if (electrical) removeStatus(e.ctx, e.caster, electrical.id, 'CONSUMED');
     const targets = fx.impactOnly ? selectUnits(e, fx.to).filter((u) => samePos(u.pos, e.resolved.impact)) : selectUnits(e, fx.to);
     // Decided from the board before any damage (a first target that dies still passes it on).
     const first = targets[0];
@@ -160,7 +172,7 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
       // Golpe del Bastión: the caster's shield NOW (read per hit, after any earlier effect).
       const guard = fx.fromCasterShield ? Math.min(e.caster.shield, fx.fromCasterShield.max) : 0;
       const base = finisher ? finisher.amount : guard > 0 ? guard : fx.amount;
-      const amount = base + bonusFor(e, fx.bonus, u);
+      const amount = base + bonusFor(e, fx.bonus, u) + electricalBonus + consumeElectricalTargetBonus(e, u, fx.electrical);
       if (fx.shieldBreak) breakShield(e.ctx, u, fx.shieldBreak, e.caster.id);
       if (guard > 0) breakShield(e.ctx, e.caster, fx.fromCasterShield!.consumeAll ? e.caster.shield : guard, e.caster.id);
       dealDamage(e.ctx, u, attackDamage(e.ctx, e.caster, u, amount), e.caster.id, fx.damageType, fx.attackKind, fx.attackKind === 'RANGED' && e.directAttack ? 'DIRECT_RANGED' : e.directAttack);
@@ -168,9 +180,9 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     let from = first?.pos;
     bounces.forEach((u, i) => {
       if (!fx.rebound || !from || !e.ctx.state.units.includes(u) || !e.ctx.state.units.includes(e.caster)) return;
-      e.ctx.emit({ type: 'ARROW_REBOUNDED', casterId: e.caster.id, fromPos: { ...from }, unitId: u.id, pos: { ...u.pos }, bounce: i + 1 });
+      e.ctx.emit({ type: 'ARROW_REBOUNDED', casterId: e.caster.id, fromPos: { ...from }, unitId: u.id, pos: { ...u.pos }, bounce: i + 1, ...(fx.electrical ? { element: 'THUNDER' as const } : {}) });
       from = u.pos;
-      dealDamage(e.ctx, u, attackDamage(e.ctx, e.caster, u, fx.rebound.amount), e.caster.id, fx.damageType, fx.attackKind);
+      dealDamage(e.ctx, u, attackDamage(e.ctx, e.caster, u, fx.rebound.amount + electricalBonus + consumeElectricalTargetBonus(e, u, fx.electrical)), e.caster.id, fx.damageType, fx.attackKind);
     });
     if (guardReward && targets.length && e.ctx.state.units.includes(e.caster)) {
       // Exact original targets only; dead units are not pushed. No extra collision damage.
@@ -271,11 +283,11 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
   },
   PLACE_TRAP: (e, fx) => {
     if (!fx.net && (fx.on ?? 'IMPACT') === 'IMPACT') {
-      placeTrap(e.ctx, e.caster, e.resolved.impact, fx.trapId, fx.damage, fx.rounds);
+      placeTrap(e.ctx, e.caster, e.resolved.impact, fx.trapId, fx.damage, fx.rounds, fx.damageType, fx.rootOnTrigger);
       return;
     }
     const tiles = selectTiles(e, fx.on ?? 'IMPACT').filter((p) => isEmptyTile(e.ctx, p));
-    placeTrapNet(e.ctx, e.caster, tiles, fx.trapId, fx.damage, fx.rounds, fx.net);
+    placeTrapNet(e.ctx, e.caster, tiles, fx.trapId, fx.damage, fx.rounds, fx.net, fx.damageType, fx.rootOnTrigger);
   },
   CREATE_TERRAIN: (e, fx) => {
     for (const p of selectTiles(e, fx.on)) {
@@ -347,7 +359,7 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     e.ctx.emit({ type: 'COST_DISCOUNT_GRANTED', unitId: e.caster.id, scope: fx.scope, amount: fx.amount });
   },
   PLACE_GLYPH: (e, fx) => {
-    placeGlyph(e.ctx, e.caster, e.resolved.affectedTiles, fx.glyphId, fx.damage, fx.damageType);
+    placeGlyph(e.ctx, e.caster, e.resolved.affectedTiles, fx.glyphId, fx.damage, fx.damageType, fx.activations, fx.maxTargets, fx.activations !== undefined ? e.resolved.impact : undefined);
   },
 };
 

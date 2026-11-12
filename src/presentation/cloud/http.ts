@@ -1,3 +1,4 @@
+import { contentReleaseUrl } from './contentRelease';
 /** Why a cloud call failed. NETWORK/TIMEOUT = try again later; AUTH = sign in again. */
 export type CloudErrorKind = 'NETWORK' | 'TIMEOUT' | 'AUTH' | 'REJECTED' | 'SERVER';
 
@@ -24,7 +25,7 @@ export async function request<T>(
   const timer = setTimeout(() => controller.abort(), options.timeoutMs);
   let res: Response;
   try {
-    res = await fetch(`${base}${path}`, {
+    res = await fetch(contentReleaseUrl(`${base}${path}`), {
       method: options.method ?? 'GET',
       headers: {
         ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),

@@ -20,6 +20,9 @@ export interface D1Database {
 }
 
 export interface Env {
+  RELEASE2_MAINTENANCE?: string;
+  RELEASE2_QA_USERS?: string;
+  RELEASE2_CLIENT_REQUIRED?: string;
   REAL_MONEY_PURCHASES_ENABLED?: string;
   SUPPORT_EMAIL_ENABLED?: string;
   SUPPORT_EMAIL_PROVIDER?: string;

@@ -7,6 +7,11 @@ import { RANKED_PREMIUM_STATUSES } from './ranked-premium-cards';
 
 /** 02_MVP_RULES §10: each status declares duration handling, tick timing and stacking. */
 export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
+  VOLTAIC_ARMOR: { id: 'VOLTAIC_ARMOR', name: 'Armadura de Voltios', negative: false, tick: 'NEVER', stacking: 'IGNORE', counterDamage: 1, counterDamageType: 'ARCANE', expiresAtOwnerTurnStart: true },
+  CONDUCTIVE_MARK: { id: 'CONDUCTIVE_MARK', name: 'Marca Conductora', negative: true, tick: 'NEVER', stacking: 'IGNORE', receivedElectricalBonus: 1 },
+  ELECTRIC_FRENZY: { id: 'ELECTRIC_FRENZY', name: 'Frenesí Eléctrico', negative: false, tick: 'NEVER', stacking: 'IGNORE', outgoingDamageBonus: 1, incomingDamageBonus: 1 },
+  STORM_AVATAR: { id: 'STORM_AVATAR', name: 'Avatar de la Tormenta', negative: false, tick: 'NEVER', stacking: 'IGNORE', electricalDamageBonus: 1 },
+  OVERCHARGED: { id: 'OVERCHARGED', name: 'Sobrecarga', negative: false, tick: 'NEVER', stacking: 'IGNORE', nextElectricalDamage: 1 },
   BURNING: {
     id: 'BURNING',
     name: 'Ardiendo',

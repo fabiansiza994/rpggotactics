@@ -1,3 +1,5 @@
+import { isThunderAddition } from './thunderExpansionRecipe';
+import { isThunderPremium } from './thunderRecipe';
 import { allCardEffects } from '../../game/domain/cards/form-effects';
 export { allCardEffects } from '../../game/domain/cards/form-effects';
 import type { EffectDef } from '../../game/domain/cards/card';
@@ -20,7 +22,7 @@ export type PremiumFamily =
   | 'summon'
   | 'transform'
   | 'tactic';
-export type AtlasBank = 'bastion' | 'fireball' | 'mage-spells' | 'pact-summon' | 'wild-spirit';
+export type AtlasBank = 'thunder-premium' | 'mage-elements' | 'bastion' | 'fireball' | 'mage-spells' | 'pact-summon' | 'wild-spirit';
 export type CoverageClass = 'A' | 'B' | 'C' | 'D';
 export interface CatalogRecipe {
   family: PremiumFamily;
@@ -30,6 +32,8 @@ export interface CatalogRecipe {
   contactOnDamage: boolean;
   tint: number;
   recall?: boolean;
+  mageElement?: 'nature' | 'thunder';
+  variant?: string;
   style?: 'volley' | 'ancestral';
 }
 export const BANK: Record<PremiumFamily, AtlasBank> = {
@@ -186,10 +190,11 @@ export function cardRecipe(
               : 'pulse';
   return {
     family,
-    bank: card.id === 'arrow_rain' ? 'wild-spirit' : BANK[family],
+    bank: isThunderPremium(card.id) || isThunderAddition(card.id) ? 'thunder-premium' : card.tags.includes('mage-elements') ? 'mage-elements' : card.id === 'arrow_rain' ? 'wild-spirit' : BANK[family],
     shape,
     contactOnDamage,
-    tint: TINT[family],
+    tint: card.tags.includes('nature') ? 0x54eda1 : card.tags.includes('thunder') ? 0xa5dfff : TINT[family],
+    ...(card.tags.includes('mage-elements') ? {mageElement: card.tags.includes('nature') ? 'nature' as const : 'thunder' as const, variant:card.id} : {}),
     ...(card.id === 'arrow_rain'
       ? { style: 'volley' as const }
       : family === 'transform'
@@ -232,9 +237,32 @@ export function catalogBatch(
       if (
         (recipe.recall && child.type === 'UNIT_DEFEATED') ||
         child.type === 'PROJECTILE_LAUNCHED' ||
-        (recipe.contactOnDamage && child.type === 'UNIT_DAMAGED' && child.sourceId === e.casterId)
+        (card.id==='paralyzing_pulse' && child.type==='STATUS_APPLIED' && child.sourceId===e.casterId) ||
+        ((recipe.contactOnDamage || isThunderPremium(card.id) || isThunderAddition(card.id) || card.id==='paralyzing_pulse') && child.type === 'UNIT_DAMAGED' && child.sourceId === e.casterId)
       )
         result.set(child, recipe);
+  }
+  for(let i=0;i<events.length;i++) {
+    const event=events[i]!;
+    if((event.type!=='TRAP_PLACED'&&event.type!=='TRAP_TRIGGERED')||event.kind!=='lightning_wall')continue;
+    const card=lookup('lightning_wall');if(!card)continue;
+    const recipe=cardRecipe(card,[],event.ownerId);result.set(event,recipe);
+    if(event.type==='TRAP_TRIGGERED')for(let j=i+1;j<events.length;j++) {
+      const child=events[j]!;if(['TRAP_TRIGGERED','CARD_PLAYED','TURN_ENDED'].includes(child.type))break;
+      if(child.type==='UNIT_DAMAGED'&&child.sourceId===event.ownerId&&child.unitId===event.unitId)result.set(child,recipe);
+    }
+  }
+  // Bounded automatic glyph damage has its own authoritative causal batch (no fabricated cast).
+  for (let i=0;i<events.length;i++) {
+    const event=events[i]!;
+    if(event.type!=='GLYPH_ACTIVATED')continue;
+    const id=event.kind==='thunder_orb'?'storm_orb':event.kind==='thunder_static'?'static_field':null;
+    const card=id?lookup(id):undefined;if(!card)continue;
+    const recipe=cardRecipe(card,[],event.ownerId);result.set(event,recipe);
+    for(let j=i+1;j<events.length;j++) {
+      const child=events[j]!;if(['GLYPH_ACTIVATED','CARD_PLAYED','TURN_ENDED'].includes(child.type))break;
+      if(child.type==='UNIT_DAMAGED'&&child.sourceId===event.ownerId&&event.targets.some(t=>t.unitId===child.unitId))result.set(child,recipe);
+    }
   }
   return result;
 }
@@ -273,7 +301,8 @@ export function catalogEventRecipes(
   events: readonly GameEvent[],
   lookup: (id: string) => CardDefinition | undefined,
 ): CatalogRecipe[] {
-  const recipes = [...catalogBatch(events, lookup).values()];
+  const batch = catalogBatch(events, lookup);
+  const recipes = [...batch.values()];
   for (const e of events) {
     if (['ENEMY_ATTACKED', 'SUMMON_ATTACKED', 'SUMMON_BREATH', 'COUNTER_ATTACK'].includes(e.type))
       recipes.push(familyRecipe(confirmedAttackFamily(events, e)));
@@ -285,6 +314,7 @@ export function catalogEventRecipes(
       recipes.push(familyRecipe('tactic'));
     if (
       e.type === 'STATUS_APPLIED' &&
+      batch.get(e)?.variant !== 'paralyzing_pulse' &&
       !['UNLEASHED_HUNT', 'HUNT_PURSUIT', 'MARKED_PREY', 'PREY'].includes(e.status)
     )
       recipes.push(familyRecipe('tactic'));

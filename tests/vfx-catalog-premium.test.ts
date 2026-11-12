@@ -155,7 +155,7 @@ describe('lote A — Mago', () => {
     ])
       expect(existingPresentation(C.cards[id]!)).toBe('A');
     expect(existingPresentation(C.cards.arcane_burst_ii!)).toBeNull();
-    expect(C.cards.arcane_surge!.heroId).toBeUndefined();
+    expect(C.cards.arcane_surge!.heroId).toBe('mage');
     expect(C.cards.arcane_surge!.effects).toEqual([{ type: 'DRAW', count: 2 }]);
   });
   it('loads only the necessary atlas, retries fallback, and forbids public use', async () => {

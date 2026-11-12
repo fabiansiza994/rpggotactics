@@ -1,3 +1,5 @@
+import { MAGE_THUNDER_EXPANSION } from './mage-thunder-expansion';
+import { MAGE_THUNDER_CORE } from './mage-thunder-core';
 import { UNLEASHED_HUNT } from './unleashed-hunt';
 import { RANKED_CORE_CARDS } from './ranked-cards';
 import { RANKED_PREMIUM_CORE_CARDS } from './ranked-premium-cards';
@@ -487,6 +489,7 @@ list.push(...TACTICAL_CARDS);
 list.push(...ARSENAL_CARDS);
 list.push(...SHOWCASE_STORE_CARDS);
 list.push(...FREE_CATALOG_CORE_CARDS);
+list.push(...MAGE_THUNDER_CORE, ...MAGE_THUNDER_EXPANSION);
 
 list.push({
   id: 'pack_tracking', name: 'Rastreo de la Manada', heroId: 'summoner', cost: 1,

@@ -6,6 +6,10 @@ export function statusIcon(id: StatusId): IconName {
 }
 export function statusEffect(def: StatusDef): string {
   const effects:string[]=[];
+  if(def.outgoingDamageBonus) effects.push(`Ataques +${def.outgoingDamageBonus}`);
+  if(def.incomingDamageBonus) effects.push(`Daño recibido de ataques +${def.incomingDamageBonus}`);
+  if(def.electricalDamageBonus) effects.push(`Cartas eléctricas +${def.electricalDamageBonus}`);
+  if(def.receivedElectricalBonus) effects.push(`Próxima carta eléctrica recibida +${def.receivedElectricalBonus}; se consume`);
   if(def.tickDamage) effects.push(`${def.tickDamage} de daño ${def.tick === 'TURN_START' ? 'al comenzar' : 'al terminar'} su turno`);
   if(def.preventsMovement) effects.push('Impide caminar; no impide desplazamientos forzados');
   if(def.preventsActions) effects.push('Impide actuar');

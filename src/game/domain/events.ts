@@ -19,6 +19,7 @@ import type { TerrainType } from './terrain/terrain';
  * `sourceId` conventions: a unit id, `terrain:<TYPE>` or `status:<ID>`.
  */
 export type GameEvent =
+  | { type: 'GLYPH_ACTIVATED'; glyphId: string; kind: string; ownerId: string; origin: Pos; targets: {unitId:string;pos:Pos}[]; remaining: number }
   | { type: 'BACKSTAB'; unitId: string; sourceId: string; pos: Pos; bonus: 1 }
   | { type: 'FORM_CHANGED'; unitId: string; from: string | null; to: string | null }
   | {
@@ -226,7 +227,7 @@ export type GameEvent =
   | { type: 'TRAP_TRIGGERED'; trapId: string; kind: string; ownerId: string; unitId: string; pos: Pos; damage: number }
   | { type: 'TRAP_REMOVED'; trapId: string; kind: string; pos: Pos; reason: 'EXPIRED' | 'REPLACED' | 'NET_CLOSED' }
   /** A rebounding arrow jumped `from` → `unitId` (bounce 1 or 2); its damage follows as UNIT_DAMAGED. */
-  | { type: 'ARROW_REBOUNDED'; casterId: string; fromPos: Pos; unitId: string; pos: Pos; bounce: number }
+  | { type: 'ARROW_REBOUNDED'; casterId: string; fromPos: Pos; unitId: string; pos: Pos; bounce: number; element?: 'THUNDER' }
   /** Riposte fired: `unitId` answers `targetId`'s adjacent attack (the damage follows as UNIT_DAMAGED). */
   | { type: 'COUNTER_ATTACK'; unitId: string; targetId: string; amount: number }
   /** A finisher hit met its HP condition (`unitId` had ≤ `hpAtMost` HP): UNIT_DAMAGED of `amount` follows. */

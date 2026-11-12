@@ -16,6 +16,10 @@ import { manhattan } from '../core/position';
 export function attackDamage(ctx: RuleContext, attacker: Unit | undefined, target: Unit, amount: number): number {
   if (amount <= 0) return amount;
   let out = amount;
+  if (attacker && areHostile(attacker, target)) {
+    out += attacker.statuses.reduce((n, s) => n + (ctx.content.statuses[s.id]?.outgoingDamageBonus ?? 0), 0);
+    out += target.statuses.reduce((n, s) => n + (ctx.content.statuses[s.id]?.incomingDamageBonus ?? 0), 0);
+  }
   if (attacker) {
     let less = 0;
     for (const s of attacker.statuses) {

@@ -14,4 +14,8 @@ export interface Glyph {
   tiles: Pos[];
   damage: number;
   damageType: DamageType;
+  /** Limited recurring glyph; absent means the original one-shot rune. */
+  activationsLeft?: number;
+  maxTargets?: number;
+  origin?: Pos;
 }

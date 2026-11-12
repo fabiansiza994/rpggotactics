@@ -182,3 +182,9 @@ for (const id of ["double_moon_pact", "fallen_king_wall", "stalker_heart", "ash_
 
 // Vínculo Prohibido: original painted ritual scene (qa/forbidden-bond-art-20261022).
 FINAL_CARD_ART.forbidden_bond = "/art/forbidden-bond/forbidden_bond.webp";
+
+/** Mage Thunder: original approved-scope expansion artwork. */
+for (const id of ["thunder_discharge", "chain_lightning", "arcane_overload", "paralyzing_pulse", "tempest_judgment"]) FINAL_CARD_ART[id] = `/art/mage-elements/${id}.webp`;
+
+// Thunder expansion: individual optimized illustrations, loaded by card on demand.
+for (const id of ["fulminating_spear", "voltaic_armor", "lightning_step", "storm_orb", "conductive_mark", "thunder_hammer", "static_field", "electric_frenzy", "lightning_wall", "storm_avatar"]) FINAL_CARD_ART[id] = `/art/mage-thunder/${id}.webp`;

@@ -1,3 +1,4 @@
+import { CONTENT_RELEASE } from '../cloud/contentRelease';
 import { BattleResultPresentation } from '../results/BattleResultPresentation';
 import '../react/components/BattleStyles';
 import { useMechanismPlayback } from '../mechanisms/mechanismPlayback';
@@ -219,6 +220,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
       const token = await api('connect', { code: room });
       if (!alive.current || generation !== connectionGeneration.current) return;
       const url = new URL(CLOUD_CONFIG.apiUrl + '/api/tactics/pvp/socket');
+      url.searchParams.set('clientRelease', CONTENT_RELEASE);
       url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
       url.searchParams.set('code', room);
       url.searchParams.set('ticket', token.ticket);
