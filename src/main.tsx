@@ -1,3 +1,4 @@
+import { StartupBoundary } from './presentation/startup/StartupBoundary';
 import { createRoot } from 'react-dom/client';
 import { lazy, Suspense } from 'react';
 import { Capacitor } from '@capacitor/core';
@@ -46,4 +47,4 @@ const root = document.getElementById('root');
 if (!root) throw new Error('#root not found');
 applyMotionTokens(document.documentElement);
 // No StrictMode double-mount: the Pixi canvas lifecycle is managed explicitly in BoardView.
-createRoot(root).render(<Suspense fallback={<p role="status">Cargando RPG GO Tactics…</p>}>{ArtFoilQa ? <ArtFoilQa/> : MissionRewardQa ? <MissionRewardQa/> : ForbiddenBondQa ? <ForbiddenBondQa/> : PremiumIntegrationQa ? <PremiumIntegrationQa/> : FinalCleanupQa ? <FinalCleanupQa/> : FreeCatalogQa ? <FreeCatalogQa/> : ResolutionQa ? <ResolutionQa/> : Act3Qa ? <Act3Qa/> : Act3RotationLab ? <Act3RotationLab/> : RankedRewardVisualQa ? <RankedRewardVisualQa/> : UnleashedHuntQa ? <UnleashedHuntQa /> : SummonInspectionQa ? <SummonInspectionQa /> : MasteryVisualQa ? <MasteryVisualQa /> : RankedVisualQa ? <RankedVisualQa /> : LocomotionLab ? <LocomotionLab /> : ShapeshifterLab ? <ShapeshifterLab /> : publicSite ? <OfficialSite /> : <App />}</Suspense>);
+createRoot(root).render(<StartupBoundary><Suspense fallback={<p role="status">Cargando RPG GO Tactics…</p>}>{ArtFoilQa ? <ArtFoilQa/> : MissionRewardQa ? <MissionRewardQa/> : ForbiddenBondQa ? <ForbiddenBondQa/> : PremiumIntegrationQa ? <PremiumIntegrationQa/> : FinalCleanupQa ? <FinalCleanupQa/> : FreeCatalogQa ? <FreeCatalogQa/> : ResolutionQa ? <ResolutionQa/> : Act3Qa ? <Act3Qa/> : Act3RotationLab ? <Act3RotationLab/> : RankedRewardVisualQa ? <RankedRewardVisualQa/> : UnleashedHuntQa ? <UnleashedHuntQa /> : SummonInspectionQa ? <SummonInspectionQa /> : MasteryVisualQa ? <MasteryVisualQa /> : RankedVisualQa ? <RankedVisualQa /> : LocomotionLab ? <LocomotionLab /> : ShapeshifterLab ? <ShapeshifterLab /> : publicSite ? <OfficialSite /> : <App />}</Suspense></StartupBoundary>);
