@@ -14,8 +14,8 @@ export function BattleResultPresentation({ identity, tone, children }: {
   const skippable = tone !== 'victory' && tone !== 'defeat';
   const content = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    seen.mark(identity);
-    if (done) return;
+    // An interrupted/remounted sequence is not a completed presentation.
+    if (done) { seen.mark(identity); return; }
     (skippable ? skip.current : cinema.current)?.focus();
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     const finish = () => setDone(true);

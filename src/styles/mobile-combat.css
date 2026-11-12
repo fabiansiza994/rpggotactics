@@ -79,7 +79,13 @@
   .battle .mobile-aim-controls button:last-child { background: #39262b; border-color: #95634e; }
   .battle .mobile-aim-controls button:disabled { opacity: .45; }
   .battle:has(.mobile-aim-controls, .hand-discard-bar) .end-turn-box { visibility: hidden; pointer-events: none; }
-  .battle .hand-discard-bar { position: fixed; bottom: calc(var(--mobile-hand-space) + env(safe-area-inset-bottom)); left: 6px; right: 6px; width: auto; z-index: 17; }
+  /* The desktop picker uses left:50% + translateX(-50%). Reset both when pinned to mobile insets. */
+  .battle:has(.hand-discard-bar) { grid-template-rows: calc(58px + env(safe-area-inset-top)) minmax(0, 1fr) 0 calc(260px + env(safe-area-inset-bottom)); }
+  .battle:has(.hand-discard-bar) .mobile-player-status { visibility: hidden; }
+  .battle .hand-discard-bar { position: fixed; bottom: calc(var(--mobile-hand-space) + env(safe-area-inset-bottom) + 4px); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); width: auto; max-width: none; margin: 0; transform: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 6px 8px; box-sizing: border-box; z-index: 17; }
+  .battle .hand-discard-text { grid-column: 1 / -1; min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 16px; font-size: 12px; }
+  .battle .hand-discard-bar button { min-width: 0; min-height: 44px; padding: 6px 10px; font-size: 11px; }
+
   .battle .card-preview-zoom { width: min(340px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); padding: 12px; overflow-y: auto; background: #0a1422; }
   .battle .card-preview-zoom .feature-card { width: min(280px, calc(100vw - 52px)); height: 392px; min-height: 392px; margin: 0 auto; transform: none; }
   .battle .card-preview-zoom .zoom-support { width: 100%; margin: 8px 0 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
