@@ -3,6 +3,7 @@
 @media (orientation: portrait) and (max-width: 600px) {
   .battle {
     --mobile-hand-space: 164px;
+    --mobile-hud-space: 56px;
     --battle-depth: .9;
     --battle-front-frame: 12;
     height: 100dvh; min-height: 0; width: 100%;
@@ -27,7 +28,7 @@
   .battle > button.pause-trigger { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 8px; font-size: 0; }
   .battle > .pause-trigger span { font-size: 18px; }
   .battle > .pause-trigger kbd { display: none; }
-  .battle .hand { position: absolute; inset: auto 0 env(safe-area-inset-bottom); width: 100%; height: var(--mobile-hand-space); display: flex; align-items: flex-end; justify-content: center; gap: 0; padding: 22px 4px 8px; overflow: visible; margin: 0 !important; touch-action: pan-x; }
+  .battle .hand { position: absolute; inset: auto 0 calc(var(--mobile-hud-space) + env(safe-area-inset-bottom)); width: 100%; height: var(--mobile-hand-space); display: flex; align-items: flex-end; justify-content: center; gap: 0; padding: 22px 4px 8px; overflow: visible; margin: 0 !important; touch-action: pan-x; }
   .battle .hand .card { width: 92px; min-width: 92px; flex: 0 0 92px; height: 128px; padding: 4px; margin: 0 0 0 calc(-1 * max(24px, (496px - 100vw) / 4)); border-radius: 7px; transform: rotate(var(--card-tilt)); transform-origin: 50% 100%; display: flex; flex-direction: column; gap: 0; }
   .battle .hand .card:not(.is-selected):hover { transform: rotate(var(--card-tilt)); width: 92px; height: 128px; }
   .battle .hand .card:first-child { margin-left: 0; }
@@ -47,7 +48,7 @@
   .battle .hand .card-cost { width: 26px; height: 26px; font-size: 18px; top: -4px; left: -5px; }
   .battle .hand .card-selection-cancel { display: none; } /* Dedicated separated targeting row. */
   .battle .pile { display: none; }
-  .battle .mobile-player-status { position: absolute; top: 0; left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); height: 56px; display: flex; gap: 12px; align-items: center; padding: 5px 10px; background: linear-gradient(100deg, #102a38, #0b1928); border: 1px solid #526b79; border-radius: 7px; font-size: 12px; }
+  .battle .mobile-player-status { position: absolute; top: auto; bottom:env(safe-area-inset-bottom); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); height: 56px; display: flex; gap: 12px; align-items: center; padding: 5px 10px; background: linear-gradient(100deg, #102a38, #0b1928); border: 1px solid #526b79; border-radius: 7px; font-size: 12px; }
   .battle .mobile-player-health { flex: 0 0 100px; min-width: 0; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3px; }
   .battle .mobile-player-health strong { grid-column: 1 / -1; font-size: 12px; line-height: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-player-health > span { grid-column: 1 / -1; font-variant-numeric: tabular-nums; font-size: 11px; }
@@ -73,16 +74,16 @@
   .battle .end-turn-short { display: inline; }
   .battle .battle-utilities { position: static; height: 0; }
   .battle .aim-controls, .battle .pvp-confirm { display: none; }
-  .battle .mobile-aim-controls { position: fixed; left: 8px; right: 8px; bottom: calc(var(--mobile-hand-space) + env(safe-area-inset-bottom) + 4px); height: 48px; margin: 0; padding: 3px 4px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; background: #0a1726; z-index: 16; border-radius: 6px; }
+  .battle .mobile-aim-controls { position: fixed; left: 8px; right: 8px; bottom: calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom) + 4px); height: 48px; margin: 0; padding: 3px 4px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; background: #0a1726; z-index: 16; border-radius: 6px; }
   .battle .mobile-aim-controls > span { white-space: normal; flex: 1; font-size: 11px; padding: 2px; }
   .battle .mobile-aim-controls button { min-height: 44px; min-width: 56px; padding: 6px; font-size: 12px; border: 1px solid #b59b68; border-radius: 6px; background: #23402d; color: #f4dfad; }
   .battle .mobile-aim-controls button:last-child { background: #39262b; border-color: #95634e; }
   .battle .mobile-aim-controls button:disabled { opacity: .45; }
   .battle:has(.mobile-aim-controls, .hand-discard-bar) .end-turn-box { visibility: hidden; pointer-events: none; }
   /* The desktop picker uses left:50% + translateX(-50%). Reset both when pinned to mobile insets. */
-  .battle:has(.hand-discard-bar) { grid-template-rows: calc(58px + env(safe-area-inset-top)) minmax(0, 1fr) 0 calc(260px + env(safe-area-inset-bottom)); }
-  .battle:has(.hand-discard-bar) .mobile-player-status { visibility: hidden; }
-  .battle .hand-discard-bar { position: fixed; bottom: calc(var(--mobile-hand-space) + env(safe-area-inset-bottom) + 4px); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); width: auto; max-width: none; margin: 0; transform: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 6px 8px; box-sizing: border-box; z-index: 17; }
+  .battle:has(.hand-discard-bar) { grid-template-rows: calc(58px + env(safe-area-inset-top)) minmax(0, 1fr) 0 calc(var(--mobile-hud-space) + 252px + env(safe-area-inset-bottom)); }
+
+  .battle .hand-discard-bar { position: fixed; bottom: calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom) + 4px); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); width: auto; max-width: none; margin: 0; transform: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 6px 8px; box-sizing: border-box; z-index: 17; }
   .battle .hand-discard-text { grid-column: 1 / -1; min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 16px; font-size: 12px; }
   .battle .hand-discard-bar button { min-width: 0; min-height: 44px; padding: 6px 10px; font-size: 11px; }
 
@@ -105,3 +106,46 @@
   @keyframes mobile-notice-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 }
 @media (prefers-reduced-motion: reduce) { .mobile-opponent-notice { animation: none; } }
+
+/* Shared card action vocabulary; existing targeting/validation controls own activation. */
+.card-activation-icon { display:inline-block; width:22px; height:22px; position:relative; vertical-align:middle; margin-right:4px; }
+.card-activation-icon .game-icon { width:18px; height:20px; }
+.card-activation-icon .game-icon:last-child { position:absolute; width:11px; height:14px; right:0; bottom:0; color:#ffe5a1; background:#172a35; border-radius:3px; }
+.mobile-mission { display:none; }
+@media (orientation:portrait) and (max-width:600px) {
+  /* Mission follows the canvas in normal flow; never covers its picking surface. */
+  .battle .board-column:has(.mechanism-controls-compact) { display:flex; flex-direction:column; gap:6px; }
+  .battle .board-column:has(.mechanism-controls-compact) .board-host { flex:1 1 0; height:auto; min-height:0; order:0; }
+  .battle .mechanism-controls-compact { position:relative; top:auto; left:auto; right:auto; width:100%; flex:0 0 auto; order:1; max-height:200px; margin:0; padding:0 6px; z-index:15; pointer-events:none; }
+  .battle .mechanism-controls-compact .mechanism-goal { display:none; }
+  .battle .mobile-mission { display:block; }
+  .mobile-mission summary { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:44px; font-size:12px; cursor:pointer; pointer-events:auto; }
+  .mobile-mission summary span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  .mobile-mission summary small { flex-shrink:0; color:#b5cfe0; }
+  .mobile-mission p { font-size:12px; line-height:1.35; margin:4px 0 8px; }
+  .battle .mechanism-controls-compact .mechanism-inspection { display:none; }
+  .battle .mechanism-controls-compact:has(.mobile-mission[open]) .mechanism-inspection { display:block; pointer-events:auto; }
+  .battle .mechanism-controls-compact .mechanism-context-actions { display:flex; gap:4px; padding:0 0 4px; pointer-events:none; }
+  .battle .mechanism-context-actions button { flex:1; min-width:0; pointer-events:auto; }
+  .battle .mechanism-feedback { display:none; }
+  .battle:has(.mobile-aim-controls) { grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(280px + env(safe-area-inset-bottom)); }
+  /* Vitals and ritual form the footer below the hand. */
+  .battle:has(.altar-panel) { --mobile-hud-space:104px; grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(272px + env(safe-area-inset-bottom)); }
+  .battle:has(.altar-panel):has(.mobile-aim-controls) { grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(320px + env(safe-area-inset-bottom)); }
+  .battle .hand-bar .altar-panel { position:absolute; top:auto; bottom:env(safe-area-inset-bottom); left:max(8px,env(safe-area-inset-left)); right:max(8px,env(safe-area-inset-right)); width:auto; max-width:none; max-height:none; padding:0 8px; border-radius:6px; z-index:13; }
+  .battle .hand-bar .altar-panel summary { min-height:44px; display:flex; align-items:center; flex-wrap:wrap; gap:3px; padding:3px 0; font-size:11px; }
+  .battle .altar-panel summary .ritual-glyph { width:18px; height:18px; flex-shrink:0; }
+  .battle .altar-panel[open] .altar-body { left:0; right:0; bottom:calc(100% + 4px); width:auto; max-height:min(340px,calc(100dvh - 390px)); }
+  .battle:has(.altar-panel) .mobile-player-status { bottom:calc(48px + env(safe-area-inset-bottom)); }
+  .battle:has(.hand-discard-bar) { grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(var(--mobile-hud-space) + 252px + env(safe-area-inset-bottom)); }
+  .battle .mobile-aim-controls > span { display:flex; flex-direction:column; min-width:0; gap:3px; }
+  .mobile-aim-controls > span small { font-size:10px; color:#d4dce0; }
+  .mobile-aim-controls > span strong { color:#f5d58f; font-size:12px; line-height:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .battle .mobile-aim-controls button:first-of-type { min-width:116px; border:1px solid #e2b76d; color:#fff0c8; background:linear-gradient(140deg,#553413,#211a14); font:700 17px Georgia,serif; border-radius:12px 5px; box-shadow:inset 0 0 0 2px #c58d3a55; }
+  .battle .mobile-aim-controls button:first-of-type:not(:disabled) { border-color:#ffe2a0; box-shadow:inset 0 0 0 2px #d5a65366,0 0 8px #e5a64d66; }
+  .battle .mobile-aim-controls button:first-of-type:disabled { color:#a7a5a0; border-color:#696b6b; background:#222c30; box-shadow:none; opacity:.6; }
+  .battle .mobile-aim-controls button:last-child { min-width:44px; width:44px; font-size:22px; }
+  .battle .mobile-aim-controls .card-activation-icon { width:26px; height:26px; margin-right:5px; }
+  .battle .mobile-aim-controls .card-activation-icon .game-icon:first-child { width:22px; height:24px; }
+
+}

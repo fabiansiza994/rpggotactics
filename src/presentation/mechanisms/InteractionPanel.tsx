@@ -84,6 +84,11 @@ export function InteractionPanelView({
   const options = card ? [] : ui.options.filter(option => option.allowed);
   return (
     <aside className="mechanism-controls mechanism-controls-compact" aria-label="Mecanismos del templo">
+      <details className="mobile-mission">
+        <summary><span>◈ {puzzle?.introTitle ?? 'Objetivo de misión'}</span><small>{puzzle?.progressTotal ? `${puzzle.progressCurrent}/${puzzle.progressTotal}` : 'Detalles'}</small></summary>
+        <p>{puzzle?.hudHint}</p>
+        {window && <strong>{window.title}{window.exposed ? ` · ${window.remaining} turnos` : ''}</strong>}
+      </details>
       <section className="mechanism-goal" aria-label="Objetivo del mecanismo">
         <h3>{puzzle?.introTitle ?? 'MECANISMOS DEL TEMPLO'}</h3>
         <p>{puzzle?.hudHint}</p>

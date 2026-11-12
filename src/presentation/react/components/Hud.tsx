@@ -1,3 +1,4 @@
+import { CardActivationLabel } from './CardActivationLabel';
 import { mobileCombat, mobileEndTurnAllowed } from '../mobileCombat';
 import { isActionableTile } from '../../input/aim';
 import { BattleResultPresentation } from '../../results/BattleResultPresentation';
@@ -362,6 +363,9 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   // Reading a blocked card never becomes a gameplay selection.
   const [detailUid, setDetailUid] = useState<string | null>(null);
   const hero = state.units.find(u => u.id === engine.heroId);
+  const aimedCard = state.player.hand.find(c => c.uid === selectedCardUid);
+  const aimedName = aimedCard ? engine.content.cards[aimedCard.cardId]?.name : null;
+  const canActivateAim = !busy && aim?.source === 'tap' && isActionableTile(engine, selectedCardUid, aim.pos, pair);
   const hint = !discarding && inspected ? blocks.get(inspected) : undefined;
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
   return (
@@ -371,8 +375,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         <div><small>RONDA {state.round}</small><strong>{busy ? 'Resolviendo…' : state.phase === 'PLAYER' ? 'Tu turno' : 'Turno rival'}</strong></div>
       </div>
       {!discarding && (selectedCardUid || aim?.source === 'tap') && <div className="mobile-aim-controls" role="group" aria-label="Objetivo de carta">
-        <span>{aim?.source === 'tap' ? 'Toca de nuevo o confirma' : 'Elige un objetivo'}</span>
-        <button type="button" disabled={busy || aim?.source !== 'tap' || !isActionableTile(engine, selectedCardUid, aim.pos, pair)} onClick={() => useBattleStore.getState().confirmAim()}>Confirmar</button>
+        <span><small>{selectedCardUid ? canActivateAim ? 'Activa la carta' : 'Selecciona un objetivo válido' : 'Confirma el destino'}</small>{selectedCardUid && <strong>{aimedName ?? 'Carta seleccionada'}</strong>}</span>
+        <button type="button" disabled={!canActivateAim} onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>
         <button type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}>×</button>
       </div>}
       <section className="mobile-player-status" aria-label="Tu campeón">

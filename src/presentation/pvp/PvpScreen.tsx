@@ -1,3 +1,5 @@
+import { isActionableTile } from '../input/aim';
+import { CardActivationLabel } from '../react/components/CardActivationLabel';
 import { CONTENT_RELEASE, contentReleaseUrl } from '../cloud/contentRelease';
 import { BattleResultPresentation } from '../results/BattleResultPresentation';
 import '../react/components/BattleStyles';
@@ -401,6 +403,8 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
   const game = snapshot?.game,
     engine = useBattleStore((s) => s.engine),
     aim = useBattleStore((s) => s.aim);
+  const selectedCardUid = useBattleStore(s=>s.selectedCardUid);
+  const pairSelection = useBattleStore(s=>s.pairSelection);
   const playback = useBattleStore(s=>s.playbackBusy || s.introLocked);
   const presented = useMechanismPlayback(s=>s.state);
   const displayGame = playback && presented?.scenarioId === game?.scenarioId ? presented : game;
@@ -529,8 +533,8 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
             )}
           {aim?.source === 'tap' && (
             <div className="pvp-confirm">
-              <button onClick={() => useBattleStore.getState().confirmAim()}>
-                Confirmar objetivo
+              <button disabled={playback || !isActionableTile(engine,selectedCardUid,aim.pos,pairSelection)} onClick={() => useBattleStore.getState().confirmAim()}>
+                <CardActivationLabel card={!!selectedCardUid}/>
               </button>
               <button className="cancel-action cancel-secondary" onClick={() => useBattleStore.getState().cancelAim()}>Cancelar selección</button>
             </div>

@@ -1,3 +1,4 @@
+import { CardActivationLabel } from '../components/CardActivationLabel';
 import { TurnAnnouncement } from '../components/TurnAnnouncement';
 import '../components/BattleStyles';
 import { useMechanismPlayback } from '../../mechanisms/mechanismPlayback';
@@ -141,7 +142,7 @@ export function BattleScreen() {
             </span>
             {canConfirm && (
               <button className="confirm-action" type="button" onClick={confirmAim}>
-                Confirmar
+                <CardActivationLabel card={!!selectedCardUid}/>
               </button>
             )}
             <button className={`cancel-action${selectedCardUid ? ' cancel-secondary' : ''}`} type="button" onClick={cancelAim}>

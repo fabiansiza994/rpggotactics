@@ -1,0 +1,12 @@
+import {withShapeshifterRelease} from '../src/game/data/shapeshifter-release';
+import {expect,it} from 'vitest';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {CardActivationLabel} from '../src/presentation/react/components/CardActivationLabel';
+import {InteractionPanelView} from '../src/presentation/mechanisms/InteractionPanel';
+import {GameEngine,DEFAULT_CONTENT,encounterFor} from '../src/game';
+import {TEMPLE_CAMPAIGN} from '../src/game/data/temple-encounters';
+import {isActionableTile} from '../src/presentation/input/aim';
+it('uses Activar plus existing card/energy icons only for card actions',()=>{const html=renderToStaticMarkup(createElement(CardActivationLabel,{card:true}));expect(html).toContain('Activar');expect(html).toContain('card-activation-icon');expect(html.match(/<svg/g)).toHaveLength(2);expect(renderToStaticMarkup(createElement(CardActivationLabel,{card:false}))).toBe('Confirmar');});
+it.each(['mage','summoner','shapeshifter'])('%s mission is folded and does not mutate mission state',hero=>{const e=new GameEngine(encounterFor(TEMPLE_CAMPAIGN,'w3_e01',hero),withShapeshifterRelease(DEFAULT_CONTENT),1);const before=JSON.stringify(e.state);const html=renderToStaticMarkup(createElement(InteractionPanelView,{engine:e,state:e.state,selected:null,card:null,busy:false,feedback:''}));expect(html).toContain('<details class="mobile-mission">');expect(html).toContain('Detalles');expect(html).toContain('Abre el paso');expect(html).not.toContain('<details open');expect(JSON.stringify(e.state)).toBe(before);});
+it('changing an action label cannot make an invalid card target actionable',()=>{const e=new GameEngine(encounterFor(TEMPLE_CAMPAIGN,'w3_e01','mage'),DEFAULT_CONTENT,1);expect(isActionableTile(e,'not-in-hand',{x:0,y:0})).toBe(false);expect(isActionableTile(e,e.state.player.hand[0]!.uid,{x:-99,y:-99})).toBe(false);});
