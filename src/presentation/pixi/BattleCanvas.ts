@@ -1,3 +1,4 @@
+import { OpponentNotices, noticeLane, type OpponentNotice, type NoticeLane } from '../mobile/OpponentNotices';
 import { mobileCameraTurn } from '../react/mobileCombat';
 import { ElementalTargetingPreview } from '../vfx/ElementalTargetingPreview';
 import { EnvironmentEffects } from '../vfx/EnvironmentEffects';
@@ -85,6 +86,8 @@ const PADDING = 20;
 const OCCLUDER_ALPHA = 0.42;
 
 export interface BattleCanvasCallbacks {
+  onOpponentNotices?(rows: OpponentNotice[]): void;
+  onNoticeLane?(lane: NoticeLane): void;
   onTileHover(pos: Pos | null): void;
   /** Mouse click: acts at once (hover already previewed). */
   onTileClick(pos: Pos): void;
@@ -340,7 +343,9 @@ export class BattleCanvas {
   /** Logical board size of the scene being drawn; read from GameState on every draw. */
   private boardSize = { w: this.proj.cols, h: this.proj.rows };
 
+  private readonly opponentNotices: OpponentNotices;
   constructor(private readonly callbacks: BattleCanvasCallbacks) {
+    this.opponentNotices = new OpponentNotices(rows => this.callbacks.onOpponentNotices?.(rows));
     this.director = new VfxDirector(this.effects, {
       readableCards: import.meta.env.DEV && location.pathname === '/act3-qa',
       enemyAction: event => presentPublicAction(event),
@@ -349,6 +354,7 @@ export class BattleCanvas {
         if (this.vm) this.draw({ ...this.vm, state, mechanisms: mechanismView(state) });
       },
       presentEvent: (event) => {
+        if (this.portraitQuery.matches && this.director.state) this.opponentNotices.present(event, this.director.state);
         if (event.type === 'MECHANISM_CHANGED' && event.kind === 'REGION' && this.director.state) {
           this.sections.playEvents([event], this.director.state, this.effects.reduced);
           if (this.sections.busy) this.reportPlaybackBusy(true);
@@ -577,6 +583,7 @@ export class BattleCanvas {
     this.targetingPreview.destroy();
     this.resetPlayback();
     this.director.destroy();
+    this.opponentNotices.destroy();
     if (this.ready) {
       this.app.ticker.remove(this.animateWorld);
       for (const view of this.units.values()) view.destroy();
@@ -717,13 +724,22 @@ export class BattleCanvas {
     }
     const { width, height } = this.app.screen;
     const bounds = this.framingBounds();
-    const framedHeight = Math.max(1, height - this.bleed());
+    // Reserve a small non-tactical lane below the surface; the surface itself stays fully visible.
+    const noticeSpace = this.portraitQuery.matches ? (height >= 550 ? 76 : 44) : 0;
+    const framedHeight = Math.max(1, height - this.bleed() - noticeSpace);
     const fit = fitBattlefield(width, framedHeight, bounds, PADDING);
     // DOM controls retain their own sizes. Only the shared projected world fits this viewport.
     this.world.scale.set(fit.scale);
     for (const view of this.units.values()) view.setStatusScale(1 / fit.scale);
     this.mechanisms.setLabelScale(1 / fit.scale);
     this.world.position.set(fit.x, fit.y);
+    if(this.host && this.portraitQuery.matches){
+      const rect=this.app.canvas.getBoundingClientRect();
+      const edge=[{x:0,y:0},{x:this.boardSize.w-1,y:0},{x:0,y:this.boardSize.h-1},{x:this.boardSize.w-1,y:this.boardSize.h-1}];
+      const bottom=Math.max(...edge.flatMap(p=>this.proj.getTilePolygon(p).map(v=>rect.top + (fit.y + v.y * fit.scale) * rect.height / height)));
+      const lane=noticeLane(rect.left,bottom,rect.right,rect.bottom-4);
+      this.opponentNotices.setCapacity(lane.capacity);this.callbacks.onNoticeLane?.(lane);
+    } else this.opponentNotices.setCapacity(0);
     this.compactAmbient = window.matchMedia(
       '(orientation: landscape) and (max-height: 500px)',
     ).matches;
@@ -765,7 +781,7 @@ export class BattleCanvas {
         } catch { /* Rendering failure must never block continuing the run. */ }
       }
     }
-    if (previous && previous.scenarioId !== vm.state.scenarioId) this.environment.clear();
+    if (previous && previous.scenarioId !== vm.state.scenarioId) { this.environment.clear(); this.opponentNotices.reset(); }
     this.vm = vm;
     if (!this.ready || this.assetGate.busy) return;
     if(!this.preparedScenes.has(sceneAssetKey(vm.state))){
@@ -829,6 +845,7 @@ export class BattleCanvas {
     this.targetingPreview.reset();
     if (!this.ready || !this.vm) return;
     if(events.some(e=>e.type==='BATTLE_STARTED'))this.resetPlayback();
+    if(this.portraitQuery.matches)this.opponentNotices.register(events,state,this.vm.content,this.vm.heroId,this.director.state ?? this.vm.state);
     const vm={...this.vm,state,mechanisms:mechanismView(state)};
     const recipes = [
       { key: 'frost_nova', effect: this.effects.mage },
@@ -892,6 +909,7 @@ export class BattleCanvas {
   }
 
   private resetPlayback(): void {
+    this.opponentNotices.reset();
     this.assetGate.clear();
     for (const view of this.units.values()) view.resetMotion();
     this.pointerFacingTarget = null;

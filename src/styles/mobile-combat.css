@@ -88,3 +88,14 @@
   .battle .card-preview-zoom button { background: #142d40; border: 1px solid #b59b68; border-radius: 6px; color: #f4dfad; min-height: 44px; padding: 8px 16px; }
   .battle .card-block-hint { display: none; }
 }
+
+.mobile-opponent-notices { display: none; }
+@media (orientation: portrait) and (max-width: 600px) {
+  .battle .resolving-card-preview[data-rival="true"] { display: none; }
+  .battle .mobile-opponent-notices { display: grid; position: fixed; gap: 4px; z-index: 8; pointer-events: none; user-select: none; }
+  .mobile-opponent-notices, .mobile-opponent-notices * { pointer-events: none !important; }
+  .mobile-opponent-notice { height: 28px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 5px 8px; border: 1px solid #725c56; border-left: 2px solid #d2a577; border-radius: 5px; background: #0c1827ed; color: #e3d5c5; font-size: 11px; line-height: 16px; box-shadow: 0 2px 5px #0004; animation: mobile-notice-in 140ms ease-out; }
+  .mobile-opponent-notice[data-priority="3"] { border-left-color: #e39a80; color: #ffe1d3; }
+  @keyframes mobile-notice-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) { .mobile-opponent-notice { animation: none; } }

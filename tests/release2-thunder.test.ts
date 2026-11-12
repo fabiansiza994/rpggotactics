@@ -37,9 +37,9 @@ describe('Release 2 boundary and acquisition',()=>{
   const offer=STORE_CATALOG.find(o=>o.id===`card_${card.id}`);if(card.id==='storm_avatar'){expect(offer).toBeUndefined();return;}expect(offer!.price).toBe(PRICE_LADDER.card[rarityOf(card)]);expect(offer!.contents).toEqual([{kind:'CARD',cardId:card.id,copies:1}]);
   expect(ownedFor(createProfile(DEFAULT_CONTENT),'mage',DEFAULT_CONTENT)(card.id)).toBe(0);
  });
- it('keeps published hotfixes and the approved Mobile 1 canvas intact',()=>{
-  // Only BattleCanvas hash advances for the approved presentation-only Mobile 1 camera.
-  const publishedHashes={ "src/presentation/pvp/eligibility.ts": "282e6478f69770ac04721eb93664916ca4e50f8213ae99b69ca6044f76ed0f6a", "src/presentation/pixi/BattleCanvas.ts": "09bf16d39e54b8d8b0a67cf8344c93e378c426fe30c7360b52d0c09cf19a33fa", "src/presentation/pixi/RotatingSections.ts": "8bccef1f9fb5cf07853d9110f4feecfd2ef24f9ed62a5e06f5be71c5d92ed155", "src/presentation/vfx/visualProjection.ts": "95399a2c9476b34442e3b680b3d0c00fd2df4f10945bcb0fdc1d852178c5c065", "src/presentation/store/battleStore.ts": "dd542c0b7f1fe06548c73ca98ea2666459f061335b54006c6d049813f91e9c57"};
+ it('keeps published hotfixes and the approved Mobile 3 canvas intact',()=>{
+  // Only BattleCanvas hash advances for the approved presentation-only Mobile 3 presentation hook and lane.
+  const publishedHashes={ "src/presentation/pvp/eligibility.ts": "282e6478f69770ac04721eb93664916ca4e50f8213ae99b69ca6044f76ed0f6a", "src/presentation/pixi/BattleCanvas.ts": "018253b636fbf86c877572a71d30de34205b3da1f6d04556a11823b36677543b", "src/presentation/pixi/RotatingSections.ts": "8bccef1f9fb5cf07853d9110f4feecfd2ef24f9ed62a5e06f5be71c5d92ed155", "src/presentation/vfx/visualProjection.ts": "95399a2c9476b34442e3b680b3d0c00fd2df4f10945bcb0fdc1d852178c5c065", "src/presentation/store/battleStore.ts": "dd542c0b7f1fe06548c73ca98ea2666459f061335b54006c6d049813f91e9c57"};
   for(const [path,hash] of Object.entries(publishedHashes))expect(createHash('sha256').update(readFileSync(new URL('../'+path,import.meta.url))).digest('hex')).toBe(hash);
  });
  it.each(nature)('%s cannot be equipped, acquired or played even by a forged request',async id=>{

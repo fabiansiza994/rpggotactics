@@ -1,3 +1,4 @@
+import type { OpponentNotice, NoticeLane } from '../../mobile/OpponentNotices';
 import { LinkedMechanismAction } from '../../mechanisms/LinkedAction';
 const Act3AnimationTools=import.meta.env.DEV?lazy(()=>import('../../qa/act3/Act3AnimationTools').then(m=>({default:m.Act3AnimationTools}))):null;
 import { UnitInspection, inspectedUnitAt } from './UnitInspection';
@@ -12,6 +13,8 @@ const ArcherBoardControls=import.meta.env.DEV?lazy(()=>import('../../qa/archer/A
 
 /** Hosts the Pixi board. React owns the lifecycle; Pixi owns the pixels. */
 export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, cameraOrigin }: { focusedEnemyId: string | null; menuPaused?: boolean; cameraOrigin?: {x:number;y:number}; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
+  const [notices,setNotices] = useState<OpponentNotice[]>([]);
+  const [noticeLane,setNoticeLane] = useState<NoticeLane | null>(null);
   const [inspectedId,setInspectedId] = useState<string|null>(null);
   const publicState = useBattleStore(s=>s.state);
   const engine = useBattleStore(s=>s.engine);
@@ -29,6 +32,8 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
     if (!host) return;
     const { setHoverTile, clickTile, tapTile, cancelAim } = useBattleStore.getState();
     const canvas = new BattleCanvas({
+      onOpponentNotices: rows => setNotices(previous => JSON.stringify(previous)===JSON.stringify(rows)?previous:rows),
+      onNoticeLane: lane => setNoticeLane(previous => previous && JSON.stringify(previous)===JSON.stringify(lane)?previous:lane),
       onInspectUnit: positions => {
         const store=useBattleStore.getState();
         if(store.playbackBusy||store.introLocked||store.handDiscard)return false;
@@ -101,6 +106,9 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
         if (e.pointerType === 'mouse') useBattleStore.getState().setHoverTile(null);
       }}
     />
+    {noticeLane && <div className="mobile-opponent-notices" role="status" aria-live="polite" aria-atomic="true" style={{left:noticeLane.left,top:noticeLane.top,width:noticeLane.width}}>
+      {notices.slice(0,noticeLane.capacity).map(notice=><div key={notice.id} className="mobile-opponent-notice" data-priority={notice.priority}>{notice.text}</div>)}
+    </div>}
     {Act3AnimationTools && location.pathname==='/act3-qa' && publicState && <Suspense fallback={null}><Act3AnimationTools units={publicState.units} canvas={()=>canvasRef.current}/></Suspense> }
     {engine && vm && <LinkedMechanismAction engine={engine} project={p=>canvasRef.current?.tileToClient(p)??null} polygon={p=>canvasRef.current?.tilePolygonToClient(p)??null}/> }
     {inspected && engine && <UnitInspection key={inspected.id} unit={inspected} content={engine.content} units={publicState?.units} onClose={()=>setInspectedId(null)}/> }

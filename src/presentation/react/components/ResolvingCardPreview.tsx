@@ -17,6 +17,7 @@ function PublicActionPreview({ engine }: { engine: GameEngine }) {
     return (
       <aside
         className="resolving-card-preview resolving-enemy-action"
+        data-rival="true"
         role="status"
         aria-label="Acción del rival"
       >
@@ -38,6 +39,7 @@ function PublicActionPreview({ engine }: { engine: GameEngine }) {
     <aside
       key={`${cast.casterId}:${cast.cardUid}`}
       className="resolving-card-preview"
+      data-rival={cast.casterId !== engine.heroId}
       role="status"
       aria-label={`Carta en resolución: ${card.name}`}
       data-card-id={card.id}

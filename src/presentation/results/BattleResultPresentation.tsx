@@ -10,32 +10,34 @@ export function BattleResultPresentation({ identity, tone, children }: {
 }) {
   const [done, setDone] = useState(() => seen.has(identity) || window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const skip = useRef<HTMLButtonElement>(null);
+  const cinema = useRef<HTMLElement>(null);
+  const skippable = tone !== 'victory' && tone !== 'defeat';
   const content = useRef<HTMLDivElement>(null);
   useEffect(() => {
     seen.mark(identity);
     if (done) return;
-    skip.current?.focus();
+    (skippable ? skip.current : cinema.current)?.focus();
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     const finish = () => setDone(true);
     const change = () => { if (media.matches) finish(); };
     media.addEventListener('change', change);
     const timer = window.setTimeout(finish, resultDuration(tone));
     return () => { clearTimeout(timer); media.removeEventListener('change', change); };
-  }, [identity, tone, done]);
+  }, [identity, tone, done, skippable]);
   useEffect(() => {
     if (done) content.current?.focus();
   }, [done]);
   return <div className={`battle-result-presentation result-${tone}`}>
     <div ref={content} tabIndex={-1} inert={!done} aria-hidden={!done} style={!done ? { visibility: 'hidden' } : undefined}>{children}</div>
-    {!done && <section className="result-cinema" role="dialog" aria-modal="true" aria-label={titles[tone]} onKeyDown={event => {
+    {!done && <section ref={cinema} tabIndex={-1} className="result-cinema" role="dialog" aria-modal="true" aria-label={titles[tone]} onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); setDone(true); }
-      if (event.key === 'Tab') { event.preventDefault(); skip.current?.focus(); }
+      if (event.key === 'Tab') { event.preventDefault(); (skippable ? skip.current : cinema.current)?.focus(); }
     }}>
       <div className="result-cinema-glow" aria-hidden="true" />
       <div className="result-cinema-emblem" aria-hidden="true">{tone === 'victory' ? '✦' : tone === 'defeat' ? '◇' : '⚖'}</div>
       <h1>{titles[tone]}</h1>
       <p>{tone === 'victory' ? 'El campo recuerda tu hazaña' : tone === 'defeat' ? 'La batalla termina. Tu camino continúa.' : tone === 'draw' ? 'Dos fuerzas. Un mismo destino.' : 'Consulta el motivo y resultado confirmado.'}</p>
-      <button ref={skip} type="button" onClick={() => { setDone(true); }}>Omitir animación</button>
+      {skippable && <button ref={skip} type="button" onClick={() => { setDone(true); }}>Omitir animación</button>}
     </section>}
   </div>;
 }
