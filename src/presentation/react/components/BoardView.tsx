@@ -11,7 +11,7 @@ import { archerBattlePreviewEnabled, archerPresentationState } from '../../qa/ar
 const ArcherBoardControls=import.meta.env.DEV?lazy(()=>import('../../qa/archer/ArcherBoardControls').then(m=>({default:m.ArcherBoardControls}))):null;
 
 /** Hosts the Pixi board. React owns the lifecycle; Pixi owns the pixels. */
-export function BoardView({ focusedEnemyId, menuPaused = false, qaSample }: { focusedEnemyId: string | null; menuPaused?: boolean; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
+export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, cameraOrigin }: { focusedEnemyId: string | null; menuPaused?: boolean; cameraOrigin?: {x:number;y:number}; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
   const [inspectedId,setInspectedId] = useState<string|null>(null);
   const publicState = useBattleStore(s=>s.state);
   const engine = useBattleStore(s=>s.engine);
@@ -19,7 +19,8 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample }: { fo
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<BattleCanvas | null>(null);
   const vm = useBoardViewModel(focusedEnemyId);
-  const initialVm = useRef(vm);
+  const cameraX = cameraOrigin?.x, cameraY = cameraOrigin?.y;
+  const initialVm = useRef(vm && cameraOrigin ? {...vm, cameraOrigin} : vm);
   const onlineCommand=useBattleStore(s=>s.onlineCommand);
   const archerPreview=archerBattlePreviewEnabled && onlineCommand===null;
 
@@ -83,9 +84,9 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample }: { fo
 
 
   useEffect(() => {
-    if (vm) canvasRef.current?.render(archerPreview
+    if (vm) canvasRef.current?.render(cameraX !== undefined && cameraY !== undefined ? {...vm, cameraOrigin: {x:cameraX,y:cameraY}} : archerPreview
       ? {...vm,state:archerPresentationState(vm.state)} : vm);
-  }, [vm,archerPreview]);
+  }, [vm,archerPreview,cameraX,cameraY]);
 
   return (
     <><div

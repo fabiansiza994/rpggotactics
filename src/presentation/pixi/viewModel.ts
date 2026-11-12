@@ -12,6 +12,8 @@ export interface BoardViewModel {
   state: Readonly<GameState>;
   content: GameContent;
   heroId: string;
+  /** Stable authored spawn, never the current position (also used after reconnect). */
+  cameraOrigin?: Pos;
   interactive: boolean;
   /** Aimed tile: under the mouse, or the last touch tap. Feeds `preview` / `hoverPath`. */
   hoverTile: Pos | null;

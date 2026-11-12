@@ -45,6 +45,7 @@ export function BattleCardFeature({
   hoveredCardUid = null,
   inspectedCardUid = null,
   onCloseInspection,
+  onChooseInspection,
 }: {
   state: Readonly<GameState>;
   engine: GameEngine;
@@ -52,6 +53,7 @@ export function BattleCardFeature({
   hoveredCardUid?: string | null;
   inspectedCardUid?: string | null;
   onCloseInspection?(): void;
+  onChooseInspection?(uid: string): void;
 }) {
   const inspection = state.player.hand.some((c) => c.uid === inspectedCardUid) ? inspectedCardUid : null;
   const previewUid = inspection ?? hoveredCardUid ?? selectedCardUid;
@@ -176,6 +178,7 @@ export function BattleCardFeature({
         >
           <FeatureCard def={card} engine={engine} className="is-zoomed" extras={extras} />
           <div className="zoom-support">
+            {onChooseInspection && selected && <button className="mobile-inspection-play" type="button" disabled={!extras.playable} onClick={() => { closeDetail(); onChooseInspection(selected.uid); }}>Elegir carta</button>}
             <button className="card-zoom-close" type="button" onClick={closeDetail} autoFocus>
               Cerrar detalle
             </button>

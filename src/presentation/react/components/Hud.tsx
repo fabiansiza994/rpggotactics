@@ -1,3 +1,5 @@
+import { mobileCombat, mobileEndTurnAllowed } from '../mobileCombat';
+import { isActionableTile } from '../../input/aim';
 import { BattleResultPresentation } from '../../results/BattleResultPresentation';
 import { EquippedCardBack } from '../../cosmetics/CardBack';
 import '../../../styles/combat-clarity.css';
@@ -309,6 +311,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
     if (!footer) return;
     return attachCardActivation(footer, () => useBattleStore.getState().engine?.heroId ?? '');
   }, [activationBattle]);
+  const aim = useBattleStore(s => s.aim);
   const pair = useBattleStore(s => s.pairSelection);
   const selectedCardUid = useBattleStore((s) => s.selectedCardUid);
   const selectCard = useBattleStore((s) => s.selectCard);
@@ -330,6 +333,13 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
     });
   }, [selectedCardUid]);
   const endTurn = useBattleStore((s) => s.endTurn);
+  const aiming = !!selectedCardUid || aim?.source === 'tap';
+  const wasAiming = useRef(false);
+  const aimReleasedAt = useRef(-Infinity);
+  useEffect(() => {
+    if (wasAiming.current && !aiming) aimReleasedAt.current = performance.now();
+    wasAiming.current = aiming;
+  }, [aiming]);
   const busy = useBattleStore(inputLocked);
   // During an intro the hand is held back and dealt on the `deal` beat.
   const dealt = useBattleStore((s) => !s.introLocked || s.introReached.includes('deal'));
@@ -351,10 +361,37 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   const [inspected, setInspected] = useState<string | null>(null);
   // Reading a blocked card never becomes a gameplay selection.
   const [detailUid, setDetailUid] = useState<string | null>(null);
+  const hero = state.units.find(u => u.id === engine.heroId);
   const hint = !discarding && inspected ? blocks.get(inspected) : undefined;
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
   return (
     <footer ref={footerRef} className="hand-bar" aria-busy={busy}>
+      <div className="mobile-combat-header" aria-label="Estado del combate">
+        <div className="mobile-enemies">{state.units.filter(u => u.faction !== hero?.faction && u.hp > 0).map(u => <span key={u.id} title={engine.content.enemies[u.defId]?.name ?? u.defId} aria-label={`${engine.content.enemies[u.defId]?.name ?? u.defId}: ${u.hp} HP`}><b>{(engine.content.enemies[u.defId]?.name ?? u.defId).slice(0, 2)}</b><small>{u.hp}</small></span>)}</div>
+        <div><small>RONDA {state.round}</small><strong>{busy ? 'Resolviendo…' : state.phase === 'PLAYER' ? 'Tu turno' : 'Turno rival'}</strong></div>
+      </div>
+      {!discarding && (selectedCardUid || aim?.source === 'tap') && <div className="mobile-aim-controls" role="group" aria-label="Objetivo de carta">
+        <span>{aim?.source === 'tap' ? 'Toca de nuevo o confirma' : 'Elige un objetivo'}</span>
+        <button type="button" disabled={busy || aim?.source !== 'tap' || !isActionableTile(engine, selectedCardUid, aim.pos, pair)} onClick={() => useBattleStore.getState().confirmAim()}>Confirmar</button>
+        <button type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}>×</button>
+      </div>}
+      <section className="mobile-player-status" aria-label="Tu campeón">
+        <div className="mobile-player-health">
+          <strong>{engine.content.heroes[hero?.defId ?? '']?.name ?? 'Campeón'}</strong>
+          <span aria-label={`Vida ${hero?.hp ?? 0} de ${hero?.maxHp ?? 0}`}>♥ {hero?.hp}/{hero?.maxHp}</span>
+          <div className="mobile-health-track" aria-hidden="true"><i style={{width:`${100 * (hero?.hp ?? 0) / Math.max(1,hero?.maxHp ?? 1)}%`}}/></div>
+        </div>
+        <div className="mobile-player-resources">
+          <div className="mobile-resource-row">
+            <span className="mobile-energy" aria-label={`Energía ${state.player.energy} de ${state.player.maxEnergy}`}><b>EN</b> {state.player.energy}/{state.player.maxEnergy}</span>
+            <span aria-label={`Movimiento ${state.player.movePoints}`}><b>PM</b> {state.player.movePoints}</span>
+            <span className="mobile-shield" aria-label={`${engine.content.heroes[hero?.defId ?? '']?.momentum ? 'Guardia' : 'Escudo'} ${hero?.shield ?? 0}`}>◇ {hero?.shield ?? 0}</span>
+          </div>
+          <div className="mobile-status-chips" aria-label="Estados activos">
+            {hero?.statuses.length ? hero.statuses.map(status => <span key={status.id} title={statusChipText(status)}>{statusChipText(status)}</span>) : <span className="mobile-no-status">Sin estados</span>}
+          </div>
+        </div>
+      </section>
       {hint && hintCard && (
         <div className="card-block-hint" role="status">
           <strong>{engine.content.cards[hintCard.cardId]?.name}:</strong> {hint.detail}
@@ -365,7 +402,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       <RitualTransfer heroId={engine.heroId} />
       <ResolvingCardPreview engine={engine} />
       <BattleCardFeature state={state} engine={engine} selectedCardUid={selectedCardUid} hoveredCardUid={discarding ? null : inspected}
-        inspectedCardUid={discarding ? null : detailUid} onCloseInspection={() => setDetailUid(null)} />
+        inspectedCardUid={discarding ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} />
       <AltarPanel state={state} engine={engine} busy={busy} />
       {handPulse > 0 && (
         <span key={handPulse} className="draw-feedback" aria-live="polite">
@@ -407,6 +444,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 playable={!block}
                 block={block}
                 onInspect={(on) => setInspected((cur) => (on ? card.uid : cur === card.uid ? null : cur))}
+                onLongInspect={() => { useBattleStore.getState().cancelAim(); setDetailUid(card.uid); }}
                 onCancel={discarding ? undefined : () => useBattleStore.getState().cancelAim()}
                 onClick={() => {
                   // A ritual can still be usable on the altar even when its cast is blocked.
@@ -436,7 +474,10 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           className="end-turn"
           aria-label="Finalizar turno"
           disabled={!isPlayerTurn}
-          onClick={endTurn}
+          onClick={() => {
+            if (mobileCombat() && !mobileEndTurnAllowed(performance.now(), aimReleasedAt.current, aiming, discarding)) return;
+            endTurn();
+          }}
         >
           <GameIcon name="arcane" /> <span className="end-turn-full">Finalizar turno</span>
           <span className="end-turn-short" aria-hidden="true">

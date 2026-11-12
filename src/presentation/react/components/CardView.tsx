@@ -9,7 +9,8 @@ import type { CardDefinition } from '../../../game';
 import { CATEGORY_LABEL, rangeText } from '../format';
 import { CardPattern } from './CardPattern';
 import { SpellArt } from './SpellArt';
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
+import { cardHold, mobileCombat } from '../mobileCombat';
 import { CARD_IDENTITY } from '../../assets/visualIdentity';
 import { GameIcon } from './GameIcon';
 import type { IconName } from '../../assets/iconPaths';
@@ -27,6 +28,7 @@ interface Props {
   /** Fine-pointer hover / keyboard focus in or out, for the hand's explanation hint. */
   onInspect?(on: boolean): void;
   onClick(): void;
+  onLongInspect?(): void;
   onCancel?(): void;
   handSize?: number;
   uid?: string;
@@ -60,10 +62,32 @@ export function CardView({
   onInspect,
   onClick,
   onCancel,
+  onLongInspect,
   handSize = 5,
   uid,
   effectiveCost = def.cost,
 }: Props) {
+  const inspectRef = useRef(onLongInspect);
+  useEffect(() => { inspectRef.current = onLongInspect; }, [onLongInspect]);
+  const holdRef = useRef<ReturnType<typeof cardHold> | null>(null);
+  useEffect(() => {
+    let releaseGuard: (() => void) | undefined;
+    const hold = cardHold(() => {
+      // A modal can retarget the compatibility click away from the card that was held.
+      releaseGuard?.();
+      let timer: ReturnType<typeof setTimeout>;
+      const cleanup = () => { clearTimeout(timer); document.removeEventListener('click', swallow, true); document.removeEventListener('pointerup', released, true); hold.consumeClick(); };
+      const swallow = (event: MouseEvent) => { event.preventDefault(); event.stopImmediatePropagation(); cleanup(); };
+      const released = () => { clearTimeout(timer); timer = setTimeout(cleanup, 250); };
+      document.addEventListener('click', swallow, true);
+      document.addEventListener('pointerup', released, { capture: true, once: true });
+      timer = setTimeout(cleanup, 10000);
+      releaseGuard = cleanup;
+      inspectRef.current?.();
+    });
+    holdRef.current = hold;
+    return () => { hold.destroy(); releaseGuard?.(); };
+  }, []);
   const premiumRef = useCardPremiumEffect<HTMLDivElement>(def, 'compact', selected, !disabled);
   const origin = worldRewardIdentity(def);
   const identity = CARD_IDENTITY[def.presentation.visualKey];
@@ -105,7 +129,18 @@ export function CardView({
         } as CSSProperties
       }
       title={block ? undefined : def.rulesText}
-      onClick={disabled ? undefined : onClick}
+      onClick={(event) => {
+        if (holdRef.current?.consumeClick()) { event.preventDefault(); event.stopPropagation(); return; }
+        if (!disabled) onClick();
+      }}
+      onPointerDown={(event) => {
+        if (mobileCombat() && onLongInspect && !disabled && event.button === 0 && !(event.target as HTMLElement).closest('.card-selection-cancel'))
+          holdRef.current?.start(event.clientX, event.clientY);
+      }}
+      onPointerMove={event => holdRef.current?.move(event.clientX, event.clientY)}
+      onPointerUp={() => holdRef.current?.end()}
+      onPointerCancel={() => holdRef.current?.cancel()}
+      onContextMenu={event => { if (mobileCombat()) event.preventDefault(); }}
       onPointerEnter={onInspect && ((e) => e.pointerType === 'mouse' && matchMedia('(hover: hover) and (pointer: fine)').matches && onInspect(true))}
       onPointerLeave={onInspect && ((e) => e.pointerType === 'mouse' && onInspect(false))}
       onFocus={onInspect && (() => matchMedia('(hover: hover) and (pointer: fine)').matches && onInspect(true))}

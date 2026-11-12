@@ -141,14 +141,6 @@
   .battle .mobile-menu-content .log-panel .log { position: static; width: auto; max-height: 130px; padding: 6px; }
   .battle .painted-scenery { background-position: center; filter: saturate(0.76) brightness(0.92); }
 }
-@media (orientation: portrait) and (pointer: coarse) and (max-width: 600px) {
-  .battle { min-height: 0; }
-  .battle > :not(.rotation-prompt) { visibility: hidden; pointer-events: none; }
-  .battle .rotation-prompt { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: max(24px, env(safe-area-inset-left)); background: radial-gradient(ellipse, #1d344a, #080f1a); }
-  .rotation-prompt > span { font-size: 64px; color: #b8dff3; }
-  .rotation-prompt h1 { font: 24px Georgia, serif; }
-  .rotation-prompt button { min-height: 44px; min-width: 90px; }
-}
 @media (prefers-reduced-motion: reduce) {
   .battle .hand .card:nth-child(n) { animation: none; transition: none; }
 }

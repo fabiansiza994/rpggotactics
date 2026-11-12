@@ -448,7 +448,11 @@ export class UnitView {
   setFacingLock(locked: boolean): void {
     this.facingLocked = locked;
   }
+  projectFacing?: (p: Pos) => { x: number; y: number };
   faceTarget(origin: Pos, target: Pos | null, attack = false): void {
+    this.faceProjectedTarget(this.projectFacing?.(origin) ?? origin, target ? this.projectFacing?.(target) ?? target : null, attack);
+  }
+  private faceProjectedTarget(origin: Pos, target: Pos | null, attack = false): void {
     if (!hasDirectionalArt(this.defId)) {
       if (target) this.faceHorizontal(target.x - origin.x);
       return;
@@ -470,13 +474,16 @@ export class UnitView {
 
   faceMovement(from: Pos, to: Pos): void {
     if (hasDirectionalAtlas(this.defId) || (shapeshifterPresentationEnabled && hasDirectionalArt(this.defId))) this.faceTarget(from, to, true);
-    else this.faceHorizontal(to.x - from.x);
+    else {
+      const a = this.projectFacing?.(from) ?? from, b = this.projectFacing?.(to) ?? to;
+      this.faceHorizontal(b.x - a.x);
+    }
   }
 
   faceHorizontal(delta: number): void {
     if (hasDirectionalArt(this.defId)) {
       if (!this.facingLocked && delta !== 0)
-        this.faceTarget({ x: 0, y: 0 }, { x: delta, y: 0 }, true);
+        this.faceProjectedTarget({ x: 0, y: 0 }, { x: delta, y: 0 }, true);
       return;
     }
     this.animator?.faceHorizontal(delta);
@@ -486,7 +493,7 @@ export class UnitView {
 
   face(facing: Facing): void {
     if (hasDirectionalArt(this.defId)) {
-      this.faceTarget({ x: 0, y: 0 }, { x: facing === 'RIGHT' ? 1 : -1, y: 0 });
+      this.faceProjectedTarget({ x: 0, y: 0 }, { x: facing === 'RIGHT' ? 1 : -1, y: 0 });
       return;
     }
     this.animator?.face(facing);

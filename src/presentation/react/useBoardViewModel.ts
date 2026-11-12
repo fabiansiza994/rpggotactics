@@ -83,6 +83,7 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
       mechanismPushTo: !selectedCardUid ? engine.getInteractions().find(o=>o.adjacent && (selectedMechanismId ? o.mechanismId===selectedMechanismId : !!o.pushTo))?.pushTo : undefined,
       content: engine.content,
       heroId: engine.heroId,
+      cameraOrigin: engine.scenario.hero.pos,
       interactive: base.interactive,
       hoverTile,
       aimArmed,

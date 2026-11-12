@@ -29,6 +29,8 @@ export interface ProjectionConfig {
   depth: number;
   /** Presentation-only camera shear; zero preserves the standard board camera. */
   oblique?: number;
+  /** Presentation-only quarter turn; logical cells and combat never rotate. */
+  quarterTurn?: 0 | 1 | 2 | 3;
 }
 
 /** Tuned against reference/gameplay_concept.png (front/back width ≈ 1.18, depth ≈ 0.66). */
@@ -55,6 +57,8 @@ export function pointInPolygon(p: Point, poly: readonly Point[]): boolean {
 }
 
 export class GridProjection {
+  readonly quarterTurn: 0 | 1 | 2 | 3;
+  private readonly visualCols: number;
   readonly cols: number;
   readonly rows: number;
   readonly tile: number;
@@ -72,16 +76,18 @@ export class GridProjection {
   private readonly centers: Point[] = [];
 
   constructor(config: ProjectionConfig) {
+    this.quarterTurn = config.quarterTurn ?? 0;
+    this.visualCols = this.quarterTurn % 2 ? config.rows : config.cols;
     this.cols = config.cols;
     this.rows = config.rows;
     this.tile = config.tile;
     this.perspective = config.perspective;
     this.depthRatio = config.depth;
     this.oblique = config.oblique ?? 0;
-    const average = config.cols * config.tile;
+    const average = this.visualCols * config.tile;
     this.backWidth = (2 * average) / (1 + config.perspective);
     this.frontWidth = this.backWidth * config.perspective;
-    this.height = config.rows * config.tile * config.depth;
+    this.height = (this.quarterTurn % 2 ? config.cols : config.rows) * config.tile * config.depth;
     const shift = (this.oblique * this.height) / 2;
     const [x0, y0] = [-this.backWidth / 2 - shift, 0];
     const [x1, y1] = [this.backWidth / 2 - shift, 0];
@@ -134,8 +140,10 @@ export class GridProjection {
 
   /** Continuous logical coordinates (cell units, may lie outside the board) → world point. */
   project(u: number, v: number): Point {
-    const s = u / this.cols,
-      t = v / this.rows,
+    const a = this.quarterTurn === 1 ? v : this.quarterTurn === 3 ? this.rows - v : this.quarterTurn === 2 ? this.cols - u : u;
+    const b = this.quarterTurn === 1 ? this.cols - u : this.quarterTurn === 3 ? u : this.quarterTurn === 2 ? this.rows - v : v;
+    const s = a / this.visualCols,
+      t = b / (this.quarterTurn % 2 ? this.cols : this.rows),
       m = this.m;
     const w = m[6]! * s + m[7]! * t + m[8]!;
     return { x: (m[0]! * s + m[1]! * t + m[2]!) / w, y: (m[3]! * s + m[4]! * t + m[5]!) / w };
@@ -145,10 +153,10 @@ export class GridProjection {
   unproject(p: Point): { u: number; v: number } {
     const n = this.inv;
     const w = n[6]! * p.x + n[7]! * p.y + n[8]!;
-    return {
-      u: ((n[0]! * p.x + n[1]! * p.y + n[2]!) / w) * this.cols,
-      v: ((n[3]! * p.x + n[4]! * p.y + n[5]!) / w) * this.rows,
-    };
+    const a = ((n[0]! * p.x + n[1]! * p.y + n[2]!) / w) * this.visualCols;
+    const b = ((n[3]! * p.x + n[4]! * p.y + n[5]!) / w) * (this.quarterTurn % 2 ? this.cols : this.rows);
+    return this.quarterTurn === 1 ? { u: this.cols - b, v: a }
+      : this.quarterTurn === 3 ? { u: b, v: this.rows - a } : this.quarterTurn === 2 ? {u:this.cols-a,v:this.rows-b} : { u: a, v: b };
   }
 
   contains(cell: Pos): boolean {
@@ -241,13 +249,13 @@ export class GridProjection {
   /** Projected width of one tile at world y (linear on a symmetric trapezoid). */
   tileWidthAtY(y: number): number {
     const t = Math.max(-0.5, Math.min(1.5, y / this.height));
-    return (this.backWidth + (this.frontWidth - this.backWidth) * t) / this.cols;
+    return (this.backWidth + (this.frontWidth - this.backWidth) * t) / this.visualCols;
   }
 
   /** Local projected size of a cell (width at its centre, depth of its row). */
   footprint(cell: Pos): { w: number; h: number } {
     const poly = this.getTilePolygon(cell);
-    return { w: this.tileWidthAtY(this.getTileCenter(cell).y), h: poly[3]!.y - poly[0]!.y };
+    return { w: this.tileWidthAtY(this.getTileCenter(cell).y), h: Math.max(...poly.map(p => p.y)) - Math.min(...poly.map(p => p.y)) };
   }
 
   /** Subtle per-row size reinforcement for actors standing at world y (≈ ±4 %). */

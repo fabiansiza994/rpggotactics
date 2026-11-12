@@ -1,4 +1,4 @@
-import { CONTENT_RELEASE } from '../cloud/contentRelease';
+import { CONTENT_RELEASE, contentReleaseUrl } from '../cloud/contentRelease';
 import { BattleResultPresentation } from '../results/BattleResultPresentation';
 import '../react/components/BattleStyles';
 import { useMechanismPlayback } from '../mechanisms/mechanismPlayback';
@@ -13,7 +13,7 @@ import {
   type Command,
 } from '../../game';
 import { type PvpMode } from '../../game/pvp/dominion';
-import { PVP_MAPS, pvpMap, mapScenario } from '../../game/pvp/maps';
+import { PVP_MAPS, pvpMap, mapScenario, mapSpawns } from '../../game/pvp/maps';
 import { TacticalOverview } from '../react/components/TacticalOverview';
 import { CLOUD_CONFIG } from '../cloud/config';
 import { loadSession } from '../cloud/session';
@@ -86,7 +86,7 @@ const PROBE_MS = 10000,
 async function api(path: string, body?: unknown) {
   const session = loadSession();
   if (!session) throw Error('Inicia sesión para jugar PvP.');
-  const res = await fetch(CLOUD_CONFIG.apiUrl + '/api/tactics/pvp/' + path, {
+  const res = await fetch(contentReleaseUrl(CLOUD_CONFIG.apiUrl + '/api/tactics/pvp/' + path), {
     method: body ? 'POST' : 'GET',
     headers: { Authorization: 'Bearer ' + session.token, 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
@@ -494,7 +494,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
           </header>
           <main className="battle-main">
             <div className="board-column">
-              <BoardView focusedEnemyId={null} />
+              <BoardView focusedEnemyId={null} cameraOrigin={mapSpawns(pvpMap(snapshot.mapId ?? 'classic', snapshot.mode), snapshot.mode)[snapshot.seat]} />
             </div>
           </main>
           <PauseMenu online onExit={() => void exit()} />

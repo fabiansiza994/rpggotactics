@@ -1,3 +1,4 @@
+import { mobileCameraTurn } from '../react/mobileCombat';
 import { ElementalTargetingPreview } from '../vfx/ElementalTargetingPreview';
 import { EnvironmentEffects } from '../vfx/EnvironmentEffects';
 import { cornerLight, blendLight } from './localLighting';
@@ -222,8 +223,9 @@ export class BattleCanvas {
   /** The intro owns the root transform / canvas opacity until it has settled them once. */
   private introSettled = true;
   private readonly portraitQuery = window.matchMedia(
-    '(orientation: portrait) and (pointer: coarse) and (max-width: 600px)',
+    '(orientation: portrait) and (max-width: 600px)',
   );
+  private portraitCamera: { key: string; turn: 0 | 1 | 2 | 3 } | null = null;
   private projectionPending = false;
   private readonly motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
   private readonly clock = new PresentationClock();
@@ -289,7 +291,7 @@ export class BattleCanvas {
   setMenuPaused(paused: boolean): void { this.menuPaused = paused; this.syncVisibility(); }
   private readonly syncVisibility = () => {
     if (!this.ready || this.destroyed) return;
-    const paused = this.menuPaused || document.hidden || this.portraitQuery.matches;
+    const paused = this.menuPaused || document.hidden;
     this.host?.closest('.battle')?.toggleAttribute('data-scene-paused', paused);
     this.clock.setSuspended(paused, performance.now());
     if (paused) this.app.ticker.stop();
@@ -523,7 +525,7 @@ export class BattleCanvas {
       this.callbacks.onTileHover(null);
     });
     this.app.stage.on('pointermove', (e) => {
-      if (e.pointerType !== 'touch') {
+      if (e.pointerType !== 'touch' && !this.portraitQuery.matches) {
         const tile = this.mouseTarget(e);
         const candidates = this.tapCandidates(e);
         const hero = this.vm?.state.units.find((unit) => unit.id === this.vm?.heroId);
@@ -541,7 +543,7 @@ export class BattleCanvas {
       // Legal board actions win over secondary body inspection, even under tall artwork.
       const boardFirst = boardActionWins(ground, this.vm?.moveTiles.map(n=>n.pos) ?? [], this.vm?.targetTiles ?? []);
       if (!boardFirst && this.callbacks.onInspectUnit?.(this.tapCandidates(e, false))) return;
-      if (e.pointerType === 'mouse') {
+      if (e.pointerType === 'mouse' && !this.portraitQuery.matches) {
         const tile = this.mouseTarget(e);
         if (tile) this.callbacks.onTileClick(tile);
         return;
@@ -659,13 +661,19 @@ export class BattleCanvas {
     const depth = this.host
       ? parseFloat(getComputedStyle(this.host).getPropertyValue('--battle-depth'))
       : NaN;
-    const preset = { ...base, depth: Number.isFinite(depth) ? depth : base.depth, oblique: TEMPLE_PLACES[this.vm?.state.scenarioId ?? ''] ? .58 : 0 };
+    const key = `${this.vm?.state.scenarioId}:${this.vm?.heroId}`;
+    if (this.vm && this.portraitCamera?.key !== key) {
+      const hero = this.vm.state.units.find(u => u.id === this.vm?.heroId);
+      this.portraitCamera = { key, turn: mobileCameraTurn(this.vm.cameraOrigin ?? hero?.pos ?? {x:0,y:0}, this.boardSize.w, this.boardSize.h) };
+    }
+    const quarterTurn: 0 | 1 | 2 | 3 = this.portraitQuery.matches ? this.portraitCamera?.turn ?? 1 : 0;
+    const preset = { ...base, quarterTurn, depth: Number.isFinite(depth) ? depth : base.depth, oblique: TEMPLE_PLACES[this.vm?.state.scenarioId ?? ''] ? .58 : 0 };
     const { w, h } = this.boardSize;
     if (
       this.proj.cols === w &&
       this.proj.rows === h &&
       this.proj.perspective === preset.perspective &&
-      this.proj.depthRatio === preset.depth && this.proj.oblique === preset.oblique
+      this.proj.depthRatio === preset.depth && this.proj.oblique === preset.oblique && this.proj.quarterTurn === quarterTurn
     )
       return false;
     // Active spells retain their world geometry; resizing still fits that same world.
@@ -683,7 +691,7 @@ export class BattleCanvas {
   /** World bounds that must stay on screen: rim, front props and back-row headroom. */
   private framingBounds() {
     const p = this.proj;
-    const half = p.frontWidth / 2 + Math.abs(p.oblique)*p.height/2 + TILE * 1.05;
+    const half = p.frontWidth / 2 + Math.abs(p.oblique)*p.height/2 + TILE * (p.quarterTurn ? .25 : 1.05);
     const frame = this.host
       ? parseFloat(getComputedStyle(this.host).getPropertyValue('--battle-front-frame'))
       : NaN;
@@ -1151,6 +1159,7 @@ export class BattleCanvas {
         this.actorLayer.addChild(view.root);
         this.chromeLayer.addChild(view.chrome);
       }
+      view.projectFacing = this.proj.quarterTurn ? this.tileCenter : undefined;
       view.stablePuzzleIdle = !!vm.mechanisms;
       const anchor = this.proj.getUnitAnchor(unit.pos);
       if (
