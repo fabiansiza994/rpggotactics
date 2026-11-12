@@ -1,3 +1,4 @@
+import { withShapeshifterRelease } from '../../src/game/data/shapeshifter-release';
 import { withArcher } from '../../src/game/data/archer';
 import { pvpMap } from '../../src/game/pvp/maps';
 import type { PvpMode } from '../../src/game/pvp/dominion';
@@ -183,7 +184,6 @@ export async function serverLoadout(
   const db = env.DB;
   const record = await loadPlayer(db, caller.userId, PVP_CONTENT);
   if (!record) return response({ error: { message: 'Crea tu perfil primero.' } }, 404);
-  if (heroId === 'shapeshifter') return response({ error: { message: 'Cambiaformas: PvP pendiente de validación.' } }, 403);
   if (!championAllowed(heroId, env, caller.username))
     return response({ error: { message: 'Este campeón todavía no está disponible.' } }, 403);
   if (typeof heroId !== 'string' || !isChampionUnlocked(record.profile, heroId))
@@ -864,4 +864,4 @@ function canonicalCommand(command: Command): Command {
 }
 
 /** Compatible rule catalog for active rooms; championAllowed still gates every new loadout. */
-export const PVP_CONTENT = withArcher(DEFAULT_CONTENT);
+export const PVP_CONTENT = withShapeshifterRelease(withArcher(DEFAULT_CONTENT));

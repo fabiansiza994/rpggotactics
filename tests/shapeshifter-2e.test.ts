@@ -29,13 +29,13 @@ describe('Phase 2E real flow, isolated QA', () => {
     expect(localShapeshifterQa(true, 'production', 'localhost')).toBe(false);
     expect(localShapeshifterQa(true, 'shapeshifterqa', 'rpggo-tactics.pages.dev')).toBe(false);
   });
-  it('keeps public content, campaigns and server PvP policy closed, regardless of QA username', () => {
+  it('keeps server eligibility closed without release flags while the released campaign supports shapeshifter', () => {
     expect(DEFAULT_CONTENT.heroes.shapeshifter).toBeUndefined();
     for (const username of ['tactics_qa_a', 'tactics_qa_b', 'player'])
       expect(championAllowed('shapeshifter', {} as Env, username)).toBe(false);
     expect(championAllowed('mage', {} as Env, 'player')).toBe(true);
     const content = realFlowQaContent(DEFAULT_CONTENT);
-    expect(() => createRun(ASCENT_CAMPAIGN, content, 1, 'shapeshifter')).toThrow();
+    expect(() => createRun(ASCENT_CAMPAIGN, content, 1, 'shapeshifter')).not.toThrow();
     for (const id of ['mage', 'summoner', 'warrior'])
       expect(content.heroes[id]).toEqual(DEFAULT_CONTENT.heroes[id]);
   });
@@ -150,11 +150,11 @@ describe('Phase 2E real flow, isolated QA', () => {
     expect(useBattleStore.getState().resumeQaBattle()).toBe(true);
     expect(useBattleStore.getState().state).toEqual(engine.state);
   });
-  it('maps board forms and card art through the existing form registry, without public registrations', () => {
+  it('maps board forms and card art through the existing form registry, with release-gated registrations', () => {
     const board = readFileSync('src/presentation/pixi/BattleCanvas.ts', 'utf8');
     expect(board).toContain('formVisual(unit.activeForm)');
     const paintings = readFileSync('src/presentation/assets/paintedAssets.ts', 'utf8');
-    expect(paintings).toContain('if (shapeshifterQaEnabled)');
+    expect(paintings).toContain('if (shapeshifterPresentationEnabled)');
     expect(paintings).toContain('Object.entries(QA_TRANSFORM_ART)');
   });
 });

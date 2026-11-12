@@ -1,3 +1,4 @@
-/** Presentation of restrictions already enforced by server/src/pvp.ts; never grants access. */
-const existingRestrictions:Readonly<Record<string,string>>={shapeshifter:'PvP pendiente de validación'};
-export const pvpChampionRestriction=(id:string)=>existingRestrictions[id];
+/** Available/unlocked champions share Casual and Ranked eligibility.
+ * Release flags, account ownership and deck validity remain enforced separately and on the Worker.
+ */
+export const pvpChampionRestriction = (_id: string): string | undefined => { void _id; return undefined; };
