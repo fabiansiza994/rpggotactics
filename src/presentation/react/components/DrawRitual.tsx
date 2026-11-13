@@ -1,3 +1,4 @@
+import { handArrivalCenter } from '../handScroll';
 import { createPortal } from "react-dom";
 import {
   useEffect,
@@ -70,12 +71,16 @@ export function DrawRitual({
       ).find((el) => el.dataset.cardUid === ticket.uid);
       const target = card?.getBoundingClientRect(),
         hand = footer.current?.querySelector(".hand")?.getBoundingClientRect();
+      const targetCenter = target ? target.left + target.width / 2 : innerWidth / 2;
+      const arrival = hand && target && matchMedia('(min-width: 601px) and (min-height: 501px)').matches
+        ? handArrivalCenter(targetCenter, target.width, hand.left + 28, hand.right - 28)
+        : targetCenter;
       const x = Math.max(12, Math.min(innerWidth - 128, innerWidth / 2 - 58)),
         y = Math.max(72, (hand?.top ?? innerHeight - 150) - 224);
       geometry.current = {
         x,
         y,
-        dx: (target ? target.left + target.width / 2 : innerWidth / 2) - x - 58,
+        dx: arrival - x - 58,
         dy:
           (target ? target.top + target.height / 2 : innerHeight - 90) - y - 82,
         scale: target ? target.width / 116 : 1,
@@ -92,7 +97,9 @@ export function DrawRitual({
     setOffset(0);
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const handElement = footer.current?.querySelector('.hand');
+    handElement?.addEventListener('scroll', measure, { passive: true });
+    return () => { window.removeEventListener("resize", measure); handElement?.removeEventListener('scroll', measure); };
   }, [ticket, active, footer]);
   useEffect(() => {
     if (!ticket) return;

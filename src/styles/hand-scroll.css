@@ -1,0 +1,44 @@
+/* Phone portrait and compact landscape retain Mobile Combat 2.0 unchanged. */
+.hand-scroll-region { display: contents; }
+.hand-scroll-prev, .hand-scroll-next { display: none; }
+@media (min-width: 601px) and (min-height: 501px) {
+  .battle .hand-scroll-region {
+    display: block; position: relative; grid-column: 2; grid-row: 1;
+    min-width: 0; height: 100%; align-self: stretch;
+  }
+  .battle .hand-bar > .pile-deck { grid-column: 1; grid-row: 1; }
+  .battle .hand-bar > .end-turn-box {
+    grid-column: 3; grid-row: 1; position: static; min-width: 0; width: auto;
+    z-index: 2; margin: 0; align-self: end;
+  }
+  .battle .hand-bar > .pile-discard { grid-column: 4; grid-row: 1; }
+  .battle .hand-scroll-region > .hand:not(.card-activation-layer) {
+    box-sizing: border-box; position: relative; inset: auto; width: 100%; min-width: 0;
+    height: calc(100% + 96px); min-height: 0; margin: -96px 0 0; padding: 96px 28px 12px;
+    overflow-x: auto; overflow-y: hidden; justify-content: safe center;
+    gap: 10px; touch-action: pan-x; overscroll-behavior-x: contain;
+    scroll-padding-inline: 28px; scrollbar-width: thin; pointer-events: none;
+  }
+  .battle .hand-scroll-region > .hand > .card {
+    flex: 0 0 auto; margin-inline: 0; pointer-events: auto;
+    max-height: calc(100% - 2px); transform: none;
+  }
+  .battle .hand-scroll-region > .hand > .card:is(:hover, :focus-visible, .is-selected) {
+    transform: translateY(-12px); z-index: 10;
+  }
+  .battle .hand-scroll-region :is(.hand-scroll-prev, .hand-scroll-next) {
+    position: absolute; bottom: 38px; z-index: 15; width: 24px; min-height: 48px;
+    padding: 0; border: 1px solid #b29a63; border-radius: 5px;
+    background: #0a1b2cf0; color: #f0db9f; font-size: 25px;
+  }
+  .battle .hand-scroll-prev { left: 1px; }
+  .battle .hand-scroll-next { right: 1px; }
+  .battle .hand-scroll-region[data-before='true'] .hand-scroll-prev,
+  .battle .hand-scroll-region[data-after='true'] .hand-scroll-next { display: block; }
+  .battle .hand-bar:has(.altar-panel) .hand-scroll-region { padding-left: var(--altar-width); box-sizing: border-box; }
+  .battle .hand-bar:has(.altar-panel) .hand-scroll-region > .hand:not(.card-activation-layer) { margin: -96px 0 0; }
+  .battle .hand-scroll-region > .hand:focus-visible { outline: 1px solid #c5b17c; outline-offset: -2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle .hand-scroll-region > .hand > .card { transition: none; }
+}

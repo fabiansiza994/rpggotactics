@@ -1,3 +1,4 @@
+import { HandScrollRegion } from './HandScrollRegion';
 import {DrawRitual,useDrawVisual} from './DrawRitual';
 import { CardActivationLabel } from './CardActivationLabel';
 import { mobileCombat, mobileEndTurnAllowed } from '../mobileCombat';
@@ -432,7 +433,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         <span className="pile-count">{state.pileCounts?.deck ?? state.player.deck.length}</span>
         <span className="pile-label">Mazo</span>
       </button>
-      <div className={`hand ${discarding ? 'is-discarding' : ''}`}>
+      <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''}`}>
         {dealt &&
           state.player.hand.map((card, i) => {
             const def = engine.content.cards[card.cardId];
@@ -466,7 +467,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
               />
             );
           })}
-      </div>
+      </HandScrollRegion>
       <div className="end-turn-box">
         <HandCounter state={state} />
         <div
