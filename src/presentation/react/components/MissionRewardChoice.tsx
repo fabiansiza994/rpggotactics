@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState, type CSSProperties, type ReactNode, type Dispatch } from 'react';
+import { useEffect, useReducer, useState, useRef, type CSSProperties, type ReactNode, type Dispatch } from 'react';
 import { ownedFor, type RewardOption } from '../../../game';
 import { PRESENTATION_CONTENT as CONTENT } from '../../qa/shapeshifter/runtime';
 import { useBattleStore } from '../../store/battleStore';
@@ -25,6 +25,9 @@ function RewardFace({ option, index, count, phase, selected, muted, disabled, se
   option: RewardOption; index: number; count: number; phase: 'hidden' | 'revealing' | 'revealed'; selected: boolean; muted: boolean;
   disabled: boolean; selectLocked: boolean; reduced: boolean; heroId: string; onReveal(): void; dispatch: Dispatch<RevealAction>; onSelect(): void;
 }) {
+  const [inspecting, setInspecting] = useState(false);
+  const inspectionRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => { if (inspecting && !inspectionRef.current?.open) inspectionRef.current?.showModal(); }, [inspecting]);
   const owned = useBattleStore(s => option.kind === 'ADD_CARD' ? ownedFor(s.profile, heroId, CONTENT)(option.cardId) : 0);
   const def = option.kind === 'ADD_CARD' ? CONTENT.cards[option.cardId] : undefined;
   const visual = useCosmeticCard(def);
@@ -54,6 +57,11 @@ function RewardFace({ option, index, count, phase, selected, muted, disabled, se
           disabled={disabled || selectLocked || phase !== 'revealed'} onClick={onSelect} />
       </div>
     </div>
+    {def && <button type="button" className="mission-reward-inspect" disabled={phase !== 'revealed' || disabled} onClick={() => setInspecting(true)} aria-label={`Inspeccionar ${def.name}`}>Inspeccionar</button>}
+    {inspecting && def && <dialog ref={inspectionRef} className="mission-reward-inspection" aria-label={`Detalle de recompensa: ${def.name}`} onClose={() => setInspecting(false)} onCancel={() => setInspecting(false)}>
+      <div className="mission-reward-inspection-content"><FeatureCard def={def} className="mission-reward-inspected" extras={{playable:true}} scrollableDescription /></div>
+      <button type="button" className="reward-inspection-close" autoFocus onClick={() => { inspectionRef.current?.close(); setInspecting(false); }}>Cerrar detalle</button>
+    </dialog>}
     <span className="mission-reward-sparks" aria-hidden="true">{sparks}</span>
     <div className="mission-reward-status" aria-live="polite">
       {selected ? '✓ Recompensa seleccionada' : phase === 'revealing' ? 'Revelando…' : phase === 'hidden' ? 'Descubre tu recompensa' : def ? `${owned === 0 ? 'Nueva carta' : 'Copia extra'} · ${RARITY_LABEL[def.rarity ?? 'COMMON']}` : 'Mejora permanente'}
@@ -82,6 +90,7 @@ export function MissionRewardChoice({ options, heroId, saving, onConfirm, confir
   }, [state.confirming, state.picked, onConfirm, reduced]);
   return <section className="result-card won reward-card mission-reward" data-confirming={state.confirming} data-reduced-motion={reduced || undefined} style={{ '--reward-center': (options.length - 1) / 2 } as CSSProperties} aria-label="Revelación de recompensas">
     <header><h2>Victoria</h2><p>Elige 1 recompensa</p><small>Revela las cartas y elige una para tu colección.</small></header>
+    <div className="mission-reward-content" tabIndex={0} aria-label="Opciones de recompensa; desplázate para ver todas">
     {masteryFeedback}
     <div className="mission-reward-options" role="group" aria-label="Recompensas por revelar">
       {options.map((option, index) => <RewardFace key={option.id} option={option} index={index} count={options.length} heroId={heroId}
@@ -90,6 +99,7 @@ export function MissionRewardChoice({ options, heroId, saving, onConfirm, confir
         onReveal={() => dispatch({ type: 'reveal', id: option.id })}
         dispatch={dispatch}
         onSelect={() => dispatch({ type: 'select', id: option.id })} />)}
+    </div>
     </div>
     <footer><small>Puedes equiparla después desde Mazo.</small>{footer && <small>{footer}</small>}
       <button type="button" className="reward-confirm" disabled={!state.picked || busy || saving || state.confirming}

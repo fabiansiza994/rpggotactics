@@ -40,4 +40,13 @@ describe('mission reward presentation state (no grants)', () => {
     expect(html).toContain('data-phase="hidden"'); expect(html).toContain('Revelar recompensa 1');
     expect(html).toMatch(/disabled=""[^>]*>Guardar recompensa/);
   });
+  it('keeps inspection locked until reveal and preserves one confirmation outside the scrollable choices', () => {
+    const html=renderToStaticMarkup(createElement(MissionRewardChoice,{options:[{id:'card',kind:'ADD_CARD',cardId:'magic_missile',rarity:'COMMON',isNew:true},{id:'hp',kind:'MAX_HP',amount:2}],heroId:'mage',saving:false,onConfirm:()=>{},confirmLabel:'Guardar recompensa'}));
+    expect(html).toContain('aria-label="Opciones de recompensa; desplázate para ver todas"');
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*aria-label="Inspeccionar Magic Missile"/);
+    expect(html.match(/class="reward-confirm"/g)).toHaveLength(1);
+    expect(html).not.toContain('Inspeccionar Vida máxima');
+    expect(html).not.toContain('<dialog');
+  });
+
 });
