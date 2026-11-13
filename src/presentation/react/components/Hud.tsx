@@ -411,7 +411,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       <ResolvingCardPreview engine={engine} />
       <BattleCardFeature state={state} engine={engine} selectedCardUid={selectedCardUid} hoveredCardUid={discarding ? null : inspected}
         inspectedCardUid={discarding ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} />
-      <AltarPanel state={state} engine={engine} busy={busy} />
+      <AltarPanel key={`${state.player.heroId}:${hero?.defId}`} state={state} engine={engine} busy={busy} />
       {handPulse > 0 && (
         <span key={handPulse} className="draw-feedback" aria-live="polite">
           ✦ Cartas robadas
@@ -680,15 +680,17 @@ export function AltarPanel({
   const [activatedName, setActivatedName] = useState<string | null>(null);
   const [consuming, setConsuming] = useState<{ uid: string; cardId: string }[]>([]);
   const [feedback, setFeedback] = useState<'sealed' | 'released' | 'activating' | null>(null);
+  const localHeroId = state.player.heroId;
+  const content = engine.content;
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     const off = presentationBus.subscribe((events) => {
       const e = events.find(
-        (e) => e.type.startsWith('RITUAL_') && 'casterId' in e && e.casterId === engine.heroId,
+        (e) => e.type.startsWith('RITUAL_') && 'casterId' in e && e.casterId === localHeroId,
       );
       if (!e) return;
       if (e.type === 'RITUAL_ACTIVATED')
-        setActivatedName(engine.content.rituals?.[e.ritualId]?.name ?? 'Invocación ritual');
+        setActivatedName(content.rituals?.[e.ritualId]?.name ?? 'Invocación ritual');
       if (e.type === 'RITUAL_ACTIVATED')
         setConsuming(e.pieces.map((p) => ({ uid: p.cardUid, cardId: p.cardId })));
       const next =
@@ -722,16 +724,11 @@ export function AltarPanel({
       off();
       clearTimeout(timer);
     };
-  }, [engine]);
-  const hero = state.units.find((u) => u.id === engine.heroId);
-  const slots = hero ? altarSlots(engine.content, hero.defId) : 0;
-  const rivalAltar = state.pileCounts?.opponentAltar ?? 0;
-  const rivalHasAltar =
-    rivalAltar > 0 ||
-    state.units.some(
-      (u) => u.kind === 'HERO' && u.id !== engine.heroId && altarSlots(engine.content, u.defId) > 0,
-    );
-  if (slots <= 0 && !rivalHasAltar) return null;
+  }, [localHeroId, content]);
+  // The snapshot player belongs to this client, independent of the rival's champion.
+  const hero = state.units.find((u) => u.id === localHeroId);
+  const slots = hero ? altarSlots(content, hero.defId) : 0;
+  if (slots <= 0) return null;
   const altar = altarOf(state.player);
   const shownAltar = feedback === 'activating' ? consuming : altar;
   const myTurn = state.phase === 'PLAYER' && !busy;
@@ -789,12 +786,6 @@ export function AltarPanel({
           >
             {' '}
             · Sello siguiente: {status.nextSealCost} energía
-          </span>
-        )}
-        {rivalHasAltar && (
-          <span className="altar-rival">
-            {' '}
-            · Rival: {rivalAltar} sellada{rivalAltar === 1 ? '' : 's'} / 4
           </span>
         )}
       </summary>

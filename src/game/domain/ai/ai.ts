@@ -1,4 +1,3 @@
-import { depthEnabled } from '../combat/qa-depth';
 import { terrainDefAt } from '../board/occupancy';
 import { inBounds } from '../board/board';
 import {
@@ -329,7 +328,7 @@ export function executeIntent(ctx: RuleContext, intent: EnemyIntent): void {
       const raw = 'damage' in intent ? intent.damage : 0;
       for (const id of plan.targetUnitIds) {
         const victim = unitById(ctx.state, id);
-        if (victim) dealDamage(ctx, victim, attackDamage(ctx, enemy, victim, raw), enemy.id, plan.damageType, depthEnabled(ctx) && intent.kind === 'MELEE_ATTACK' ? 'DIRECT_MELEE' : undefined);
+        if (victim) dealDamage(ctx, victim, attackDamage(ctx, enemy, victim, raw), enemy.id, plan.damageType, intent.kind === 'MELEE_ATTACK' ? 'DIRECT_MELEE' : undefined);
       }
       if (plan.onHit) applyHitRider(ctx, enemy, intent, plan, plan.onHit);
     }

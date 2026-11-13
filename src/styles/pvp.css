@@ -576,3 +576,17 @@
     grid-template-rows: 100px minmax(0, 1fr) 196px;
   }
 }
+
+/* Keep all status lines in normal flow; older direct-child span grid rules no
+   longer place the Ranked badge on top of the network/round text. */
+.battle.pvp-battle .pvp-turn > .pvp-turn-summary {
+  display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  grid-column: 1; grid-row: 1 / 4;
+}
+.battle.pvp-battle .pvp-turn:has(> .dominion-score) > .pvp-turn-summary {
+  grid-column: 2; grid-row: 1 / 3;
+}
+.pvp-turn-title { line-height: 1.2; }
+.pvp-turn-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 11px; line-height: 1.3; }
+.pvp-turn-meta > span { overflow-wrap: anywhere; }
+.pvp-rival-altar { font-size: 11px; color: #b9ccdc; }

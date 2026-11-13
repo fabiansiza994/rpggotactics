@@ -395,7 +395,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
         attackDamage(ctx, unit, adjacent, def.damage + bonus),
         unit.id,
         def.damageType ?? (range > 1 ? 'ARCANE' : 'PHYSICAL'),
-        range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : (depthEnabled(ctx) ? 'DIRECT_MELEE' : undefined),
+        range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
       );
       if (def.onHitStatus && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
         applyStatus(ctx, adjacent, def.onHitStatus.status, def.onHitStatus.duration, unit.id);

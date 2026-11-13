@@ -104,9 +104,8 @@ describe('private QA directional damage', () => {
     expect(
       dealDamage(duel.ctx, duel.hero, 2, duel.enemy.id, 'PHYSICAL', 'DIRECT_MELEE').hpLost,
     ).toBe(2);
-    expect(duel.events.some((e) => e.type === 'COUNTER_ATTACK' || e.type === 'BACKSTAB')).toBe(
-      false,
-    );
+    expect(duel.events.some((e) => e.type === 'BACKSTAB')).toBe(false);
+    expect(duel.events.filter((e) => e.type === 'COUNTER_ATTACK')).toHaveLength(1);
   });
   it.each([undefined, 'RANGED', 'GROUND_HAZARD', 'COUNTER'] as (AttackKind | undefined)[])(
     'excludes area, DoT, hazard and reactions (%s)',

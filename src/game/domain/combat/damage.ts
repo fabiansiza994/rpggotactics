@@ -84,7 +84,7 @@ export function dealDamage(
 
   const defeated = unit.hp <= 0;
   if (defeated) defeatUnit(ctx, unit);
-  else onUnitHit(ctx, unit, sourceId, result.shieldAbsorbed + result.hpLost, direct ?? attackKind);
+  else onUnitHit(ctx, unit, sourceId, result.shieldAbsorbed + result.hpLost, direct ?? attackKind, damageType);
   return { ...result, defeated };
 }
 

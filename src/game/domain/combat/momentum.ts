@@ -7,6 +7,7 @@ import type { Unit } from '../entities/unit';
 import type { GameState } from '../state';
 import { removeStatus } from '../statuses/status-rules';
 import { dealDamage } from './damage';
+import type { DamageType } from './damage-types';
 
 /**
  * Warrior signature rules: Momentum (Impulso) and Riposte (Contraataque). Both live in the
@@ -81,6 +82,7 @@ export function onUnitHit(
   sourceId: string,
   landed: number,
   attackKind: AttackKind | undefined,
+  damageType: DamageType,
 ): void {
   if (attackKind === 'GROUND_HAZARD' || !ctx.state.units.includes(unit)) return;
   const source = unitById(ctx.state, sourceId);
@@ -89,14 +91,15 @@ export function onUnitHit(
   if (landed > 0 && manhattan(source.pos, unit.pos) > 1) onDistantHit(ctx, unit);
   if (attackKind === 'COUNTER' || manhattan(source.pos, unit.pos) !== 1) return;
   const riposte = unit.statuses.find((s) => ctx.content.statuses[s.id]?.counterDamage);
-  const passive = depthEnabled(ctx) && source.hp > 0 && source.kind !== 'STRUCTURE' && attackKind === 'DIRECT_MELEE' && unit.defId === 'shapeshifter' &&
+  // The authored form response is public; only the optional QA frequency comparison stays gated.
+  const passive = damageType === 'PHYSICAL' && source.hp > 0 && source.kind !== 'STRUCTURE' && attackKind === 'DIRECT_MELEE' && unit.defId === 'shapeshifter' &&
     (unit.activeForm === 'bear' || unit.activeForm === 'minotaur') &&
-    (ctx.content.qaCombatDepth!.formCounter === 'perHit' || unit.qaCounterRound !== ctx.state.round);
+    (!depthEnabled(ctx) || ctx.content.qaCombatDepth!.formCounter === 'perHit' || unit.qaCounterRound !== ctx.state.round);
   if (!riposte && !passive) return;
   // One reaction, never stack an existing Riposte with the innate response.
   const amount = riposte ? ctx.content.statuses[riposte.id].counterDamage! : attackDamage(ctx, unit, source, 1);
   if (riposte) removeStatus(ctx, unit, riposte.id, 'CONSUMED');
-  if (passive) unit.qaCounterRound = ctx.state.round;
+  if (passive && depthEnabled(ctx)) unit.qaCounterRound = ctx.state.round;
   ctx.emit({ type: 'COUNTER_ATTACK', unitId: unit.id, targetId: source.id, amount });
   dealDamage(ctx, source, amount, unit.id, riposte ? ctx.content.statuses[riposte.id].counterDamageType ?? 'PHYSICAL' : 'PHYSICAL', 'COUNTER');
 }

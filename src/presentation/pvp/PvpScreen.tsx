@@ -1,3 +1,5 @@
+import { altarSlots } from '../../game';
+import { PvpTurnSummary } from './PvpTurnSummary';
 import {drawRitual,classifyDraws} from '../cards/drawRitual';
 import { isActionableTile } from '../input/aim';
 import { CardActivationLabel } from '../react/components/CardActivationLabel';
@@ -271,8 +273,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
       ws.onerror = () => ws.close();
     } catch (e) {
       if (generation !== connectionGeneration.current) return;
-      setError(e instanceof Error ? e.message : 'Error de conexión');
-      setNetwork('Sin conexión');
+      setNetwork(`Sin conexión · ${e instanceof Error ? e.message : 'Error de conexión'}`);
       if (alive.current && latest.current) {
         void readState(room);
         retry.current = setTimeout(() => void connect(room), 3000);
@@ -489,19 +490,12 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
                   </div>
                 </div>
               )}
-              {snapshot.ranked && <span className="pvp-ranked-badge">Clasificatoria · Pretemporada</span>}
-              <strong>{busy || playback ? 'Resolviendo…' : game.phase === 'PLAYER' ? 'Tu turno' : 'Esperando al rival'}</strong>
-              <span>
-                Ronda {displayGame?.round ?? game.round} · {network}
-                {snapshot.deadline
-                  ? ` · ${Math.max(0, Math.ceil((snapshot.deadline - clock) / 1000))} s`
-                  : ''}
-                {busy ? ' · Validando…' : ''}
-              </span>
+              <PvpTurnSummary ranked={!!snapshot.ranked} title={busy || playback ? 'Resolviendo…' : game.phase === 'PLAYER' ? 'Tu turno' : 'Esperando al rival'} round={displayGame?.round ?? game.round} network={network} seconds={snapshot.deadline ? Math.max(0, Math.ceil((snapshot.deadline - clock) / 1000)) : null} validating={busy} />
               <button onClick={() => setConfirm(true)}>Rendirse</button>
             </div>
             <div className="panel pvp-rival">
               <strong>{snapshot.members[1 - snapshot.seat]?.name}</strong>
+              {game.units.some(u => u.kind === 'HERO' && u.id !== game.player.heroId && altarSlots(DEFAULT_CONTENT, u.defId) > 0) && <small className="pvp-rival-altar" aria-label="Información pública del altar rival">Altar del rival: {game.pileCounts?.opponentAltar ?? 0} selladas · información pública</small>}
               <span>
                 {snapshot.members[1 - snapshot.seat]?.heroId} ·{' '}
                 {game.units.find((u) => u.kind === 'HERO' && u.faction === 'ENEMY')?.hp ?? 0} HP
@@ -521,7 +515,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
             viewerSeat={snapshot.seat}
             progress={{ round: game.round, cardsPlayed: game.stats.cardsPlayed, finished: !!snapshot.result }}
           />
-          <HandBar state={game} engine={engine} />
+          <HandBar key={pvpMatchKey(snapshot)} state={game} engine={engine} />
           {snapshot.events
             .filter((e) => e.type === 'DOMINION_SCORED')
             .map(

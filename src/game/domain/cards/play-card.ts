@@ -137,7 +137,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     // CARD_DRAWN is private in PvP (duelEvents hides it from the rival).
     ctx.emit({type:'CARD_DRAWN',cardUid:fromDiscard.uid,cardId:fromDiscard.cardId});
   }
-  const directAttack = depthEnabled(ctx) && def.targeting.type === 'UNIT' && !def.targeting.area ? (def.targeting.range === 1 ? 'DIRECT_MELEE' as const : 'DIRECT_RANGED' as const) : undefined;
+  const directAttack = def.targeting.type === 'UNIT' && !def.targeting.area ? (def.targeting.range === 1 ? 'DIRECT_MELEE' as const : depthEnabled(ctx) ? 'DIRECT_RANGED' as const : undefined) : undefined;
   if (price.scope) ctx.emit({ type: 'COST_DISCOUNT_USED', unitId: caster.id, scope: price.scope, cardId: def.id, paid: price.cost });
   applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id }, selectedEffects);
 
