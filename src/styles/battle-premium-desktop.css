@@ -47,3 +47,21 @@
   .battle .card-selection-cancel { min-width: 44px; min-height: 44px; }
   .battle .card-select-surface { touch-action: manipulation; }
 }
+
+/* Desktop utilities share a right-side column without reserving layout space.
+   Compact/tablet and touch compositions keep their existing positions. */
+@media (min-width: 1281px) and (min-height: 501px) and (hover: hover) and (pointer: fine) {
+  .battle > button.pause-trigger {
+    position: fixed;
+    left: auto;
+    right: max(14px, env(safe-area-inset-right));
+    top: calc(50% - 46px);
+    bottom: auto;
+  }
+  body:has(.battle) button.bug-report-fab:is([data-route='BATTLE'], [data-route='PVP']) {
+    left: auto;
+    right: max(14px, env(safe-area-inset-right));
+    top: calc(50% + 6px);
+    bottom: auto;
+  }
+}
