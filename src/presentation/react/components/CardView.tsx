@@ -18,6 +18,7 @@ import { STAGGER, staggerDelay } from '../../motion/tokens';
 import type { CardBlock } from '../cardBlock';
 
 interface Props {
+  presentationHidden?: boolean;
   def: CardDefinition;
   hotkey: number;
   selected: boolean;
@@ -53,6 +54,7 @@ export const CATEGORY_ICON: Record<CardDefinition['category'], IconName> = {
 
 /** Illustrated presentation; all rule text and costs come directly from Core content. */
 export function CardView({
+  presentationHidden = false,
   def,
   hotkey,
   selected,
@@ -105,6 +107,8 @@ export function CardView({
     <div
       ref={premiumRef}
       data-disabled={disabled || undefined}
+      data-draw-hidden={presentationHidden||undefined}
+      aria-hidden={presentationHidden||undefined}
       className={`card ${selected ? 'is-selected' : ''} ${playable ? '' : 'is-unplayable'}`}
       data-ritual-piece={def.ritualPiece || undefined}
       data-premium={def.id === 'summon_war_drake' || undefined}

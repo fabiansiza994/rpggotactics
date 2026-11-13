@@ -1,0 +1,152 @@
+/* Overlay only: hand ownership/order and combat input remain authoritative. */
+.card[data-draw-hidden] {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.draw-ritual {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  pointer-events: none;
+  perspective: 900px;
+}
+.draw-ritual-pile,
+.draw-ritual-card {
+  position: absolute;
+  left: var(--draw-x);
+  top: var(--draw-y);
+  width: 116px;
+  height: 164px;
+  border-radius: 10px;
+}
+.draw-ritual-pile {
+  opacity: 0.65;
+  transform: translateY(12px) rotate(-4deg);
+}
+.draw-ritual-pile > .card-back-face {
+  position: absolute;
+  inset: 0;
+}
+.draw-ritual-pile > .card-back-face + span {
+  transform: translate(5px, 5px);
+}
+.draw-ritual-card {
+  transform: translateY(var(--draw-drag)) rotateY(0);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 5px 9px #0009);
+  outline: 1px solid #e9c26a;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.draw-ritual[data-phase="presenting"] .draw-ritual-card {
+  animation: draw-arrive 180ms ease-out both;
+}
+.draw-ritual[data-phase="ready"] .draw-ritual-card,
+.draw-ritual[data-phase="dragging"] .draw-ritual-card {
+  pointer-events: auto;
+  cursor: grab;
+  box-shadow: 0 0 14px #d9ad5366;
+}
+.draw-ritual-card:focus-visible {
+  outline: 3px solid #b9e9ff;
+  outline-offset: 4px;
+}
+.draw-ritual[data-phase="springBack"] .draw-ritual-card {
+  transition: transform 180ms cubic-bezier(0.22, 1.4, 0.5, 1);
+}
+.draw-ritual-back,
+.draw-ritual-front {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #091b2c;
+}
+.draw-ritual-front {
+  transform: rotateY(180deg);
+}
+.draw-ritual-back > .card-back-face,
+.draw-ritual-pile .card-back-face {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.draw-ritual-back img,
+.draw-ritual-pile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.draw-ritual-front .card {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  transform: none !important;
+  animation: none !important;
+  pointer-events: none;
+  opacity: 1 !important;
+  filter: none !important;
+}
+.draw-ritual[data-phase="reveal"] .draw-ritual-card {
+  transform: translateY(var(--draw-drag)) rotateY(180deg);
+  transition: transform 220ms ease-in-out;
+}
+.draw-ritual[data-phase="flight"] .draw-ritual-card {
+  transform: translate(var(--draw-dx), var(--draw-dy)) rotateY(180deg)
+    scale(var(--draw-scale));
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    opacity 280ms;
+  opacity: 0;
+}
+.draw-ritual[data-phase="flight"] .draw-ritual-pile {
+  opacity: 0;
+  transition: opacity 150ms;
+}
+.draw-ritual-hint {
+  position: absolute;
+  left: var(--draw-x);
+  top: calc(var(--draw-y) - 28px);
+  font-size: 11px;
+  color: #f4dfad;
+  white-space: nowrap;
+  background: #06131ee8;
+  border: 1px solid #bd9659;
+  border-radius: 5px;
+  padding: 4px 7px;
+  transform: translateX(-16px);
+}
+.draw-ritual-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@keyframes draw-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-8px) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .draw-ritual * {
+    animation: none !important;
+    transition-duration: 60ms !important;
+  }
+  .draw-ritual[data-phase="flight"] .draw-ritual-card {
+    transform: rotateY(180deg);
+    opacity: 0;
+  }
+}
+.draw-ritual[data-reduced] * {
+  animation: none !important;
+  transition-duration: 60ms !important;
+}

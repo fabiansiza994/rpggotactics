@@ -1,3 +1,4 @@
+import {drawRitual,classifyDraws} from '../cards/drawRitual';
 import { pairTargets, planCardSelection, type PairSelection } from '../input/pairSelection';
 import { saveQaCampaignTransition } from './campaignStorage';
 import { ASCENT_CAMPAIGN, campaignForRun, WORLD_CAMPAIGNS, worldContext } from "../qa/shapeshifter/campaigns";
@@ -506,15 +507,19 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     unsubscribeEngine?.();
     unsubscribeEngine = engine.subscribe((events, state) => {
       const previous = get().state;
+      if(events.some(e=>e.type==='BATTLE_STARTED')||state.outcome)drawRitual.reset();
+
       if (previous) rememberUnits(previous);
       set((s) => ({
         state,
         log: [...s.log, ...toLog(events, state)].slice(-80),
         ...(s.aim?.source === 'tap' ? { aim: null } : {}),
       }));
+
       persistRealQaBattle(engine);
       settleRunVictory(state);
       presentationBus.publish(events, state);
+      if(!state.outcome)drawRitual.enqueue(classifyDraws({events,state,previous,content:engine.content,revision:`${engine.scenario.id}:${engine.history.length}`}));
     });
   }
 
@@ -886,6 +891,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       notice: null,
       log: toLog(engine.initialEvents, engine.state),
     });
+    drawRitual.reset();
     presentationBus.publish(engine.initialEvents, engine.state);
   }
 
@@ -966,6 +972,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
   }
 
   function run(command: Command): boolean {
+    drawRitual.complete();
     const { engine } = get();
     if (!engine || inputLocked(get())) return false;
     if (get().onlineCommand) {

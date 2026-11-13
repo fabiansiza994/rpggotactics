@@ -1,3 +1,4 @@
+import {drawRitual,classifyDraws} from '../cards/drawRitual';
 import { isActionableTile } from '../input/aim';
 import { CardActivationLabel } from '../react/components/CardActivationLabel';
 import { CONTENT_RELEASE, contentReleaseUrl } from '../cloud/contentRelease';
@@ -152,7 +153,9 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
     if (rankedFinished) void ranked.refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rankedFinished]);
-  function renderSnapshot(next: Snapshot) {
+  function renderSnapshot(next: Snapshot, liveDraw = false) {
+    const previousGame = latest.current?.game;
+    if(next.result)drawRitual.complete();
     if (next.version < lastRevision.current) return;
     const fresh = next.version > lastRevision.current;
     lastRevision.current = next.version;
@@ -163,6 +166,9 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
     if (fresh) pending.current = null;
     setBusy(false);
     if (next.game) {
+      if(!liveDraw)drawRitual.complete();
+
+      if(next.game.outcome)drawRitual.complete();
       const state = next.game,
         old = useBattleStore.getState().state;
       rememberUnits(old ?? state);
@@ -193,10 +199,13 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
             tone: 'info',
           })),
       });
+
       if (fresh && next.events.length) presentationBus.publish(next.events, state);
+      if(fresh)drawRitual.enqueue(classifyDraws({events:next.events,state:next.game,previous:previousGame,content:DEFAULT_CONTENT,online:true,live:liveDraw,revision:`${next.code}:${next.version}`}));
     }
   }
   function send(command: Command) {
+    drawRitual.complete();
     const s = latest.current;
     if (
       !s?.game ||
@@ -234,14 +243,15 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
         localStorage.setItem(LAST_ROOM, room);
         if (pending.current) ws.send(JSON.stringify(pending.current));
       };
+      let initialSnapshot=true;
       ws.onmessage = (e) => {
         if (socket.current !== ws) return;
         const msg = JSON.parse(e.data);
-        if (msg.type === 'snapshot') renderSnapshot(msg);
+        if (msg.type === 'snapshot') {renderSnapshot(msg,!initialSnapshot);initialSnapshot=false;}
         else if (msg.type === 'pong') {
           pingSentAt.current = null;
           // The server moved on without this client seeing it (a push was lost): pull the truth.
-          if (msg.version > lastRevision.current) ws.send(JSON.stringify({ type: 'resync' }));
+          if (msg.version > lastRevision.current) {initialSnapshot=true;ws.send(JSON.stringify({ type: 'resync' }));}
         } else if (msg.type === 'ack') {
           pending.current = null;
           setBusy(false);
@@ -249,7 +259,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
           setError(ERRORS[msg.message] ?? 'No se pudo aplicar la acción.');
           pending.current = null;
           setBusy(false);
-          ws.send(JSON.stringify({ type: 'resync' }));
+          initialSnapshot=true;ws.send(JSON.stringify({ type: 'resync' }));
         }
       };
       ws.onclose = () => {
@@ -333,6 +343,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
       });
     return () => {
       alive.current = false;
+      drawRitual.reset();
       clearInterval(clockTimer);
       setPvpReportContext(null);
       if (retry.current) clearTimeout(retry.current);
@@ -381,6 +392,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
     }
     localStorage.removeItem(LAST_ROOM);
     alive.current = false;
+      drawRitual.reset();
     socket.current?.close();
     onExit();
   }

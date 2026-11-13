@@ -1,3 +1,5 @@
+import {drawRitual} from '../../cards/drawRitual';
+import {readDrawMode,writeDrawMode} from '../../cards/drawRitualSettings';
 import {useEffect,useRef,useState} from 'react';
 import {useBattleStore} from '../../store/battleStore';
 import '../../../styles/pause-menu.css';
@@ -8,6 +10,7 @@ export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange
  const trigger=useRef<HTMLButtonElement>(null);
  const [view,setView]=useState<'main'|'controls'|'restart'|'exit'>('main');
  const [dialogue,setDialogue]=useState(readDialogueSettings);
+ const [drawMode,setDrawMode]=useState(readDrawMode);
  const dialogueKey=online?'pvp':'campaign';
  const toggleDialogue=()=>{const next={...dialogue,[dialogueKey]:!dialogue[dialogueKey]};writeDialogueSettings(next);setDialogue(next);};
  const close=()=>{dialog.current?.close();onOpenChange?.(false);setView('main');trigger.current?.focus();};
@@ -35,6 +38,7 @@ export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange
     <button autoFocus className="pause-primary" onClick={close}>Reanudar combate</button>
     <button disabled={!onRestart||busy} title={!onRestart?'No disponible en PvP':undefined} onClick={()=>setView('restart')}>Reiniciar combate</button>
     <button onClick={()=>setView('controls')}>Controles</button>
+    <button onClick={()=>{const next=drawMode==='interactive'?'automatic':'interactive';writeDrawMode(next);setDrawMode(next);drawRitual.complete();}}>Robo de cartas: {drawMode==='interactive'?'Tocar o deslizar':'Automático'}</button>
     <button aria-pressed={dialogue[dialogueKey]} onClick={toggleDialogue}>{online?'Diálogos PvP':'Diálogos de campaña'}: {dialogue[dialogueKey]?'Sí':'No'}</button>
     <button className="pause-caution" onClick={()=>setView('exit')}>Volver al menú</button>
    </div>:view==='controls'?<div className="pause-controls">

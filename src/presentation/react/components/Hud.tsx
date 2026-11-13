@@ -1,3 +1,4 @@
+import {DrawRitual,useDrawVisual} from './DrawRitual';
 import { CardActivationLabel } from './CardActivationLabel';
 import { mobileCombat, mobileEndTurnAllowed } from '../mobileCombat';
 import { isActionableTile } from '../../input/aim';
@@ -299,6 +300,7 @@ export function EnemyPanel({
 
 export function HandBar({ state, engine }: { state: Readonly<GameState>; engine: GameEngine }) {
   const footerRef = useRef<HTMLElement>(null);
+  const drawVisual=useDrawVisual();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [pile, setPile] = useState<'deck' | 'discard' | null>(null);
   // PvP rebuilds its read-only engine on every authoritative snapshot, not a new battle.
@@ -401,6 +403,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           <strong>{engine.content.cards[hintCard.cardId]?.name}:</strong> {hint.detail}
         </div>
       )}
+      <DrawRitual state={state} engine={engine} busy={busy} footer={footerRef}/>
       <SummonSearchDialog key={selectedCardUid ?? 'no-search'} state={state} engine={engine} />
       <RitualEchoDialog key={`echo-${selectedCardUid ?? 'none'}`} state={state} engine={engine} />
       <RitualTransfer heroId={engine.heroId} />
@@ -438,6 +441,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
             return (
               <CardView
                 key={card.uid}
+                presentationHidden={drawVisual.queue.some(t=>t.uid===card.uid)}
                 uid={card.uid}
                 def={def}
                 effectiveCost={engine.getCardCost(card.uid)?.cost ?? def.cost}
