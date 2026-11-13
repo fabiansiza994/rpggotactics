@@ -59,6 +59,16 @@ describe('performance pass 1 — local presentation contracts',()=>{
  });
  it('emits immutable only for generated hashed files and preserves HTML revalidation',()=>{
   const h=cacheHeaders(['assets/App-AbCDef12.js','assets/theme-bCDef123.css','art/warrior.webp','assets/unversioned.js']);
-  expect(h).toContain('/assets/App-AbCDef12.js\n  Cache-Control: public, max-age=31536000, immutable');expect(h).toContain('/index.html\n  Cache-Control: public, max-age=0, must-revalidate');expect(h).not.toContain('art/warrior');expect(h).not.toContain('unversioned');
+  expect(h).toContain('/assets/App-AbCDef12.js\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable');expect(h).toContain('/index.html\n  Cache-Control: public, max-age=0, must-revalidate');expect(h).not.toContain('art/warrior');expect(h).not.toContain('unversioned');
  });
+});
+
+
+it('never caches an unknown asset fallback while known hashed assets keep immutable',()=>{
+  const h=cacheHeaders(['assets/PvpScreen-Tg0HSvPZ.js','assets/index-D5N0Dk0-.js']);
+  expect(h).toContain('/assets/*\n  Cache-Control: no-store');
+  expect(h.indexOf('/assets/*')).toBeLessThan(h.indexOf('/assets/PvpScreen-Tg0HSvPZ.js'));
+  for(const f of ['PvpScreen-Tg0HSvPZ.js','index-D5N0Dk0-.js']) expect(h).toContain(`/assets/${f}\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable`);
+  expect(h).not.toContain('/assets/missing-old-chunk.js\n');
+  expect(h).not.toContain('max-age=14400');
 });

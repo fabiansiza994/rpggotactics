@@ -1,18 +1,18 @@
 import type { Plugin } from 'vite';
 import { gzipSync } from 'node:zlib';
-import { readdirSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, statSync, existsSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-/** Exact generated hashed paths only. Mutable /art files never receive immutable. */
-export function cacheHeaders(files: readonly string[]): string {
-  const html=['/','/index.html','/play','/store','/terms','/privacy','/delivery','/refunds','/contact'];
-  return '# Generated for both Cloudflare Pages domains; no environment-specific rule.\n'+
-    html.map(path=>`${path}\n  Cache-Control: public, max-age=0, must-revalidate\n`).join('\n')+'\n'+
-    files.filter(f=>/^assets\/[^/]+-[\w-]{8}\.(js|css|woff2?|png|webp|svg|jpg)$/.test(f))
-      .sort().map(f=>`/${f}\n  Cache-Control: public, max-age=31536000, immutable\n`).join('\n');
-}
+import {cacheHeaders,spaRedirects,notFoundHtml} from './pagesPolicy.ts';
+export {cacheHeaders} from './pagesPolicy.ts';
 export function performanceBudget(): Plugin {
   return {
     name:'rpggo-performance-budget',
+    writeBundle(options) {
+      const dir=options.dir??'dist',assetsDir=join(dir,'assets');
+      const files=existsSync(assetsDir)?readdirSync(assetsDir).filter(f=>statSync(join(assetsDir,f)).isFile()).map(f=>'assets/'+f):[];
+      // Rolldown may report optimized-away chunks in generateBundle: only emitted files get immutable.
+      writeFileSync(join(dir,'_headers'),cacheHeaders(files));
+    },
     generateBundle(_options,bundle) {
       const chunks=Object.values(bundle).filter(b=>b.type==='chunk');
       const roots=chunks.filter(c=>c.isEntry||Object.keys(c.modules).some(id=>id.endsWith('/presentation/react/App.tsx')));
@@ -32,7 +32,8 @@ export function performanceBudget(): Plugin {
       const criticalJsGzip=sizes.filter(c=>c.critical).reduce((sum,c)=>sum+c.gzip,0),criticalCssGzip=cssSizes.reduce((sum,c)=>sum+c.gzip,0);
       const report={criticalJsGzip,criticalCssGzip,largestChunk:sizes[0],chunks:sizes,criticalCss:cssSizes,topAssets:assets.slice(0,30),budgets:{jsGzip:350*1024,cssGzip:50*1024},scope:'Conservative static closure of HTML entry and App shell, excludes dynamic modes. Gzip summed per HTTP file.'};
       this.emitFile({type:'asset',fileName:'performance-budget.json',source:JSON.stringify(report,null,2)});
-      this.emitFile({type:'asset',fileName:'_headers',source:cacheHeaders(Object.keys(bundle))});
+      this.emitFile({type:'asset',fileName:'_redirects',source:spaRedirects()});
+      this.emitFile({type:'asset',fileName:'404.html',source:notFoundHtml});
       console.log(`[performance] critical JS ${(criticalJsGzip/1024).toFixed(1)} KiB gzip; CSS ${(criticalCssGzip/1024).toFixed(1)} KiB; largest ${sizes[0]?.file}`);
       if(criticalJsGzip>350*1024||criticalCssGzip>50*1024)this.warn('Performance budget exceeded (advisory; see performance-budget.json).');
       if(criticalJsGzip>2.5*1024*1024||criticalCssGzip>500*1024)this.error('Extreme critical bundle size regression.');
