@@ -7,7 +7,7 @@
     --battle-depth: .9;
     --battle-front-frame: 12;
     height: 100dvh; min-height: 0; width: 100%;
-    grid-template-rows: calc(58px + env(safe-area-inset-top)) minmax(0, 1fr) 0 calc(224px + env(safe-area-inset-bottom));
+    grid-template-rows: calc(58px + env(safe-area-inset-top)) minmax(0, 1fr) 0 calc(280px + env(safe-area-inset-bottom));
   }
   body:has(.battle) .bug-report-fab:is([data-route="BATTLE"], [data-route="PVP"]) { top: calc(env(safe-area-inset-top) + 62px); bottom: auto; left: 8px; right: auto; width: 44px; height: 44px; }
   .battle .rotation-prompt, .battle .top-bar, .battle .tactical-overview,
@@ -128,10 +128,10 @@
   .battle .mechanism-controls-compact .mechanism-context-actions { display:flex; gap:4px; padding:0 0 4px; pointer-events:none; }
   .battle .mechanism-context-actions button { flex:1; min-width:0; pointer-events:auto; }
   .battle .mechanism-feedback { display:none; }
-  .battle:has(.mobile-aim-controls) { grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(280px + env(safe-area-inset-bottom)); }
+  /* Reserve the control lane in idle too: selecting/aiming cannot resize the canvas. */
   /* Vitals and ritual form the footer below the hand. */
-  .battle:has(.altar-panel) { --mobile-hud-space:104px; grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(272px + env(safe-area-inset-bottom)); }
-  .battle:has(.altar-panel):has(.mobile-aim-controls) { grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(320px + env(safe-area-inset-bottom)); }
+  .battle:has(.altar-panel) { --mobile-hud-space:104px; grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(320px + env(safe-area-inset-bottom)); }
+
   .battle .hand-bar .altar-panel { position:absolute; top:auto; bottom:env(safe-area-inset-bottom); left:max(8px,env(safe-area-inset-left)); right:max(8px,env(safe-area-inset-right)); width:auto; max-width:none; max-height:none; padding:0 8px; border-radius:6px; z-index:13; }
   .battle .hand-bar .altar-panel summary { min-height:44px; display:flex; align-items:center; flex-wrap:wrap; gap:3px; padding:3px 0; font-size:11px; }
   .battle .altar-panel summary .ritual-glyph { width:18px; height:18px; flex-shrink:0; }

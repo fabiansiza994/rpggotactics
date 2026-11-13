@@ -1,3 +1,4 @@
+import { PvpTerrainInfo } from './PvpTerrainInfo';
 import { altarSlots } from '../../game';
 import { PvpTurnSummary } from './PvpTurnSummary';
 import {drawRitual,classifyDraws} from '../cards/drawRitual';
@@ -19,7 +20,6 @@ import {
 } from '../../game';
 import { type PvpMode } from '../../game/pvp/dominion';
 import { PVP_MAPS, pvpMap, mapScenario, mapSpawns } from '../../game/pvp/maps';
-import { TacticalOverview } from '../react/components/TacticalOverview';
 import { CLOUD_CONFIG } from '../cloud/config';
 import { loadSession } from '../cloud/session';
 import { useBattleStore } from '../store/battleStore';
@@ -437,16 +437,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
           data-action={busy ? 'resolving' : 'normal'}
         >
           <BattleScenery theme="duel" />
-          <details className="pvp-terrain-info">
-            <summary>Mapa y terreno</summary>
-            <b>{pvpMap(snapshot.mapId ?? 'classic', snapshot.mode).name}</b>
-            <p>
-              Cobertura ▰: −1 daño de proyectiles y ataques directos a distancia. Peligro △: 1 daño
-              al final del turno del propietario. Arcano ◇: campeón +1 energía al iniciar su turno.
-              Vacío: sin paso ni destinos; los proyectiles lo cruzan.
-            </p>
-            <TacticalOverview state={game} />
-          </details>
+          <PvpTerrainInfo name={pvpMap(snapshot.mapId ?? 'classic', snapshot.mode).name} state={game} />
           <header className="top-bar">
             <HeroPanel state={displayGame ?? game} engine={engine} />
             <div className="panel pvp-turn">

@@ -1,0 +1,12 @@
+import {it,expect} from 'vitest';
+import {readFileSync} from 'node:fs';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {DEFAULT_CONTENT,GameEngine,type ScenarioDef} from '../src/game';
+import {PvpTerrainInfo} from '../src/presentation/pvp/PvpTerrainInfo';
+import {GridProjection} from '../src/presentation/pixi/GridProjection';
+const css=readFileSync(new URL('../src/styles/mobile-combat.css',import.meta.url),'utf8');
+it('aim controls cannot change grid row allocation when a card is selected',()=>{expect(css).not.toMatch(/\.battle:has\([^{}]*mobile-aim-controls[^{}]*\)\s*\{[^}]*grid-template-rows/);expect(css).toContain('calc(280px + env(safe-area-inset-bottom))');expect(css).toContain('calc(320px + env(safe-area-inset-bottom))');expect(css).toMatch(/\.battle \.mobile-aim-controls\s*\{[^}]*position: fixed/);});
+it('keeps end-turn excluded while aiming and preserves hand touch scrolling',()=>{expect(css).toContain('.battle:has(.mobile-aim-controls, .hand-discard-bar) .end-turn-box');expect(css).toContain('touch-action: pan-x');});
+it('terrain entry exposes useful information without opening or changing game state',()=>{const scenario:ScenarioDef={id:'qa',name:'QA',description:'QA',layout:['.......','.......','.......','.......','.......'],legend:{'.':{}},hero:{heroId:'mage',pos:{x:1,y:3}},structures:[],enemies:[],waves:[],objectives:[{type:'ELIMINATE_ALL'}],defaultSeed:1};const e=new GameEngine(scenario,DEFAULT_CONTENT,1);const before=JSON.stringify(e.state);const html=renderToStaticMarkup(createElement(PvpTerrainInfo,{name:'Patio arcano',state:e.state}));expect(html).toContain('aria-haspopup="dialog"');expect(html).toContain('aria-label="Mapa y terreno"');expect(html).toContain('Patio arcano');expect(html).toContain('Cobertura');expect(html).not.toContain('<dialog');expect(JSON.stringify(e.state)).toBe(before);});
+it.each([[7,5],[9,6],[10,7]])('all %sx%s tile centers remain pickable after rotation and resizing', (cols,rows)=>{for(const quarterTurn of [0,1,3] as const){const p=new GridProjection({cols,rows,tile:96,perspective:1.1,depth:.9,quarterTurn});for(let y=0;y<rows!;y++)for(let x=0;x<cols!;x++){expect(p.screenToGrid(p.getTileCenter({x,y}))).toEqual({x,y});}}});

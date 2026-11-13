@@ -590,3 +590,23 @@
 .pvp-turn-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 11px; line-height: 1.3; }
 .pvp-turn-meta > span { overflow-wrap: anywhere; }
 .pvp-rival-altar { font-size: 11px; color: #b9ccdc; }
+
+/* Touch terrain help uses the reserved control gutter; desktop keeps its inspector. */
+.mobile-terrain-trigger { display:none; }
+.mobile-terrain-overlay { position:fixed; inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); border:0; background:transparent; box-sizing:border-box; }
+.mobile-terrain-overlay[open] { display:grid; place-items:center; }
+.mobile-terrain-overlay::backdrop { background:#040a13b8; }
+.mobile-terrain-dialog { width:min(360px,100%); max-height:100%; overflow-y:auto; padding:12px; box-sizing:border-box; background:#101b28; border:1px solid #b69c60; border-radius:8px; color:#eee3c8; font-size:13px; line-height:1.5; }
+.mobile-terrain-dialog header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.mobile-terrain-dialog h2 { margin:0; font-size:18px; }
+.mobile-terrain-dialog button { min-width:44px; min-height:44px; border:1px solid #b69c60; background:#182c40; color:#eee3c8; border-radius:6px; font-size:22px; }
+.mobile-terrain-dialog .tactical-overview { display:block!important; position:static; width:100%; box-sizing:border-box; }
+@media (orientation:portrait) and (max-width:600px) {
+ .battle .pvp-terrain-info { display:none; }
+ .battle .mobile-terrain-trigger { display:grid; place-items:center; position:fixed; top:calc(62px + env(safe-area-inset-top)); right:max(6px,env(safe-area-inset-right)); width:44px; height:44px; padding:0; z-index:18; border:1px solid #b69c60; border-radius:6px; background:#101b28ed; color:#efcf86; font-size:24px; }
+}
+@media (orientation:landscape) and (max-width:900px) and (max-height:500px) {
+ .battle .pvp-terrain-info { display:none; }
+ .battle .battle-main { padding-right:calc(56px + env(safe-area-inset-right)); }
+ .battle .mobile-terrain-trigger { display:grid; place-items:center; position:absolute; right:max(6px,env(safe-area-inset-right)); top:68px; width:44px; height:44px; padding:0; z-index:18; border:1px solid #b69c60; border-radius:6px; background:#101b28ed; color:#efcf86; font-size:24px; }
+}
