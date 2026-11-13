@@ -191,6 +191,8 @@ interface BattleStore {
   confirmHandDiscard(): void;
   cancelHandDiscard(): void;
   /** The tile feeding the board preview. Mouse hover and touch taps share it (see `input/aim`). */
+  wallOrientation: 'HORIZONTAL' | 'VERTICAL';
+  rotateIceWall(): void;
   aim: Aim | null;
   notice: string | null;
   log: LogEntry[];
@@ -1024,6 +1026,8 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     state: null,
     selectedCardUid: null, pairSelection: null,
     handDiscard: null,
+    wallOrientation: 'HORIZONTAL',
+    rotateIceWall() { const s=get(); if(!s.engine || inputLocked(s) || s.state?.player.hand.find(c=>c.uid===s.selectedCardUid)?.cardId!=='ice_wall') return; const wallOrientation=s.wallOrientation==='HORIZONTAL'?'VERTICAL':'HORIZONTAL'; s.engine.wallOrientation=wallOrientation; set({wallOrientation,aim:s.aim?{...s.aim}:null}); },
     aim: null,
     notice: null,
     log: [],
@@ -1498,6 +1502,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       // Any selection change invalidates a touch preview made for the previous selection.
       const aim = withoutTapAim(get().aim);
       if (!engine || cardUid === null) return set({ selectedCardUid: null, pairSelection: null, aim });
+      engine.wallOrientation=get().wallOrientation;
       // Clicking an already-selected SELF card (or ritual) casts it.
       const searchCard = engine.content.cards[engine.state.player.hand.find(c=>c.uid===cardUid)?.cardId ?? ''];
       // Search cards (Rastreo: deck, Eco del Altar: discard) resolve only through their choice dialog.

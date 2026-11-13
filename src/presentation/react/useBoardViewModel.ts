@@ -25,6 +25,7 @@ function predictionLabels(events: GameEvent[]): { unitId: string; label: string 
  * this hook only decides WHAT to highlight given the UI selection.
  */
 export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel | null {
+  const wallOrientation = useBattleStore(s=>s.wallOrientation);
   const engine = useBattleStore((s) => s.engine);
   const state = useBattleStore((s) => s.state);
   const selectedCardUid = useBattleStore((s) => s.selectedCardUid);
@@ -42,9 +43,9 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
     const moveTiles = interactive && !selectedCardUid ? engine.getLegalMoves() : [];
     const targetTiles =
       interactive && selectedCardUid ? pairTargets(engine, selectedCardUid, pairSelection) : [];
-    return { interactive, moveTiles, targetTiles, intents: engine.getIntentPreviews() };
+    return { interactive, moveTiles, targetTiles, wallOrientation, intents: engine.getIntentPreviews() };
     // `state` identity changes on every accepted command, which is what invalidates queries.
-  }, [engine, state, selectedCardUid, pairSelection, introLocked]);
+  }, [engine, state, selectedCardUid, pairSelection, introLocked, wallOrientation]);
 
   return useMemo(() => {
     if (!engine || !state || !base) return null;
@@ -70,7 +71,7 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
               impact: result.resolved?.impact ?? null,
               predicted: predictionLabels(result.predictedEvents),
             }
-          : { tiles: target ? [target] : [], valid: false, impact: null, predicted: [] };
+          : { tiles: result.resolved?.affectedTiles ?? (target ? [target] : []), valid: false, impact: null, predicted: [] };
       }
     } else if (hoverTile) {
       hoverPath = base.moveTiles.find((n) => samePos(n.pos, hoverTile))?.path ?? [];

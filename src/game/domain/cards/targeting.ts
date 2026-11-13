@@ -29,6 +29,10 @@ import type { Unit } from '../entities/unit';
 import type { AreaDef, TargetingDef, TileFilter, UnitFilter } from './card';
 import { isPreyOf, nearestHostileDistance } from '../combat/archery';
 
+export type WallOrientation = 'HORIZONTAL' | 'VERTICAL';
+/** Full footprint for the player's explicitly oriented Ice Wall; legacy walls keep their rules. */
+export const iceWallFits = (ctx: RuleContext, tiles: readonly Pos[]) => tiles.length === 3 && tiles.every(p=>isEmptyTile(ctx,p));
+
 /**
  * Result of interpreting a targeting definition for a concrete selection. Used identically
  * for validation, preview (UI) and resolution (effects), so what the player sees is exactly
@@ -73,6 +77,7 @@ export function areaTiles(
   area: AreaDef | undefined,
   center: Pos,
   origin: Pos,
+  wallOrientation?: WallOrientation,
 ): Pos[] {
   const out: Pos[] = [];
   const shape = area ?? { shape: 'SINGLE' as const };
@@ -97,7 +102,7 @@ export function areaTiles(
       break;
     case 'WALL': {
       const axis = dominantDirection(origin, center) ?? 'UP';
-      const [a, b]: [Direction, Direction] = isHorizontal(axis)
+      const [a, b]: [Direction, Direction] = (wallOrientation ? wallOrientation === 'VERTICAL' : isHorizontal(axis))
         ? ['UP', 'DOWN']
         : ['LEFT', 'RIGHT'];
       out.push(center);
@@ -330,6 +335,7 @@ export function resolveTarget(
   targeting: TargetingDef,
   target: Pos | null,
   secondary?: Pos | null,
+  wallOrientation?: WallOrientation,
 ): ResolvedTarget | null {
   const board = ctx.state.board;
   const pairSwap = targeting.type === 'UNIT' && !!targeting.pairSwap;
@@ -402,7 +408,7 @@ export function resolveTarget(
     target,
     impact: target,
     direction: alignedDirection(caster.pos, target),
-    affectedTiles: areaTiles(board, areaFor(targeting), target, caster.pos),
+    affectedTiles: areaTiles(board, areaFor(targeting), target, caster.pos, wallOrientation),
     hitUnitId: null,
   };
 }

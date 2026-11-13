@@ -74,7 +74,7 @@ const list: CardDefinition[] = [
     category: 'TERRAIN',
     tags: ['ice', 'obstacle'],
     rulesText:
-      'Crea un muro de hielo de 3 casillas (perpendicular a ti) durante 2 rondas. Bloquea paso y visión.',
+      'Crea un muro de hielo de 3 casillas libres en horizontal o vertical durante 2 rondas. Rota antes de activar. Bloquea paso y visión.',
     targeting: {
       type: 'TILE',
       range: 3,
