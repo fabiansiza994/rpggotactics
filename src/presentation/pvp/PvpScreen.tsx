@@ -179,6 +179,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
         DEFAULT_CONTENT,
         mapScenario(pvpMap(next.mapId ?? 'classic', next.mode), next.mode),
       );
+      engine.wallOrientation=useBattleStore.getState().wallOrientation;
       useBattleStore.setState({
         engine,
         state,

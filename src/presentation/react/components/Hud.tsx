@@ -37,6 +37,7 @@ import { SummonCapacityMeter } from './SummonCapacityMeter';
 import { explainCardBlock, type CardBlock } from '../cardBlock';
 import { HandCounter, HandDiscardBar } from './HandLimitControls';
 import { BattleCardFeature } from './BattleCardFeature';
+import {IceWallRotation} from './IceWallRotation';
 import { CharacterPortrait } from './CharacterPortrait';
 import { GameIcon } from './GameIcon';
 import { unitVisualId } from '../../assets/visualIdentity';
@@ -469,6 +470,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           })}
       </HandScrollRegion>
       <div className="end-turn-box">
+        <IceWallRotation/>
         <HandCounter state={state} />
         <div
           className="energy-pips"

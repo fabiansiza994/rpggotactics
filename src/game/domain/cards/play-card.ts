@@ -10,7 +10,7 @@ import type { CardDefinition, CardInstance } from './card';
 import { setEnergy } from './deck';
 import { depthEnabled } from '../combat/qa-depth';
 import { applyEffects } from './effects';
-import { resolveTarget } from './targeting';
+import { iceWallFits, resolveTarget } from './targeting';
 import { spendMomentum } from '../combat/momentum';
 import { spendFocus } from '../combat/archery';
 
@@ -68,7 +68,7 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
  * Validate → pay → resolve effects → discard. Emits CARD_PLAYED before any effect event so
  * the presentation can play a cast animation first.
  */
-export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, searchUid?: string, secondary?: Pos | null): RuleResult {
+export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, searchUid?: string, secondary?: Pos | null, wallOrientation?: import('./targeting').WallOrientation): RuleResult {
   const check = checkPlayability(ctx, cardUid);
   if (!check.ok) return check;
   const { card, def, caster } = check;
@@ -78,9 +78,11 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   if (def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSummon(found, ctx.content, caster.defId) : searchUid !== undefined)
     return fail('INVALID_TARGET', def.discardSearch ? 'Elige una pieza de ritual de tu descarte.' : 'Elige una invocación válida del mazo.');
 
-  const resolved = resolveTarget(ctx, caster, def.targeting, target, secondary);
+  if (wallOrientation !== undefined && (def.id !== 'ice_wall' || !['HORIZONTAL','VERTICAL'].includes(wallOrientation))) return fail('INVALID_TARGET', 'Orientación no permitida.');
+  const resolved = resolveTarget(ctx, caster, def.targeting, target, secondary, wallOrientation);
   if (!resolved) return fail('INVALID_TARGET', `Invalid target for ${def.name}.`);
 
+  if (wallOrientation && !iceWallFits(ctx,resolved.affectedTiles)) return fail('INVALID_TARGET', 'La barrera necesita tres casillas libres y transitables.');
   const selectedEffects = effectsForCard(ctx.content, caster, def);
   if (selectedEffects.some((fx) => fx.type === 'SUMMON') && !isEmptyTile(ctx, resolved.impact))
     return fail('INVALID_TARGET', 'La invocación necesita una casilla vacía y transitable.');

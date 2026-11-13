@@ -840,7 +840,8 @@ export function validCommand(c: unknown): c is Command {
       typeof v.cardUid === 'string' &&
       v.cardUid.length < 100 &&
       (v.target === null || pos(v.target)) &&
-      (v.secondary === undefined || pos(v.secondary))
+      (v.secondary === undefined || pos(v.secondary)) &&
+      (v.wallOrientation === undefined || v.wallOrientation === 'HORIZONTAL' || v.wallOrientation === 'VERTICAL')
     );
   if (v.type === 'MOVE_UNIT')
     return typeof v.unitId === 'string' && v.unitId.length < 100 && pos(v.to);
@@ -874,6 +875,7 @@ function canonicalCommand(command: Command): Command {
     target: command.target ? { x: command.target.x, y: command.target.y } : null,
     // Only present when sent: older logs replay byte for byte.
     ...(command.secondary ? { secondary: { x: command.secondary.x, y: command.secondary.y } } : {}),
+    ...(command.wallOrientation ? {wallOrientation:command.wallOrientation} : {}),
   };
 }
 

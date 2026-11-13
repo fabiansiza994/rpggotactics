@@ -2,7 +2,7 @@ import type { IntentPlan } from '../domain/ai/ai';
 import { getHero } from '../domain/board/occupancy';
 import type { PathNode } from '../domain/board/pathfinding';
 import { checkPlayability, playCard } from '../domain/cards/play-card';
-import { getValidTargets, pairSwapPartners, resolveTarget, type ResolvedTarget } from '../domain/cards/targeting';
+import { areaTiles, iceWallFits, getValidTargets, pairSwapPartners, resolveTarget, type ResolvedTarget } from '../domain/cards/targeting';
 import { effectiveCost } from '../domain/cards/form-effects';
 import { unitAt } from '../domain/board/occupancy';
 import type { GameContent } from '../domain/content';
@@ -64,6 +64,9 @@ export interface CardPreview {
  * state object (safe for React/zustand identity checks). Never mutate `engine.state`.
  */
 export class GameEngine {
+  /** Presentation selection only; authoritative resolution uses the command field. */
+  wallOrientation: import('../domain/cards/targeting').WallOrientation = 'HORIZONTAL';
+  private wallChoice(key: string) { return this.current.player.hand.find(c=>c.uid===key)?.cardId === 'ice_wall' ? this.wallOrientation : undefined; }
   private current: GameState;
   private currentSeed: number;
   private readonly listeners = new Set<EngineListener>();
@@ -163,7 +166,7 @@ export class GameEngine {
   selectionCommand(key: string, target: Pos | null, secondary?: Pos | null): Command {
     const ritualId = ritualIdOf(key);
     if (ritualId) return { type: 'ACTIVATE_RITUAL', ritualId, target };
-    return secondary ? { type: 'PLAY_CARD', cardUid: key, target, secondary } : { type: 'PLAY_CARD', cardUid: key, target };
+    return { type: 'PLAY_CARD', cardUid: key, target, ...(secondary ? {secondary} : {}), ...(this.wallChoice(key) ? {wallOrientation:this.wallChoice(key)} : {}) };
   }
 
   /**
@@ -202,7 +205,9 @@ export class GameEngine {
     }
     const check = checkPlayability(ctx, cardUid);
     if (!check.ok) return [];
-    return getValidTargets(ctx, check.caster, check.def.targeting);
+    const targets=getValidTargets(ctx, check.caster, check.def.targeting);
+    const orientation=this.wallChoice(cardUid);
+    return orientation && check.def.targeting.type==='TILE' ? targets.filter(p=>iceWallFits(ctx,areaTiles(ctx.state.board,check.def.targeting.type==='TILE'?check.def.targeting.area:undefined,p,check.caster.pos,orientation))) : targets;
   }
 
   previewCard(cardUid: string, target: Pos | null, secondary?: Pos | null): CardPreview {
@@ -216,9 +221,16 @@ export class GameEngine {
       resolved = check.ok ? resolveRitualTarget(ctx, check, target) : null;
     } else {
       const check = checkPlayability(ctx, cardUid);
-      resolved = check.ok ? resolveTarget(ctx, check.caster, check.def.targeting, target, secondary) : null;
+      resolved = check.ok ? resolveTarget(ctx, check.caster, check.def.targeting, target, secondary, this.wallChoice(cardUid)) : null;
     }
-    if (!resolved) return none;
+    if (!resolved) {
+      if (this.wallChoice(cardUid) && target) {
+        const def=this.content.cards.ice_wall;
+        const caster=this.current.units.find(u=>u.id===this.heroId);
+        if(def?.targeting.type==='TILE' && caster) return {...none,resolved:{target,impact:target,direction:null,hitUnitId:null,affectedTiles:areaTiles(this.current.board,def.targeting.area,target,caster.pos,this.wallChoice(cardUid))}};
+      }
+      return none;
+    }
     const predictedEvents: GameEvent[] = [];
     const dryRun: RuleContext = {
       state: structuredClone(this.current),
@@ -226,7 +238,7 @@ export class GameEngine {
       emit: (e) => predictedEvents.push(e),
     };
     if (ritualId) activateRitual(dryRun, ritualId, target);
-    else playCard(dryRun, cardUid, target, undefined, secondary);
+    else { const result = playCard(dryRun, cardUid, target, undefined, secondary, this.wallChoice(cardUid)); if (!result.ok) return {valid:false,resolved,predictedEvents:[]}; }
     return { valid: true, resolved, predictedEvents };
   }
 

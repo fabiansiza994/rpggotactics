@@ -149,3 +149,10 @@
   .battle .mobile-aim-controls .card-activation-icon .game-icon:first-child { width:22px; height:24px; }
 
 }
+
+/* Floating orientation control: never contributes to battlefield sizing. */
+@media (min-width:601px), (orientation:landscape) { body .battle .hand-bar > .end-turn-box { position:relative; } }
+.ice-wall-rotation { position:absolute; left:0; right:0; top:-48px; visibility:visible; pointer-events:auto; min-height:44px; padding:8px 12px; z-index:25; border:1px solid #b69c60; border-radius:7px; background:#102a3c; color:#e6f5ff; }
+@media (orientation:portrait) and (max-width:600px) { .battle .ice-wall-rotation { position:fixed; left:12px; right:auto; top:auto; bottom:calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom) + 6px); max-width:110px; padding:8px 6px; font-size:12px; } }
+
+@media (orientation:portrait) and (max-width:600px) { .battle:has(.ice-wall-rotation) .mobile-aim-controls > span { visibility:hidden; } .battle:has(.ice-wall-rotation) .end-turn-box { z-index:17; } }

@@ -22,7 +22,7 @@ export type Command =
   /** Play a search card with the chosen card uid: Rastreo (deck) or Eco del Altar (own discard). */
   | { type: 'SEARCH_SUMMON'; cardUid: string; choiceUid: string }
   /** `secondary`: only for `pairSwap` cards (Pacto de la Doble Luna's second summon); refused otherwise. */
-  | { type: 'PLAY_CARD'; cardUid: string; target: Pos | null; secondary?: Pos }
+  | { type: 'PLAY_CARD'; cardUid: string; target: Pos | null; secondary?: Pos; wallOrientation?: import('../domain/cards/targeting').WallOrientation }
   /** Seal a ritual piece from the hand onto the altar. */
   | { type: 'COMMIT_RITUAL_PIECE'; cardUid: string }
   /** Abandon a sealed piece (altar → discard). */
@@ -55,7 +55,7 @@ export function executeCommand(ctx: RuleContext, command: Command): RuleResult {
       return result;
     }
     case 'PLAY_CARD': {
-      const result = playCard(ctx, command.cardUid, command.target, undefined, command.secondary);
+      const result = playCard(ctx, command.cardUid, command.target, undefined, command.secondary, command.wallOrientation);
       if (result.ok) updateObjectives(ctx);
       return result;
     }
