@@ -129,6 +129,20 @@ describe('decks (validated against the server collection)', () => {
 });
 
 describe('campaign (server-validated steps)', () => {
+  it('repeated seeds create distinct reward identities and reject delayed claims from a prior run', async () => {
+    const {token}=addAccount(db,'copies_retry'); await call(token,'POST','/profile',{});
+    const first=await call(token,'POST','/campaign/start',{});
+    const won=await call(token,'POST','/campaign/victory',{proof:winProof(first.body)});
+    const oldOption=won.body.run!.rewardOptions[0]!;
+    expect(oldOption.id).toMatch(/:r[0-9]+$/);
+    expect((await call(token,'POST','/campaign/reward',{encounterId:ASCENT_CAMPAIGN.start,optionId:oldOption.id})).status).toBe(200);
+    const restarted=await call(token,'POST','/campaign/start',{});
+    expect(restarted.body.run!.seed).toBe(first.body.run!.seed);
+    const again=await call(token,'POST','/campaign/victory',{proof:winProof(restarted.body)});
+    expect(again.body.run!.rewardOptions.every(o=>o.id!==oldOption.id)).toBe(true);
+    expect((await call(token,'POST','/campaign/reward',{encounterId:ASCENT_CAMPAIGN.start,optionId:oldOption.id})).status).toBe(409);
+  });
+
   it('start → replay-verified victory → offered reward → card owned → deck uses it → survives reload', async () => {
     const { token } = addAccount(db, 'ana');
     await call(token, 'POST', '/profile', {});
@@ -212,7 +226,7 @@ describe('one-time local import', () => {
     expect((await call(token, 'POST', '/import', { profile: serializeProfile(profile) })).status).toBe(409);
   });
 
-  it('drops unknown cards, caps inflated copies, replaces illegal decks and regenerates reward offers', async () => {
+  it('refuses unverifiable surplus before importing; corrected import validates cards, decks and reward offers', async () => {
     const { token } = addAccount(db, 'ana');
     const profile = createProfile(DEFAULT_CONTENT);
     profile.heroes.mage!.collection.fireball = { copies: 99, acquired: 1 };
@@ -225,6 +239,10 @@ describe('one-time local import', () => {
       completedEncounterIds: ['ascent_01_outpost', 'ascent_02_watchtower'],
       rewardOptions: [{ id: 'reward-0-frost_nova', kind: 'ADD_CARD', cardId: 'frost_nova', rarity: 'UNCOMMON' }],
     });
+    const rejected = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) });
+    expect(rejected.status).toBe(422);expect(rejected.body.error!.code).toBe('IMPORT_REQUIRES_REVIEW');
+    expect((await call(token,'GET','/state')).body.hasProfile).toBe(false);
+    profile.heroes.mage!.collection.fireball!.copies=3;
     const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) });
     expect(res.status).toBe(200);
     const collection = res.body.profile!.heroes.mage!.collection;

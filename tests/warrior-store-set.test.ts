@@ -1,3 +1,4 @@
+import {acceptCatalogQuote,STORE_QUOTE_TEST_SECRET} from './support/storeQuote';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ALL_RELEASED } from './support/drops';
 import {
@@ -185,12 +186,13 @@ describe('Ejecución: normal rewards (not store-only)', () => {
     expect(option).toMatchObject({ rarity: 'RARE', isNew: true });
   });
 
-  it('never offered to other champions; never offered once at its copy cap', () => {
+  it('never offered to other champions; new cards retain priority but owned copies remain eligible', () => {
     for (const heroId of ['mage', 'summoner'])
       for (let seed = 0; seed < 200; seed++) {
         const roll = rollReward({ content: DEFAULT_CONTENT, heroId, owned: ownedFor(createProfile(DEFAULT_CONTENT), heroId, DEFAULT_CONTENT), pity: 4, rules: DECK_RULES, poolId: 'BOSS', seed, count: 3 });
         expect(roll.options.some((o) => o.kind === 'ADD_CARD' && o.cardId === 'execution')).toBe(false);
       }
+    expect(Array.from({length:200},(_,seed)=>rollReward({content:DEFAULT_CONTENT,heroId:'warrior',owned:()=>5,pity:PITY_THRESHOLD,rules:DECK_RULES,poolId:'BOSS',seed,count:3}).options).flat().some(o=>o.kind==='ADD_CARD'&&o.cardId==='execution')).toBe(true);
     const capped = (id: string) => (id === 'execution' ? 1 : owned(id));
     for (let seed = 0; seed < 200; seed++) {
       const roll = rollReward({ content: DEFAULT_CONTENT, heroId: 'warrior', owned: capped, pity: 4, rules: DECK_RULES, poolId: 'BOSS', seed, count: 3 });
@@ -257,8 +259,9 @@ const QA_ENV = { WARRIOR_QA: '1' };
 const SET_CARDS = "('execution', 'ram', 'grapple')";
 type Res = { status: number; body: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
 async function call(token: string, method: string, path: string, body?: unknown, env: Record<string, string> = QA_ENV): Promise<Res> {
+  body = await acceptCatalogQuote(method,path,body,async()=> (await call(token,'GET','/store/catalog',undefined,env)).body);
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-  const res = await handle(new Request(`https://api.test/api/tactics${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), { DB: db, ...env }, deps);
+  const res = await handle(new Request(`https://api.test/api/tactics${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), { DB: db, STORE_QUOTE_SECRET:STORE_QUOTE_TEST_SECRET, ...env }, deps);
   return { status: res.status, body: await res.json() };
 }
 const grant = (username: string, amount: number) =>
@@ -302,16 +305,12 @@ describe('«Juramento del Verdugo»: release gate (Warrior QA-only)', () => {
 });
 
 describe('«Juramento del Verdugo»: quote and dynamic pricing', () => {
-  it('owns Agarre at cap → left out, 680 × 700/800 = 600; plus the frame → 340', async () => {
-    const { token, id } = await player();
-    own(id, 'grapple', 3);
-    const one = await offer(token);
-    expect(one).toMatchObject({ price: 600, basePrice: 680, availability: { purchasable: true } });
-    expect(one.excluded).toEqual([{ kind: 'CARD', cardId: 'grapple', copies: 1, owned: 3, cap: 3 }]);
-    db.sql.prepare("INSERT INTO tactics_player_cosmetics VALUES (?, ?, 'PROFILE_FRAME', 'STORE_PURCHASE', 'x', 0)").run(id, FRAME);
-    const two = await offer(token);
-    expect(two.price).toBe(340);
-    expect(two.contents.map((c: { cardId?: string }) => c.cardId)).toEqual(['execution', 'ram']);
+  it('owned cards remain in the bundle; only the unique frame is prorated', async () => {
+    const {token,id}=await player();own(id,'grapple',3);
+    expect(await offer(token)).toMatchObject({price:680,excluded:[]});
+    db.sql.prepare("INSERT INTO tactics_player_cosmetics VALUES (?, ?, 'PROFILE_FRAME', 'STORE_PURCHASE', 'x', 0)").run(id,FRAME);
+    const q=await offer(token);expect(q.price).toBe(430);
+    expect(q.contents.map((c:{cardId?:string})=>c.cardId)).toEqual(['execution','ram','grapple']);
   });
 
   it('owning some copies below the cap does not reduce the price (each line is still granted)', async () => {
@@ -321,25 +320,18 @@ describe('«Juramento del Verdugo»: quote and dynamic pricing', () => {
     expect(await offer(token)).toMatchObject({ price: 680, excluded: [] });
   });
 
-  it('every playable card at cap and the frame owned → ALL_OWNED, refused by the server', async () => {
-    const { token, id } = await player();
-    grant('tactics_qa_a', 2000);
-    own(id, 'execution', 1);
-    own(id, 'ram', 2);
-    own(id, 'grapple', 3);
-    db.sql.prepare("INSERT INTO tactics_player_cosmetics VALUES (?, ?, 'PROFILE_FRAME', 'STORE_PURCHASE', 'x', 0)").run(id, FRAME);
-    expect((await offer(token)).availability).toEqual({ purchasable: false, reason: { code: 'ALL_OWNED' } });
-    const res = await buy(token, 'all-owned-0001');
-    expect(res.status).toBe(409);
-    expect(res.body.error.reason).toEqual({ code: 'ALL_OWNED' });
+  it('owned playsets do not prevent a legitimate purchase; unique frame stays excluded', async () => {
+    const {token,id}=await player();grant('tactics_qa_a',2000);
+    own(id,'execution',1);own(id,'ram',2);own(id,'grapple',3);
+    db.sql.prepare("INSERT INTO tactics_player_cosmetics VALUES (?, ?, 'PROFILE_FRAME', 'STORE_PURCHASE', 'x', 0)").run(id,FRAME);
+    expect((await offer(token)).availability).toEqual({purchasable:true});
+    const res=await buy(token,'all-owned-0001');expect(res.status).toBe(200);
+    expect(copies(res.body,'execution')).toBe(2);expect(copies(res.body,'ram')).toBe(3);expect(copies(res.body,'grapple')).toBe(4);
   });
 
-  it('cards at cap but frame not owned → still sold as the frame alone, at a reduced price (300 × 0.85 → 260)', async () => {
-    const { token, id } = await player();
-    own(id, 'execution', 1);
-    own(id, 'ram', 2);
-    own(id, 'grapple', 3);
-    expect(await offer(token)).toMatchObject({ price: 260, contents: [{ kind: 'COSMETIC', cosmeticId: FRAME }] });
+  it('cards at deck capacity still receive the whole authored bundle', async () => {
+    const {token,id}=await player();own(id,'execution',1);own(id,'ram',2);own(id,'grapple',3);
+    const q=await offer(token);expect(q.price).toBe(680);expect(q.contents).toHaveLength(4);
   });
 });
 
@@ -397,18 +389,18 @@ describe('«Juramento del Verdugo»: purchase flow and persistence', () => {
     expect(db.sql.prepare(`SELECT COUNT(*) AS c FROM tactics_player_cards WHERE user_id = ? AND card_id IN ${SET_CARDS}`).get(id)).toEqual({ c: 0 });
   });
 
-  it('a partly-owned pack charges the server quote and grants only the rest', async () => {
+  it('a partly-owned card pack grants all cards at the unchanged price', async () => {
     const { token, id } = await player();
     grant('tactics_qa_a', 1000);
     own(id, 'grapple', 3);
     const res = await buy(token, 'oath-key-0005');
-    expect(res.body.purchase.price).toBe(600);
-    expect(res.body.wallet.balance).toBe(400);
-    expect(res.body.purchase.granted.cards.map((c: { cardId: string }) => c.cardId)).toEqual(['execution', 'ram']);
-    expect(copies(res.body, 'grapple')).toBe(3);
+    expect(res.body.purchase.price).toBe(680);
+    expect(res.body.wallet.balance).toBe(320);
+    expect(res.body.purchase.granted.cards.map((c: { cardId: string }) => c.cardId)).toEqual(['execution', 'ram', 'grapple']);
+    expect(copies(res.body, 'grapple')).toBe(4);
   });
 
-  it('bought Ejecución makes a server-accepted Warrior deck; the single card is then at cap', async () => {
+  it('bought Ejecución makes a legal Warrior deck while further acquisition stays available', async () => {
     const { token, id } = await player();
     // Legacy accounts unlock the Warrior at encounter VI (champion onboarding rules).
     db.sql.prepare('UPDATE tactics_profiles SET campaign_best = 6 WHERE user_id = ?').run(id);
@@ -416,6 +408,6 @@ describe('«Juramento del Verdugo»: purchase flow and persistence', () => {
     await buy(token, 'oath-key-0006');
     const deck = addCard(removeCard(starterDeck(DEFAULT_CONTENT.heroes.warrior!), 'steady_advance'), 'execution');
     expect((await call(token, 'PUT', '/decks/warrior/main', { cards: deck })).status).toBe(200);
-    expect((await offer(token, 'card_execution')).availability.reason).toMatchObject({ code: 'CARD_AT_CAP', cardId: 'execution', owned: 1, cap: 1 });
+    expect((await offer(token, 'card_execution')).availability.purchasable).toBe(true);
   });
 });

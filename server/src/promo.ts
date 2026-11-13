@@ -13,13 +13,13 @@ import {
 import type { D1Database, D1PreparedStatement } from './db';
 import { error, json } from './http';
 import { loadPlayer } from './repo';
-import { cardCapGuards, cardGrantStatements, ledgerStatement, ownership, walletView, type StoreRequest } from './store';
+import { cardInventoryGuards, cardGrantStatements, ledgerStatement, ownership, walletView, type StoreRequest } from './store';
 
 /**
  * Gift / promo codes: POST /api/tactics/store/promo/redeem { code }. The body's `code` is the
  * ONLY input read: user id comes from the session, the reward from D1. One redemption is one D1
  * batch — redemption row (unique per account; its triggers re-check active/window and count the
- * global cap) + ledger credit + card/cosmetic grants + a final cap guard — all or nothing.
+ * global cap) + ledger credit + card/cosmetic grants + a final integrity guard — all or nothing.
  */
 
 /** Redeem attempts allowed per account per window (successes and failures alike). */
@@ -117,8 +117,8 @@ function redemptionStatements(
         .prepare("INSERT INTO tactics_player_cosmetics (user_id, cosmetic_id, kind, source, reference_id, acquired_at) VALUES (?, ?, ?, 'PROMO_CODE', ?, ?)")
         .bind(userId, c.cosmeticId, c.kind, ids.redemptionId, now),
     );
-  // Last: copy caps re-checked inside the transaction (a concurrent grant may have added copies).
-  const { guards, binds } = cardCapGuards(userId, r.content, grant.cards);
+  // Last: inventory integrity re-checked inside the transaction (a concurrent grant may have added copies).
+  const { guards, binds } = cardInventoryGuards(userId, r.content, grant.cards);
   if (guards.length)
     out.push(
       db

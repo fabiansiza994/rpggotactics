@@ -32,11 +32,21 @@ export function ownership(offer: CatalogOffer, cardId: string, profile: PlayerPr
   };
 }
 export function purchaseError(error: CloudError): string {
+  if (error.code === 'STORE_QUOTE_UNAVAILABLE') return 'La tienda está en actualización. Conservamos tu operación pendiente; puedes recuperar su recibo más tarde.';
   if (error.kind === 'AUTH')
     return 'Tu sesión venció. Vuelve al menú e inicia sesión para continuar.';
   if (error.kind === 'NETWORK' || error.kind === 'TIMEOUT' || error.kind === 'SERVER')
     return 'No pudimos confirmar el resultado. Reintenta esta misma compra; no se cobrará dos veces.';
   switch (error.code) {
+    case 'QUOTE_REQUIRED':
+    case 'QUOTE_UPDATE_REQUIRED':
+      return 'Recarga la página: esta compra necesita una cotización actualizada. Conservamos el identificador para recuperar cualquier recibo anterior.';
+    case 'QUOTE_EXPIRED':
+    case 'QUOTE_CHANGED':
+    case 'QUOTE_INVALID':
+      return 'La cotización venció, cambió o no es válida. Revisa las condiciones actuales y vuelve a confirmar; este intento no se ha cobrado.';
+    case 'PURCHASE_NOT_FOUND':
+      return 'Todavía no hay un recibo confirmado. Puedes recuperarlo de nuevo o revisar las condiciones para confirmar esta misma compra.';
     case 'INSUFFICIENT_FUNDS':
       return 'Saldo insuficiente. Actualiza la tienda para consultar tu saldo.';
     case 'OFFER_EXPIRED':
@@ -52,18 +62,23 @@ export function purchaseError(error: CloudError): string {
       return 'No se pudo completar la compra. Actualiza la tienda e inténtalo de nuevo.';
   }
 }
+/** A rejection must not discard an identifier whose first request may still be in flight. */
+export const needsQuoteReview = (code:string) => ['QUOTE_REQUIRED','QUOTE_UPDATE_REQUIRED','QUOTE_EXPIRED','QUOTE_CHANGED','QUOTE_INVALID','PURCHASE_NOT_FOUND'].includes(code);
 export interface PurchaseIntent {
   username: string;
   offerId: string;
   key: string;
+  /** The exact signed quote confirmed by the user; never refreshed automatically on retry. */
+  quote?: CatalogOffer['purchaseQuote'];
 }
 const KEY = 'rpg-go-tactics:store-pending';
 export function readIntent(username: string): PurchaseIntent | null {
   try {
     const x = JSON.parse(localStorage.getItem(`${KEY}:${username}`) ?? 'null');
-    return x?.username === username && typeof x.offerId === 'string' && typeof x.key === 'string'
-      ? x
-      : null;
+    if (x?.username !== username || typeof x.offerId !== 'string' || typeof x.key !== 'string') return null;
+    const quote = typeof x.quote?.token === 'string' && Number.isSafeInteger(x.quote?.expiresAt)
+      ? {token:x.quote.token,expiresAt:x.quote.expiresAt} : undefined;
+    return {username:x.username,offerId:x.offerId,key:x.key,...(quote ? {quote} : {})};
   } catch {
     return null;
   }

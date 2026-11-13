@@ -88,6 +88,8 @@ export interface PlayerRecord {
    * as they were for older clients). Example: `worldRuns.infernal.summoner`.
    */
   worldRuns: Record<string, Record<string, RunState | null>>;
+  /** Server-only revision keyed by campaign/champion; never accepted from the client. */
+  campaignRevisions?: Record<string, number>;
   /** Durable world achievements per champion (stored rows + legacy evidence, see loadWorldHistory). */
   worldHistory: Record<string, WorldHistory>;
   skirmish: StoredSkirmish | null;
@@ -201,9 +203,9 @@ export async function loadPlayer(
       .bind(userId)
       .all<DeckCardRow>(),
     db
-      .prepare('SELECT campaign_id, hero_id, run_json, updated_at FROM tactics_hero_campaign_runs WHERE user_id = ?')
+      .prepare('SELECT campaign_id, hero_id, run_json, updated_at, revision FROM tactics_hero_campaign_runs WHERE user_id = ?')
       .bind(userId)
-      .all<{ campaign_id: string; hero_id: string; run_json: string; updated_at: number }>(),
+      .all<{ campaign_id: string; hero_id: string; run_json: string; updated_at: number; revision: number }>(),
     db
       .prepare('SELECT hero_id, reward_pity FROM tactics_hero_progress WHERE user_id = ?')
       .bind(userId)
@@ -319,6 +321,7 @@ export async function loadPlayer(
     runs,
     run: runs[defaultCampaignHero(ASCENT_CAMPAIGN)] ?? null,
     worldRuns,
+    campaignRevisions: Object.fromEntries(runRows.results.map(r => [`${r.campaign_id}:${r.hero_id}`, r.revision])),
     worldHistory: await loadWorldHistory(db, userId),
     skirmish: await loadSkirmish(db, userId, content),
   };
@@ -382,8 +385,8 @@ export function worldCompletionStatements(
     payReward: boolean;
     transactionId: string;
     now: number;
-    /** The champion's exclusive card (1 copy, capped at `cap`); `acquired` = its next acquisition index. */
-    card?: { cardId: string; acquired: number; cap: number };
+    /** The champion's exclusive card (1 additional copy; `cap` is legacy deck metadata); `acquired` = its next acquisition index. */
+    card?: { cardId: string; acquired: number; /** @deprecated Ignored. Deck capacity never limits inventory. */ cap?: number };
   },
 ): D1PreparedStatement[] {
   const out = [
@@ -396,7 +399,7 @@ export function worldCompletionStatements(
   ];
   // The card goes to the collection only (never into a deck). It is inserted only while the
   // reward is still unpaid INSIDE this transaction, so even a duplicate that skipped the ledger
-  // (a world without crystals) cannot grant it twice; the cap is re-applied on conflict.
+  // (a world without crystals) cannot grant it twice; inventory is incremented without a deck cap.
   if (e.payReward && e.card)
     out.push(
       db
@@ -404,9 +407,9 @@ export function worldCompletionStatements(
           `INSERT INTO tactics_player_cards (user_id, hero_id, card_id, copies, acquired, source, unlocked_at)
            SELECT ?, ?, ?, 1, ?, 'WORLD_REWARD', ?
            WHERE NOT EXISTS (SELECT 1 FROM tactics_world_progress WHERE user_id = ? AND hero_id = ? AND world_id = ? AND reward_granted_at IS NOT NULL)
-           ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = MIN(copies + 1, ?), acquired = excluded.acquired, source = excluded.source`,
+           ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = copies + 1, acquired = excluded.acquired, source = excluded.source`,
         )
-        .bind(userId, e.heroId, e.card.cardId, e.card.acquired, e.now, userId, e.heroId, e.worldId, e.card.cap),
+        .bind(userId, e.heroId, e.card.cardId, e.card.acquired, e.now, userId, e.heroId, e.worldId),
     );
   if (e.payReward && e.crystals > 0)
     out.push(
@@ -460,34 +463,26 @@ async function foldNeutralRows(
 ): Promise<CardRow[]> {
   const legacy = rows.filter((c) => neutral(c) && c.hero_id !== SHARED_POOL_ID);
   if (!legacy.length) return [...rows];
-  const shared = sharedFromRows(rows.filter((c) => neutral(c) && c.hero_id === SHARED_POOL_ID), content);
-  const merged = new Map<string, CardRow>();
-  for (const c of legacy) {
-    const prev = merged.get(c.card_id) ?? {
-      hero_id: SHARED_POOL_ID,
-      card_id: c.card_id,
-      copies: shared.collection[c.card_id]?.copies ?? 0,
-      acquired: shared.collection[c.card_id]?.acquired ?? 0,
-    };
-    merged.set(c.card_id, { ...prev, copies: prev.copies + c.copies, acquired: Math.max(prev.acquired, c.acquired) });
-  }
+  const ids = [...new Set(legacy.map(c => c.card_id))];
+  const starter = starterShared(content).collection;
+  // Read legacy quantities INSIDE the transaction, not from the loaded profile. A second
+  // concurrent fold sees no legacy rows and adds nothing; a concurrent purchase is retained.
   await db.batch([
-    ...[...merged.values()].map((c) =>
-      db
-        .prepare(
-          `INSERT INTO tactics_player_cards (user_id, hero_id, card_id, copies, acquired, source, unlocked_at) VALUES (?, ?, ?, ?, ?, 'NEUTRAL_MERGE', ?)
-           ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = excluded.copies, acquired = excluded.acquired`,
-        )
-        .bind(userId, SHARED_POOL_ID, c.card_id, c.copies, c.acquired, now),
-    ),
-    ...legacy.map((c) =>
-      db
-        .prepare('DELETE FROM tactics_player_cards WHERE user_id = ? AND hero_id = ? AND card_id = ?')
-        .bind(userId, c.hero_id, c.card_id),
-    ),
+    ...ids.map(cardId => db.prepare(`INSERT INTO tactics_player_cards
+      (user_id, hero_id, card_id, copies, acquired, source, unlocked_at)
+      SELECT ?, ?, ?, SUM(copies) + CASE WHEN EXISTS (
+        SELECT 1 FROM tactics_player_cards WHERE user_id = ? AND hero_id = ? AND card_id = ?
+      ) THEN 0 ELSE ? END, MAX(acquired), 'NEUTRAL_MERGE', ?
+      FROM tactics_player_cards WHERE user_id = ? AND card_id = ? AND hero_id <> ?
+      HAVING COUNT(*) > 0
+      ON CONFLICT(user_id, hero_id, card_id) DO UPDATE SET
+        copies = copies + excluded.copies, acquired = MAX(acquired, excluded.acquired)`)
+      .bind(userId, SHARED_POOL_ID, cardId, userId, SHARED_POOL_ID, cardId, starter[cardId]?.copies ?? 0, now, userId, cardId, SHARED_POOL_ID)),
+    ...ids.map(cardId => db.prepare('DELETE FROM tactics_player_cards WHERE user_id = ? AND card_id = ? AND hero_id <> ?')
+      .bind(userId, cardId, SHARED_POOL_ID)),
   ]);
-  const replaced = (c: CardRow) => legacy.includes(c) || (c.hero_id === SHARED_POOL_ID && merged.has(c.card_id));
-  return [...rows.filter((c) => !replaced(c)), ...merged.values()];
+  return (await db.prepare('SELECT hero_id, card_id, copies, acquired FROM tactics_player_cards WHERE user_id = ?')
+    .bind(userId).all<CardRow>()).results;
 }
 
 /** Statements that write the shared neutral pool (creation / import). */
@@ -719,11 +714,13 @@ export async function saveCampaignStep(
   now: number,
   step: {
     run: RunState;
+    expectedRevision?: number;
     skirmish?: { id: number; step: 'VICTORY' | 'CLAIM' };
     grant?: {
       /** Collection owner: the champion, or SHARED_POOL_ID for a neutral card (`collectionOwner`). */
       ownerId: string;
       cardId: string;
+      /** Positive delta, never a client/computed inventory total. */
       copies: number;
       acquired: number;
       source: CardSource;
@@ -738,7 +735,14 @@ export async function saveCampaignStep(
   },
 ): Promise<void> {
   const { grant } = step;
+  if (grant && (!Number.isSafeInteger(grant.copies) || grant.copies < 1)) throw new Error('Invalid card acquisition delta');
+  const campaignClaim = step.log?.event === 'CLAIMED' && !step.skirmish;
+  if (campaignClaim && !Number.isSafeInteger(step.expectedRevision)) throw new Error('Missing campaign claim revision');
   await db.batch([
+    ...(!step.skirmish && step.expectedRevision !== undefined ? [db.prepare(`UPDATE tactics_profiles SET save_version = CASE WHEN EXISTS (
+      SELECT 1 FROM tactics_hero_campaign_runs WHERE revision = ? AND user_id = ? AND campaign_id = ? AND hero_id = ?
+      ) THEN save_version ELSE NULL END WHERE user_id = ?`)
+      .bind(step.expectedRevision, userId, step.run.campaignId, step.run.heroId, userId)] : []),
     ...(step.skirmish
       ? [
           db
@@ -754,7 +758,7 @@ export async function saveCampaignStep(
           db
             .prepare(
               `INSERT INTO tactics_player_cards (user_id, hero_id, card_id, copies, acquired, source, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = excluded.copies, acquired = excluded.acquired, source = excluded.source`,
+               ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = copies + excluded.copies, acquired = MAX(acquired, excluded.acquired), source = excluded.source`,
             )
             .bind(
               userId,

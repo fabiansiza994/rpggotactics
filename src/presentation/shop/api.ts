@@ -9,7 +9,7 @@ export interface Wallet {
   balance: number;
 }
 /** Price/contents are the server's quote for this player (a partly-owned bundle is prorated). */
-export type CatalogOffer = OfferView;
+export type CatalogOffer = OfferView & { purchaseQuote?: { token: string; expiresAt: number } };
 export interface Cosmetics {
   owned: { cosmeticId: string; kind: string; acquiredAt: number }[];
   /** slot → equipped cosmetic id (null = nothing equipped). */
@@ -51,11 +51,11 @@ export const storeApi = {
       token,
       timeoutMs: CLOUD_CONFIG.timeoutMs,
     }),
-  purchase: (token: string, offerId: string, idempotencyKey: string) =>
+  purchase: (token: string, offerId: string, idempotencyKey: string, quoteToken?: string, receiptOnly = false) =>
     request<PurchaseResponse>(CLOUD_CONFIG.apiUrl, '/api/tactics/store/purchase', {
       method: 'POST',
       token,
-      body: { offerId, idempotencyKey },
+      body: { offerId, idempotencyKey, ...(quoteToken ? { quoteToken } : {}), ...(receiptOnly ? { receiptOnly:true } : {}) },
       timeoutMs: CLOUD_CONFIG.timeoutMs,
     }),
   /** The client sends ONLY the code text; the reward is decided by the server. */

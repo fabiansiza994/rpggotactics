@@ -1,3 +1,4 @@
+import {acceptCatalogQuote,STORE_QUOTE_TEST_SECRET} from './support/storeQuote';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -78,13 +79,13 @@ describe('Ritual del Dragón Primordial — offer', () => {
       expect(validateCatalog([{ ...PACK, ritualPreview }], released).map((i) => i.code), ritualPreview).toContain('BAD_RITUAL_PREVIEW');
   });
 
-  it('prorated when the player already owns a seal (the server leaves it out and lowers the price)', () => {
+  it('grants all authored seals at the catalog price even when one is already owned', () => {
     const owned: StoreOwnership = { copies: (_hero, id) => (id === 'seal_claw' ? 2 : 0), hasCosmetic: () => false, purchases: () => 0 };
     const plan = planPurchase(PACK, owned, released, Date.now());
     expect(plan.ok).toBe(true);
     if (plan.ok) {
-      expect(plan.quote.contents.map((c) => c.kind === 'CARD' && c.cardId).sort()).toEqual(['seal_fang', 'seal_heart', 'seal_wing']);
-      expect(plan.quote.price).toBeLessThan(PACK.price);
+      expect(plan.quote.contents.map((c) => c.kind === 'CARD' && c.cardId).sort()).toEqual(['seal_claw', 'seal_fang', 'seal_heart', 'seal_wing']);
+      expect(plan.quote.price).toBe(PACK.price);
     }
   });
 });
@@ -95,9 +96,10 @@ describe('Ritual pack — server purchase (real Worker, in-process)', () => {
     db = memoryD1({ legacyProfiles: true });
   });
   const call = async (env: Record<string, string>, token: string, method: string, path: string, body?: unknown) => {
+    body = await acceptCatalogQuote(method,path,body,async()=> (await call(env,token,'GET','/store/catalog')).body);
     const res = await handle(
       new Request(`https://api.test/api/tactics${path}`, { method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }),
-      { DB: db, ...env },
+      { DB: db, STORE_QUOTE_SECRET:STORE_QUOTE_TEST_SECRET, ...env },
     );
     return { status: res.status, body: (await res.json()) as { offers?: StoreOffer[]; profile?: PlayerProfile; error?: { code: string } } };
   };

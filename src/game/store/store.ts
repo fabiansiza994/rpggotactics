@@ -179,7 +179,7 @@ export interface StoreOffer {
   /** Server timestamps (ms). null = open-ended. Rotation = offers with windows. */
   startAt: number | null;
   endAt: number | null;
-  /** Times one account may buy it (null = only ownership/copy caps limit it). */
+  /** Times one account may buy it (null = unlimited card purchases; unique cosmetics still apply). */
   purchaseLimit: number | null;
   /** Lower first inside a section. */
   sortOrder: number;
@@ -299,7 +299,7 @@ export function validateCatalog(offers: readonly StoreOffer[], ctx: StoreContext
         if (!card) issues.push({ code: 'UNKNOWN_CARD', offerId, cardId: c.cardId });
         else if (o.heroId === undefined || !isCardForHero(card, o.heroId))
           issues.push({ code: 'WRONG_HERO', offerId, cardId: c.cardId });
-        else if (!Number.isInteger(c.copies) || c.copies < 1 || c.copies > copyLimit(card, ctx.rules))
+        else if (!Number.isSafeInteger(c.copies) || c.copies < 1)
           issues.push({ code: 'OVER_COPY_LIMIT', offerId, cardId: c.cardId });
         else if (isExclusiveCard(card) && !hasGuaranteedFreeCatalogRoute(card)) issues.push({ code: 'EXCLUSIVE_CARD', offerId, cardId: c.cardId });
         else if (card.expansion && !(ctx.content.releasedExpansions ?? []).includes(card.expansion))
@@ -336,7 +336,7 @@ export interface CardGrant {
   heroId: string;
   cardId: string;
   copies: number;
-  /** Owned copies after the grant (never above `cap`). */
+  /** Estimated owned copies after the grant; `cap` is deck metadata, not an inventory cap. */
   total: number;
   cap: number;
 }
@@ -388,14 +388,9 @@ export function proratedPrice(basePrice: number, fullValue: number, remainingVal
 }
 
 /**
- * Ownership rule (Phase 4C, replaces 4A's all-or-nothing): what the buyer already has is left
- * out and the price drops in proportion.
- * - A card line grants only the copies that fit under the copy cap; a cosmetic already owned
- *   is skipped. Nothing is ever granted above a cap, and nothing unusable is charged for.
- * - Nothing left → unavailable: single-item offers keep their specific reason
- *   (CARD_AT_CAP / COSMETIC_OWNED), bundles report ALL_OWNED.
- * - Ownership only grows, so between showing a quote and buying, the price can only stay or
- *   drop; the server recomputes it at purchase time anyway and charges ITS number.
+ * Cards always grant the authored quantity, regardless of deck capacity. Only unique
+ * cosmetics already owned are excluded and prorated using the existing price formula.
+ * Catalog prices, purchase limits and quantities remain unchanged.
  */
 export function planPurchase(
   offer: StoreOffer,
@@ -419,12 +414,7 @@ export function planPurchase(
       const heroId = offer.heroId!; // validated: card offers always name their champion
       const cap = copyLimit(ctx.content.cards[c.cardId]!, ctx.rules);
       const have = owned.copies(heroId, c.cardId);
-      const grant = Math.max(0, Math.min(c.copies, cap - have));
-      if (grant < c.copies) {
-        excluded.push({ kind: 'CARD', cardId: c.cardId, copies: c.copies - grant, owned: have, cap });
-        firstBlock ??= { code: 'CARD_AT_CAP', cardId: c.cardId, owned: have, cap };
-      }
-      if (grant === 0) continue;
+      const grant = c.copies;
       plan.cards.push({ heroId, cardId: c.cardId, copies: grant, total: have + grant, cap });
       contents.push({ kind: 'CARD', cardId: c.cardId, copies: grant });
       remainingValue += (value / c.copies) * grant;

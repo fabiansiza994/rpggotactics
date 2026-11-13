@@ -132,20 +132,22 @@ describe('duplicate protection', () => {
     }
   });
 
-  it('capped cards are never offered; below-cap copies are once new cards run out', () => {
-    // Own every Mage card except one copy short on Fireball.
-    const almost: OwnedCopies = (id) => (id === 'fireball' ? 2 : allCapped(id));
-    for (const seed of seeds.slice(0, 60)) {
-      const ids = cardIds(roll({ poolId: 'BOSS', seed, owned: almost }));
-      expect(ids).toEqual(['fireball']);
+  it('cards remain eligible after reaching a deck limit', () => {
+    for (const seed of seeds.slice(0,60)) {
+      const ids = cardIds(roll({poolId:'BOSS',seed,owned:allCapped}));
+      expect(ids.length).toBeGreaterThan(0);
+      for(const id of ids) expect(allCapped(id)).toBeGreaterThan(0);
     }
   });
 
-  it('a complete collection degrades safely: normal → nothing, elite/boss → MAX_HP only', () => {
-    for (const seed of seeds.slice(0, 30)) {
-      expect(roll({ poolId: 'NORMAL', seed, owned: allCapped, pity: PITY_THRESHOLD }).options).toEqual([]);
-      for (const poolId of ['ELITE', 'BOSS'] as const)
-        expect(roll({ poolId, seed, owned: allCapped }).options.map((o) => o.kind)).toEqual(['MAX_HP']);
+  it('a complete collection still earns cards without altering HP or drop probabilities', () => {
+    for (const seed of seeds.slice(0,30)) {
+      expect(cardIds(roll({poolId:'NORMAL',seed,owned:allCapped,pity:PITY_THRESHOLD})).length).toBeGreaterThan(0);
+      for(const poolId of ['ELITE','BOSS'] as const) {
+        const options=roll({poolId,seed,owned:allCapped,pity:PITY_THRESHOLD}).options;
+        expect(options.some(o=>o.kind==='ADD_CARD')).toBe(true);
+        expect(options.filter(o=>o.kind==='MAX_HP')).toHaveLength(1);
+      }
     }
   });
 });

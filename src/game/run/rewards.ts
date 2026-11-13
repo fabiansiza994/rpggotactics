@@ -2,7 +2,7 @@ import { isExclusiveCard } from '../domain/cards/card';
 import type { CardDefinition } from '../domain/cards/card';
 import type { GameContent } from '../domain/content';
 import { nextRandom, type RngHolder } from '../domain/core/rng';
-import { copyLimit, isCardForHero, type DeckRules, type OwnedCopies } from '../collection/deck-rules';
+import { isCardForHero, type DeckRules, type OwnedCopies } from '../collection/deck-rules';
 
 export type CardRarity = NonNullable<CardDefinition['rarity']>;
 
@@ -73,7 +73,7 @@ export interface RewardRollInput {
   seed: number;
   count: number;
   favorTags?: readonly string[];
-  /** Authored offer (`EncounterDef.rewards.cards`): replaces the roll while any is below its cap. */
+  /** Authored offer (`EncounterDef.rewards.cards`): replaces the random roll without an inventory cap. */
   authored?: readonly string[];
 }
 
@@ -88,8 +88,8 @@ export interface RewardRoll {
 /**
  * Deterministic reward offer for one victory. Pure: same input → same offer.
  * - Drop: `cardChance`, forced at `PITY_THRESHOLD`.
- * - Pool: the champion's cards (own + neutral) still below their copy limit — capped cards
- *   are never offered. Unowned cards fill the offer first (weighted by rarity/theme), then
+ * - Pool: the champion's cards (own + neutral), independent of deck copy limits.
+ *   Unowned cards fill the offer first (weighted by rarity/theme), then
  *   extra copies.
  * - Elite/boss always add a MAX_HP option; with nothing left to offer, that is the offer.
  */
@@ -97,7 +97,7 @@ export function rollReward(input: RewardRollInput): RewardRoll {
   // Authored offer: a fixed, guaranteed card (campaign progression), never random and never pity.
   const authored = (input.authored ?? [])
     .map((id) => input.content.cards[id])
-    .filter((c): c is CardDefinition => !!c && isCardForHero(c, input.heroId) && input.owned(c.id) < copyLimit(c, input.rules));
+    .filter((c): c is CardDefinition => !!c && isCardForHero(c, input.heroId));
   if (authored.length && input.count > 0)
     return {
       options: authored.map((c, i) => ({ id: `reward-${i}-${c.id}`, kind: 'ADD_CARD', cardId: c.id, rarity: rarityOf(c), isNew: input.owned(c.id) === 0 })),
@@ -113,7 +113,7 @@ export function rollReward(input: RewardRollInput): RewardRoll {
 
   // Content order is authored order; sort by id so the offer never depends on key order.
   const eligible = Object.values(input.content.cards)
-    .filter((c) => isCardForHero(c, input.heroId) && input.owned(c.id) < copyLimit(c, input.rules))
+    .filter((c) => isCardForHero(c, input.heroId))
     // QA-only sets (unreleased expansions) never drop.
     .filter((c) => !c.expansion || (input.content.releasedExpansions ?? []).includes(c.expansion))
     // Exclusive cards (world rewards…) only come from their own source.

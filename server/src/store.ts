@@ -1,3 +1,4 @@
+import {issueQuote,readQuote,quotedTerms,quoteSecretReady,quoteFailure,quoteResponse} from './storeQuote';
 import {
   COSMETICS,
   cosmeticSlot,
@@ -187,22 +188,22 @@ export function cardGrantStatements(
     return db
       .prepare(
         `INSERT INTO tactics_player_cards (user_id, hero_id, card_id, copies, acquired, source, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = copies + excluded.copies, acquired = excluded.acquired, source = excluded.source`,
+         ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = copies + excluded.copies, acquired = MAX(acquired, excluded.acquired), source = excluded.source`,
       )
       .bind(userId, owner, g.cardId, g.copies, next, source, now);
   });
 }
 
 /**
- * SQL conditions re-checking every copy cap inside the granting transaction (a concurrent grant
- * may have added copies since the plan was made).
+ * SQL conditions protecting the numeric storage domain inside the granting transaction.
+ * Deck copy limits never constrain inventory.
  */
-export function cardCapGuards(userId: number, content: GameContent, cards: readonly CardGrant[]): { guards: string[]; binds: unknown[] } {
+export function cardInventoryGuards(userId: number, content: GameContent, cards: readonly CardGrant[]): { guards: string[]; binds: unknown[] } {
   const guards: string[] = [];
   const binds: unknown[] = [];
   for (const g of cards) {
-    guards.push('(SELECT copies FROM tactics_player_cards WHERE user_id = ? AND hero_id = ? AND card_id = ?) <= ?');
-    binds.push(userId, collectionOwner(content, g.heroId, g.cardId), g.cardId, g.cap);
+    guards.push(`(SELECT typeof(copies) = 'integer' AND copies BETWEEN 1 AND 9007199254740991 FROM tactics_player_cards WHERE user_id = ? AND hero_id = ? AND card_id = ?)`);
+    binds.push(userId, collectionOwner(content, g.heroId, g.cardId), g.cardId);
   }
   return { guards, binds };
 }
@@ -249,9 +250,9 @@ function purchaseStatements(
         .bind(userId, c.cosmeticId, c.kind, ids.purchaseId, now),
     );
   // Last: re-check, inside the transaction, what a concurrent request could have changed since
-  // the plan was made (copy caps, purchase limit). A failed guard nulls the NOT NULL status,
+  // the plan was made (inventory integrity, purchase limit). A failed guard nulls the NOT NULL status,
   // which aborts the whole batch: no charge, no grant.
-  const { guards, binds } = cardCapGuards(userId, content, plan.cards);
+  const { guards, binds } = cardInventoryGuards(userId, content, plan.cards);
   if (offer.purchaseLimit !== null) {
     guards.push(
       "(SELECT COUNT(*) FROM tactics_store_purchases WHERE user_id = ? AND offer_id = ? AND status = 'COMPLETED') <= ?",
@@ -320,6 +321,8 @@ export async function equippedPublic(
 }
 
 export interface StoreRequest {
+  quoteSecret?: string;
+  quoteNow?(): number;
   db: D1Database;
   userId: number;
   record: PlayerRecord;
@@ -366,15 +369,20 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
   }
 
   if (route === 'GET /api/tactics/store/catalog') {
+    if (!quoteSecretReady(r.quoteSecret)) return error(503, 'STORE_QUOTE_UNAVAILABLE', 'La tienda está temporalmente en actualización. No se ha realizado ninguna compra.');
+    const secret = r.quoteSecret;
     const owned = await ownership(db, userId, r.record, r.content);
-    return json({
+    return quoteResponse({
       serverTime: now,
       currencies: Object.values(CURRENCIES),
       categories: STORE_CATEGORIES,
-      offers: offers()
+      offers: await Promise.all(offers()
         .filter((o) => isOfferActive(o, now))
         .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
-        .map((o) => offerView(o, owned, ctx, now)),
+        .map(async (o) => {
+          const view = offerView(o, owned, ctx, now);
+          return {...view, purchaseQuote: view.availability.purchasable ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
+        })),
       wallet: await walletView(db, userId),
       cosmetics: await cosmeticsView(db, userId, r.store),
     });
@@ -421,7 +429,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
   }
 
   if (route === 'POST /api/tactics/store/purchase') {
-    // Only these two fields are read; price/contents/balance/userId in the body are ignored.
+    // Price/contents/balance/userId are never trusted. Existing receipts are recovered before quote validation.
     const offerId = r.body.offerId;
     const key = r.body.idempotencyKey;
     if (typeof offerId !== 'string' || !OFFER_ID.test(offerId))
@@ -436,9 +444,18 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
 
     const previous = await purchaseByKey(db, userId, key);
     if (previous) return replay(previous);
+    const reject = async (response:Response) => {
+      // Another same-key request may have committed while signature/ownership checks awaited.
+      const completed = await purchaseByKey(db,userId,key);
+      return completed ? replay(completed) : response;
+    };
 
+    // Recovery is read-only: never turn an uncertain/legacy intent into a new debit.
+    if (r.body.receiptOnly === true) return reject(error(409,'PURCHASE_NOT_FOUND','Todavía no hay un recibo confirmado. Revisa las condiciones actuales antes de volver a confirmar esta misma compra.'));
     const offer = offers().find((o) => o.id === offerId);
     if (!offer) return error(404, 'UNKNOWN_OFFER', 'Esa oferta no existe.');
+    if (!quoteSecretReady(r.quoteSecret)) return error(503,'STORE_QUOTE_UNAVAILABLE','La tienda está temporalmente en actualización. Conserva tu compra pendiente y reintenta más tarde.');
+    const secret = r.quoteSecret;
     const check = async (record: PlayerRecord) => {
       const plan = planPurchase(offer, await ownership(db, userId, record, r.content), ctx, now);
       if (!plan.ok)
@@ -448,14 +465,18 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
             reason: plan.reason,
           }),
         };
+      const signed = await readQuote(secret,r.body.quoteToken,userId,offerId,r.quoteNow?.() ?? now);
+      if (!signed.ok) return {ok:false as const,fail:quoteFailure(signed.code)};
+      if (signed.quote.terms !== quotedTerms(offer,plan.quote)) return {ok:false as const,fail:quoteFailure('QUOTE_CHANGED')};
       const balance = await walletBalance(db, userId, offer.currencyId);
       if (balance < plan.quote.price)
         return { ok: false as const, fail: error(409, 'INSUFFICIENT_FUNDS', 'Saldo insuficiente.', { balance, price: plan.quote.price }) };
-      return { ok: true as const, plan: plan.plan, quote: plan.quote };
+      return { ok: true as const, plan: plan.plan, quote: plan.quote, expiresAt:signed.quote.expiresAt };
     };
     const checked = await check(r.record);
-    if (!checked.ok) return checked.fail;
+    if (!checked.ok) return reject(checked.fail);
 
+    if ((r.quoteNow?.() ?? now) >= checked.expiresAt) return reject(quoteFailure('QUOTE_EXPIRED'));
     const purchaseId = `pur_${r.store.newId()}`;
     try {
       await db.batch(
@@ -478,7 +499,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
       if (raced) return replay(raced);
       const fresh = await loadPlayer(db, userId, r.content);
       const again = fresh ? await check(fresh) : null;
-      if (again && !again.ok) return again.fail;
+      if (again && !again.ok) return reject(again.fail);
       return error(409, 'PURCHASE_CONFLICT', 'La compra no se completó; inténtalo de nuevo.');
     }
     const row = await purchaseByKey(db, userId, key);

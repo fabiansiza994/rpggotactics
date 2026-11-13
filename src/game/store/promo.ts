@@ -123,7 +123,7 @@ function cardHero(content: GameContent, cardId: string): string | null {
 
 /**
  * Can this content grant the reward at all (independent of the player)? A card must exist, belong
- * to a released champion and a released content set, and fit its copy cap; a cosmetic must be in
+ * to a released champion and a released content set, and specify a positive safe quantity; a cosmetic must be in
  * the registry (no ownership of something the game cannot show).
  */
 export function checkPromoReward(reward: PromoReward, ctx: PromoContext): boolean {
@@ -137,7 +137,7 @@ export function checkPromoReward(reward: PromoReward, ctx: PromoContext): boolea
     if (!card || isExclusiveCard(card)) return false;
     if (card.expansion && !(ctx.content.releasedExpansions ?? []).includes(card.expansion)) return false;
     if (card.heroId !== undefined && (!ctx.content.heroes[card.heroId] || !(ctx.heroAllowed?.(card.heroId) ?? true))) return false;
-    return i.copies <= copyLimit(card, ctx.rules);
+    return Number.isSafeInteger(i.copies) && i.copies > 0;
   });
 }
 
@@ -155,8 +155,7 @@ export type PromoPlan =
   | { ok: false; reason: 'ALREADY_OWNED'; cosmeticId: string };
 
 /**
- * All or nothing: if any item cannot be granted in full (a card would pass its copy cap, a
- * cosmetic is already owned), nothing is granted and the code is NOT consumed. There is no
+ * All or nothing: if any unique cosmetic is already owned, nothing is granted and the code is NOT consumed. There is no
  * automatic compensation; a code that wants one must say so in its reward.
  */
 export function planPromoReward(reward: PromoReward, owned: StoreOwnership, ctx: PromoContext): PromoPlan {
@@ -171,7 +170,6 @@ export function planPromoReward(reward: PromoReward, owned: StoreOwnership, ctx:
       const heroId = cardHero(ctx.content, i.cardId)!;
       const cap = copyLimit(ctx.content.cards[i.cardId]!, ctx.rules);
       const have = owned.copies(heroId, i.cardId);
-      if (have + i.copies > cap) return { ok: false, reason: 'CARD_AT_CAP', cardId: i.cardId, owned: have, cap };
       grant.cards.push({ heroId, cardId: i.cardId, copies: i.copies, total: have + i.copies, cap });
     }
   }

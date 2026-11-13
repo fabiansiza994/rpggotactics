@@ -1,8 +1,8 @@
+import {acceptCatalogQuote,STORE_QUOTE_TEST_SECRET} from './support/storeQuote';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   addCard,
   contentValue,
-  copyLimit,
   COSMETICS,
   DECK_RULES,
   DEFAULT_CONTENT,
@@ -84,10 +84,11 @@ const store: StoreDeps = { catalog: TEST_CATALOG, cosmetics: { [SKIN.id]: SKIN }
 const deps = { content: DEFAULT_CONTENT, now: () => NOW, seed: () => 7, store };
 
 async function call(token: string | null, method: string, path: string, body?: unknown): Promise<{ status: number; body: Body }> {
+  body = await acceptCatalogQuote(method,path,body,async()=> (await call(token,'GET','/store/catalog')).body);
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   const req = new Request(`https://api.test/api/tactics${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-  const res = await handle(req, { DB: db }, deps);
+  const res = await handle(req, { DB: db, STORE_QUOTE_SECRET:STORE_QUOTE_TEST_SECRET }, deps);
   return { status: res.status, body: (await res.json()) as Body };
 }
 
@@ -130,12 +131,12 @@ describe('seed catalog (authoring rules)', () => {
     for (const o of STORE_CATALOG) for (const c of o.categories) expect(STORE_CATEGORIES.map((x) => x.id)).toContain(c);
   });
 
-  it('rejects unknown cards, other-champion cards, over-cap copies, fake cosmetics and bad prices', () => {
+  it('rejects unknown cards, other-champion cards, invalid quantities, fake cosmetics and bad prices', () => {
     const codes = validateCatalog(
       [
         offer({ id: 'a', contents: [{ kind: 'CARD', cardId: 'meteor', copies: 1 }] }),
         offer({ id: 'b', contents: [{ kind: 'CARD', cardId: 'summon_wolf', copies: 1 }] }),
-        offer({ id: 'c', contents: [{ kind: 'CARD', cardId: 'frost_nova', copies: 3 }] }),
+        offer({ id: 'c', contents: [{ kind: 'CARD', cardId: 'frost_nova', copies: 0 }] }),
         offer({ id: 'd', contents: [{ kind: 'COSMETIC', cosmeticId: 'skin_chicken_spectral' }] }),
         offer({ id: 'e', price: 0 }),
         offer({ id: 'f', heroId: undefined }),
@@ -287,30 +288,28 @@ describe('purchases', () => {
     expect(res.body.profile.heroes.summoner!.collection.dispel).toBeUndefined();
   });
 
-  it('copy cap: a card at its cap cannot be bought (no charge for an unusable duplicate)', async () => {
+  it('owned copies accumulate beyond deck limits at the unchanged catalog price', async () => {
     const { token } = await player();
     qaGrant('tactics_qa_a', 1000);
-    expect(copyLimit(DEFAULT_CONTENT.cards.frost_nova!, DECK_RULES)).toBe(2);
-    expect((await buy(token, 'card_frost_nova', 'key-00000001')).status).toBe(200);
-    expect((await buy(token, 'card_frost_nova', 'key-00000002')).status).toBe(200);
-    const third = await buy(token, 'card_frost_nova', 'key-00000003');
-    expect(third.status).toBe(409);
-    expect(third.body.error).toMatchObject({ code: 'ALREADY_OWNED', reason: { code: 'CARD_AT_CAP', owned: 2, cap: 2 } });
-    expect(await balance(token)).toBe(700);
+    for (let n = 1; n <= 3; n++) {
+      const res = await buy(token, 'card_frost_nova', `copy-key-${n}`);
+      expect(res.status).toBe(200);
+      expect(copies(res.body, 'mage', 'frost_nova')).toBe(n);
+      expect(res.body.purchase.price).toBe(150);
+    }
+    expect(await balance(token)).toBe(550);
   });
 
-  it('a bundle with a capped part sells the rest at a server-prorated price (Phase 4C)', async () => {
+  it('a bundle keeps its authored price and grants a further copy of an owned rare card', async () => {
     const { token, id } = await player();
     qaGrant('tactics_qa_a', 2000);
-    // Wolf (RARE, cap 1) earned through play first: only the skin is left to sell.
     db.sql.prepare("INSERT INTO tactics_player_cards VALUES (?, 'summoner', 'summon_wolf', 1, 9, 'NORMAL_DROP', 0)").run(id);
     const res = await buy(token, 'skin_bundle', 'key-00000001');
-    // 500 × skin 400 / (skin 400 + wolf 250) = 307.7 → 310.
-    expect(res.body.purchase.price).toBe(310);
-    expect(res.body.purchase.granted).toEqual({ cards: [], cosmetics: [{ cosmeticId: SKIN.id, kind: 'SUMMON_SKIN' }] });
-    expect(await balance(token)).toBe(1690);
-    expect(copies(res.body, 'summoner', 'summon_wolf')).toBe(1);
-    expect(db.sql.prepare('SELECT COUNT(*) AS n FROM tactics_player_cosmetics').get()).toEqual(expect.objectContaining({ n: 1 }));
+    expect(res.body.purchase.price).toBe(500);
+    expect(res.body.purchase.granted.cards).toEqual([expect.objectContaining({cardId:'summon_wolf',copies:1})]);
+    expect(await balance(token)).toBe(1500);
+    expect(copies(res.body, 'summoner', 'summon_wolf')).toBe(2);
+    expect(db.sql.prepare('SELECT COUNT(*) AS n FROM tactics_player_cosmetics').get()).toMatchObject({ n: 1 });
   });
 
   it('cosmetics are unique: owned once, never stacked or charged twice', async () => {
@@ -374,7 +373,7 @@ describe('purchases', () => {
     expect(ledgerRows(id)).toHaveLength(2);
   });
 
-  it('concurrent purchases cannot overdraw the wallet or exceed a copy cap', async () => {
+  it('concurrent purchases preserve wallet limits and accumulate independent acquisitions', async () => {
     const { token } = await player();
     qaGrant('tactics_qa_a', 150); // enough for exactly one
     const funds = await Promise.all([buy(token, 'card_frost_nova', 'race-a-0001'), buy(token, 'card_frost_nova', 'race-b-0001')]);
@@ -384,10 +383,10 @@ describe('purchases', () => {
 
     qaGrant('tactics_qa_a', 1000); // owned 1 of cap 2: only one more fits
     const caps = await Promise.all([buy(token, 'card_frost_nova', 'race-c-0001'), buy(token, 'card_frost_nova', 'race-d-0001')]);
-    expect(caps.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect(caps.map((r) => r.status).sort()).toEqual([200, 200]);
     const state = await call(token, 'GET', '/state');
-    expect(copies(state.body, 'mage', 'frost_nova')).toBe(2);
-    expect(await balance(token)).toBe(850);
+    expect(copies(state.body, 'mage', 'frost_nova')).toBe(3);
+    expect(await balance(token)).toBe(700);
   });
 });
 

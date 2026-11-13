@@ -1,3 +1,4 @@
+import {issueQuote,readQuote,quotedTerms,quoteSecretReady,quoteFailure,quoteResponse} from './storeQuote';
 import {
   collectionOwner,
   copyLimit,
@@ -24,7 +25,7 @@ import type { D1Database, D1PreparedStatement, Env } from './db';
 import { error, json } from './http';
 import { loadPlayer, type PlayerRecord } from './repo';
 import { canInteract, cleanMessage, normalizeUsername, notify, rateLimit } from './social';
-import { cardCapGuards, cardGrantStatements, ledgerStatement, ownership, walletBalance, walletView, type StoreRequest } from './store';
+import { cardInventoryGuards, cardGrantStatements, ledgerStatement, ownership, walletBalance, walletView, type StoreRequest } from './store';
 import { championAllowed } from './warriorRelease';
 
 /**
@@ -252,13 +253,6 @@ function giftStatements(
   const pendingFor = "SELECT COALESCE(SUM(i.copies), 0) FROM tactics_gift_items i JOIN tactics_gifts g ON g.gift_id = i.gift_id WHERE g.recipient_user_id = ? AND g.status = 'PENDING'";
   const guards: string[] = [];
   const binds: unknown[] = [];
-  for (const c of plan.cards) {
-    const owner = collectionOwner(content, c.heroId, c.cardId);
-    guards.push(
-      `COALESCE((SELECT copies FROM tactics_player_cards WHERE user_id = ? AND hero_id = ? AND card_id = ?), 0) + (${pendingFor} AND i.kind = 'CARD' AND i.owner_id = ? AND i.item_id = ?) <= ?`,
-    );
-    binds.push(recipient.id, owner, c.cardId, recipient.id, owner, c.cardId, c.cap);
-  }
   for (const c of plan.cosmetics) {
     guards.push(`NOT EXISTS (SELECT 1 FROM tactics_player_cosmetics WHERE user_id = ? AND cosmetic_id = ?) AND (${pendingFor} AND i.kind = 'COSMETIC' AND i.item_id = ?) <= 1`);
     binds.push(recipient.id, c.cosmeticId, recipient.id, c.cosmeticId);
@@ -351,7 +345,6 @@ async function claimPlan(
       if (!card || !championAllowed(heroId, x.env, x.username)) return { ok: false, reason: 'RECIPIENT_CANNOT_RECEIVE' };
       const cap = copyLimit(card, DECK_RULES);
       const have = owned.copies(heroId, i.item_id);
-      if (have + i.copies > cap) return { ok: false, reason: 'RECIPIENT_CARD_AT_CAP' };
       cards.push({ heroId, cardId: i.item_id, copies: i.copies, total: have + i.copies, cap });
     } else {
       const def = r.store.cosmetics[i.item_id];
@@ -381,7 +374,7 @@ function claimStatements(r: StoreRequest, giftId: string, cards: CardGrant[], co
         .prepare("INSERT INTO tactics_player_cosmetics (user_id, cosmetic_id, kind, source, reference_id, acquired_at) VALUES (?, ?, ?, 'STORE_GIFT', ?, ?)")
         .bind(userId, c.cosmeticId, c.kind, giftId, now),
     );
-  const { guards, binds } = cardCapGuards(userId, r.content, cards);
+  const { guards, binds } = cardInventoryGuards(userId, r.content, cards);
   if (guards.length)
     out.push(db.prepare(`UPDATE tactics_gifts SET status = CASE WHEN ${guards.join(' AND ')} THEN status ELSE NULL END WHERE gift_id = ?`).bind(...binds, giftId));
   out.push(db.prepare('UPDATE tactics_profiles SET updated_at = ? WHERE user_id = ?').bind(now, userId));
@@ -422,7 +415,9 @@ export async function giftRoute(route: string, r: StoreRequest, x: GiftExtras): 
     if (await limited('gift_quote')) return fail('RATE_LIMITED');
     const checked = await checkGift(r, x, parsed.productId, parsed.recipient);
     if (!checked.ok) return checked.fail;
-    return json({
+    if (!quoteSecretReady(r.quoteSecret)) return error(503,'STORE_QUOTE_UNAVAILABLE','La tienda está temporalmente en actualización. No se ha enviado el regalo.');
+    return quoteResponse({
+      purchaseQuote: await issueQuote(r.quoteSecret,userId,checked.offer,{price:checked.price,contents:checked.offer.contents},r.quoteNow?.() ?? now,`GIFT:${checked.recipient.id}`),
       productId: checked.offer.id,
       productName: checked.offer.title,
       recipientUsername: checked.recipient.username,
@@ -449,10 +444,19 @@ export async function giftRoute(route: string, r: StoreRequest, x: GiftExtras): 
         : json({ gift: view(row, 'SENT'), replayed: true, wallet: await walletView(db, userId, row.currency_id) });
     const previous = await giftByKey(db, userId, key);
     if (previous) return replay(previous);
-    if (await limited('gift_send')) return fail('RATE_LIMITED');
+    const reject = async (response:Response) => {
+      const completed = await giftByKey(db,userId,key);
+      return completed ? replay(completed) : response;
+    };
+    if (!quoteSecretReady(r.quoteSecret)) return error(503,'STORE_QUOTE_UNAVAILABLE','La tienda está temporalmente en actualización. Conserva el identificador del regalo.');
+    if (await limited('gift_send')) return reject(fail('RATE_LIMITED'));
 
     const checked = await checkGift(r, x, parsed.productId, parsed.recipient);
-    if (!checked.ok) return checked.fail;
+    if (!checked.ok) return reject(checked.fail);
+    const signed = await readQuote(r.quoteSecret,r.body.quoteToken,userId,checked.offer.id,r.quoteNow?.() ?? now,`GIFT:${checked.recipient.id}`);
+    if (!signed.ok) return reject(quoteFailure(signed.code));
+    if (signed.quote.terms !== quotedTerms(checked.offer,{price:checked.price,contents:checked.offer.contents})) return reject(quoteFailure('QUOTE_CHANGED'));
+    if ((r.quoteNow?.() ?? now) >= signed.quote.expiresAt) return reject(quoteFailure('QUOTE_EXPIRED'));
     const giftId = `gft_${r.store.newId()}`;
     try {
       await db.batch(
@@ -467,7 +471,7 @@ export async function giftRoute(route: string, r: StoreRequest, x: GiftExtras): 
       const raced = await giftByKey(db, userId, key);
       if (raced) return replay(raced);
       const again = await checkGift(r, x, parsed.productId, parsed.recipient);
-      if (!again.ok) return again.fail;
+      if (!again.ok) return reject(again.fail);
       return fail('GIFT_CONFLICT');
     }
     const row = (await giftById(db, giftId))!;

@@ -1,16 +1,17 @@
+import {needsQuoteReview} from '../shop/presentation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GIFT_LIMITS } from '../../game';
 import { useBattleStore } from '../store/battleStore';
 import { useSocialStore } from '../social/socialStore';
 import type { CatalogOffer, Wallet } from '../shop/api';
-import { giftApi, giftError, GUEST_GIFT_TEXT, type GiftQuote } from './api';
+import { giftApi, giftError, giftConfirmation, GUEST_GIFT_TEXT, type GiftQuote } from './api';
 import '../../styles/gifts.css';
 
 type Step =
   | { kind: 'closed' }
   | { kind: 'pick'; error?: string }
   | { kind: 'checking' }
-  | { kind: 'confirm'; quote: GiftQuote; error?: string }
+  | { kind: 'confirm'; quote: GiftQuote; error?: string; reviewQuote?: boolean }
   | { kind: 'sending'; quote: GiftQuote }
   | { kind: 'sent'; recipient: string };
 
@@ -26,7 +27,7 @@ export function GiftPanel({ offer, token, onSent }: { offer: CatalogOffer; token
   const [step, setStep] = useState<Step>({ kind: 'closed' });
   const [recipient, setRecipient] = useState('');
   const [message, setMessage] = useState('');
-  const key = useRef<string | null>(null);
+  const operation = useRef<{target:string;key:string} | null>(null);
   const busy = useRef(false);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function GiftPanel({ offer, token, onSent }: { offer: CatalogOffer; token
     const res = await giftApi.quote(token, offer.id, name);
     busy.current = false;
     if (res.ok) {
-      key.current = crypto.randomUUID();
+      operation.current = giftConfirmation(operation.current,offer.id,name);
       setStep({ kind: 'confirm', quote: res.data });
     } else {
       if (res.error.kind === 'AUTH') useBattleStore.getState().sessionExpired();
@@ -54,27 +55,28 @@ export function GiftPanel({ offer, token, onSent }: { offer: CatalogOffer; token
   }
 
   async function send(quote: GiftQuote) {
-    if (busy.current || !token || !key.current) return;
+    if (busy.current || !token || !operation.current) return;
     busy.current = true;
     setStep({ kind: 'sending', quote });
     const res = await giftApi.send(token, {
       productId: quote.productId,
       recipientUsername: quote.recipientUsername,
-      idempotencyKey: key.current,
+      idempotencyKey: operation.current.key,
+      quoteToken: quote.purchaseQuote?.token,
       ...(message.trim() ? { message: message.trim() } : {}),
     });
     busy.current = false;
     if (res.ok) {
-      key.current = null;
+      operation.current = null;
       setMessage('');
       setStep({ kind: 'sent', recipient: res.data.gift.recipientUsername });
       onSent(res.data.wallet);
       return;
     }
     if (res.error.kind === 'AUTH') useBattleStore.getState().sessionExpired();
-    // A refused gift was not charged → a new attempt gets a new key; a lost answer keeps it.
-    if (res.error.kind === 'REJECTED') key.current = crypto.randomUUID();
-    setStep({ kind: 'confirm', quote, error: giftError(res.error) });
+    // Keep the identifier until this operation resolves; a prior request may still commit.
+    // Reviewing updated terms retains it; choosing a new recipient starts a new operation.
+    setStep({ kind: 'confirm', quote, error: giftError(res.error), reviewQuote: needsQuoteReview(res.error.code) });
   }
 
   if (step.kind === 'closed')
@@ -123,9 +125,10 @@ export function GiftPanel({ offer, token, onSent }: { offer: CatalogOffer; token
             </p>
           )}
           <div className="gift-actions">
-            <button type="button" className="shop-primary" disabled={step.kind === 'sending'} onClick={() => void send(step.quote)}>
+            <button type="button" className="shop-primary" disabled={step.kind === 'sending' || !step.quote.purchaseQuote || (step.kind === 'confirm' && step.reviewQuote)} onClick={() => void send(step.quote)}>
               {step.kind === 'sending' ? 'Enviando…' : `Confirmar regalo · ${step.quote.price}`}
             </button>
+            {step.kind === 'confirm' && step.reviewQuote && <button type="button" onClick={() => void review()}>Revisar condiciones actuales</button>}
             <button type="button" disabled={step.kind === 'sending'} onClick={() => setStep({ kind: 'pick' })}>
               Cambiar destinatario
             </button>

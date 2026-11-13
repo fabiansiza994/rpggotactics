@@ -1,6 +1,6 @@
 import {
   ASCENT_CAMPAIGN,
-  copyLimit,
+  rarityOf,
   DEFAULT_DECK_SLOTS_PER_CHAMPION,
   defaultCampaignHero,
   GUEST_ENCOUNTER_LIMIT,
@@ -33,15 +33,21 @@ export interface ImportResult {
   run: RunState | null;
   /** What was dropped or corrected (reported to the client, never silently). */
   notes: string[];
+  /** Client totals above the legacy allowance need provenance before ANY import is saved. */
+  unverifiedCopies: { ownerId: string; cardId: string; claimed: number; allowance: number }[];
 }
+
+/** Frozen legacy migration allowance, NOT derived from current deck rules. Unverified
+ * client totals above this allowance cannot authorize grants to a connected account. */
+const LEGACY_IMPORT_ALLOWANCE = { COMMON: 3, UNCOMMON: 2, RARE: 1, LEGENDARY: 1, ULTRA: 1 } as const;
+const importAllowance = (card: Parameters<typeof rarityOf>[0]) => LEGACY_IMPORT_ALLOWANCE[rarityOf(card)];
 
 const DECK_ID = /^[a-z0-9_-]{1,32}$/;
 
 /**
  * One-time migration of a device's local progress. Local data is untrusted: it goes through
  * the same parsers as a local load, then the server tightens it —
- * - collection: only cards of that champion; copies capped at what a deck could ever use
- *   (the rarity copy limit), never below the starter set; neutral cards only in the shared
+ * - collection: only cards of that champion; copies bounded by the frozen legacy import allowance, independent of deck rules, never below the starter set; neutral cards only in the shared
  *   pool, under the same cap;
  * - decks: must be legal with the imported collection, otherwise the starter deck;
  * - campaign: one save per champion; each must be a valid run of THAT champion; a pending
@@ -63,6 +69,7 @@ export function sanitizeLocalImport(
   available: readonly string[] = Object.keys(content.heroes),
 ): ImportResult {
   const notes: string[] = [];
+  const unverifiedCopies: ImportResult['unverifiedCopies'] = [];
   let profile = createProfile(content);
   if (typeof rawProfile === 'string' && rawProfile) {
     const parsed = parseProfileSave(rawProfile, content);
@@ -77,8 +84,9 @@ export function sanitizeLocalImport(
   for (const [cardId, owned] of Object.entries(profile.shared?.collection ?? {})) {
     const card = content.cards[cardId];
     if (!card || !isNeutral(card)) continue;
-    const copies = Math.max(starterPool[cardId]?.copies ?? 0, Math.min(owned.copies, copyLimit(card, rules)));
-    if (copies < owned.copies) notes.push(`shared: ${cardId} capped at ${copies} copies`);
+    const copies = Math.max(starterPool[cardId]?.copies ?? 0, Math.min(owned.copies, importAllowance(card)));
+    if (copies < owned.copies) unverifiedCopies.push({ownerId:'*',cardId,claimed:owned.copies,allowance:copies});
+    if (copies < owned.copies) notes.push(`shared: ${cardId} unverified surplus not imported; legacy allowance ${copies} copies`);
     if (copies > 0) shared.collection[cardId] = { copies, acquired: Math.max(0, Math.floor(owned.acquired)) };
   }
   for (const [cardId, owned] of Object.entries(starterPool)) shared.collection[cardId] ??= { ...owned };
@@ -94,12 +102,14 @@ export function sanitizeLocalImport(
       if (!card || !isCardForHero(card, hero.id) || isNeutral(card)) continue;
       // Exclusive cards (world rewards) are only granted by the server's own source.
       if (card.acquisition) {
+        if (owned.copies > (starter[cardId]?.copies ?? 0)) unverifiedCopies.push({ownerId:hero.id,cardId,claimed:owned.copies,allowance:starter[cardId]?.copies ?? 0});
         notes.push(`${hero.id}: ${cardId} not imported (exclusive reward)`);
         continue;
       }
       const floor = starter[cardId]?.copies ?? 0;
-      const copies = Math.max(floor, Math.min(owned.copies, copyLimit(card, rules)));
-      if (copies < owned.copies) notes.push(`${hero.id}: ${cardId} capped at ${copies} copies`);
+      const copies = Math.max(floor, Math.min(owned.copies, importAllowance(card)));
+      if (copies < owned.copies) unverifiedCopies.push({ownerId:hero.id,cardId,claimed:owned.copies,allowance:copies});
+      if (copies < owned.copies) notes.push(`${hero.id}: ${cardId} unverified surplus not imported; legacy allowance ${copies} copies`);
       if (copies > 0) collection[cardId] = { copies, acquired: Math.max(0, Math.floor(owned.acquired)) };
     }
     for (const [cardId, owned] of Object.entries(starter)) collection[cardId] ??= { ...owned };
@@ -171,5 +181,5 @@ export function sanitizeLocalImport(
     runs.push(reofferPending(ASCENT_CAMPAIGN, content, sanitized, run, rules));
   }
   const run = runs.find((r) => r.heroId === defaultCampaignHero(ASCENT_CAMPAIGN)) ?? null;
-  return { profile: sanitized, runs, run, notes };
+  return { profile: sanitized, runs, run, notes, unverifiedCopies };
 }

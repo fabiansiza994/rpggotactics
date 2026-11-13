@@ -1,3 +1,4 @@
+import {acceptCatalogQuote,STORE_QUOTE_TEST_SECRET} from './support/storeQuote';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   addCard,
@@ -258,9 +259,10 @@ const store = { catalog: STORE_CATALOG, cosmetics: COSMETICS, newId: () => `0000
 const deps = { content: DEFAULT_CONTENT, now: () => NOW, seed: () => 7, store };
 type Res = { status: number; body: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
 async function call(token: string | null, method: string, path: string, body?: unknown): Promise<Res> {
+  body = await acceptCatalogQuote(method,path,body,async()=> (await call(token,'GET','/store/catalog')).body);
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await handle(new Request(`https://api.test/api/tactics${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), { DB: db }, deps);
+  const res = await handle(new Request(`https://api.test/api/tactics${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), { DB: db, STORE_QUOTE_SECRET:STORE_QUOTE_TEST_SECRET }, deps);
   return { status: res.status, body: await res.json() };
 }
 const grant = (username: string, amount: number) =>
@@ -284,48 +286,46 @@ beforeEach(() => {
 describe('dynamic bundle pricing (server-authoritative)', () => {
   const BESTIARY = 'pack_summoner_bestiary'; // turtle + raven + aegis (UNCOMMON ×3) = 450 → 380
 
-  it('owns nothing → full price; one at cap → that card left out, price 250; two → 130', async () => {
-    const { token, id } = await player();
-    expect(await catalogOffer(token, BESTIARY)).toMatchObject({ price: 380, basePrice: 380, excluded: [], availability: { purchasable: true } });
-    own(id, 'summoner', 'summon_turtle', 2);
-    const one = await catalogOffer(token, BESTIARY);
-    expect(one).toMatchObject({ price: 250, basePrice: 380, availability: { purchasable: true } });
-    expect(one.contents.map((c: { cardId: string }) => c.cardId)).toEqual(['summon_raven', 'familiar_aegis']);
-    expect(one.excluded).toEqual([{ kind: 'CARD', cardId: 'summon_turtle', copies: 1, owned: 2, cap: 2 }]);
-    own(id, 'summoner', 'summon_raven', 2);
-    expect(await catalogOffer(token, BESTIARY)).toMatchObject({ price: 130 });
+  it('card copies do not reduce the authored bundle quantity or price', async () => {
+    const {token,id}=await player();
+    for(const count of [0,2,5]) {
+      own(id,'summoner','summon_turtle',count);
+      const q=await catalogOffer(token,BESTIARY);
+      expect(q).toMatchObject({price:380,basePrice:380,excluded:[],availability:{purchasable:true}});
+      expect(q.contents.map((c:{cardId:string})=>c.cardId)).toEqual(['summon_turtle','summon_raven','familiar_aegis']);
+    }
   });
 
-  it('owns everything at cap → unavailable (ALL_OWNED), nothing charged', async () => {
-    const { token, id } = await player();
-    grant('tactics_qa_a', 1000);
-    for (const c of ['summon_turtle', 'summon_raven', 'familiar_aegis']) own(id, 'summoner', c, 2);
-    expect((await catalogOffer(token, BESTIARY)).availability).toEqual({ purchasable: false, reason: { code: 'ALL_OWNED' } });
-    const res = await call(token, 'POST', '/store/purchase', { offerId: BESTIARY, idempotencyKey: 'all-owned-01' });
-    expect(res.body.error).toMatchObject({ code: 'ALREADY_OWNED', reason: { code: 'ALL_OWNED' } });
-    expect((await call(token, 'GET', '/wallet')).body.wallet.balance).toBe(1000);
+  it('a full playset can legitimately purchase more copies at the catalog price', async () => {
+    const {token,id}=await player();grant('tactics_qa_a',1000);
+    for(const c of ['summon_turtle','summon_raven','familiar_aegis'])own(id,'summoner',c,2);
+    expect((await catalogOffer(token,BESTIARY)).availability).toEqual({purchasable:true});
+    const res=await call(token,'POST','/store/purchase',{offerId:BESTIARY,idempotencyKey:'all-owned-01'});
+    expect(res.status).toBe(200);expect(res.body.wallet.balance).toBe(620);
+    for(const c of ['summon_turtle','summon_raven','familiar_aegis'])expect(res.body.profile.heroes.summoner.collection[c].copies).toBe(3);
   });
 
-  it('charges the server quote (forged price ignored), grants only what fits, snapshots the sale', async () => {
+  it('charges the server quote (forged price ignored), grants every authored card, snapshots the sale', async () => {
     const { token, id } = await player();
     grant('tactics_qa_a', 1000);
     own(id, 'summoner', 'summon_turtle', 1); // 1/2: one more copy still fits → nothing excluded
     own(id, 'summoner', 'summon_raven', 2); // at cap → excluded
     const res = await call(token, 'POST', '/store/purchase', { offerId: BESTIARY, idempotencyKey: 'prorate-key-01', price: 1, basePrice: 1 });
     expect(res.status).toBe(200);
-    expect(res.body.purchase.price).toBe(250);
-    expect(res.body.wallet.balance).toBe(750);
+    expect(res.body.purchase.price).toBe(380);
+    expect(res.body.wallet.balance).toBe(620);
     expect(res.body.purchase.granted.cards.map((c: { cardId: string; total: number }) => [c.cardId, c.total])).toEqual([
       ['summon_turtle', 2],
+      ['summon_raven', 3],
       ['familiar_aegis', 2], // the starter's copy + the one bought
     ]);
     const row = db.sql.prepare('SELECT price, offer_json FROM tactics_store_purchases WHERE user_id = ?').get(id) as { price: number; offer_json: string };
     const sold = JSON.parse(row.offer_json);
-    expect(row.price).toBe(250);
-    expect(sold).toMatchObject({ id: BESTIARY, price: 250, basePrice: 380, excluded: [{ cardId: 'summon_raven' }] });
-    expect(sold.contents.map((c: { cardId: string }) => c.cardId)).toEqual(['summon_turtle', 'familiar_aegis']);
+    expect(row.price).toBe(380);
+    expect(sold).toMatchObject({ id: BESTIARY, price: 380, basePrice: 380, excluded: [] });
+    expect(sold.contents.map((c: { cardId: string }) => c.cardId)).toEqual(['summon_turtle', 'summon_raven', 'familiar_aegis']);
     const debit = db.sql.prepare("SELECT amount_delta FROM tactics_wallet_ledger WHERE reason = 'STORE_PURCHASE'").get() as { amount_delta: number };
-    expect(debit.amount_delta).toBe(-250);
+    expect(debit.amount_delta).toBe(-380);
   });
 
   it('a retry replays the stored price even if ownership changed since', async () => {
@@ -339,7 +339,7 @@ describe('dynamic bundle pricing (server-authoritative)', () => {
     expect((await call(token, 'GET', '/wallet')).body.wallet.balance).toBe(660);
   });
 
-  it('racing a single card against a bundle that contains it: never above cap, each sale charged its own quote', async () => {
+  it('racing a single card against a bundle accumulates both acquisitions at their server quotes', async () => {
     const { token, id } = await player();
     grant('tactics_qa_a', 1000);
     const [a, b] = await Promise.all([
@@ -347,16 +347,16 @@ describe('dynamic bundle pricing (server-authoritative)', () => {
       call(token, 'POST', '/store/purchase', { offerId: 'pack_mage_glacial_control', idempotencyKey: 'race-pack-01' }),
     ]);
     const shells = db.sql.prepare("SELECT copies FROM tactics_player_cards WHERE user_id = ? AND card_id = 'glacial_shell'").get(id) as { copies: number };
-    expect(shells.copies).toBe(1); // RARE cap
+    expect(shells.copies).toBe(2); // RARE cap
     const ok = [a, b].filter((r) => r.status === 200);
-    expect(ok.length).toBeGreaterThanOrEqual(1);
+    expect(ok).toHaveLength(2);
     for (const r of [a, b].filter((x) => x.status !== 200)) expect(['ALREADY_OWNED', 'PURCHASE_CONFLICT']).toContain(r.body.error.code);
     const debits = db.sql.prepare("SELECT -amount_delta AS paid, reference_id FROM tactics_wallet_ledger WHERE reason = 'STORE_PURCHASE'").all() as { paid: number; reference_id: string }[];
     expect(debits.map((d) => d.paid).sort()).toEqual(ok.map((r) => r.body.purchase.price).sort());
     expect((await call(token, 'GET', '/wallet')).body.wallet.balance).toBe(1000 - debits.reduce((x, d) => x + d.paid, 0));
     // Whatever won, the bundle is still sold without the shell afterwards (420 × 250/500 = 210), or is already bought.
     const pack = await catalogOffer(token, 'pack_mage_glacial_control');
-    if (pack.availability.purchasable) expect(pack.price).toBe(210);
+    if (pack.availability.purchasable) expect(pack.price).toBe(420);
   });
 });
 

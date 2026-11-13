@@ -295,7 +295,7 @@ describe('server: legacy accounts and migration 0012', () => {
     });
     expect(sql.prepare('SELECT * FROM tactics_player_cards ORDER BY card_id').all()).toEqual(before);
     // The current Worker reads deck columns added by 0028 (multi-deck; it also alters 0023's queue).
-    for (const f of ['0023_tactics_ranked_preseason.sql', '0028_tactics_multi_deck.sql']) migrate(f);
+    for (const f of ['0023_tactics_ranked_preseason.sql', '0028_tactics_multi_deck.sql', '0029_tactics_collection_claim_revision.sql']) migrate(f);
 
     const d1 = memoryD1();
     const wrapped = { ...d1, prepare: (q: string) => wrap(sql, q), batch: d1.batch };

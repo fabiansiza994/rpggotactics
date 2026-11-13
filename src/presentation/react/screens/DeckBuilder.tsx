@@ -207,9 +207,10 @@ export function CollectionTile({
   const locked = owned === 0;
   const limit = copyLimit(card, DECK_RULES);
   const rarity = rarityOf(card);
+  const addable = Math.max(0, Math.min(owned, limit) - inDeck);
   const status = locked
     ? 'Bloqueada'
-    : `Tienes ${owned}; En mazo ${inDeck}; Disponible ${availability}`;
+    : `Poseídas ${owned}; Límite por mazo ${limit}; En mazo ${inDeck}; Puedes añadir ${addable}`;
   return (
     <li
       className={`db-tile-wrap${owned > 0 && availability === 0 ? ' is-depleted' : ''}`}
@@ -280,10 +281,10 @@ export function CollectionTile({
             <span className="db-tile-copies">
               <CopyPips inDeck={inDeck} limit={limit} owned={owned} />
               <span className="db-tile-owned">
-                Tienes: {owned} · En mazo: {inDeck}
+                Poseídas: {owned} · En mazo: {inDeck}
               </span>
               <strong className="db-tile-available">
-                {availability > 0 ? `Disponible ${availability}` : 'Sin copias'}
+                {addable > 0 ? `Puedes añadir ${addable}` : owned > 0 ? 'Límite en este mazo' : 'Sin copias'}
               </strong>
             </span>
           )}
@@ -382,7 +383,7 @@ function CardDetail({
           </>
         ) : (
           <>
-            Tienes: {owned} · En mazo: {inDeck} · Disponibles: {Math.max(0, owned - inDeck)}
+            Poseídas: {owned} · En mazo: {inDeck} · Puedes añadir: {Math.max(0, Math.min(owned, copyLimit(card, DECK_RULES)) - inDeck)}
             <span className="muted"> (máx. {limit} por mazo)</span>
           </>
         )}

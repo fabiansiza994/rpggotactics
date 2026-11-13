@@ -17,7 +17,7 @@ export function memoryD1(options: { legacyProfiles?: boolean } = {}): D1Database
   const sql = new DatabaseSync(':memory:');
   sql.exec('PRAGMA foreign_keys = ON;');
   sql.exec(AUTH_SCHEMA);
-  for (const file of ['0001_tactics_player_data.sql', '0002_tactics_card_progression.sql', '0003_tactics_skirmishes.sql', '0007_tactics_store_economy.sql', '0008_tactics_cosmetic_equip.sql', '0011_tactics_campaign_runs_per_hero.sql', '0012_tactics_champion_unlocks.sql', '0013_tactics_promo_codes.sql', '0014_tactics_world_progress.sql', '0023_tactics_ranked_preseason.sql', '0024_tactics_champion_mastery.sql', '0025_tactics_ranked_reward_track.sql', '0026_tactics_profile_avatar.sql', '0028_tactics_multi_deck.sql'])
+  for (const file of ['0001_tactics_player_data.sql', '0002_tactics_card_progression.sql', '0003_tactics_skirmishes.sql', '0007_tactics_store_economy.sql', '0008_tactics_cosmetic_equip.sql', '0011_tactics_campaign_runs_per_hero.sql', '0012_tactics_champion_unlocks.sql', '0013_tactics_promo_codes.sql', '0014_tactics_world_progress.sql', '0023_tactics_ranked_preseason.sql', '0024_tactics_champion_mastery.sql', '0025_tactics_ranked_reward_track.sql', '0026_tactics_profile_avatar.sql', '0028_tactics_multi_deck.sql', '0029_tactics_collection_claim_revision.sql'])
     sql.exec(readFileSync(new URL(`../../server/migrations/${file}`, import.meta.url), 'utf8'));
   if (options.legacyProfiles)
     sql.exec(`CREATE TRIGGER legacy_profiles AFTER INSERT ON tactics_profiles BEGIN

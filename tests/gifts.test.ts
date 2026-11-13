@@ -77,6 +77,13 @@ async function call(
   body?: unknown,
   env: Partial<Env> = RELEASED(),
 ) {
+  // Modern test client: explicitly obtains the quote before confirming a new gift.
+  // A quoteToken property (even undefined) opts out for old-client/rejection scenarios.
+  if (method === 'POST' && path === '/store/gifts' && body && typeof body === 'object' && !('quoteToken' in body)) {
+    const input = body as {productId:string;recipientUsername:string};
+    const quote = await call(token,'POST','/store/gifts/quote',{productId:input.productId,recipientUsername:input.recipientUsername},env);
+    body = {...body,...(quote.status===200 ? {quoteToken:quote.body.purchaseQuote.token} : {})};
+  }
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   const req = new Request(`https://api.test/api/tactics${path}`, {
@@ -84,8 +91,8 @@ async function call(
     headers,
     body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body),
   });
-  const res = await handle(req, { DB: db, ...env } as Env, deps());
-  return { status: res.status, body: (await res.json()) as Json };
+  const res = await handle(req, { DB: db, STORE_QUOTE_SECRET:'disposable-gift-quote-fixture-not-a-production-secret', ...env } as Env, deps());
+  return { status: res.status, body: (await res.json()) as Json, cacheControl:res.headers.get('Cache-Control') };
 }
 
 interface Player {
@@ -175,6 +182,48 @@ beforeEach(async () => {
   bruno = await player('bruno');
   await befriend(ana, bruno);
   pushes = [];
+});
+
+describe('gift quote safety',()=>{
+  it('does not cache a personalized gift quote',async()=>{expect((await call(ana.token,'POST','/store/gifts/quote',{productId:'card_glacial_shell',recipientUsername:'bruno'})).cacheControl).toBe('private, no-store');});
+  it('old tabs cannot send a new gift without a signed quote',async()=>{
+    const before=await balance(ana);const r=await send(ana,'card_glacial_shell','bruno',{quoteToken:undefined});
+    expect(r.status).toBe(426);expect(r.body.error.code).toBe('QUOTE_REQUIRED');expect(await balance(ana)).toBe(before);expect(giftRows()).toEqual([]);
+  });
+  it('expired and manipulated gift quotes never debit or deliver',async()=>{
+    const q=await call(ana.token,'POST','/store/gifts/quote',{productId:'card_glacial_shell',recipientUsername:'bruno'});
+    const token=q.body.purchaseQuote.token;const before=await balance(ana);
+    expect((await send(ana,'card_glacial_shell','bruno',{quoteToken:token+'x'})).body.error.code).toBe('QUOTE_INVALID');
+    now=q.body.purchaseQuote.expiresAt;
+    expect((await send(ana,'card_glacial_shell','bruno',{quoteToken:token})).body.error.code).toBe('QUOTE_EXPIRED');
+    expect(await balance(ana)).toBe(before);expect(giftRows()).toEqual([]);expect(copies(await profileOf(bruno),'mage','glacial_shell')).toBe(0);
+  });
+  it('binds confirmation to its recipient and separates self-purchase from gift quotes',async()=>{
+    const q=await call(ana.token,'POST','/store/gifts/quote',{productId:'card_glacial_shell',recipientUsername:'bruno'});
+    const carla=await player('carla');await befriend(ana,carla);
+    expect((await send(ana,'card_glacial_shell','carla',{quoteToken:q.body.purchaseQuote.token})).body.error.code).toBe('QUOTE_INVALID');
+    const cat=await call(ana.token,'GET','/store/catalog');const self=cat.body.offers.find((o:Json)=>o.id==='card_glacial_shell');
+    expect((await send(ana,'card_glacial_shell','bruno',{quoteToken:self.purchaseQuote.token})).body.error.code).toBe('QUOTE_INVALID');
+    expect(giftRows()).toEqual([]);expect(await balance(ana)).toBe(2000);
+  });
+  it('a changed gift price requires a fresh explicit confirmation at the same receipt key',async()=>{
+    const q=await call(ana.token,'POST','/store/gifts/quote',{productId:'card_glacial_shell',recipientUsername:'bruno'});
+    const o=CATALOG.find(o=>o.id==='card_glacial_shell')!,original=o.price;
+    try{
+      o.price=original+10;
+      const rejected=await send(ana,o.id,'bruno',{quoteToken:q.body.purchaseQuote.token,idempotencyKey:'gift-requote-01'});
+      expect(rejected.body.error.code).toBe('QUOTE_CHANGED');expect(await balance(ana)).toBe(2000);expect(giftRows()).toEqual([]);
+      const fresh=await call(ana.token,'POST','/store/gifts/quote',{productId:o.id,recipientUsername:'bruno'});
+      const accepted=await send(ana,o.id,'bruno',{quoteToken:fresh.body.purchaseQuote.token,idempotencyKey:'gift-requote-01'});
+      expect(accepted.status).toBe(200);expect(accepted.body.gift.price).toBe(original+10);
+    }finally{o.price=original;}
+  });
+  it('confirmed gifts recover before missing or expired quote validation',async()=>{
+    const first=await send(ana,'card_glacial_shell','bruno',{idempotencyKey:'gift-recovery-01'});expect(first.status).toBe(200);
+    now+=600_000;const before=await balance(ana);
+    const retry=await send(ana,'card_glacial_shell','bruno',{idempotencyKey:'gift-recovery-01',quoteToken:undefined});
+    expect(retry.status).toBe(200);expect(retry.body.replayed).toBe(true);expect(retry.body.gift.giftId).toBe(first.body.gift.giftId);expect(await balance(ana)).toBe(before);expect(giftRows()).toHaveLength(1);
+  });
 });
 
 describe('buying a gift', () => {
@@ -365,40 +414,23 @@ describe('buying a gift', () => {
     expect(giftRows()).toEqual([]);
   });
 
-  it('checks the RECIPIENT at cap (pending gifts included), never the sender', async () => {
-    // The sender owning the card is irrelevant.
-    own(ana.id, 'mage', 'glacial_shell', 1);
+  it('allows owned and pending card copies while preserving gift limits and charges', async () => {
     own(bruno.id, 'mage', 'frost_nova', 2);
-    const capped = await send(ana, 'card_frost_nova', 'bruno');
-    expect(capped.body.error).toMatchObject({
-      code: 'RECIPIENT_CARD_AT_CAP',
-      recipientUsername: 'bruno',
-    });
-    expect((await send(ana, 'card_glacial_shell', 'bruno')).status).toBe(200);
-    // RARE cap 1: the waiting gift already fills it, from any sender.
-    expect((await send(ana, 'card_glacial_shell', 'bruno')).body.error.code).toBe(
-      'RECIPIENT_CARD_AT_CAP',
-    );
-    const carla = await player('carla', 500);
-    await befriend(carla, bruno);
-    expect((await send(carla, 'card_glacial_shell', 'bruno')).body.error.code).toBe(
-      'RECIPIENT_CARD_AT_CAP',
-    );
-    expect(await balance(ana)).toBe(1750);
-    expect(await balance(carla)).toBe(500);
+    expect((await send(ana,'card_frost_nova','bruno')).status).toBe(200);
+    expect((await send(ana,'card_glacial_shell','bruno')).status).toBe(200);
+    expect((await send(ana,'card_glacial_shell','bruno')).status).toBe(200);
+    const carla = await player('carla',500); await befriend(carla,bruno);
+    expect((await send(carla,'card_glacial_shell','bruno')).status).toBe(200);
+    expect(await balance(ana)).toBe(1350);
+    expect(await balance(carla)).toBe(250);
   });
 
-  it('two friends racing for the last free copy: the transaction guard lets exactly one through', async () => {
-    const carla = await player('carla', 500);
-    await befriend(carla, bruno);
-    const [a, c] = await Promise.all([
-      send(ana, 'card_glacial_shell', 'bruno'),
-      send(carla, 'card_glacial_shell', 'bruno'),
-    ]);
-    expect([a.status, c.status].sort()).toEqual([200, 409]);
-    expect([a, c].find((r) => r.status === 409)!.body.error.code).toBe('RECIPIENT_CARD_AT_CAP');
-    expect(giftRows()).toHaveLength(1);
-    expect((await balance(ana)) + (await balance(carla))).toBe(2500 - 250);
+  it('two independently purchased card gifts both survive concurrent acquisition', async () => {
+    const carla = await player('carla',500); await befriend(carla,bruno);
+    const results = await Promise.all([send(ana,'card_glacial_shell','bruno'),send(carla,'card_glacial_shell','bruno')]);
+    expect(results.map(r=>r.status)).toEqual([200,200]);
+    expect(giftRows()).toHaveLength(2);
+    expect((await balance(ana))+(await balance(carla))).toBe(2000);
   });
 
   it('refuses a cosmetic the recipient owns or is already being gifted', async () => {
@@ -418,18 +450,12 @@ describe('buying a gift', () => {
     expect(await balance(ana)).toBe(1700);
   });
 
-  it('never prorates a bundle: a partly-owned bundle is refused whole', async () => {
-    // The recipient already holds Frost Nova at its cap: buying the pack themselves would be
-    // prorated; gifting it is refused (no partial gifts, no silent repricing).
-    own(bruno.id, 'mage', 'frost_nova', 2);
-    expect((await send(ana, 'pack_mage_glacial_control', 'bruno')).body.error.code).toBe(
-      'RECIPIENT_CARD_AT_CAP',
-    );
-    const own_ = (await call(bruno.token, 'GET', '/store/catalog')).body.offers.find(
-      (o: Json) => o.id === 'pack_mage_glacial_control',
-    );
-    expect(own_.price).toBeLessThan(own_.basePrice);
-    expect(await balance(ana)).toBe(2000);
+  it('card ownership does not prorate a gift or its catalog price', async () => {
+    own(bruno.id,'mage','frost_nova',2);
+    const own_ = (await call(bruno.token,'GET','/store/catalog')).body.offers.find((o:Json)=>o.id==='pack_mage_glacial_control');
+    expect(own_.price).toBe(own_.basePrice);
+    expect((await send(ana,'pack_mage_glacial_control','bruno')).status).toBe(200);
+    expect(await balance(ana)).toBe(2000-own_.price);
   });
 
   it('respects champion and content release gates of the recipient', async () => {
@@ -605,19 +631,14 @@ describe('claiming a gift', () => {
     expect(copies(await profileOf(bruno), 'mage', 'glacial_shell')).toBe(0);
   });
 
-  it('a gift the recipient can no longer take stays PENDING (not lost, not converted)', async () => {
+  it('a card acquired while its gift waits does not prevent the legitimate gift claim', async () => {
     const giftId = await gifted();
-    own(bruno.id, 'mage', 'glacial_shell', 1); // got it meanwhile (drop / own purchase)
-    const res = await claim(bruno, giftId);
-    expect(res.status).toBe(409);
-    expect(res.body.error).toMatchObject({ code: 'GIFT_BLOCKED', reason: 'RECIPIENT_CARD_AT_CAP' });
-    expect(giftRows()[0]!.status).toBe('PENDING');
-    expect((await call(bruno.token, 'GET', '/store/gifts/received')).body.gifts[0]).toMatchObject({
-      status: 'PENDING',
-      claimable: false,
-      blockedReason: 'RECIPIENT_CARD_AT_CAP',
-    });
-    expect(copies(await profileOf(bruno), 'mage', 'glacial_shell')).toBe(1);
+    own(bruno.id,'mage','glacial_shell',1);
+    expect((await claim(bruno,giftId)).status).toBe(200);
+    expect(giftRows()[0]!.status).toBe('CLAIMED');
+    expect(copies(await profileOf(bruno),'mage','glacial_shell')).toBe(2);
+    await claim(bruno,giftId);
+    expect(copies(await profileOf(bruno),'mage','glacial_shell')).toBe(2);
     expect(await balance(bruno)).toBe(0);
   });
 

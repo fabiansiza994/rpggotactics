@@ -20,7 +20,6 @@ import {
   createProfile,
   createRun,
   DECK_RULES,
-  copyLimit,
   defaultCampaignHero,
   supportsHero,
   DEFAULT_CONTENT,
@@ -339,6 +338,9 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       route === 'POST /api/tactics/import'
         ? sanitizeLocalImport(body.profile, localCampaigns(body), content, DECK_RULES, availableChampions(env, deps, caller.username))
         : null;
+    if (imported?.unverifiedCopies.length) return error(422, 'IMPORT_REQUIRES_REVIEW',
+      'La colección local contiene copias que necesitan verificación. Se conserva tu progreso local y no se ha creado ni reemplazado ningún inventario.',
+      { cards: imported.unverifiedCopies, notes: imported.notes });
     if (imported?.runs.some(run => !campaignReleased(run.heroId, env, deps, caller.username))) return error(403, 'CHAMPION_LOCKED', 'Este campeón todavía no está disponible en la campaña.');
     try {
       await createPlayer(
@@ -391,6 +393,8 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     now,
     content,
     store: deps.store ?? defaultStoreDeps,
+    quoteSecret: env.STORE_QUOTE_SECRET,
+    quoteNow: deps.now,
     heroAllowed: (heroId) => championAllowed(heroId, env, caller.username),
     state: async () => stateBody(caller, await loadReconciled(), env, deps),
   };
@@ -574,6 +578,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
           grant: claim.granted
             ? {
                 ...claim.granted,
+                copies: 1,
                 ownerId: collectionOwner(content, battle.run.heroId, claim.granted.cardId),
                 source: `${encounter.rewards.pool}_DROP` as CardSource,
               }
@@ -671,7 +676,10 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
         : [];
       try {
         await saveCampaignStep(db, caller.userId, now, {
-          run: won.run,
+          expectedRevision: record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`],
+          run: { ...won.run, rewardOptions: won.run.rewardOptions.map(option => ({
+            ...option, id: `${option.id}:r${(record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`] ?? 0) + 1}`,
+          })) },
           beforeLog: [...economy.statements, ...masteryXp],
           // Champion milestones count World 1 only (their thresholds are World 1 encounters).
           campaignBest: campaign.id === ASCENT_CAMPAIGN.id ? won.run.completedEncounterIds.length : undefined,
@@ -702,7 +710,6 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
                   ? {
                       cardId: rewardCard.id,
                       acquired: heroProfile(record.profile, run.heroId, content).acquisitions + 1,
-                      cap: copyLimit(rewardCard, DECK_RULES),
                     }
                   : undefined,
               })
@@ -728,31 +735,40 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       if (!claim.ok) return error(409, 'INVALID_STEP', claim.error);
       const encounter = encounterById(campaign, run.currentEncounterId);
       const source = `${encounter.rewards.pool}_DROP` as CardSource;
-      await saveCampaignStep(db, caller.userId, now, {
-        run: claim.run,
-        grant: claim.granted
-          ? {
-              ownerId: collectionOwner(content, run.heroId, claim.granted.cardId),
-              cardId: claim.granted.cardId,
-              copies: claim.granted.copies,
-              acquired: claim.granted.acquired,
-              source,
-            }
-          : undefined,
-        pity: { heroId: run.heroId, value: claim.pity.after },
-        log: {
-          campaignId: run.campaignId,
-          heroId: run.heroId,
-          runSeed: run.seed,
-          encounterId: encounter.id,
-          pool: encounter.rewards.pool,
-          event: 'CLAIMED',
-          offered: null,
-          chosen: { reward: claim.reward, isNew: claim.granted?.isNew ?? null },
-          pityBefore: claim.pity.before,
-          pityAfter: claim.pity.after,
-        },
-      });
+      try {
+        await saveCampaignStep(db, caller.userId, now, {
+          expectedRevision: record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`],
+          run: claim.run,
+          grant: claim.granted
+            ? {
+                ownerId: collectionOwner(content, run.heroId, claim.granted.cardId),
+                cardId: claim.granted.cardId,
+                copies: 1,
+                acquired: claim.granted.acquired,
+                source,
+              }
+            : undefined,
+          pity: { heroId: run.heroId, value: claim.pity.after },
+          log: {
+            campaignId: run.campaignId,
+            heroId: run.heroId,
+            runSeed: run.seed,
+            encounterId: encounter.id,
+            pool: encounter.rewards.pool,
+            event: 'CLAIMED',
+            offered: null,
+            chosen: { reward: claim.reward, isNew: claim.granted?.isNew ?? null },
+            pityBefore: claim.pity.before,
+            pityAfter: claim.pity.after,
+          },
+        });
+      } catch {
+        // A concurrent claim/start changed this run. Never reapply the acquisition.
+        const fresh = await loadPlayer(db, caller.userId, content);
+        const freshRun = run.campaignId === ASCENT_CAMPAIGN.id ? fresh?.runs[run.heroId] : fresh?.worldRuns[run.campaignId]?.[run.heroId];
+        if (freshRun?.seed === run.seed && freshRun.chosenRewards.some(c => c.encounterId === encounter.id && c.reward.id === body.optionId)) return respond();
+        return error(409, 'INVALID_STEP', 'La campaña ha cambiado. Actualiza antes de reclamar.');
+      }
       return respond();
     }
   }

@@ -40,6 +40,7 @@ export interface SentGift extends GiftBase {
   currencyId: string;
 }
 export interface GiftQuote {
+  purchaseQuote?: { token:string; expiresAt:number };
   productId: string;
   productName: string;
   recipientUsername: string;
@@ -55,7 +56,7 @@ const opts = (token: string, method = 'GET', body?: unknown) => ({ method, token
 export const giftApi = {
   quote: (token: string, productId: string, recipientUsername: string) =>
     request<GiftQuote>(CLOUD_CONFIG.apiUrl, `${base}/quote`, opts(token, 'POST', { productId, recipientUsername })),
-  send: (token: string, body: { productId: string; recipientUsername: string; idempotencyKey: string; message?: string }) =>
+  send: (token: string, body: { productId: string; recipientUsername: string; idempotencyKey: string; quoteToken?: string; message?: string }) =>
     request<{ gift: SentGift; replayed: boolean; wallet: Wallet }>(CLOUD_CONFIG.apiUrl, base, opts(token, 'POST', body)),
   received: (token: string) => request<{ gifts: ReceivedGift[]; pending: number }>(CLOUD_CONFIG.apiUrl, `${base}/received`, opts(token)),
   sent: (token: string) => request<{ gifts: SentGift[] }>(CLOUD_CONFIG.apiUrl, `${base}/sent`, opts(token)),
@@ -83,3 +84,9 @@ export function blockedText(reason: GiftBlock): string {
 }
 
 export const GUEST_GIFT_TEXT = 'Inicia sesión para enviar y recibir regalos.';
+
+/** A refresh/timeout does not turn the same gift confirmation into a second operation. */
+export function giftConfirmation(previous:{target:string;key:string}|null,productId:string,recipient:string,mint:()=>string=()=>crypto.randomUUID()) {
+  const target = `${productId}:${recipient.trim().toLowerCase()}`;
+  return previous?.target===target ? previous : {target,key:mint()};
+}

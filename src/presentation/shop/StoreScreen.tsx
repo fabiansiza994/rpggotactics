@@ -34,6 +34,7 @@ import {
   readIntent,
   remainingTime,
   saveIntent,
+  needsQuoteReview,
   type PurchaseIntent,
 } from './presentation';
 import '../../styles/shop.css';
@@ -117,6 +118,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
   const [selected, setSelected] = useState<CatalogOffer | null>(null);
   const [inspect, setInspect] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
+  const [quoteReview, setQuoteReview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [synced, setSynced] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
   const reload = useCallback(async () => {
     if (!session) {
       setLoading(false);
-      return;
+      return null;
     }
     setLoading(true);
     setSynced(false);
@@ -143,7 +145,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
       storeApi.catalog(session.token),
       tacticsApi.state(session.token),
     ]);
-    if (!mounted.current || loadSession()?.token !== session.token) return;
+    if (!mounted.current || loadSession()?.token !== session.token) return null;
     if (cat.ok && cat.data?.wallet && state.ok && state.data?.profile) {
       setSynced(true);
       setNow(Date.now());
@@ -159,6 +161,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
       useBattleStore.getState().sessionExpired();
     } else setError('No pudimos actualizar la tienda. Revisa tu conexión y vuelve a intentarlo.');
     setLoading(false);
+    return cat.ok && cat.data?.wallet && state.ok && state.data?.profile ? cat.data : null;
   }, [session]);
   useEffect(() => {
     mounted.current = true;
@@ -194,24 +197,21 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
     setReceipt(null);
     setError(null);
   };
-  const buy = async (retry?: PurchaseIntent) => {
-    if (
-      !session ||
-      lock.current ||
-      (!retry &&
-        (!selected ||
-          !catalog ||
-          !synced ||
-          loading ||
-          !selected.availability.purchasable ||
-          catalog.wallet.balance < selected.price ||
-          intent))
-    )
+  const buy = async (retry?: PurchaseIntent, confirmedOffer?: CatalogOffer) => {
+    if (!session || lock.current) return;
+    const recovering = !!retry && !confirmedOffer;
+    const chosen = confirmedOffer ?? selected;
+    if (!recovering && (!chosen || !catalog || !synced || loading || !chosen.availability.purchasable || catalog.wallet.balance < chosen.price || (intent && !confirmedOffer))) return;
+    if (retry && (retry.username !== session.username || (confirmedOffer && confirmedOffer.id !== retry.offerId))) return;
+    if (!recovering && !chosen?.purchaseQuote) {
+      setError('Actualiza la tienda antes de confirmar esta compra.');
       return;
-    const next = retry ?? {
+    }
+    const next: PurchaseIntent = recovering ? retry! : {
       username: session.username,
-      offerId: selected!.id,
-      key: crypto.randomUUID(),
+      offerId: chosen!.id,
+      key: retry?.key ?? crypto.randomUUID(),
+      quote: chosen!.purchaseQuote,
     };
     try {
       saveIntent(next);
@@ -226,7 +226,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
     setIntent(next);
     setConfirm(false);
     setError(null);
-    const result = await storeApi.purchase(session.token, next.offerId, next.key);
+    const result = await storeApi.purchase(session.token, next.offerId, next.key, recovering ? undefined : next.quote?.token, recovering);
     if (result.ok && result.data?.purchase && result.data.wallet && result.data.profile) {
       if (readIntent(session.username)?.key === next.key) {
         try {
@@ -237,6 +237,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
       }
       if (mounted.current && loadSession()?.token === session.token) {
         setIntent(null);
+        setQuoteReview(false);
         setReceipt(result.data.purchase);
         setCatalog((old) => (old ? { ...old, wallet: result.data.wallet } : old));
         useBattleStore.setState({ profile: result.data.profile });
@@ -251,7 +252,9 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
         setError(purchaseError(result.error));
         if (result.error.kind === 'AUTH' && loadSession()?.token === session.token)
           useBattleStore.getState().sessionExpired();
-        if (!['NETWORK', 'TIMEOUT', 'SERVER', 'AUTH'].includes(result.error.kind)) {
+        if (needsQuoteReview(result.error.code)) {
+          setQuoteReview(true);
+        } else if (!['NETWORK', 'TIMEOUT', 'SERVER', 'AUTH'].includes(result.error.kind)) {
           try {
             saveIntent(null, session.username);
           } catch {
@@ -263,6 +266,20 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
     }
     lock.current = false;
     if (mounted.current) setBusy(false);
+  };
+  const reviewPending = async () => {
+    if (!intent || busy || loading) return;
+    const fresh = await reload();
+    if (!fresh) return;
+    const offer = fresh.offers.find(o => o.id === intent.offerId);
+    if (!offer?.availability.purchasable || !offer.purchaseQuote) {
+      setError('La oferta ya no está disponible. Conservamos el identificador para recuperar su recibo.');
+      return;
+    }
+    setSelected(offer);
+    setReceipt(null);
+    setQuoteReview(true);
+    setConfirm(true);
   };
   const equip = async (slot: string, cosmeticId: string | null) => {
     if (!session || lock.current) return;
@@ -355,6 +372,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
             <button disabled={busy} onClick={() => void buy(intent)}>
               {busy ? 'Confirmando…' : 'Recuperar compra'}
             </button>
+            {quoteReview && <button disabled={busy || loading} onClick={() => void reviewPending()}>Revisar condiciones actuales</button>}
           </div>
         )}
         {loading && !catalog && session && (
@@ -495,7 +513,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
                 <div className="shop-grant" key={c.cardId}>
                   <CardPreview id={c.cardId} />
                   <p>
-                    +{c.copies} · Ahora {c.total}/{c.cap} copias
+                    +{c.copies} copias · Límite por mazo: {c.cap}
                   </p>
                 </div>
               ))}
@@ -575,8 +593,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
                               ×{c.copies} · {rarityName[rarityOf(DEFAULT_CONTENT.cards[c.cardId]!)]}
                             </small>
                             <small>
-                              Tienes {ownership(selected, c.cardId, profile).owned}/
-                              {ownership(selected, c.cardId, profile).cap} copias
+                              Poseídas: {ownership(selected, c.cardId, profile).owned} · Límite por mazo: {ownership(selected, c.cardId, profile).cap}
                             </small>
                           </span>
                         </button>
@@ -663,23 +680,22 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
                     <div className="shop-confirm" role="group" aria-label="Confirmar compra">
                       <h3>¿Adquirir {selected.title}?</h3>
                       <p>Se descontarán {selected.price} Cristales Arcanos de tu saldo.</p>
-                      <button autoFocus className="shop-primary" onClick={() => void buy()}>
+                      <button autoFocus className="shop-primary" disabled={busy || !selected.purchaseQuote} onClick={() => void buy(quoteReview && intent ? intent : undefined, quoteReview && intent ? selected : undefined)}>
                         Confirmar compra · {selected.price}
                       </button>
                       <button onClick={() => setConfirm(false)}>Cancelar</button>
                     </div>
                   ) : intent ? (
-                    <button
-                      className="shop-primary"
-                      disabled={busy}
-                      onClick={() => void buy(intent)}
-                    >
-                      {busy ? 'Confirmando…' : 'Recuperar compra pendiente'}
-                    </button>
+                    <div>
+                      <button className="shop-primary" disabled={busy} onClick={() => void buy(intent)}>
+                        {busy ? 'Confirmando…' : 'Recuperar compra pendiente'}
+                      </button>
+                      {quoteReview && <button disabled={busy || loading} onClick={() => void reviewPending()}>Revisar condiciones actuales</button>}
+                    </div>
                   ) : (
                     <button
                       className="shop-primary"
-                      disabled={busy || loading || !synced || !!blocked || insufficient}
+                      disabled={busy || loading || !synced || !!blocked || insufficient || !selected.purchaseQuote}
                       onClick={() => setConfirm(true)}
                     >
                       {busy ? 'Adquiriendo…' : 'COMPRAR'} <Price offer={selected} />

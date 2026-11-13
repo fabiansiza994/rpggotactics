@@ -183,17 +183,19 @@ describe('redeem', () => {
     expect(redemptions(id)).toEqual([]);
   });
 
-  it('a card at its copy cap rejects the code (CARD_AT_CAP) and leaves it unused', async () => {
+  it('an owned rare card is granted again once per valid promo redemption', async () => {
     const { token, id } = await player();
     own(id, 'summoner', 'summon_war_drake', 1);
     const res = await redeem(token, 'WARDRAGON');
-    expect(res.status).toBe(409);
-    expect(res.body.error).toMatchObject({ code: 'CARD_AT_CAP' });
-    expect(uses('WARDRAGON')).toBe(0);
-    expect(redemptions(id)).toEqual([]);
+    expect(res.status).toBe(200);
+    expect(copies(res.body.profile,'summoner','summon_war_drake')).toBe(2);
+    expect(uses('WARDRAGON')).toBe(1);
+    expect(redemptions(id)).toHaveLength(1);
+    await redeem(token,'WARDRAGON');
+    expect(copies((await call(token,'GET','/state')).body.profile,'summoner','summon_war_drake')).toBe(2);
   });
 
-  it('RITUALSTART grants both minor-ritual pieces, or nothing if one is at cap', async () => {
+  it('RITUALSTART grants both authored pieces even above their deck limits', async () => {
     const a = await player('tactics_qa_a');
     const ok = await redeem(a.token, 'RITUALSTART');
     expect(ok.body.reward!.items.map((i) => i.id)).toEqual(['rune_stone', 'rune_shell']);
@@ -203,9 +205,10 @@ describe('redeem', () => {
     const b = await player('tactics_qa_b');
     own(b.id, 'summoner', 'rune_shell', 2);
     const capped = await redeem(b.token, 'RITUALSTART');
-    expect(capped.body.error!.code).toBe('CARD_AT_CAP');
+    expect(capped.status).toBe(200);
     const state = (await call(b.token, 'GET', '/state')).body;
-    expect(copies(state.profile, 'summoner', 'rune_stone')).toBe(0);
+    expect(copies(state.profile, 'summoner', 'rune_stone')).toBe(1);
+    expect(copies(state.profile, 'summoner', 'rune_shell')).toBe(3);
   });
 
   it('multi rewards are atomic: an owned cosmetic blocks the crystals and the card too', async () => {

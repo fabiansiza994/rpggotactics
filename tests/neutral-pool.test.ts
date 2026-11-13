@@ -85,10 +85,10 @@ describe('shared neutral pool', () => {
     expect(profile.shared!.collection.frost_nova).toBeUndefined();
   });
 
-  it('either champion can roll a neutral card; a capped neutral is excluded for both', () => {
-    const offered = (profile: PlayerProfile, heroId: string) =>
+  it('either champion can earn neutral duplicates after prioritizing unowned cards', () => {
+    const offered = (profile: PlayerProfile, heroId: string, complete = false) =>
       Array.from({ length: 300 }, (_, seed) => seed).some((seed) =>
-        rollReward({ content: CONTENT, heroId, owned: ownedFor(profile, heroId, CONTENT), pity: 4, rules: DECK_RULES, poolId: 'BOSS', seed, count: 3 }).options.some(
+        rollReward({ content: CONTENT, heroId, owned: complete ? () => 5 : ownedFor(profile, heroId, CONTENT), pity: 4, rules: DECK_RULES, poolId: 'BOSS', seed, count: 3 }).options.some(
           (o) => o.kind === 'ADD_CARD' && o.cardId === 'ward_stone',
         ),
       );
@@ -98,6 +98,8 @@ describe('shared neutral pool', () => {
     const capped = granted(granted(fresh, 'mage', 'ward_stone'), 'summoner', 'ward_stone');
     expect(offered(capped, 'mage')).toBe(false);
     expect(offered(capped, 'summoner')).toBe(false);
+    expect(offered(capped, 'mage', true)).toBe(true);
+    expect(offered(capped, 'summoner', true)).toBe(true);
   });
 
   it('a campaign claim of a neutral card goes to the shared pool and reports isNew from it', () => {
@@ -148,7 +150,7 @@ describe('neutral pool persistence', () => {
     const profile = granted(granted(granted(createProfile(CONTENT), 'mage', 'ward_stone'), 'mage', 'ward_stone'), 'mage', 'ward_stone');
     const imported = sanitizeLocalImport(serializeProfile(profile), null, CONTENT, DECK_RULES);
     expect(imported.profile.shared!.collection.ward_stone!.copies).toBe(2); // UNCOMMON cap
-    expect(imported.notes).toContain('shared: ward_stone capped at 2 copies');
+    expect(imported.notes).toContain('shared: ward_stone unverified surplus not imported; legacy allowance 2 copies');
     expect(imported.profile.heroes.mage!.collection.ward_stone).toBeUndefined();
   });
 });
@@ -167,6 +169,15 @@ describe('neutral pool on the server', () => {
   };
   beforeEach(() => {
     db = memoryD1({ legacyProfiles: true });
+  });
+
+  it('concurrent legacy folds do not duplicate or overwrite copies', async () => {
+    const {id,token}=addAccount(db,'legacy_concurrency');await call(token,'POST','/profile',{});
+    db.sql.prepare("INSERT INTO tactics_player_cards VALUES(?,'mage','ward_stone',2,1,'LOCAL_IMPORT',0)").run(id);
+    db.sql.prepare("INSERT INTO tactics_player_cards VALUES(?,'*','ward_stone',5,2,'STORE_PURCHASE',0)").run(id);
+    const results=await Promise.all([call(token,'GET','/state'),call(token,'GET','/state')]);
+    for(const result of results) expect(result.body.profile.shared!.collection.ward_stone!.copies).toBe(7);
+    expect((await call(token,'GET','/state')).body.profile.shared!.collection.ward_stone!.copies).toBe(7);
   });
 
   it('legacy champion rows of a now-neutral card are moved to the shared row in one step', async () => {

@@ -20,6 +20,8 @@ export interface D1Database {
 }
 
 export interface Env {
+  /** Dedicated HMAC key (>=32 random bytes encoded), provisioned as a Worker secret only. */
+  STORE_QUOTE_SECRET?: string;
   RELEASE2_MAINTENANCE?: string;
   RELEASE2_QA_USERS?: string;
   RELEASE2_CLIENT_REQUIRED?: string;
