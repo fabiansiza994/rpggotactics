@@ -1,3 +1,4 @@
+import {registerPlayNavigationGuard} from '../../play/navigation';
 import { MyDecks, DeckNameDialog, deckActionError } from './MyDecks';
 import '../../../styles/deckbuilder.css';
 const CardCosmeticPicker = lazy(() => import('../../cosmetics/CardCosmeticPicker').then(m => ({ default: m.CardCosmeticPicker })));
@@ -632,6 +633,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
   // The saved deck is an old 20-card one: shown untouched, the player adds the rest by hand.
   const savedLegacy = deckStatus(saved.cards, heroId, owned, DEFAULT_CONTENT, DECK_RULES).legacy;
   const dirty = !sameDeck(draft, saved.cards);
+  useEffect(()=>registerPlayNavigationGuard(()=>!dirty||window.confirm('¿Salir del editor? Los cambios sin guardar se perderán.')),[dirty]);
   const unlockedCount = pool.filter((c) => owned(c.id) > 0).length;
   const curve = costCurve(lines);
   const curveMax = Math.max(1, ...COST_BUCKETS.map((b) => curve[b]));

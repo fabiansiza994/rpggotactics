@@ -1,9 +1,14 @@
+import {MobileShell,InterfaceSettings,activeMobileTab,type MobileTab} from '../mobile/MobileShell';
+import {MobileHome} from '../mobile/MobileHome';
+import {useInterfaceMode} from '../mobile/interfaceMode';
+import {useMobileBalance} from '../mobile/useMobileBalance';
+import {openAccountView} from './components/Account';
 import {SocialDockButton} from '../social/SocialDockButton';
 import { useCatalogCatchupNotice } from '../catalog/CatalogCatchup';
 const CrystalModalQa = import.meta.env.DEV ? lazy(() => import('../shop/CrystalModalQa').then(m => ({default: m.CrystalModalQa}))) : null;
 const SocialUxQa = import.meta.env.DEV ? lazy(() => import('../play/SocialUxQa').then(m => ({default: m.SocialUxQa}))) : null;
 import {PlayHub} from '../play/PlayHub';
-import {navigatePlay,usePlayMode} from '../play/navigation';
+import {navigatePlay,usePlayMode,protectPlayBack} from '../play/navigation';
 const SocialSidebar=lazy(()=>import('../social/SocialSidebar').then(m=>({default:m.SocialSidebar})));
 import {socialBadge} from '../social/socialStore';
 const CampaignSelectorQa = import.meta.env.DEV ? lazy(() => import('./components/CampaignSelectorQa').then(m => ({default: m.CampaignSelectorQa}))) : null;
@@ -40,18 +45,34 @@ export function App() {
   const socialCount=useSocialStore(socialBadge);
   // Remounts the PvP screen on a new invite room so it reconnects to the server's active room.
   const [pvpKey, setPvpKey] = useState('pvp');
-  const [shop, setShop] = useState(() => new URLSearchParams(location.search).get('store') === '1');
+  const shop=playMode==='store';
+  const setShop=(open:boolean)=>navigatePlay(open?'store':'hub');
   useEffect(() => { const open = () => setShop(true); window.addEventListener('rpggo-open-crystals', open); return () => window.removeEventListener('rpggo-open-crystals', open); }, []);
   const social=playMode==='friends';
   const setSocial=(open:boolean)=>navigatePlay(open?'friends':'hub');
   const account = useBattleStore((s) => s.account);
   const screen = useBattleStore((s) => s.screen);
   const inMatch = useBattleStore((s) => s.onlineCommand !== null);
+  const battle=screen==='BATTLE'||inMatch;
+  const interfaceMode=useInterfaceMode(battle);
+  const mobile=interfaceMode.applied==='mobile';
+  const [interfaceSettings,setInterfaceSettings]=useState(false);
+  const mobileBalance=useMobileBalance(mobile&&!battle,playMode);
+  const navigateMobile=(tab:MobileTab)=>{
+    const store=useBattleStore.getState();
+    if(store.screen==='BATTLE'||store.onlineCommand)return;
+    if(!navigatePlay(tab))return;
+    if(tab!=='cards'&&store.screen!=='MENU')store.backToMenu();
+  };
+  // URL adapts the existing deck screen, not another inventory/router.
+  useEffect(()=>{if(playMode==='cards'&&(screen==='MENU'||screen==='CHAMPIONS'))useBattleStore.getState().openDeckBuilder();},[playMode,screen]);
+  useEffect(()=>{let previous=useBattleStore.getState().screen;return useBattleStore.subscribe(state=>{if(previous==='DECK'&&state.screen!=='DECK'&&state.screen!=='BATTLE'&&new URLSearchParams(location.search).get('mode')==='cards'){const url=new URL(location.href);url.searchParams.delete('mode');history.replaceState({},'',url);window.dispatchEvent(new Event('rpggo-play-route'));}previous=state.screen;});},[]);
+  useEffect(()=>{const show=()=>setInterfaceSettings(true);window.addEventListener('rpggo-interface-settings',show);return()=>window.removeEventListener('rpggo-interface-settings',show);},[]);
   useEffect(()=>useBattleStore.subscribe(s=>{if(s.screen==='BATTLE'||s.onlineCommand!==null)setSocialDrawer(false);}),[]);
   const playUrl=useRef(location.href);
   useEffect(()=>{
     const remember=()=>{playUrl.current=location.href;};
-    const back=()=>{const st=useBattleStore.getState();if(st.screen==='BATTLE'||st.onlineCommand!==null){history.pushState({},'',playUrl.current);window.dispatchEvent(new Event('rpggo-play-route'));return;}st.backToMenu();setShop(new URLSearchParams(location.search).get('store')==='1');setSocialDrawer(false);remember();};
+    const back=()=>{const st=useBattleStore.getState();if(protectPlayBack(playUrl.current,st.screen==='BATTLE'||st.onlineCommand!==null))return;st.backToMenu();setSocialDrawer(false);remember();window.dispatchEvent(new Event('rpggo-play-route'));};
     window.addEventListener('rpggo-play-route',remember);window.addEventListener('popstate',back);
     return()=>{window.removeEventListener('rpggo-play-route',remember);window.removeEventListener('popstate',back);};
   },[]);
@@ -79,8 +100,6 @@ export function App() {
           return;
         }
         useBattleStore.getState().backToMenu();
-        setShop(false);
-        setSocial(false);
         setPvpKey(code);
         setPvp(true);
       }),
@@ -96,6 +115,7 @@ export function App() {
   return (
     <>
       {VisualQaPanel && <Suspense fallback={null}><VisualQaPanel /></Suspense>}
+      {interfaceSettings&&<InterfaceSettings preference={interfaceMode.preference} pending={interfaceMode.pending} onClose={()=>setInterfaceSettings(false)}/>}
       <CloudBanner />
       <AccountNotice />
       <ImportDialog />
@@ -110,14 +130,16 @@ export function App() {
       />}
       <PaymentResult />
       <SocialRuntime />
-      {screen!=='BATTLE'&&!inMatch&&(homeVisible||account.status==='READY')&&<SocialDockButton hidden={socialDrawer} count={socialCount} disabled={account.status!=='READY'} onClick={()=>setSocialDrawer(v=>!v)}/>}
-      {socialDrawer&&account.status==='READY'&&screen!=='BATTLE'&&!inMatch&&<Suspense fallback={<p role="status">Abriendo amigos…</p>}><SocialSidebar initialFriend={chatFriend} onClose={()=>setSocialDrawer(false)} onProfile={username=>{setSocialDrawer(false);setShop(false);navigatePlay('friends',{friend:username});}}/></Suspense>}
+      {!mobile&&screen!=='BATTLE'&&!inMatch&&(homeVisible||account.status==='READY')&&<SocialDockButton hidden={socialDrawer} count={socialCount} disabled={account.status!=='READY'} onClick={()=>setSocialDrawer(v=>!v)}/>}
+      {socialDrawer&&account.status==='READY'&&screen!=='BATTLE'&&!inMatch&&<Suspense fallback={<p role="status">Abriendo amigos…</p>}><SocialSidebar initialFriend={chatFriend} onClose={()=>setSocialDrawer(false)} onProfile={username=>{setSocialDrawer(false);navigatePlay('friends',{friend:username});}}/></Suspense>}
       <GiftRuntime />
       <GiftNotifications quiet={inMatch || (!pvp && screen === 'BATTLE')} />
       <SocialNotifications
         suppressInvites={inMatch || socialOpen || socialDrawer}
         quiet={inMatch || (!pvp && screen === 'BATTLE')}
       />
+      <MobileShell enabled={mobile&&!battle} active={activeMobileTab(playMode,screen)} balance={mobileBalance} onSettings={()=>setInterfaceSettings(true)} onNavigate={navigateMobile}>
+      {mobile&&!battle&&['campaign','skirmish','stories'].includes(playMode)&&<div className="m2-play-access"><button onClick={()=>navigatePlay('pvp',{queue:'ranked'})}>Ranked</button><button onClick={()=>navigatePlay('pvp')}>Casual</button><button onClick={()=>navigatePlay('skirmish')}>Escaramuza</button><button onClick={()=>navigatePlay('stories')}>Historias</button></div>}
       <Suspense fallback={<p className="mode-loading" role="status">Cargando modo…</p>}>
       {account.status === 'CONNECTING' && !pvp && !shop ? (
         <AccountBootstrap />
@@ -136,10 +158,13 @@ export function App() {
         <DeckBuilder />
       ) : screen === 'CHAMPIONS' ? (
         <ChampionSelect />
-      ) : (
+      ) : playMode==='profile' ? (
+        <section className="m2-profile-entry"><h1>Perfil</h1><p>{'username' in account?account.username:'Invitado · progreso local'}</p><button onClick={()=>openAccountView(account.status==='READY'?'ACCOUNT':'ENTRY')}>Cuenta y ajustes</button><button onClick={()=>setInterfaceSettings(true)}>Interfaz: Automático / Móvil / Escritorio</button><button onClick={()=>account.status==='READY'?navigatePlay('friends'):openAccountView('ENTRY')}>Amigos</button></section>
+      ) : playMode==='cards' ? <section><p role="status">Selecciona un campeón disponible para abrir tus mazos.</p><button onClick={()=>useBattleStore.getState().openChampions()}>Elegir campeón</button></section> : mobile&&playMode==='hub' ? <MobileHome/> : (
         <PlayHub mode={playMode} onStore={()=>setShop(true)} utilities={homeVisible?<><BugReportButton route="MENU"/></>:undefined}/>
       )}
       </Suspense>
+      </MobileShell>
     </>
   );
 }

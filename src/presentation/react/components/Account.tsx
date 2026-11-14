@@ -328,6 +328,7 @@ function AccountFlow({
         </div>
       </aside>
       <section className="account-content" aria-busy={busy}>
+        {!recoveryCode&&<button type="button" className="account-link" disabled={busy} onClick={()=>{open(null);window.dispatchEvent(new Event('rpggo-interface-settings'));}}>Interfaz: Automático / Móvil / Escritorio</button>}
         <div className="account-heading">
           <span className="account-eyebrow">
             ✦ {recoveryCode ? 'Protege tu aventura' : 'Portal de cuentas'}
