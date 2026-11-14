@@ -679,6 +679,7 @@ export function AltarPanel({
   const selectCard = useBattleStore((s) => s.selectCard);
   const commit = useBattleStore((s) => s.commitRitualPiece);
   const release = useBattleStore((s) => s.releaseRitualPiece);
+  const [expanded, setExpanded] = useState<boolean | null>(null);
   const [activatedName, setActivatedName] = useState<string | null>(null);
   const [consuming, setConsuming] = useState<{ uid: string; cardId: string }[]>([]);
   const [feedback, setFeedback] = useState<'sealed' | 'released' | 'activating' | null>(null);
@@ -760,13 +761,20 @@ export function AltarPanel({
     if (hole >= 0) socketCards[hole] = card;
   }
   const charged = status?.rituals.some(r => r.ready) && myTurn;
+  const aimingRitual = progress.some(p => selectedCardUid === ritualSelection(p.ritual.id));
 
   return (
     // Opens itself only when there is a decision to make (seal the selected piece / a ritual is ready).
+    <>
     <details
       className="altar-panel"
-      open={!!commitCheck || progress.some((p) => p.complete) || undefined}
+      open={expanded ?? (!!commitCheck || progress.some((p) => p.complete))}
+      onToggle={(event) => {
+        if (event.target === event.currentTarget) setExpanded(event.currentTarget.open);
+      }}
+      data-targeting={aimingRitual || undefined}
       data-testid="altar-panel"
+      data-mobile-flow="true"
       data-state={
         feedback ??
         (status?.rituals.some((r) => r.ready) && myTurn
@@ -792,6 +800,10 @@ export function AltarPanel({
         )}
       </summary>
       <div className="altar-body">
+        <div className="altar-mobile-header">
+          <strong>Altar de ritual</strong>
+          <button type="button" aria-label="Cerrar altar" onClick={() => setExpanded(false)}>Cerrar ×</button>
+        </div>
         {feedback === 'activating' && (
           <strong className="ritual-name-reveal" role="status">
             <RitualGlyph family="MAJOR" /> {activatedName}
@@ -919,5 +931,10 @@ export function AltarPanel({
         })}
       </div>
     </details>
+    {aimingRitual && <div className="altar-aim-controls" role="region" aria-label="Objetivo del ritual">
+      <span>Elige una casilla válida</span>
+      <button type="button" onClick={() => selectCard(null)}>Cancelar ritual</button>
+    </div>}
+    </>
   );
 }

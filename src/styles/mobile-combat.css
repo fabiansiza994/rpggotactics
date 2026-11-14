@@ -156,3 +156,26 @@
 @media (orientation:portrait) and (max-width:600px) { .battle .ice-wall-rotation { position:fixed; left:12px; right:auto; top:auto; bottom:calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom) + 6px); max-width:110px; padding:8px 6px; font-size:12px; } }
 
 @media (orientation:portrait) and (max-width:600px) { .battle:has(.ice-wall-rotation) .mobile-aim-controls > span { visibility:hidden; } .battle:has(.ice-wall-rotation) .end-turn-box { z-index:17; } }
+
+/* Mobile altar: reading and aiming are separate presentation states, never commands. */
+.altar-mobile-header, .altar-aim-controls { display:none; }
+@media (orientation:portrait) and (max-width:600px) {
+  .battle .hand-bar .altar-panel[data-mobile-flow][open] .altar-body {
+    max-height:min(420px,calc(100dvh - 180px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    overscroll-behavior:contain; scroll-padding-top:60px;
+  }
+  .battle .altar-mobile-header {
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    position:sticky; top:0; z-index:5; margin:-12px -12px 10px;
+    padding:8px 12px; background:#111827; border-bottom:1px solid #b49969;
+  }
+  .battle .altar-mobile-header button { min-width:76px; min-height:44px; flex-shrink:0; }
+  .battle .altar-panel[data-targeting='true'] .altar-body,
+  .battle .hand-bar .altar-panel[data-targeting='true'] summary { display:none; }
+  .battle .altar-panel[data-targeting='true'] { visibility:hidden; }
+  .battle .hand-bar .altar-aim-controls {
+    display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:44px;
+    position:absolute; bottom:env(safe-area-inset-bottom); left:max(8px,env(safe-area-inset-left)); right:max(8px,env(safe-area-inset-right)); z-index:26; background:#111827; padding:0 8px; border:1px solid #b49969; border-radius:6px;
+  }
+  .battle .altar-aim-controls button { min-height:44px; min-width:108px; padding:8px 12px; border:1px solid #b0826d; border-radius:6px; background:#321d26; color:#f2e5cf; font:inherit; font-size:12px; }
+}
