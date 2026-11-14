@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-export const PLAY_MODES=['hub','campaign','skirmish','stories','pvp','friends','cards','profile','store'] as const;
+export const PLAY_MODES=['hub','play','campaign','skirmish','stories','pvp','friends','cards','profile','store'] as const;
 export type PlayMode=typeof PLAY_MODES[number];
 export function readPlayMode():PlayMode {const query=new URLSearchParams(location.search);const mode=query.get('mode');if(query.get('store')==='1')return 'store';return PLAY_MODES.includes(mode as PlayMode)?mode as PlayMode:'hub';}
 const guards=new Set<()=>boolean>();

@@ -33,7 +33,7 @@ const SUGGESTED: Record<ReportRoute, BugCategory> = {
  * Global "Reportar un problema" entry point: a small corner button on every screen + the report
  * modal. Accounts only (the server rejects guests too); hidden in local-only builds.
  */
-export function BugReportButton({ route }: { route: ReportRoute }) {
+export function BugReportButton({ route, placement = 'floating' }: { route: ReportRoute; placement?: 'floating' | 'hidden' }) {
   const account = useBattleStore((s) => s.account);
   // null = closed; {} = opened from this button; a preset = opened from elsewhere (purchase, …).
   const [open, setOpen] = useState<BugReportPreset | null>(null);
@@ -43,7 +43,7 @@ export function BugReportButton({ route }: { route: ReportRoute }) {
     account.status === 'READY' || account.status === 'NEEDS_IMPORT' || account.status === 'OFFLINE';
   return (
     <>
-      <button
+      {placement !== 'hidden' && <button
         type="button"
         className="bug-report-fab"
         data-route={route}
@@ -54,7 +54,7 @@ export function BugReportButton({ route }: { route: ReportRoute }) {
       >
         <span aria-hidden="true">!</span>
         <span className="bug-report-button-text">Reportar un problema</span>
-      </button>
+      </button>}
       {open && <BugReportModal route={route} preset={open} signedIn={signedIn} onClose={() => setOpen(null)} />}
     </>
   );

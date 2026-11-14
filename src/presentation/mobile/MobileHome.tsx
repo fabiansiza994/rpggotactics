@@ -1,4 +1,3 @@
-import {BugReportButton} from '../support/BugReport';
 import {useEffect,useState} from 'react';
 import {activeDeck,heroProfile,deckSize,DECK_RULES,encounterOrder,encounterById} from '../../game';
 import {rankFor} from '../../game/ranked/ranked';
@@ -31,6 +30,6 @@ export function MobileHome(){
  <div className="m2-section-heading"><h2>Entra en la arena</h2><small>JUEGA A TU RITMO</small></div><div className="m2-arena-grid"><button className="m2-arena" onClick={()=>pvp('ranked')}><GameIcon name="shield"/><strong>Ranked</strong><span>Cada decisión cuenta.</span><small>{rank?`${rankFor(rank.rp).label} · ${rank.rp} RP`:account.status==='READY'?'Consulta tu rango':'Requiere una cuenta'}</small><b>Competir <GameIcon name="move"/></b></button><button className="m2-arena m2-casual" onClick={()=>pvp()}><GameIcon name="melee"/><strong>Casual</strong><span>Prueba tu estrategia.</span><small>Sin puntos de rango</small><b>Jugar <GameIcon name="move"/></b></button></div>
  <div className="m2-section-heading"><h2>Tu siguiente paso</h2></div><button className="m2-collection-link" onClick={()=>navigatePlay('cards')}><GameIcon name="deck"/><span><strong>Prepara tu mazo</strong><small>Tus cartas. Tu estrategia.</small></span><GameIcon name="move"/></button>
  {account.status!=='READY'&&<p className="m2-guest">Progreso guardado en este dispositivo. <button onClick={()=>openAccountView('ENTRY')}>Cuenta y sincronización</button></p>}
- <div className="m2-home-utilities"><BugReportButton route="MENU"/></div>
+ 
  </section>;
 }

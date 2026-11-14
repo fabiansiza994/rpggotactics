@@ -1,0 +1,8 @@
+import {activeDeck,heroProfile,deckSize,DECK_RULES} from '../../game';
+import {ChampionContext} from '../play/ChampionContext';
+import {useBattleStore} from '../store/battleStore';
+import {PRESENTATION_CONTENT as content} from '../qa/shapeshifter/runtime';
+import {openAccountView} from '../react/components/Account';
+import {navigatePlay} from '../play/navigation';
+/** Existing profile and progress only; no extra session or account service. */
+export function MobileProfile(){const account=useBattleStore(s=>s.account),profile=useBattleStore(s=>s.profile),runs=useBattleStore(s=>s.runs);const id=profile.selectedChampionId,hero=content.heroes[id],deck=activeDeck(heroProfile(profile,id,content));const signed=account.status==='READY';return <section className="m2-profile"><header className="m2-section-title"><small>TU IDENTIDAD</small><h1>Perfil</h1><p>{'username'in account?account.username:'Invitado · progreso guardado en este dispositivo'}</p></header><div className="m2-loadout"><ChampionContext/></div><section className="m2-profile-summary"><h2>Tu aventura con {hero?.name}</h2><p>{runs[id]?.completedEncounterIds.length??0} encuentros completados en El Ascenso</p><p>{deck.name} · {deckSize(deck.cards)}/{DECK_RULES.requiredSize} cartas</p>{!signed&&<p>Tu progreso sigue en este dispositivo. Accede a tu cuenta para sincronizarlo.</p>}</section><div className="m2-profile-actions"><button onClick={()=>openAccountView(signed?'ACCOUNT':'ENTRY')}>{signed?'Cuenta y ajustes':'Cuenta y sincronización'}</button><button onClick={()=>signed?navigatePlay('friends'):openAccountView('LOGIN')}>Amigos</button></div></section>;}

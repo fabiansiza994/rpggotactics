@@ -1,3 +1,4 @@
+import {visibleCollectionCopy,type CollectionScope} from '../../mobile/mobileUx';
 import {registerPlayNavigationGuard} from '../../play/navigation';
 import { MyDecks, DeckNameDialog, deckActionError } from './MyDecks';
 import '../../../styles/deckbuilder.css';
@@ -547,14 +548,14 @@ function StarterDialog({ onConfirm, onClose }: { onConfirm(): void; onClose(): v
   );
 }
 
-export function DeckBuilder() {
+export function DeckBuilder({mobile=false}:{mobile?:boolean}) {
   const heroId=useBattleStore(s=>s.deckHeroId);
   const profile=useBattleStore(s=>s.profile);
-  const [editing,setEditing]=useState<{heroId:string;deckId:string}|null>(null);
+  const [editing,setEditing]=useState<{heroId:string;deckId:string;initialTab?:'COLLECTION'}|null>(null);
   const selected=editing?.heroId===heroId&&heroProfile(profile,heroId,DEFAULT_CONTENT).decks.some(d=>d.id===editing.deckId)?editing.deckId:null;
-  return selected ? <DeckEditor key={`${heroId}:${selected}`} deckId={selected} onBack={()=>setEditing(null)}/> : <MyDecks onEdit={deckId=>setEditing({heroId,deckId})}/>;
+  return <div data-cards-frame className={mobile?'m2-cards':undefined}>{mobile&&!selected&&<header className="m2-section-title"><small>TU ARSENAL</small><h1>Cartas</h1><nav aria-label="Mazos y colección"><button aria-current="page">Mazos</button><button onClick={()=>setEditing({heroId,deckId:activeDeck(heroProfile(profile,heroId,DEFAULT_CONTENT)).id,initialTab:'COLLECTION'})}>Colección</button></nav></header>}{selected ? <DeckEditor key={`${heroId}:${selected}`} mobile={mobile} deckId={selected} initialTab={editing?.initialTab} onBack={()=>setEditing(null)}/> : <MyDecks onEdit={deckId=>setEditing({heroId,deckId})}/>}</div>;
 }
-function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
+function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:string;onBack:()=>void;initialTab?:'DECK'|'COLLECTION';mobile?:boolean}) {
   const profile = useBattleStore((s) => s.profile);
   const saveDeck = useBattleStore((s) => s.saveDeck);
   const closeDeckBuilder = onBack;
@@ -592,7 +593,8 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
   const [inspected, setInspected] = useState<string | null>(saved.cards[0]?.cardId ?? null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [tab, setTab] = useState<'COLLECTION' | 'DECK'>('DECK');
+  const [collectionScope,setCollectionScope]=useState<CollectionScope>(initialTab==='COLLECTION'&&mobile?'owned':'available');
+  const [tab, setTab] = useState<'COLLECTION' | 'DECK'>(initialTab);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [starterConfirm, setStarterConfirm] = useState(false);
@@ -626,7 +628,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
   const copyStatus = new Map(view.collection.map((c) => [c.cardId, c]));
   // Keep browsing order/filters, but show only owned copies not already in the draft.
   const shown = browseCollection(pool, lookup, query).filter(
-    card => (copyStatus.get(card.id)?.availableCopies ?? 0) > 0,
+    card => visibleCollectionCopy(mobile?collectionScope:'available',owned(card.id),copyStatus.get(card.id)?.availableCopies??0),
   );
   const status = view.deck;
   const { totalCards: size, issues } = status;
@@ -652,6 +654,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
     setFeedback({ id: ++feedbackId.current, cardId, kind, text });
 
   function tryAdd(cardId: string) {
+    if(mobile&&tab==='COLLECTION'&&collectionScope==='owned')return;
     if (inspectTimer.current) {
       clearTimeout(inspectTimer.current);
       inspectTimer.current = null;
@@ -676,6 +679,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
 
   /** Only removes: the gap stays until the player picks a card (nothing is added for them). */
   function tryRemove(cardId: string) {
+    if(mobile&&tab==='COLLECTION'&&collectionScope==='owned')return;
     if (inspectTimer.current) {
       clearTimeout(inspectTimer.current);
       inspectTimer.current = null;
@@ -821,6 +825,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
     <div
       className="deckbuilder"
       data-tab={tab.toLowerCase()}
+      data-collection-view={mobile&&tab==='COLLECTION'?collectionScope:undefined}
       data-detail={detailOpen && inspectedCard ? 'open' : 'closed'}
     >
       {renaming&&<DeckNameDialog name={saved.name} busy={renameBusy} error={renameError} onClose={()=>setRenaming(false)} onSave={name=>{setRenameBusy(true);void useBattleStore.getState().renameDeck(heroId,deckId,name).then(r=>{if(r.ok)setRenaming(false);else setRenameError(deckActionError(r));}).finally(()=>setRenameBusy(false));}}/>}
@@ -830,7 +835,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
         </button>
         <div className="db-title">
           <span className="menu-eyebrow">Colección y mazo</span>
-          <h1>{saved.name}</h1><button type="button" className="db-rename" onClick={()=>setRenaming(true)}>Renombrar</button>
+          <h1>{mobile&&tab==='COLLECTION'&&collectionScope==='owned'?`Mi colección · ${heroDef.name}`:saved.name}</h1><button hidden={mobile&&tab==='COLLECTION'&&collectionScope==='owned'} type="button" className="db-rename" onClick={()=>setRenaming(true)}>Renombrar</button>
         </div>
         <label className="db-search">
           <span className="sr-only">Buscar carta</span>
@@ -965,6 +970,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
         )}
       </div>
 
+      {mobile&&<section className="m2-collection-purpose"><p>{tab==='COLLECTION'&&collectionScope==='owned'?'Consulta tus cartas poseídas. Para editar, abre Mi mazo o Disponibles para añadir.':`Editando ${saved.name} · los cambios se guardan solo al confirmar.`}</p>{tab==='COLLECTION'&&<div role="group" aria-label="Vista de colección"><button aria-pressed={collectionScope==='owned'} onClick={()=>setCollectionScope('owned')}>Todas mis cartas</button><button aria-pressed={collectionScope==='available'} onClick={()=>setCollectionScope('available')}>Disponibles para añadir</button></div>}</section>}
       <nav className="db-tabs" aria-label="Secciones">
         <NeutralCounter count={status.neutralCards} limit={DECK_RULES.maxNeutralCards} compact />
         <button type="button" aria-pressed={tab === 'DECK'} onClick={() => setTab('DECK')}>
@@ -978,7 +984,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
           aria-pressed={tab === 'COLLECTION'}
           onClick={() => setTab('COLLECTION')}
         >
-          Colección disponible
+          {mobile?'Colección':'Colección disponible'}
         </button>
       </nav>
 
@@ -1228,7 +1234,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
         >
           <DiscoverRarities heroId={heroId}/>
           <h2 id="db-collection-title" className="menu-section-title">
-            Colección disponible{' '}
+            {mobile?(collectionScope==='owned'?'Todas mis cartas':'Disponibles para añadir'):'Colección disponible'}{' '}
             <span className="db-section-count">
               {unlockedCount}/{pool.length} desbloqueadas
             </span>
@@ -1270,7 +1276,7 @@ function DeckEditor({deckId,onBack}:{deckId:string;onBack:()=>void}) {
             <p className="db-empty">
               {query.ownership === 'LOCKED' && !query.text && unlockedCount === pool.length
                 ? `Ya tienes todas las cartas del ${heroDef.name}.`
-                : 'No hay copias disponibles que coincidan con los filtros.'}{' '}
+                : mobile&&collectionScope==='owned'?'No hay cartas poseídas que coincidan con los filtros.':'No hay copias disponibles que coincidan con los filtros.'}{' '}
               <button
                 type="button"
                 className="db-clear"

@@ -1,4 +1,8 @@
+import {RankedAccess} from '../mobile/RankedAccess';
+import {MobileProfile} from '../mobile/MobileProfile';
+import {rankedAccessRequired} from '../mobile/mobileUx';
 import {MobileShell,InterfaceSettings,activeMobileTab,type MobileTab} from '../mobile/MobileShell';
+import {MobilePlay} from '../mobile/MobilePlay';
 import {MobileHome} from '../mobile/MobileHome';
 import {useInterfaceMode} from '../mobile/interfaceMode';
 import {useMobileBalance} from '../mobile/useMobileBalance';
@@ -61,7 +65,7 @@ export function App() {
   const navigateMobile=(tab:MobileTab)=>{
     const store=useBattleStore.getState();
     if(store.screen==='BATTLE'||store.onlineCommand)return;
-    if(!navigatePlay(tab))return;
+    if(!navigatePlay(tab==='campaign'?'play':tab))return;
     if(tab!=='cards'&&store.screen!=='MENU')store.backToMenu();
   };
   // URL adapts the existing deck screen, not another inventory/router.
@@ -115,17 +119,17 @@ export function App() {
   return (
     <>
       {VisualQaPanel && <Suspense fallback={null}><VisualQaPanel /></Suspense>}
-      {interfaceSettings&&<InterfaceSettings preference={interfaceMode.preference} pending={interfaceMode.pending} onClose={()=>setInterfaceSettings(false)}/>}
+      {interfaceSettings&&<InterfaceSettings showHelp={mobile&&!battle} preference={interfaceMode.preference} pending={interfaceMode.pending} onClose={()=>setInterfaceSettings(false)}/>}
       <CloudBanner />
       <AccountNotice />
       <ImportDialog />
       <GuestGateDialog />
-      {!pvp && !shop && !socialOpen && <ChampionPrompts key={screen} />}
+      {!pvp && !shop && !socialOpen && <ChampionPrompts key={screen} mobile={mobile}/>}
       <AccountOverlay />
       {RealQaControls && shapeshifterQaEnabled && screen !== 'BATTLE' && <Suspense fallback={null}><RealQaControls /></Suspense>}
       {ArcherReleaseControls && screen === 'BATTLE' && <Suspense fallback={null}><ArcherReleaseControls /></Suspense>}
       {ArcherCampaignVisualLab && <Suspense fallback={null}><ArcherCampaignVisualLab /></Suspense>}
-      {!homeVisible&&<BugReportButton
+      {(!homeVisible||mobile)&&<BugReportButton placement={mobile&&!battle?'hidden':'floating'}
         route={shop ? 'STORE' : pvp ? 'PVP' : socialOpen ? 'SOCIAL' : screen === 'BATTLE' ? 'BATTLE' : screen === 'DECK' ? 'DECK' : screen === 'CHAMPIONS' ? 'CHAMPIONS' : 'MENU'}
       />}
       <PaymentResult />
@@ -139,29 +143,29 @@ export function App() {
         quiet={inMatch || (!pvp && screen === 'BATTLE')}
       />
       <MobileShell enabled={mobile&&!battle} active={activeMobileTab(playMode,screen)} balance={mobileBalance} onSettings={()=>setInterfaceSettings(true)} onNavigate={navigateMobile}>
-      {mobile&&!battle&&['campaign','skirmish','stories'].includes(playMode)&&<div className="m2-play-access"><button onClick={()=>navigatePlay('pvp',{queue:'ranked'})}>Ranked</button><button onClick={()=>navigatePlay('pvp')}>Casual</button><button onClick={()=>navigatePlay('skirmish')}>Escaramuza</button><button onClick={()=>navigatePlay('stories')}>Historias</button></div>}
+
       <Suspense fallback={<p className="mode-loading" role="status">Cargando modo…</p>}>
       {account.status === 'CONNECTING' && !pvp && !shop ? (
         <AccountBootstrap />
       ) : shop ? (
-        <StoreScreen
+        <StoreScreen mobile={mobile}
           key={'username' in account ? account.username : 'guest'}
           onExit={() => setShop(false)}
         />
-      ) : pvp ? (
-        <PvpScreen key={pvpKey} onExit={() => setPvp(false)} onOpponentHistory={username=>navigatePlay('friends',{friend:username})}/>
+      ) : rankedAccessRequired(mobile,pvp&&new URLSearchParams(location.search).get('queue')==='ranked',battle,account.status) ? <RankedAccess connecting={account.status==='CONNECTING'}/> : pvp ? (
+        <PvpScreen mobile={mobile} key={pvpKey} onExit={() => setPvp(false)} onOpponentHistory={username=>navigatePlay('friends',{friend:username})}/>
       ) : socialOpen ? (
         <SocialScreen onOpenChat={username=>{setChatFriend(username);setSocialDrawer(true);}} key={new URLSearchParams(location.search).get('friend')??'friends'} initialFriend={new URLSearchParams(location.search).get('friend')??undefined} onExit={() => setSocial(false)} />
       ) : screen === 'BATTLE' ? (
         <BattleScreen />
       ) : screen === 'DECK' ? (
-        <DeckBuilder />
+        <DeckBuilder mobile={mobile}/>
       ) : screen === 'CHAMPIONS' ? (
         <ChampionSelect />
-      ) : playMode==='profile' ? (
+      ) : mobile&&playMode==='play' ? <MobilePlay/> : mobile&&playMode==='profile' ? <MobileProfile/> : playMode==='profile' ? (
         <section className="m2-profile-entry"><h1>Perfil</h1><p>{'username' in account?account.username:'Invitado · progreso local'}</p><button onClick={()=>openAccountView(account.status==='READY'?'ACCOUNT':'ENTRY')}>Cuenta y ajustes</button><button onClick={()=>setInterfaceSettings(true)}>Interfaz: Automático / Móvil / Escritorio</button><button onClick={()=>account.status==='READY'?navigatePlay('friends'):openAccountView('ENTRY')}>Amigos</button></section>
       ) : playMode==='cards' ? <section><p role="status">Selecciona un campeón disponible para abrir tus mazos.</p><button onClick={()=>useBattleStore.getState().openChampions()}>Elegir campeón</button></section> : mobile&&playMode==='hub' ? <MobileHome/> : (
-        <PlayHub mode={playMode} onStore={()=>setShop(true)} utilities={homeVisible?<><BugReportButton route="MENU"/></>:undefined}/>
+        <PlayHub mobile={mobile} mode={playMode==='play'?'hub':playMode} onStore={()=>setShop(true)} utilities={homeVisible&&!mobile?<><BugReportButton route="MENU"/></>:undefined}/>
       )}
       </Suspense>
       </MobileShell>

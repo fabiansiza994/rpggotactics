@@ -104,7 +104,7 @@ async function api(path: string, body?: unknown) {
   if (!res.ok) throw Error(data.error?.message ?? 'No se pudo conectar.');
   return data;
 }
-export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onOpponentHistory?:(username:string)=>void }) {
+export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:boolean;onExit: () => void;onOpponentHistory?:(username:string)=>void }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [code, setCode] = useState(''),
     [mode, setMode] = useState<PvpMode>('DUEL'),
@@ -611,7 +611,7 @@ export function PvpScreen({ onExit,onOpponentHistory }: { onExit: () => void;onO
     );
   if (history && !snapshot) return <PvpHistory onBack={() => setHistory(false)} />;
   return (
-    <PvpLobby
+    <PvpLobby mobile={mobile}
       room={snapshot}
       hero={hero}
       decks={decks} deckId={deckId} onDeck={id=>void chooseDeck(id)} loadoutLocked={loadoutLocked}

@@ -32,6 +32,7 @@ export interface LobbyRoom {
   ranked?: RankedSnapshot | null;
 }
 interface Props {
+  mobile?:boolean;
   room: LobbyRoom | null;
   hero: string;
   decks?: ChampionDeckSummary[];
@@ -128,6 +129,7 @@ function TerrainTags({ map }: { map: PvpMapDefinition }) {
 
 export function PvpLobby(props: Props) {
   const {
+    mobile=false,
     room,
     hero,
     mode,
@@ -274,6 +276,79 @@ export function PvpLobby(props: Props) {
       </article>
     );
   }
+  const lobbyFooter=(<footer className="lobby-footer" hidden={rankedSetup}>
+          {rankedSetup ? null : !room ? (
+            <>
+              <div className="lobby-create">
+                <button
+                  className="lobby-primary"
+                  disabled={busy||!!restriction||!deckValid}
+                  onClick={() => onAction('create')}
+                >
+                  <GameIcon name="melee" />
+                  Crear partida privada
+                </button>
+                <small>Tu campeón y mazo activo entran a la arena.</small>
+              </div>
+              <span className="lobby-or">o</span>
+              <form
+                className="lobby-join"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!busy && deckValid && code.length === 8) onAction('join');
+                }}
+              >
+                <label htmlFor="lobby-room-code">Unirse por código</label>
+                <div>
+                  <input
+                    id="lobby-room-code"
+                    aria-label="Código de sala"
+                    placeholder="XXXXXXXX"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    value={code}
+                    maxLength={8}
+                    onChange={(e) => onCode(e.target.value.toUpperCase())}
+                  />
+                  <button disabled={busy || !deckValid || code.length !== 8} type="submit">
+                    Unirse con código
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="lobby-ready-copy" role="status">
+                <b>
+                  {isReady
+                    ? rival?.ready
+                      ? 'Ambos listos. Entrando a la arena…'
+                      : 'Estás listo para combatir'
+                    : rival
+                      ? 'Tu rival está en la arena'
+                      : 'Tu sala está preparada'}
+                </b>
+                <small>
+                  {isReady
+                    ? 'La batalla comienza cuando ambos estén listos.'
+                    : rival
+                      ? 'Confirma tu campeón y pulsa Estoy listo.'
+                      : 'Puedes marcarte listo mientras esperas al rival.'}
+                </small>
+              </div>
+              <button
+                className="lobby-primary"
+                aria-pressed={isReady}
+                disabled={busy || !deckValid || !!restriction || network !== 'Conectado' || isReady}
+                onClick={() => onAction('ready')}
+              >
+                <GameIcon name={isReady ? 'shield' : 'melee'} />
+                {isReady ? '✓ Listo para combatir' : 'Estoy listo'}
+              </button>
+            </>
+          )}
+        </footer>);
   return (
     <main
       className={`pvp-lobby ${room ? 'has-room' : 'is-setup'}`}
@@ -310,6 +385,7 @@ export function PvpLobby(props: Props) {
             </div>
             {player(rival, false)}
           </section>
+          {mobile&&!room&&!rankedSetup&&lobbyFooter}
 
           {rankedSetup ? (
             rankedSlot
@@ -417,79 +493,7 @@ export function PvpLobby(props: Props) {
             </section>
           )}
         </div>
-        <footer className="lobby-footer" hidden={rankedSetup}>
-          {rankedSetup ? null : !room ? (
-            <>
-              <div className="lobby-create">
-                <button
-                  className="lobby-primary"
-                  disabled={busy||!!restriction||!deckValid}
-                  onClick={() => onAction('create')}
-                >
-                  <GameIcon name="melee" />
-                  Crear partida privada
-                </button>
-                <small>Tu campeón y mazo activo entran a la arena.</small>
-              </div>
-              <span className="lobby-or">o</span>
-              <form
-                className="lobby-join"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!busy && deckValid && code.length === 8) onAction('join');
-                }}
-              >
-                <label htmlFor="lobby-room-code">Unirse por código</label>
-                <div>
-                  <input
-                    id="lobby-room-code"
-                    aria-label="Código de sala"
-                    placeholder="XXXXXXXX"
-                    autoComplete="off"
-                    autoCapitalize="characters"
-                    spellCheck={false}
-                    value={code}
-                    maxLength={8}
-                    onChange={(e) => onCode(e.target.value.toUpperCase())}
-                  />
-                  <button disabled={busy || !deckValid || code.length !== 8} type="submit">
-                    Unirse con código
-                  </button>
-                </div>
-              </form>
-            </>
-          ) : (
-            <>
-              <div className="lobby-ready-copy" role="status">
-                <b>
-                  {isReady
-                    ? rival?.ready
-                      ? 'Ambos listos. Entrando a la arena…'
-                      : 'Estás listo para combatir'
-                    : rival
-                      ? 'Tu rival está en la arena'
-                      : 'Tu sala está preparada'}
-                </b>
-                <small>
-                  {isReady
-                    ? 'La batalla comienza cuando ambos estén listos.'
-                    : rival
-                      ? 'Confirma tu campeón y pulsa Estoy listo.'
-                      : 'Puedes marcarte listo mientras esperas al rival.'}
-                </small>
-              </div>
-              <button
-                className="lobby-primary"
-                aria-pressed={isReady}
-                disabled={busy || !deckValid || !!restriction || network !== 'Conectado' || isReady}
-                onClick={() => onAction('ready')}
-              >
-                <GameIcon name={isReady ? 'shield' : 'melee'} />
-                {isReady ? '✓ Listo para combatir' : 'Estoy listo'}
-              </button>
-            </>
-          )}
-        </footer>
+        {(!mobile||!!room||rankedSetup)&&lobbyFooter}
         {error && (
           <p className="lobby-error" role="alert">
             {error}

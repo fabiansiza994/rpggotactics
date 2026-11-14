@@ -1,3 +1,4 @@
+import {mobileScenarioName} from '../../mobile/mobileUx';
 import '../../../styles/campaign.css';
 import '../../../styles/menu.css';
 import {CampaignChampionSelector,campaignProgressLabel} from '../components/CampaignChampionSelector';
@@ -129,7 +130,7 @@ function ConfirmNewCampaign({
   );
 }
 
-export function MainMenu({ onPvp, onStore, onSocial, mode }: { onPvp?: () => void; onStore?: () => void; onSocial?: () => void; mode?: 'campaign'|'stories'|'skirmish' }) {
+export function MainMenu({ onPvp, onStore, onSocial, mode,mobile=false }: { mobile?:boolean; onPvp?: () => void; onStore?: () => void; onSocial?: () => void; mode?: 'campaign'|'stories'|'skirmish' }) {
   const socialCount = useSocialStore(socialBadge);
   const signedIn = useBattleStore((s) => s.account.status === 'READY');
   const skirmish = useBattleStore((s) => s.skirmish);
@@ -573,7 +574,7 @@ export function MainMenu({ onPvp, onStore, onSocial, mode }: { onPvp?: () => voi
                     '--mode-accent': place.accent,
                   } as CSSProperties
                 }
-                aria-label={`${s.name} · ${tags}`}
+                aria-label={`${mobile?mobileScenarioName(s.name):s.name} · ${tags}`}
                 aria-describedby={`mode-${s.id}-place mode-${s.id}-desc`}
                 onClick={() =>
                   choose(s.id, () => void startScenario(s.id).then((ok) => ok || setPending(null)))
@@ -582,7 +583,7 @@ export function MainMenu({ onPvp, onStore, onSocial, mode }: { onPvp?: () => voi
                 <span className="mode-art" aria-hidden="true" />
                 <span className="mode-body">
                   <span className="mode-tag">{tags}</span>
-                  <span className="mode-title">{s.name}</span>
+                  <span className="mode-title">{mobile?mobileScenarioName(s.name):s.name}</span>
                   <span className="mode-place" id={`mode-${s.id}-place`}>
                     {place.title}
                   </span>

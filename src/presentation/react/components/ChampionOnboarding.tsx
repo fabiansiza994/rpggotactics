@@ -98,7 +98,7 @@ function StarterDeck({ heroId }: { heroId: string }) {
  * First-time champion choice (new profiles only): choose → starter deck → Encounter I.
  * Offers the progression champions; the free Shapeshifter is claimed separately in Store.
  */
-function FirstChampionChoice() {
+function FirstChampionChoice({mobile=false}:{mobile?:boolean}) {
   const available = useBattleStore(useShallow(availableChampionsIn)).filter(isCampaignStartingChampion);
   const choose = useBattleStore((s) => s.chooseStartingChampion);
   const busy = useBattleStore((s) => s.cloud.busy !== null);
@@ -118,7 +118,7 @@ function FirstChampionChoice() {
     if (!ok) setError('No se pudo iniciar la campaña. Inténtalo de nuevo.');
   }
   return (
-    <Dialog label="Elige tu campeón" className="onb-first">
+    <Dialog label="Elige tu campeón" className={`onb-first${mobile?' onb-mobile':''}`}>
       {!confirming ? (
         <>
           <span className="onb-eyebrow">Tu primera aventura</span>
@@ -135,6 +135,7 @@ function FirstChampionChoice() {
           {picked && <button type="button" className="db-btn onb-preview" aria-expanded={preview} onClick={() => setPreview(!preview)}>Ver mazo inicial · {DEFAULT_CONTENT.heroes[picked]!.name}</button>}
           {preview && picked && <StarterDeck heroId={picked} />}
           <div className="confirm-actions">
+            {mobile&&picked&&<p className="onb-choice-summary" role="status">Elegido: <strong>{DEFAULT_CONTENT.heroes[picked]!.name}</strong><small>{championOf(picked)?.role}</small></p>}
             {guest && (
               <button type="button" className="account-link onb-signin" onClick={() => openAccountView('LOGIN')}>
                 ¿Ya tienes cuenta? Inicia sesión
@@ -226,7 +227,7 @@ function ChampionUnlockDialog({ onLater }: { onLater(): void }) {
  * Champion ownership prompts, shown on the menu only: the first-time choice for a new player,
  * then any milestone unlock waiting to be claimed ("Más tarde" hides it until the next visit).
  */
-export function ChampionPrompts() {
+export function ChampionPrompts({mobile=false}:{mobile?:boolean}) {
   const screen = useBattleStore((s) => s.screen);
   const profile = useBattleStore((s) => s.profile);
   const available = useBattleStore(useShallow(availableChampionsIn));
@@ -236,7 +237,7 @@ export function ChampionPrompts() {
   // Never from a guest profile standing in for an account whose cloud state is not loaded.
   const authoritative = useBattleStore(championPromptsAllowed);
   if (screen !== 'MENU' || gate || !authoritative) return null;
-  if (needsStartingChampion(profile)) return available.length ? <FirstChampionChoice /> : null;
+  if (needsStartingChampion(profile)) return available.length ? <FirstChampionChoice mobile={mobile}/> : null;
   if (later || !pendingChampionUnlock(profile, available)) return null;
   return <ChampionUnlockDialog onLater={() => setLater(true)} />;
 }

@@ -1,3 +1,4 @@
+import {storeCategories} from '../mobile/mobileUx';
 import { ThunderNews, THUNDER_NEWS_IDS } from './ThunderNews';
 import { EarnCrystalsModal } from './EarnCrystalsModal';
 import { realMoneyPurchasesEnabled } from './paymentAvailability';
@@ -102,7 +103,7 @@ function Wallet({ balance }: { balance: number }) {
     </div>
   );
 }
-export function StoreScreen({ onExit }: { onExit: () => void }) {
+export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile?:boolean }) {
   const profile = useBattleStore((s) => s.profile);
   const serverHasShapeshifter = useBattleStore(s => availableChampionsIn(s).includes('shapeshifter'));
   const claimChampion = useBattleStore(s => s.claimChampionUnlock);
@@ -115,6 +116,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
   const claimLock = useRef(false);
   const [session] = useState(loadSession);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [category,setCategory]=useState<string|null>(null);
   const [selected, setSelected] = useState<CatalogOffer | null>(null);
   const [inspect, setInspect] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
@@ -298,6 +300,8 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
   const featured = catalog?.offers.find((o) => o.categories.includes('FEATURED'));
   const blocked = selected ? availabilityText(selected) : null;
   const insufficient = !!selected && !!catalog && catalog.wallet.balance < selected.price;
+  const categoryOptions=catalog?.categories.filter(cat=>catalog.offers.some(o=>o.categories.includes(cat.id)))??[];
+  const activeCategory=categoryOptions.some(c=>c.id===category)?category:categoryOptions[0]?.id;
   const offerCard = (offer: CatalogOffer) => (
     <button
       className="shop-offer"
@@ -350,6 +354,7 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
           Actualizar
         </button>
       </header>
+      {mobile&&catalog&&<nav className="m2-store-categories" aria-label="Categorías de tienda">{categoryOptions.map(cat=><button key={cat.id} aria-pressed={activeCategory===cat.id} onClick={()=>setCategory(cat.id)}>{cat.label}</button>)}</nav>}
       <div className="shop-scroll">
         {!session && (
           <div className="shop-message">
@@ -442,19 +447,14 @@ export function StoreScreen({ onExit }: { onExit: () => void }) {
           />
         )}
         {(!session || catalog) && <GiftHistoryPanel token={session?.token ?? null} />}
-        {catalog?.categories
-          .filter(
-            (cat) =>
-              cat.id !== 'FEATURED' && catalog.offers.some((o) => o.categories.includes(cat.id)),
-          )
-          .map((cat) => (
+        {storeCategories(categoryOptions,mobile,category).map((cat) => (
             <section className="shop-section" data-category={cat.id} key={cat.id}>
               <div className="shop-section-title">
                 <h2>{cat.label}</h2>
                 <span>Elige tu próxima táctica</span>
               </div>
               <div className="shop-offers">
-                {catalog.offers.filter((o) => o.categories.includes(cat.id)).map(offerCard)}
+                {(catalog?.offers??[]).filter((o) => o.categories.includes(cat.id)).map(offerCard)}
               </div>
             </section>
           ))}
