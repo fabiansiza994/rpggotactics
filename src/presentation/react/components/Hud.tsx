@@ -17,6 +17,7 @@ import '../../../styles/ritual-altar.css';
 import { markedPrey } from '../../cards/tacticalPresentation';
 import { motionCues } from '../../motion/motionCues';
 import { presentationBus } from '../../events/presentationBus';
+import { RitualCardActions } from './RitualCardActions';
 import { RitualTransfer } from './RitualTransfer';
 import { RitualGlyph } from './RitualGlyph';
 import { FINAL_CARD_ART } from '../../assets/paintedAssets';
@@ -409,6 +410,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       <SummonSearchDialog key={selectedCardUid ?? 'no-search'} state={state} engine={engine} />
       <RitualEchoDialog key={`echo-${selectedCardUid ?? 'none'}`} state={state} engine={engine} />
       <RitualTransfer heroId={engine.heroId} />
+      {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.ritualPiece && <RitualCardActions key={`ritual-choice:${aimedCard.uid}`} uid={aimedCard.uid} state={state} engine={engine} busy={busy}/> }
       <ResolvingCardPreview engine={engine} />
       <BattleCardFeature state={state} engine={engine} selectedCardUid={selectedCardUid} hoveredCardUid={discarding ? null : inspected}
         inspectedCardUid={discarding ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} />
@@ -677,7 +679,6 @@ export function AltarPanel({
 }) {
   const selectedCardUid = useBattleStore((s) => s.selectedCardUid);
   const selectCard = useBattleStore((s) => s.selectCard);
-  const commit = useBattleStore((s) => s.commitRitualPiece);
   const release = useBattleStore((s) => s.releaseRitualPiece);
   const [expanded, setExpanded] = useState<boolean | null>(null);
   const [activatedName, setActivatedName] = useState<string | null>(null);
@@ -739,8 +740,6 @@ export function AltarPanel({
     ? state.player.hand.find((c) => c.uid === selectedCardUid)
     : undefined;
   const selectedDef = selected && engine.content.cards[selected.cardId];
-  const normalCheck = selected ? engine.getCardPlayability(selected.uid) : null;
-  const commitCheck = selectedDef?.ritualPiece ? engine.getCommitPlayability(selected!.uid) : null;
   const inHand = new Set(state.player.hand.map((c) => c.cardId));
   // Rituals worth showing: something sealed, or a piece of it in hand.
   const progress = engine
@@ -768,7 +767,7 @@ export function AltarPanel({
     <>
     <details
       className="altar-panel"
-      open={expanded ?? (!!commitCheck || progress.some((p) => p.complete))}
+      open={expanded ?? progress.some((p) => p.complete)}
       onToggle={(event) => {
         if (event.target === event.currentTarget) setExpanded(event.currentTarget.open);
       }}
@@ -837,38 +836,6 @@ export function AltarPanel({
               <small>{featuredRitual?.ritual.name ?? 'Altar ritual'}</small>
               {featuredRitual && <small>{featuredRitual.ritual.energyCost} energía</small>}
             </div>
-          </div>
-        )}
-        {commitCheck && (
-          <div className="ritual-piece-actions">
-            <button
-              type="button"
-              className="altar-use"
-              disabled={!myTurn || !normalCheck?.playable}
-              onClick={(event) => {
-                const panel = event.currentTarget.closest('details');
-                if (panel) panel.open = false;
-              }}
-            >
-              Usar · {selectedDef!.cost} energía · elige objetivo
-              {normalCheck && !normalCheck.playable && (
-                <small> · {ERROR_LABEL[normalCheck.reason]}</small>
-              )}
-            </button>
-            <button
-              type="button"
-              className="altar-commit"
-              disabled={!myTurn || !commitCheck.playable}
-              title={commitCheck.playable ? undefined : ERROR_LABEL[commitCheck.reason]}
-              onClick={() => commit(selected!.uid)}
-            >
-              Sellar «{selectedDef!.name}» en el altar
-              {!commitCheck.playable && <small> · {ERROR_LABEL[commitCheck.reason]}</small>}
-            </button>
-            <small>
-              Este sello: {status?.nextSealCost ?? 0} energía · el 1.º de cada turno es gratis, los
-              siguientes 1
-            </small>
           </div>
         )}
         {progress.map((p) => {

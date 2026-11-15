@@ -113,7 +113,7 @@
 }
 @keyframes vs-impact {
   from {
-    opacity: .4;
+    opacity: 0.4;
     scale: 1.3;
   }
   to {
@@ -127,7 +127,10 @@
   }
 }
 @keyframes vs-reveal {
-  0%, 90% { opacity: 1; }
+  0%,
+  90% {
+    opacity: 1;
+  }
   100% {
     opacity: 0;
   }
@@ -197,4 +200,106 @@
   }
 }
 
-@media(max-width:600px){.pvp-versus .ranked-player-avatar{width:120px;height:120px}.pvp-versus-fighters{gap:52px;align-items:start}}
+@media (max-width: 600px) {
+  .pvp-versus .ranked-player-avatar {
+    width: 120px;
+    height: 120px;
+  }
+  .pvp-versus-fighters {
+    gap: 52px;
+    align-items: start;
+  }
+}
+
+/* Keep VS anchored to the fighter row, independent of the advice height. */
+.pvp-versus-stage {
+  position: relative;
+  width: min(900px, 100%);
+}
+.pvp-versus-stage .pvp-versus-fighters {
+  width: 100%;
+}
+.pvp-versus-mark {
+  top: 40%;
+  pointer-events: none;
+}
+.pvp-versus-tip {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: min(620px, 100%);
+  margin: 24px 0 0;
+  padding: 14px 20px;
+  border-block: 1px solid #b697535c;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #091525e6 15% 85%,
+    transparent
+  );
+  text-align: center;
+}
+.pvp-versus-tip h3 {
+  color: #e8c887;
+  font:
+    600 17px Georgia,
+    serif;
+  margin: 0 0 7px;
+}
+.pvp-versus-tip p {
+  color: #eee5cf;
+  font-size: 17px;
+  line-height: 1.45;
+  margin: 0;
+  text-wrap: pretty;
+}
+.pvp-versus-caption {
+  margin-top: 16px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .pvp-versus-mark {
+    top: 38%;
+  }
+  .pvp-versus-tip {
+    margin-top: 18px;
+    padding: 12px 8px;
+  }
+  .pvp-versus-tip p {
+    font-size: 16px;
+  }
+}
+@media (max-height: 600px) {
+  .pvp-versus {
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-bottom: 80px;
+  }
+  .pvp-versus .ranked-player-avatar {
+    width: 86px;
+    height: 86px;
+  }
+  .pvp-versus-fighter h2 {
+    margin-top: 6px;
+    font-size: 18px;
+  }
+  .pvp-versus-fighter p {
+    margin: 4px 0;
+  }
+  .pvp-versus-mark {
+    top: 35%;
+    font-size: 44px;
+  }
+  .pvp-versus-tip {
+    margin-top: 12px;
+    padding: 8px;
+  }
+  .pvp-versus-caption {
+    margin: 8px 0;
+  }
+  .pvp-versus-controls {
+    position: fixed;
+    background: #050b15ed;
+  }
+}

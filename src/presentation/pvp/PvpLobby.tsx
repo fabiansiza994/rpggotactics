@@ -1,3 +1,4 @@
+import {useCosmeticView} from '../cosmetics/cardCosmetics';
 import type { ChampionDeckSummary } from "../../game";
 import "../../styles/my-decks.css";
 import { pvpChampionRestriction } from "./eligibility";
@@ -223,6 +224,7 @@ export function PvpLobby(props: Props) {
   const map = pvpMap(room?.mapId ?? mapId, activeMode);
   const selectedMode = MODES.find((m) => m.id === activeMode)!;
   const local = room?.members[room.seat];
+  const equippedFrame=useCosmeticView().equipped.PROFILE_FRAME;
   const rival = room?.members[1 - room.seat];
   const localHero = local?.heroId ?? hero;
   const heroDecks = heroProfile(profile, localHero, DEFAULT_CONTENT);
@@ -262,7 +264,7 @@ export function PvpLobby(props: Props) {
           <span className="r21-champion-avatar">
             <RankedAvatar
               avatarId={avatarState.avatarId}
-              frameId={local?.frameId}
+              frameId={local ? local.frameId : equippedFrame}
             />
           </span>
           <div className="r21-champion-copy">
@@ -325,10 +327,10 @@ export function PvpLobby(props: Props) {
                   ? (member?.avatarId ?? avatarState.avatarId)
                   : member?.avatarId
               }
-              frameId={member?.frameId}
+              frameId={own && !room ? equippedFrame : member?.frameId}
             />
           ) : id ? (
-            <ProfileFrame frameId={member?.frameId}>
+            <ProfileFrame frameId={own && !room ? equippedFrame : member?.frameId}>
               <img src={championPortrait(id)} alt="" draggable={false} />
             </ProfileFrame>
           ) : (

@@ -43,7 +43,7 @@ interface State {
   busy: boolean;
   error: string;
   load(force?: boolean): Promise<void>;
-  equip(slot: 'CARD_BACK' | 'CARD_ART', id: string | null): Promise<void>;
+  equip(slot: 'CARD_BACK' | 'CARD_ART' | 'PROFILE_FRAME', id: string | null): Promise<void>;
 }
 let inFlight: Promise<void> | null = null;
 export const useCardCosmetics = create<State>((set, get) => ({
@@ -81,6 +81,7 @@ export const useCardCosmetics = create<State>((set, get) => ({
   async equip(slot, id) {
     const session = loadSession();
     if (!session || get().busy) return;
+    if(slot==='PROFILE_FRAME'&&id!==null&&!get().data.owned.some(c=>c.cosmeticId===id&&c.kind==='PROFILE_FRAME')) {set({error:'No tienes ese marco.'});return;}
     set({ busy: true, error: '' });
     const r = await storeApi.equip(session.token, slot, id);
     if (loadSession()?.token !== session.token) return;

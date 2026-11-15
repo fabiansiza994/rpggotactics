@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RankedAvatar } from "../profile/RankedAvatar";
 import { PRESENTATION_CONTENT } from "../qa/shapeshifter/runtime";
 import type { LobbyRoom } from "./PvpLobby";
 import "../../styles/pvp-versus.css";
+import { nextVersusTip } from "./versusTips";
 export const PVP_VERSUS_MS = 3000;
 /** Pre-ready presentation: the server turn clock has not started. No game state is owned here. */
 export function PvpVersus({
@@ -14,6 +15,7 @@ export function PvpVersus({
   onFinish(): void;
   onCancel(): void;
 }) {
+  const [tip] = useState(() => nextVersusTip(room));
   const finish = useRef(onFinish),
     cancel = useRef(onCancel);
   useEffect(() => {
@@ -97,27 +99,33 @@ export function PvpVersus({
       }}
     >
       <div className="pvp-versus-energy" aria-hidden="true" />
-      <div className="pvp-versus-fighters">
-        {seats.map((member, index) => (
-          <article className={`pvp-versus-fighter side-${index}`} key={index}>
-            <RankedAvatar
-              avatarId={member?.avatarId}
-              frameId={member?.frameId}
-            />
-            <h2>{member?.name ?? "Rival"}</h2>
-            <p>
-              {PRESENTATION_CONTENT.heroes[member?.heroId ?? ""]?.name ??
-                "Campeón"}
-            </p>
-            {member?.kind === "BOT" && (
-              <small>Rival automatizado · recompensas IA</small>
-            )}
-          </article>
-        ))}
+      <div className="pvp-versus-stage">
+        <div className="pvp-versus-fighters">
+          {seats.map((member, index) => (
+            <article className={`pvp-versus-fighter side-${index}`} key={index}>
+              <RankedAvatar
+                avatarId={member?.avatarId}
+                frameId={member?.frameId}
+              />
+              <h2>{member?.name ?? "Rival"}</h2>
+              <p>
+                {PRESENTATION_CONTENT.heroes[member?.heroId ?? ""]?.name ??
+                  "Campeón"}
+              </p>
+              {member?.kind === "BOT" && (
+                <small>Rival automatizado · recompensas IA</small>
+              )}
+            </article>
+          ))}
+        </div>
+        <strong className="pvp-versus-mark" aria-hidden="true">
+          VS
+        </strong>
       </div>
-      <strong className="pvp-versus-mark" aria-hidden="true">
-        VS
-      </strong>
+      <aside className="pvp-versus-tip" aria-label="Consejo de combate">
+        <h3>{tip.title}</h3>
+        <p>{tip.text}</p>
+      </aside>
       <p className="pvp-versus-caption" role="status">
         El enfrentamiento está listo
       </p>
