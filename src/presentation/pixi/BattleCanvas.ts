@@ -1,3 +1,7 @@
+import {EMPTY_ATMOSPHERE,atmosphereView,type AtmosphereView} from '../immersion/atmosphere';
+import {CombatHaptics,browserHapticPort} from '../immersion/combatImmersion';
+import {FieldAtmosphere} from '../immersion/FieldAtmosphere';
+import {readImmersion,subscribeImmersion} from '../immersion/settings';
 import { OpponentNotices, noticeLane, type OpponentNotice, type NoticeLane } from '../mobile/OpponentNotices';
 import { mobileCameraTurn } from '../react/mobileCombat';
 import { ElementalTargetingPreview } from '../vfx/ElementalTargetingPreview';
@@ -87,6 +91,7 @@ const OCCLUDER_ALPHA = 0.42;
 
 export interface BattleCanvasCallbacks {
   onOpponentNotices?(rows: OpponentNotice[]): void;
+  onImmersion?(view:AtmosphereView):void;
   onNoticeLane?(lane: NoticeLane | null): void;
   onTileHover(pos: Pos | null): void;
   /** Mouse click: acts at once (hover already previewed). */
@@ -137,6 +142,12 @@ export class BattleCanvas {
   private readonly cameraRoot = new Container();
   private readonly camera = new CameraController(this.cameraRoot);
   private readonly world = new Container();
+  private immersionFinished=false;
+  private readonly immersionScenery=new Container();
+  private readonly atmosphere=new FieldAtmosphere(this.immersionScenery);
+  private readonly haptics=new CombatHaptics(browserHapticPort());
+  private offImmersion:()=>void=()=>{};
+  private readonly stopHaptics=()=>this.haptics.cancel();
   private readonly platformLayer = new Container();
   private readonly terrainLayer = new Container();
   private readonly terrainPulse = new Container();
@@ -242,6 +253,7 @@ export class BattleCanvas {
       ? 0.24
       : 0.22 + Math.sin(this.terrainTime / 850) * 0.08;
     this.forgePulse.alpha = this.effects.reduced ? .45 : .4 + Math.sin(this.terrainTime / 260) * .18;
+    this.atmosphere.tick(elapsed);
     this.intro.tick(elapsed);
     this.applyIntro();
     this.journey.tick(elapsed, this.effects.reduced, this.app.screen.width);
@@ -291,11 +303,18 @@ export class BattleCanvas {
     this.syncActors(elapsed);
   };
   private menuPaused = false;
+  setImmersionFinished(finished:boolean):void {
+    this.immersionFinished=finished;
+    if(finished)this.haptics.cancel();
+    if(this.ready&&this.vm)this.draw({...this.vm,state:this.director.state??this.vm.state});
+  }
+
   setMenuPaused(paused: boolean): void { this.menuPaused = paused; this.syncVisibility(); }
   private readonly syncVisibility = () => {
     if (!this.ready || this.destroyed) return;
     const paused = this.menuPaused || document.hidden;
     this.host?.closest('.battle')?.toggleAttribute('data-scene-paused', paused);
+    this.host?.toggleAttribute('data-scene-paused', paused);
     this.clock.setSuspended(paused, performance.now());
     if (paused) this.app.ticker.stop();
     else this.app.ticker.start();
@@ -345,6 +364,9 @@ export class BattleCanvas {
 
   private readonly opponentNotices: OpponentNotices;
   constructor(private readonly callbacks: BattleCanvasCallbacks) {
+    this.offImmersion=subscribeImmersion(()=>{this.haptics.cancel();if(this.ready&&this.vm)this.draw({...this.vm,state:this.director.state??this.vm.state});});
+    document.addEventListener('visibilitychange',this.stopHaptics);
+    window.addEventListener('blur',this.stopHaptics);
     this.opponentNotices = new OpponentNotices(rows => this.callbacks.onOpponentNotices?.(rows));
     this.director = new VfxDirector(this.effects, {
       readableCards: true,
@@ -354,6 +376,7 @@ export class BattleCanvas {
         if (this.vm) this.draw({ ...this.vm, state, mechanisms: mechanismView(state) });
       },
       presentEvent: (event) => {
+        if(!this.immersionFinished&&this.vm&&this.director.state)this.haptics.present(event,this.director.state,this.vm.heroId);
         if (this.director.state) this.opponentNotices.present(event, this.director.state);
         if (event.type === 'MECHANISM_CHANGED' && event.kind === 'REGION' && this.director.state) {
           this.sections.playEvents([event], this.director.state, this.effects.reduced);
@@ -490,7 +513,7 @@ export class BattleCanvas {
       if (!this.destroyed) this.app.resize();
     });
     this.hostObserver.observe(host);
-    this.world.addChild(
+    this.immersionScenery.addChild(
       this.ambience.art,
       this.platformLayer,
       this.templeEnvironment.back,
@@ -498,6 +521,9 @@ export class BattleCanvas {
       this.templeEnvironment.floor,
       this.sections.floor,
       this.ambience.lighting,
+    );
+    this.world.addChild(
+      this.immersionScenery,
       this.targetingPreview.root,
       this.tacticalLayer,
       this.objectiveLayer,
@@ -568,6 +594,10 @@ export class BattleCanvas {
   }
 
   destroy(): void {
+    if(this.destroyed)return;
+    this.offImmersion();this.haptics.destroy();this.atmosphere.destroy();
+    document.removeEventListener('visibilitychange',this.stopHaptics);
+    window.removeEventListener('blur',this.stopHaptics);
     this.destroyed = true;
     this.journey.finish();
     this.mechanisms.destroy();
@@ -793,6 +823,11 @@ export class BattleCanvas {
   }
 
   private draw(vm: BoardViewModel): void {
+    const hero=vm.state.units.find(u=>u.id===vm.heroId);
+    const settings=readImmersion(),finished=this.immersionFinished||!!vm.state.outcome||!hero;
+    const immersion=finished?EMPTY_ATMOSPHERE:atmosphereView(vm.state,vm.heroId);
+    this.callbacks.onImmersion?.(immersion);
+    this.atmosphere.set(hero?.hp??0,hero?.maxHp??0,settings.visuals,settings.subtle,finished,immersion.terrain);
     presentMechanisms(vm.state);
     vm = { ...vm, mechanisms: mechanismView(vm.state) };
     if (this.director.busy || this.journey.active)
@@ -845,6 +880,7 @@ export class BattleCanvas {
     this.targetingPreview.reset();
     if (!this.ready || !this.vm) return;
     if(events.some(e=>e.type==='BATTLE_STARTED'))this.resetPlayback();
+    if(!this.immersionFinished)this.haptics.register(events);
     this.opponentNotices.register(events,state,this.vm.content,this.vm.heroId,this.director.state ?? this.vm.state);
     const vm={...this.vm,state,mechanisms:mechanismView(state)};
     const recipes = [
@@ -921,6 +957,7 @@ export class BattleCanvas {
   }
 
   private resetPlayback(): void {
+    this.haptics.cancel();
     this.opponentNotices.reset();
     this.assetGate.clear();
     for (const view of this.units.values()) view.resetMotion();

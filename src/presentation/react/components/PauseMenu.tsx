@@ -1,3 +1,4 @@
+import {CombatImmersionSettings} from './CombatImmersionSettings';
 import {drawRitual} from '../../cards/drawRitual';
 import {readDrawMode,writeDrawMode} from '../../cards/drawRitualSettings';
 import {useEffect,useRef,useState} from 'react';
@@ -8,7 +9,7 @@ import {readDialogueSettings,writeDialogueSettings} from '../../dialogue/dialogu
 export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange}:{busy?:boolean;online?:boolean;onRestart?:()=>void;onExit:()=>void;onOpenChange?:(open:boolean)=>void}) {
  const dialog=useRef<HTMLDialogElement>(null);
  const trigger=useRef<HTMLButtonElement>(null);
- const [view,setView]=useState<'main'|'controls'|'restart'|'exit'>('main');
+ const [view,setView]=useState<'main'|'controls'|'restart'|'exit'|'game'>('main');
  const [dialogue,setDialogue]=useState(readDialogueSettings);
  const [drawMode,setDrawMode]=useState(readDrawMode);
  const dialogueKey=online?'pvp':'campaign';
@@ -38,10 +39,11 @@ export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange
     <button autoFocus className="pause-primary" onClick={close}>Reanudar combate</button>
     <button disabled={!onRestart||busy} title={!onRestart?'No disponible en PvP':undefined} onClick={()=>setView('restart')}>Reiniciar combate</button>
     <button onClick={()=>setView('controls')}>Controles</button>
+    <button onClick={()=>setView('game')}>Configuración · Juego</button>
     <button onClick={()=>{const next=drawMode==='interactive'?'automatic':'interactive';writeDrawMode(next);setDrawMode(next);drawRitual.complete();}}>Robo de cartas: {drawMode==='interactive'?'Tocar o deslizar':'Automático'}</button>
     <button aria-pressed={dialogue[dialogueKey]} onClick={toggleDialogue}>{online?'Diálogos PvP':'Diálogos de campaña'}: {dialogue[dialogueKey]?'Sí':'No'}</button>
     <button className="pause-caution" onClick={()=>setView('exit')}>Volver al menú</button>
-   </div>:view==='controls'?<div className="pause-controls">
+   </div>:view==='game'?<div><CombatImmersionSettings/><button onClick={()=>setView('main')}>Volver a pausa</button></div>:view==='controls'?<div className="pause-controls">
     <h3>Controles</h3><p>Clic en casilla azul: mover · Clic en carta (o 1–9) y luego en objetivo · Clic derecho / Esc: cancelar.</p>
     <p>Táctil: toca una carta y una casilla para previsualizar. Toca de nuevo el objetivo para confirmar. Toca una casilla azul para mover.</p>
     <p>E: finalizar turno · Esc sin selección: pausa.</p><button onClick={()=>setView('main')}>Volver a pausa</button>

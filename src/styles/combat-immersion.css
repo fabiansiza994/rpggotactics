@@ -1,0 +1,285 @@
+.immersion-settings {
+  border: 1px solid #ad945352;
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  min-width: 0;
+  color: #f0dfbc;
+}
+.immersion-settings label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  flex-wrap: wrap;
+}
+.immersion-settings input {
+  width: 22px;
+  height: 22px;
+  accent-color: #d2b266;
+}
+.immersion-settings select {
+  min-height: 44px;
+  max-width: 100%;
+  background: #101c2c;
+  color: inherit;
+  border: 1px solid #b39c68;
+  padding: 8px;
+  border-radius: 8px;
+}
+.immersion-settings small {
+  color: #bac8d2;
+  line-height: 1.5;
+}
+
+.board-host:has(> .combat-atmosphere) {
+  position: relative;
+}
+.combat-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none !important;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.combat-atmosphere > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none !important;
+  transition: opacity 600ms ease;
+}
+.combat-health-edge {
+  opacity: var(--health-opacity, 0);
+}
+.combat-root-edge {
+  opacity: var(--root-opacity, 0);
+}
+.combat-terrain-edge {
+  opacity: var(--terrain-opacity, 0);
+}
+/* Local RGBA textures carry the material; gradients only supply very restrained peripheral light. */
+.combat-blood-texture,
+.combat-root-texture,
+.combat-ice-texture,
+.combat-fire-texture,
+.combat-edge-motes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: solid transparent;
+  border-width: clamp(48px, 8vmin, 110px);
+  border-image-slice: 240;
+  border-image-repeat: stretch;
+}
+.combat-blood-texture {
+  border-image-source: url("../presentation/immersion/assets/blood.png");
+  opacity: 0.86;
+  transition:
+    transform 700ms ease,
+    opacity 600ms ease;
+}
+.combat-atmosphere[data-mood="alert"] .combat-blood-texture {
+  transform: scale(1.13);
+  opacity: 0.25;
+}
+.combat-health-edge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 65%,
+    #36030812 82%,
+    #5d091b70
+  );
+  opacity: 0.35;
+}
+.combat-atmosphere[data-mood="critical"] .combat-health-edge::after {
+  animation: combat-heart 3.6s ease-in-out infinite;
+}
+.combat-atmosphere[data-mood="extreme"] .combat-health-edge::after {
+  animation: combat-heart 2.8s ease-in-out infinite;
+}
+.combat-root-texture {
+  border-image-source: url("../presentation/immersion/assets/roots.png");
+  transform: scale(1.15);
+  transition: transform 850ms cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+.combat-atmosphere[data-rooted="true"] .combat-root-texture {
+  transform: scale(1);
+  animation: combat-root-breathe 9s 850ms ease-in-out infinite;
+}
+.combat-ice-texture {
+  border-image-source: url("../presentation/immersion/assets/ice.png");
+  opacity: 0;
+  transform: scale(1.13);
+  transition:
+    opacity 650ms ease,
+    transform 950ms ease;
+}
+.combat-fire-texture {
+  border-image-source: url("../presentation/immersion/assets/fire.png");
+  opacity: 0;
+  transition: opacity 650ms ease;
+}
+.combat-atmosphere[data-terrain="ice"] .combat-ice-texture {
+  opacity: 1;
+  transform: scale(1);
+}
+.combat-atmosphere[data-terrain="fire"] .combat-fire-texture {
+  opacity: 1;
+  animation: combat-fire-breathe 5.7s ease-in-out infinite;
+}
+.combat-edge-motes {
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+.combat-atmosphere[data-terrain="ice"] .combat-edge-motes,
+.combat-atmosphere[data-terrain="fire"] .combat-edge-motes {
+  opacity: 1;
+}
+.combat-edge-motes i {
+  position: absolute;
+  width: 3px;
+  height: 5px;
+  border-radius: 70% 20% 70% 40%;
+  bottom: 5%;
+  left: 3%;
+  background: #ffc16a;
+  box-shadow: 0 0 5px #f68b37;
+  animation: combat-ember 4.7s ease-out infinite;
+  animation-play-state: paused;
+}
+.combat-atmosphere[data-terrain="fire"] .combat-edge-motes i {
+  animation-play-state: running;
+}
+.combat-edge-motes i:nth-child(2) {
+  left: 8%;
+  bottom: 23%;
+  animation-delay: -1.7s;
+}
+.combat-edge-motes i:nth-child(3) {
+  left: 95%;
+  bottom: 12%;
+  animation-delay: -3.1s;
+}
+.combat-edge-motes i:nth-child(4) {
+  left: 98%;
+  bottom: 35%;
+  animation-delay: -2.3s;
+}
+.combat-edge-motes i:nth-child(5) {
+  left: 2%;
+  bottom: 50%;
+  animation-delay: -0.8s;
+}
+.combat-edge-motes i:nth-child(6) {
+  left: 91%;
+  bottom: 3%;
+  animation-delay: -4s;
+}
+.combat-atmosphere[data-terrain="ice"] .combat-edge-motes i {
+  background: #ddf7ff;
+  box-shadow: none;
+  width: 2px;
+  height: 3px;
+  animation: combat-snow 6s ease-in-out infinite;
+}
+@keyframes combat-heart {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  45% {
+    opacity: 0.65;
+  }
+  60% {
+    opacity: 0.35;
+  }
+}
+@keyframes combat-root-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.008);
+  }
+}
+@keyframes combat-fire-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  40% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.88;
+  }
+}
+@keyframes combat-ember {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.7);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(5px, -65px) scale(0.4);
+  }
+}
+@keyframes combat-snow {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  45% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.combat-atmosphere[data-subtle="true"] * {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .combat-atmosphere *,
+  .combat-atmosphere *::after {
+    animation: none !important;
+    transition: opacity 180ms linear !important;
+  }
+  .combat-root-texture,
+  .combat-ice-texture {
+    transform: none !important;
+  }
+  .combat-edge-motes {
+    display: none;
+  }
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  .battle .combat-atmosphere {
+    bottom: clamp(180px, 24dvh, 250px);
+  }
+}
+.interface-settings {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+/* Reuse the canvas visibility/pause lifecycle, including pseudo-element heartbeats. */
+.board-host[data-scene-paused] .combat-atmosphere *,
+.board-host[data-scene-paused] .combat-atmosphere *::after {
+  animation-play-state: paused !important;
+}

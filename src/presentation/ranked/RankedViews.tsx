@@ -1,5 +1,4 @@
 import { AnimatedReward, useResultProgress } from "../results/ResultProgress";import { RankedAvatar } from "../profile/RankedAvatar";
-import { BOT_LEVELS } from "../../game/ai/ranked-bot-policy";
 import { RankedRewardUnlock } from "./RankedRewardUnlock";
 import { MasteryTitleLabel } from "../mastery/MasteryViews";
 import { useEffect, useState, type CSSProperties } from "react";
@@ -183,32 +182,6 @@ export function RankedPanel({
       </div>
       {mobile && <RankedRewardsEntry carousel />}
       <p className="ranked-notice">{RANKED_SEASON.notice}</p>
-      {!!profile.botHistory?.length && (
-        <section
-          className="ranked-bot-history"
-          aria-label="Historial contra IA"
-        >
-          <h3>Últimas partidas contra IA</h3>
-          <ul>
-            {profile.botHistory.map((m) => (
-              <li key={m.matchId}>
-                {m.bot.name} · {BOT_LEVELS[m.bot.level]?.name} ·{" "}
-                {m.outcome === "WIN"
-                  ? "Victoria"
-                  : m.outcome === "DRAW"
-                    ? "Empate"
-                    : m.outcome === "SERVER_ERROR"
-                      ? "Incidencia"
-                      : m.outcome === "ABANDON"
-                        ? "Abandono"
-                        : "Derrota"}{" "}
-                · {m.rpDelta >= 0 ? "+" : ""}
-                {m.rpDelta} RP · {m.xp} XP
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </section>
   );
 }

@@ -728,6 +728,7 @@ export function PvpScreen({
             <div className="board-column">
               <BoardView
                 pvpEntry={entryPending}
+                finished={!!snapshot.result && !playback}
                 focusedEnemyId={null}
                 cameraOrigin={
                   mapSpawns(

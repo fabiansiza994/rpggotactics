@@ -417,10 +417,6 @@
   font-size: 10px;
   line-height: 1.5;
 }
-.pvp-lobby.ranked-mobile-21 .ranked-bot-history {
-  grid-column: 1/-1;
-  min-width: 0;
-}
 .pvp-lobby.ranked-mobile-21 .ranked-bot-offer {
   min-width: 0;
   font-size: 12px;
@@ -472,7 +468,7 @@
   background: transparent;
   box-shadow: none;
   padding-top: 12px;
-  grid-template-areas: "shield rank" "action action" "rewards rewards" "notice notice" "history history";
+  grid-template-areas: "shield rank" "action action" "rewards rewards" "notice notice";
 }
 .pvp-lobby.ranked-mobile-21 .ranked-panel::before,
 .pvp-lobby.ranked-mobile-21 .ranked-panel::after {
@@ -480,9 +476,6 @@
 }
 .pvp-lobby.ranked-mobile-21 .ranked-panel > .rrt-entry {
   grid-area: rewards;
-}
-.pvp-lobby.ranked-mobile-21 .ranked-bot-history {
-  grid-area: history;
 }
 .pvp-lobby.ranked-mobile-21 .ranked-panel-rank > .lobby-eyebrow {
   display: none;
@@ -605,7 +598,6 @@
 }
 .pvp-lobby.ranked-mobile-21 .ranked-panel > .rrt-entry { order: 7; width: 100%; }
 .pvp-lobby.ranked-mobile-21 .ranked-notice { order: 8; }
-.pvp-lobby.ranked-mobile-21 .ranked-bot-history { order: 9; }
 .pvp-lobby.ranked-mobile-21 .r21-rewards h3 { font-size: 18px; }
 .pvp-lobby.ranked-mobile-21 .ranked-panel-action {
   position: fixed;

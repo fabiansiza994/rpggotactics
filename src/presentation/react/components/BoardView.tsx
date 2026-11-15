@@ -1,3 +1,6 @@
+import {EMPTY_ATMOSPHERE} from '../../immersion/atmosphere';
+import {CombatAtmosphere} from './CombatAtmosphere';
+import '../../../styles/combat-immersion.css';
 import type { OpponentNotice, NoticeLane } from '../../mobile/OpponentNotices';
 import { LinkedMechanismAction } from '../../mechanisms/LinkedAction';
 const Act3AnimationTools=import.meta.env.DEV?lazy(()=>import('../../qa/act3/Act3AnimationTools').then(m=>({default:m.Act3AnimationTools}))):null;
@@ -12,7 +15,8 @@ import { archerBattlePreviewEnabled, archerPresentationState } from '../../qa/ar
 const ArcherBoardControls=import.meta.env.DEV?lazy(()=>import('../../qa/archer/ArcherBoardControls').then(m=>({default:m.ArcherBoardControls}))):null;
 
 /** Hosts the Pixi board. React owns the lifecycle; Pixi owns the pixels. */
-export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, cameraOrigin, pvpEntry = false }: { focusedEnemyId: string | null; pvpEntry?: boolean; menuPaused?: boolean; cameraOrigin?: {x:number;y:number}; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
+export function BoardView({ focusedEnemyId, finished = false, menuPaused = false, qaSample, cameraOrigin, pvpEntry = false }: { focusedEnemyId: string | null; finished?: boolean; pvpEntry?: boolean; menuPaused?: boolean; cameraOrigin?: {x:number;y:number}; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
+  const [immersion,setImmersion]=useState(EMPTY_ATMOSPHERE);
   const [notices,setNotices] = useState<OpponentNotice[]>([]);
   const [noticeLane,setNoticeLane] = useState<NoticeLane | null>(null);
   const [inspectedId,setInspectedId] = useState<string|null>(null);
@@ -32,6 +36,7 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
     if (!host) return;
     const { setHoverTile, clickTile, tapTile, cancelAim } = useBattleStore.getState();
     const canvas = new BattleCanvas({
+      onImmersion:next=>setImmersion(previous=>previous.hp===next.hp&&previous.max===next.max&&previous.finished===next.finished&&previous.rooted===next.rooted&&previous.terrain===next.terrain?previous:next),
       onOpponentNotices: rows => setNotices(previous => JSON.stringify(previous)===JSON.stringify(rows)?previous:rows),
       onNoticeLane: lane => setNoticeLane(previous => previous && JSON.stringify(previous)===JSON.stringify(lane)?previous:lane),
       onInspectUnit: positions => {
@@ -83,6 +88,7 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
   }, []);
 
   useEffect(() => { canvasRef.current?.setMenuPaused(menuPaused); }, [menuPaused]);
+  useEffect(() => { canvasRef.current?.setImmersionFinished(finished); }, [finished]);
   useEffect(() => {
     if (!import.meta.env.DEV || !qaSample) return;
     const id = setInterval(() => { if (canvasRef.current) qaSample(canvasRef.current.qaFeelSnapshot()); }, 250);
@@ -107,7 +113,7 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
       onPointerLeave={(e) => {
         if (e.pointerType === 'mouse') useBattleStore.getState().setHoverTile(null);
       }}
-    />
+    ><CombatAtmosphere view={finished ? EMPTY_ATMOSPHERE : immersion}/></div>
     {noticeLane && <div className="mobile-opponent-notices" role="status" aria-live="polite" aria-atomic="true" style={{left:noticeLane.left,top:noticeLane.top,width:noticeLane.width}}>
       {notices.slice(0,noticeLane.capacity).map(notice=><div key={notice.id} className="mobile-opponent-notice" data-priority={notice.priority}>{notice.text}</div>)}
     </div>}

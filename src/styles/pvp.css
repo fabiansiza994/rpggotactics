@@ -767,5 +767,3 @@
 .ranked-bot-offer p {font-size:12px;line-height:1.5;margin:8px 0;white-space:normal;}
 .ranked-panel-action .ranked-bot-offer small {display:block;max-width:none;white-space:normal;line-height:1.5;}
 .ranked-bot-offer button {width:100%;margin-top:10px;}
-.ranked-bot-history {grid-column:1/-1;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:12px;}
-.ranked-bot-history li {margin:8px 0;}
