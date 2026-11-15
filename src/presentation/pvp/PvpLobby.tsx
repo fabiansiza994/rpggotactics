@@ -68,7 +68,7 @@ interface Props {
   hero: string;
   decks?: ChampionDeckSummary[];
   deckId?: string;
-  onDeck?: (id: string) => void;
+  onCards?: () => void;
   loadoutLocked?: boolean;
   mode: PvpMode;
   mapId: string;
@@ -90,6 +90,11 @@ interface Props {
   /** Ranked panel shown instead of mode/map selection while queueKind is RANKED. */
   rankedSlot?: ReactNode;
 }
+/** Cards owns the active deck. A server room/queue keeps its already-fixed loadout. */
+export function lobbyDeckId(decks: readonly ChampionDeckSummary[], roomDeck?: string, queueDeck?: string | null) {
+  return roomDeck ?? queueDeck ?? decks.find(d => d.isDefault)?.deckId;
+}
+
 const MODES = [
   {
     id: "DUEL",
@@ -184,7 +189,7 @@ export function PvpLobby(props: Props) {
     rankedSlot,
     decks,
     deckId,
-    onDeck,
+    onCards,
     loadoutLocked = false,
   } = props;
   const avatarState = useAvatarStore();
@@ -230,15 +235,20 @@ export function PvpLobby(props: Props) {
   const heroDecks = heroProfile(profile, localHero, DEFAULT_CONTENT);
   const deck =
     heroDecks.decks.find((d) => d.id === deckId) ?? activeDeck(heroDecks);
-  const deckValid = decks
-    ? !!decks.find((d) => d.deckId === deckId)?.valid
-    : true;
+  const selectedDeck = decks?.find(d => d.deckId === deckId);
+  const deckValid = decks ? !!selectedDeck?.valid : true;
   const deckCards = deckSize(deck.cards);
-  // PvP needs a complete deck (the server re-checks): an incomplete/legacy deck says so here.
-  const deckLabel =
-    deckCards === DECK_RULES.requiredSize
-      ? `${deck.name} · ${deckCards} cartas`
-      : `${deck.name} · ${deckCards}/${DECK_RULES.requiredSize} cartas · incompleto, no válido en PvP`;
+  function activeDeckInfo(className: string) {
+    return <div className={`${className} pvp-active-deck`} aria-label="Mazo activo">
+      <span>Mazo activo: {selectedDeck?.name ?? (decks ? 'No disponible' : deck.name)} · {selectedDeck?.cardCount ?? deckCards}/{selectedDeck?.maxCards ?? DECK_RULES.requiredSize}</span>
+      {!deckValid && <>
+        <small role="status">El mazo activo no es válido para este campeón. Configúralo en Cartas antes de jugar.</small>
+        <button type="button" disabled={!onCards || loadoutLocked || !!room} onClick={onCards}>Configurar en Cartas</button>
+        {!!room && <small>Sal de la sala para configurar tu mazo.</small>}
+      </>}
+      {loadoutLocked && <small>Mazo fijado para esta búsqueda o sala.</small>}
+    </div>;
+  }
   const restriction = pvpChampionRestriction(localHero);
   const isReady = !!local?.ready;
   async function copyCode() {
@@ -261,18 +271,21 @@ export function PvpLobby(props: Props) {
     if (own && mobile && rankedSetup)
       return (
         <article className="r21-champion" aria-label="Campeón y mazo Ranked">
-          <span className="r21-champion-avatar">
-            <RankedAvatar
-              avatarId={avatarState.avatarId}
-              frameId={local ? local.frameId : equippedFrame}
-            />
-          </span>
           <div className="r21-champion-copy">
             <span className="lobby-eyebrow">TU CAMPEÓN</span>
             <h2>{DEFAULT_CONTENT.heroes[localHero]?.name}</h2>
             <p>{championOf(localHero)?.role}</p>
             <OwnMasteryTitle />
           </div>
+          <div className="r21-avatar-space">
+            <span className="r21-champion-avatar">
+              <RankedAvatar
+                avatarId={avatarState.avatarId}
+                frameId={local ? local.frameId : equippedFrame}
+              />
+            </span>
+          </div>
+          {activeDeckInfo("r21-deck-choice")}
           <button
             ref={changeButton}
             className="r21-change"
@@ -281,32 +294,8 @@ export function PvpLobby(props: Props) {
             disabled={busy || loadoutLocked}
             onClick={() => setChoosing(true)}
           >
-            Cambiar <span aria-hidden="true">›</span>
+            Cambiar campeón <span aria-hidden="true">›</span>
           </button>
-          {decks && onDeck && (
-            <label className="r21-deck-choice">
-              Mazo
-              <select
-                aria-label="Mazo para PvP o Ranked"
-                value={deckId ?? ""}
-                disabled={loadoutLocked}
-                onChange={(e) => onDeck(e.target.value)}
-              >
-                {decks.map((d) => (
-                  <option key={d.deckId} value={d.deckId}>
-                    {d.name} · {d.cardCount}/{d.maxCards}
-                    {d.valid ? "" : " · Inválido"}
-                  </option>
-                ))}
-              </select>
-              {!deckValid && (
-                <small role="status">
-                  Mazo inválido: edítalo antes de buscar.
-                </small>
-              )}
-              {loadoutLocked && <small>Mazo fijado durante la búsqueda.</small>}
-            </label>
-          )}
         </article>
       );
     return (
@@ -357,20 +346,11 @@ export function PvpLobby(props: Props) {
           ) : (
             <MasteryTitleLabel titleId={member?.titleId} />
           )}
-          {own ? (
-            <p className="lobby-deck">
-              <GameIcon name="deck" />
-              <span>
-                Mazo activo
-                <br />
-                <b>{deckLabel}</b>
-              </span>
-            </p>
-          ) : member ? (
+          {!own && (member ? (
             <p className="lobby-role">{championOf(member.heroId)?.role}</p>
           ) : (
             <p className="lobby-role">Un lugar en la arena te espera.</p>
-          )}
+          ))}
           <div className="lobby-player-status" aria-live="polite">
             {room ? (
               <>
@@ -411,33 +391,7 @@ export function PvpLobby(props: Props) {
             </button>
           )}
         </div>
-        {own && decks && onDeck && (
-          <label className="pvp-deck-choice">
-            Mazo · {DEFAULT_CONTENT.heroes[localHero]?.name}
-            <select
-              aria-label="Mazo para PvP o Ranked"
-              value={deckId ?? ""}
-              disabled={loadoutLocked}
-              onChange={(e) => onDeck(e.target.value)}
-            >
-              {decks.map((d) => (
-                <option key={d.deckId} value={d.deckId}>
-                  {d.name} · {d.cardCount}/{d.maxCards}
-                  {d.isDefault ? " · Predeterminado" : ""}
-                  {d.valid ? "" : " · Inválido"}
-                </option>
-              ))}
-            </select>
-            {!deckValid && (
-              <small role="status">
-                Mazo inválido: edítalo antes de entrar a la arena.
-              </small>
-            )}
-            {loadoutLocked && (
-              <small>Mazo fijado para esta búsqueda o sala.</small>
-            )}
-          </label>
-        )}
+        {own && activeDeckInfo("pvp-deck-choice")}
       </article>
     );
   }

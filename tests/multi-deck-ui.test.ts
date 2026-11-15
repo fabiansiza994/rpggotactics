@@ -30,10 +30,10 @@ describe('multi-deck UI contracts',()=>{
  it('renders the selected invalid deck, blocks casual queue and locks ranked room selection',()=>{
   const profile=createProfile(DEFAULT_CONTENT);useBattleStore.setState({profile});
   const decks=deckSummaries(profile,'mage',DEFAULT_CONTENT,DECK_RULES).map(d=>({...d,valid:false}));
-  const props={room:null,hero:'mage',mode:'DUEL' as const,mapId:'classic',code:'ABCDEFGH',busy:false,network:'Sin sala',error:'',onHero:()=>{},onMode:()=>{},onMap:()=>{},onCode:()=>{},onAction:()=>{},onExit:()=>{},decks,deckId:decks[0]!.deckId,onDeck:()=>{}};
-  const html=renderToStaticMarkup(h(PvpLobby,props));expect(html).toContain('Mazo inválido');expect(html).toContain('aria-label="Mazo para PvP o Ranked"');
+  const props={room:null,hero:'mage',mode:'DUEL' as const,mapId:'classic',code:'ABCDEFGH',busy:false,network:'Sin sala',error:'',onHero:()=>{},onMode:()=>{},onMap:()=>{},onCode:()=>{},onAction:()=>{},onExit:()=>{},decks,deckId:decks[0]!.deckId,onCards:()=>{}};
+  const html=renderToStaticMarkup(h(PvpLobby,props));expect(html).toContain('El mazo activo no es válido');expect(html).toContain('Mazo activo:');expect(html).not.toContain('<select');expect(html).toContain('Configurar en Cartas');
   const locked=renderToStaticMarkup(h(PvpLobby,{...props,loadoutLocked:true,queueKind:'RANKED',rankedSlot:h('p',null,'Clasificatoria')}));
-  expect(locked).toMatch(/<select[^>]*disabled=""/);expect(locked).toContain('Mazo fijado');
+  expect(locked).not.toContain('<select');expect(locked).toMatch(/<button[^>]*disabled=""[^>]*>Configurar en Cartas/);expect(locked).toContain('Mazo fijado');
  });
  it('sends champion + saved deck id to Ranked, never a card list',async()=>{
   vi.stubGlobal('window',{localStorage:{getItem:()=>JSON.stringify({token:'disposable-test',username:'QA'})}});

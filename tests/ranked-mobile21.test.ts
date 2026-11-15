@@ -160,7 +160,8 @@ describe("Ranked Mobile2.1 authoritative reward presentation", () => {
     expect(lobby).toContain("mobile && rankedSetup");
     expect(css).not.toContain(".desktop-shell");
     expect(css).not.toContain(".battle");
-    expect(lobby).toContain("onDeck(e.target.value)");
+    expect(lobby).toContain('Mazo activo:');
+    expect(lobby).not.toContain('<select');
     expect(lobby).toContain("onClick={() => setChoosing(true)}");
   });
 });

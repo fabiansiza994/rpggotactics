@@ -37,7 +37,7 @@ import { BattleScenery } from "../react/components/BattleScenery";
 import { HeroPanel, HandBar } from "../react/components/Hud";
 import { describeEvent, rememberUnits, ERROR_LABEL } from "../react/format";
 import "../../styles/pvp.css";
-import { PvpLobby } from "./PvpLobby";
+import { PvpLobby, lobbyDeckId } from "./PvpLobby";
 import { PvpHistory } from "./PvpHistory";
 import { MatchChat, useMatchFriend } from "../social/MatchChat";
 import { setPvpReportContext } from "../support/reportContext";
@@ -168,10 +168,6 @@ export function PvpScreen({
     [clock, setClock] = useState(Date.now());
   const profile = useBattleStore((s) => s.profile);
   const selectedHero = profile.selectedChampionId;
-  const [chosenDeck, setChosenDeck] = useState<{
-    heroId: string;
-    deckId: string;
-  } | null>(null);
   const socket = useRef<WebSocket | null>(null),
     latest = useRef<Snapshot | null>(null),
     retry = useRef<ReturnType<typeof setTimeout> | null>(null),
@@ -218,13 +214,7 @@ export function PvpScreen({
     ranked.queue.state === "SEARCHING" && ranked.queue.heroId === hero
       ? ranked.queue.deckId
       : undefined;
-  const deckId =
-    roomDeck ??
-    queueDeck ??
-    (chosenDeck?.heroId === hero &&
-    decks.some((d) => d.deckId === chosenDeck.deckId)
-      ? chosenDeck.deckId
-      : decks.find((d) => d.isDefault)?.deckId);
+  const deckId = lobbyDeckId(decks, roomDeck, queueDeck);
   const deckValid = !!decks.find((d) => d.deckId === deckId)?.valid;
   const loadoutLocked =
     busy ||
@@ -232,24 +222,6 @@ export function PvpScreen({
     queueLocked ||
     !!snapshot?.ranked ||
     !!snapshot?.members[snapshot.seat]?.ready;
-  async function chooseDeck(id: string) {
-    if (loadoutLocked) return;
-    if (!snapshot) {
-      setChosenDeck({ heroId: hero, deckId: id });
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      const next = await api("loadout", { code, heroId: hero, deckId: id });
-      setChosenDeck({ heroId: hero, deckId: id });
-      renderSnapshot(next);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo cambiar el mazo.");
-    } finally {
-      setBusy(false);
-    }
-  }
   const rankedFinished = !!snapshot?.ranked && !!snapshot.result;
   useEffect(() => {
     if (rankedFinished) void ranked.refresh();
@@ -1004,7 +976,7 @@ export function PvpScreen({
           hero={hero}
           decks={decks}
           deckId={deckId}
-          onDeck={(id) => void chooseDeck(id)}
+          onCards={() => { if (!loadoutLocked && !snapshot) navigatePlay("cards"); }}
           loadoutLocked={loadoutLocked}
           mode={mode}
           mapId={mapId}
@@ -1069,7 +1041,6 @@ export function PvpScreen({
             ).find((d) => d.isDefault)?.deckId;
             if (!snapshot) {
               useBattleStore.getState().selectChampion(id);
-              setChosenDeck(nextDeck ? { heroId: id, deckId: nextDeck } : null);
             } else
               void api("loadout", { code, heroId: id, deckId: nextDeck })
                 .then((next) => {

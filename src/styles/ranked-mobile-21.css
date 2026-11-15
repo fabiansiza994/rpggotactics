@@ -538,3 +538,110 @@
 .pvp-lobby.ranked-mobile-21 .r21-reward-art > span {
   font-size: 36px;
 }
+
+/* Mobile Ranked setup: reorder the existing domain components, never mount a second queue action. */
+.pvp-lobby.ranked-mobile-21 {
+  --r21-action-reserve: 240px;
+  padding-bottom: var(--r21-action-reserve);
+}
+.pvp-lobby.ranked-mobile-21 .r21-ranked-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 14px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion,
+.pvp-lobby.ranked-mobile-21 .ranked-panel { display: contents; }
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy {
+  order: 1;
+  width: 100%;
+  text-align: center;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy h2 {
+  font: 700 30px/1.15 Georgia, serif;
+  margin: 0 0 6px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy p { font-size: 12px; }
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy .mastery-title-label { justify-content: center; white-space: normal; overflow: visible; margin-top: 6px; }
+.pvp-lobby.ranked-mobile-21 .r21-avatar-space {
+  order: 2;
+  display: flex;
+  justify-content: center;
+  padding: 28px;
+  line-height: 0;
+}
+.pvp-lobby.ranked-mobile-21 .r21-ranked-card .r21-avatar-space > .r21-champion-avatar {
+  width: 96px;
+  height: 96px;
+  margin: 0;
+  flex: none;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-emblem {
+  order: 3;
+  align-self: center;
+  min-height: 0;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank {
+  order: 4;
+  width: 100%;
+  text-align: center;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank h2 { font-size: 28px; }
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank .ranked-rp { font-size: 26px; }
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank small { font-size: 11px; }
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice {
+  order: 5;
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px solid #b79b6344;
+  font-size: 13px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice select { font-size: 13px; min-height: 46px; }
+.pvp-lobby.ranked-mobile-21 .r21-change {
+  order: 6;
+  width: 100%;
+  font-size: 14px;
+  min-height: 46px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel > .rrt-entry { order: 7; width: 100%; }
+.pvp-lobby.ranked-mobile-21 .ranked-notice { order: 8; }
+.pvp-lobby.ranked-mobile-21 .ranked-bot-history { order: 9; }
+.pvp-lobby.ranked-mobile-21 .r21-rewards h3 { font-size: 18px; }
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action {
+  position: fixed;
+  z-index: 18;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(69px + env(safe-area-inset-bottom));
+  width: min(100%, 720px);
+  box-sizing: border-box;
+  padding: 10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
+  background: linear-gradient(#091724f5, #06111b);
+  border-top: 1px solid #a68a5555;
+  box-shadow: 0 -8px 18px #040b1455;
+  max-height: min(220px, 35dvh);
+  overflow-y: auto;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action > .lobby-primary,
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action > button {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid #dab66e;
+  border-radius: 9px;
+  background: linear-gradient(#24536a, #123244);
+  box-shadow: inset 0 0 0 3px #091824, inset 0 0 0 4px #a1875266;
+  color: #f6e8c8;
+  font: 700 24px Georgia, serif;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action > small { font-size: 11px; }
+.pvp-lobby.ranked-mobile-21 .ranked-searching { padding: 0; font-size: 12px; }
+
+/* Active deck is informational; all deck management lives in Cards. */
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice.pvp-active-deck {
+  display: block;
+  padding-top: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice.pvp-active-deck > span { color: #cbd6dd; }
