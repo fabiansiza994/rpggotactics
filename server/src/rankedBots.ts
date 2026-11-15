@@ -1,3 +1,5 @@
+import { DEFAULT_CONTENT, type GameContent } from "../../src/game";
+import { playableBotChampions, selectBotChampion } from "./botChampions";
 import { rewardsStatement } from "./mastery";
 import {
   BOT_POLICY,
@@ -55,6 +57,8 @@ export function makeBot(
   rp: number,
   seed: number,
   env: Env,
+  content: GameContent = DEFAULT_CONTENT,
+  recent: readonly unknown[] = [],
 ) {
   const identity = botIdentity(
     `ranked:${userId}:${since}`,
@@ -64,12 +68,11 @@ export function makeBot(
       ? undefined
       : Number(env.RANKED_BOTS_HIGHER_LEVEL_BPS),
   );
-  const heroes = [
-    "mage",
-    "summoner",
-    ...(env.SHAPESHIFTER_ENABLED === "1" ? ["shapeshifter"] : []),
-  ] as BotIdentity["heroId"][];
-  identity.heroId = heroes[Math.floor((seed >>> 0) / 48) % heroes.length]!;
+  identity.heroId = selectBotChampion(
+    seed,
+    playableBotChampions(env, content),
+    recent,
+  );
   return identity;
 }
 export interface BotFinish {

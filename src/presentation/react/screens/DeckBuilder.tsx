@@ -1,3 +1,4 @@
+import {AutoDeckBuilder} from './AutoDeckBuilder';
 import {visibleCollectionCopy,type CollectionScope} from '../../mobile/mobileUx';
 import {registerPlayNavigationGuard} from '../../play/navigation';
 import { MyDecks, DeckNameDialog, deckActionError } from './MyDecks';
@@ -579,6 +580,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     return (lookup(cardId)?.acquired ?? 0) > (card && isNeutral(card) ? sharedSeenUpTo : seenUpTo);
   };
 
+  const [autoOpen,setAutoOpen]=useState(false),[autoApplied,setAutoApplied]=useState(false);
   const [draft, setDraft] = useState<DeckEntry[]>(() => saved.cards.map((e) => ({ ...e })));
   const [query, setQuery] = useState<CollectionQuery>(EMPTY_QUERY);
   const compact = useSyncExternalStore(
@@ -634,7 +636,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const { totalCards: size, issues } = status;
   // The saved deck is an old 20-card one: shown untouched, the player adds the rest by hand.
   const savedLegacy = deckStatus(saved.cards, heroId, owned, DEFAULT_CONTENT, DECK_RULES).legacy;
-  const dirty = !sameDeck(draft, saved.cards);
+  const dirty = autoApplied || !sameDeck(draft, saved.cards);
   useEffect(()=>registerPlayNavigationGuard(()=>!dirty||window.confirm('¿Salir del editor? Los cambios sin guardar se perderán.')),[dirty]);
   const unlockedCount = pool.filter((c) => owned(c.id) > 0).length;
   const curve = costCurve(lines);
@@ -775,6 +777,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
       );
       return false;
     }
+    setAutoApplied(false);
     say('', 'saved', cloud ? 'Mazo guardado en la nube' : 'Mazo guardado');
     return true;
   }
@@ -837,6 +840,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
           <span className="menu-eyebrow">Colección y mazo</span>
           <h1>{mobile&&tab==='COLLECTION'&&collectionScope==='owned'?`Mi colección · ${heroDef.name}`:saved.name}</h1><button hidden={mobile&&tab==='COLLECTION'&&collectionScope==='owned'} type="button" className="db-rename" onClick={()=>setRenaming(true)}>Renombrar</button>
         </div>
+        <button type="button" className="db-btn db-auto-button" disabled={saving} onClick={()=>setAutoOpen(true)}><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 20 12-12 3 3L8 23zM15 3v4M13 5h4M5 4v4M3 6h4M19 15v4M17 17h4"/></svg>Autoarmar con IA</button>
         <label className="db-search">
           <span className="sr-only">Buscar carta</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -1209,7 +1213,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
               type="button"
               className="db-btn db-btn-ghost"
               disabled={!dirty}
-              onClick={() => setDraft(saved.cards.map((e) => ({ ...e })))}
+              onClick={() => {setDraft(saved.cards.map((e) => ({ ...e })));setAutoApplied(false);}}
             >
               Deshacer
             </button>
@@ -1325,6 +1329,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
           )}
         </DetailDialog>
       )}
+      {autoOpen&&<AutoDeckBuilder heroId={heroId} onClose={()=>setAutoOpen(false)} onApply={cards=>{setDraft(cards.map(e=>({...e})));setAutoApplied(true);setTab('DECK');setInspected(cards[0]?.cardId??null);setDetailOpen(false);say('','added','Propuesta aplicada al borrador. Pulsa Guardar mazo para conservarla.');}}/>}
       {starterConfirm && (
         <StarterDialog onConfirm={loadStarter} onClose={() => setStarterConfirm(false)} />
       )}

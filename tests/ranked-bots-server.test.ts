@@ -1,7 +1,7 @@
 import { botTurnBudget } from "../src/game/ai/ranked-bot-policy";
 import { applyDuel } from "../src/game/pvp/duel";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { DEFAULT_CONTENT, fallbackDiscardUid } from "../src/game";
 import { handle } from "../server/src/index";
 import { PvPMatchRoom, PVP_CONTENT, type Room } from "../server/src/pvp";
@@ -321,9 +321,16 @@ describe("ranked bot authoritative room integration", () => {
       );
     r = room.data.get("room") as Room;
     const before = r.commandCount;
-    vi.setSystemTime(Date.now() + 600);
+    vi.setSystemTime(
+      ((room.data.get("room") as Room).bot!.nextDecisionAt ?? Date.now()) + 1,
+    );
     await room.live.alarm();
     r = room.data.get("room") as Room;
+    if (r.bot!.pendingEnd) {
+      vi.setSystemTime(r.bot!.nextDecisionAt! + 1);
+      await room.live.alarm();
+      r = room.data.get("room") as Room;
+    }
     expect(r.commandCount).toBe(before + 1);
     expect(r.bot!.errors).toBe(0);
     expect(r.game!.player.energy).toBeGreaterThanOrEqual(0);
@@ -449,7 +456,9 @@ describe("ranked bot authoritative room integration", () => {
           command: { type: "END_TURN" },
         }),
       );
-    vi.setSystemTime(Date.now() + 600);
+    vi.setSystemTime(
+      ((room.data.get("room") as Room).bot!.nextDecisionAt ?? Date.now()) + 1,
+    );
     await room.live.alarm();
     r = room.data.get("room") as Room;
     const commands = r.commandCount;
@@ -486,6 +495,10 @@ describe("ranked bot authoritative room integration", () => {
     r.bot!.nodes = 0;
     r.bot!.actions = 0;
     r.bot!.nextDecisionAt = Date.now();
+    // Fault injection must invalidate a previously planned END_TURN; otherwise it executes
+    // against the deliberately removed hero and correctly resolves CHAMPION_DEFEATED.
+    delete r.bot!.pendingEnd;
+    delete r.bot!.nextDelayMs;
     // Explicit test fault injection: corrupt the visible planning input. Never a product bypass.
     r.game!.units = r.game!.units.filter(
       (u) => u.id !== r.game!.duel!.champions[0],
@@ -618,13 +631,282 @@ describe("ranked bot authoritative room integration", () => {
       r.bot!.nextDecisionAt = Date.now();
       const commands = r.commandCount;
       room.live = room.make();
-      vi.setSystemTime(Date.now() + 600);
+      vi.setSystemTime(
+        ((room.data.get("room") as Room).bot!.nextDecisionAt ?? Date.now()) + 1,
+      );
       await room.live.alarm();
       r = room.data.get("room") as Room;
+      if (r.bot!.pendingEnd) {
+        vi.setSystemTime(r.bot!.nextDecisionAt! + 1);
+        await room.live.alarm();
+        r = room.data.get("room") as Room;
+      }
       expect(r.commandCount).toBe(commands + 1);
       expect(r.game!.duel!.active).toBe(0);
       expect(r.bot!.cpuMs).toBe(0);
       expect(r.bot!.nodes).toBe(botTurnBudget(level).nodes);
     },
   );
+});
+
+// Real Worker routes and room persistence over the existing disposable SQLite/DO fixture.
+for (const human of ["mage", "summoner", "shapeshifter"])
+  for (const [seed, enemy] of [
+    [1, "mage"],
+    [2, "shapeshifter"],
+    [3, "summoner"],
+  ] as const) {
+    it(`authoritative ${human} vs ${enemy}: champion, deck, avatar and reconnect agree`, async () => {
+      const a = await player("variety-" + human + "-" + enemy);
+      // Fixture entitlement only in disposable SQLite; no product bypass or production write.
+      if (human === "shapeshifter")
+        db.sql
+          .prepare(
+            "INSERT INTO tactics_champion_unlocks(user_id,hero_id,milestone,unlocked_at) VALUES(?,'shapeshifter','FREE',?)",
+          )
+          .run(a.id, Date.now());
+      const start = await queue(a, human);
+      expect(start.status).toBe(200);
+      db.sql
+        .prepare("UPDATE tactics_ranked_queue SET bot_seed=? WHERE user_id=?")
+        .run(seed, a.id);
+      vi.setSystemTime(Date.now() + 15_000);
+      const offer = (await poll(a)).body.queue;
+      expect(offer.botOffer.identity.heroId).toBe(enemy);
+      expect((await poll(a)).body.queue.botOffer.identity).toEqual(
+        offer.botOffer.identity,
+      );
+      const accepted = await call(a.token, "POST", "/ranked/bot", {
+        since: offer.since,
+      });
+      expect(accepted.status).toBe(200);
+      const code = accepted.body.queue.code,
+        room = rooms.get(code)!;
+      let r = room.data.get("room") as Room;
+      expect(r.members[0]!.loadout.heroId).toBe(human);
+      expect(r.members[1]!.loadout.heroId).toBe(enemy);
+      expect(r.members[1]!.avatarId).toBe(
+        {
+          mage: "wizard_blue",
+          summoner: "arcane_sigil",
+          shapeshifter: "shapeshifter_bear",
+        }[enemy],
+      );
+      for (const entry of r.members[1]!.loadout.cards)
+        expect(
+          !PVP_CONTENT.cards[entry.cardId]!.heroId ||
+            PVP_CONTENT.cards[entry.cardId]!.heroId === enemy,
+        ).toBe(true);
+      const before = structuredClone(r.bot!.identity),
+        deck = structuredClone(r.members[1]!.loadout.cards);
+      r.members[0]!.offlineAt = null;
+      room.sockets.push(new FakeSocket(0));
+      room.live = room.make();
+      expect(
+        (await call(a.token, "POST", "/pvp/ready", { code, heroId: human }))
+          .status,
+      ).toBe(200);
+      r = room.data.get("room") as Room;
+      expect(r.game).not.toBeNull();
+      expect(r.game!.player.hand).toHaveLength(5);
+      expect(r.game!.duel!.other.hand).toHaveLength(5);
+      expect(
+        new Set(
+          [...r.game!.player.hand, ...r.game!.duel!.other.hand].map(
+            (c) => c.uid,
+          ),
+        ).size,
+      ).toBe(10);
+      room.live = room.make();
+      await room.live.fetch(
+        new Request("https://room/connect", {
+          method: "POST",
+          headers: {
+            "X-Pvp-User": String(a.id),
+            "X-Pvp-Bot-Protocol": "ranked-bots-1",
+          },
+          body: "{}",
+        }),
+      );
+      r = room.data.get("room") as Room;
+      expect(r.bot!.identity).toEqual(before);
+      expect(r.members[1]!.loadout.cards).toEqual(deck);
+      expect(r.members[1]!.loadout.heroId).toBe(enemy);
+    });
+  }
+
+it.each([1, 2, 3])(
+  "paces real bot %i commands, preserves alarms across restart and never repeats early",
+  async (seed) => {
+    const a = await player("tempo-" + seed),
+      q = (await queue(a)).body.queue;
+    db.sql
+      .prepare("UPDATE tactics_ranked_queue SET bot_seed=? WHERE user_id=?")
+      .run(seed, a.id);
+    vi.setSystemTime(Date.now() + 15000);
+    const accepted = await call(a.token, "POST", "/ranked/bot", {
+      since: q.since,
+    });
+    const code = accepted.body.queue.code,
+      room = rooms.get(code)!;
+    let r = room.data.get("room") as Room;
+    r.members[0]!.offlineAt = null;
+    room.sockets.push(new FakeSocket(0));
+    room.live = room.make();
+    if (process.env.BOT_TEMPO_REALTIME)
+      vi.setSystemTime(vi.getRealSystemTime());
+    vi.spyOn(crypto, "getRandomValues").mockReturnValueOnce(
+      new Uint32Array([4321]),
+    );
+    await call(a.token, "POST", "/pvp/ready", { code, heroId: "mage" });
+    r = room.data.get("room") as Room;
+    if (r.game!.duel!.active === 0)
+      await room.live.webSocketMessage(
+        sock(room.sockets[0]!),
+        JSON.stringify({
+          type: "command",
+          id: "tempo-end",
+          version: r.version,
+          command: {
+            type: "END_TURN",
+            discardUid: fallbackDiscardUid(r.game!) ?? undefined,
+          },
+        }),
+      );
+    r = room.data.get("room") as Room;
+    if (process.env.BOT_TEMPO_REALTIME) vi.useRealTimers();
+    const start = Date.now(),
+      first = r.bot!.nextDecisionAt!;
+    expect(first - start).toBeGreaterThanOrEqual(1500);
+    expect(first - start).toBeLessThanOrEqual(2500);
+    const trace: Array<{
+      at: number;
+      command: unknown;
+      cpu: number;
+      nodes: number;
+    }> = [];
+    for (let i = 0; i < 40 && r.game!.duel!.active === 1 && !r.result; i++) {
+      const due = r.bot!.nextDecisionAt!,
+        count = r.commandCount,
+        credit = r.bot!.pacingCreditMs;
+      // Early delivery is verified with the controlled clock; real timers may wake late.
+      if (!process.env.BOT_TEMPO_REALTIME) {
+        vi.setSystemTime(due - 1);
+        await room.live.alarm();
+        r = room.data.get("room") as Room;
+        expect(r.commandCount).toBe(count);
+        expect(r.bot!.pacingCreditMs).toBe(credit);
+      }
+      room.live = room.make(); // actual storage rehydration between every alarm
+      if (process.env.BOT_TEMPO_REALTIME)
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(0, due - Date.now() + 2)),
+        );
+      else vi.setSystemTime(due + 1);
+      await room.live.alarm();
+      r = room.data.get("room") as Room;
+      if (r.commandCount > count) {
+        expect(r.commandCount).toBe(count + 1);
+        trace.push({
+          at: Date.now() - start,
+          command: room.data.get(
+            `command:${r.matchId}:${String(r.commandCount).padStart(8, "0")}`,
+          ),
+          cpu: r.bot!.cpuMs,
+          nodes: r.bot!.nodes ?? 0,
+        });
+      }
+      expect(r.bot!.pacingCreditMs).toBeLessThanOrEqual(30000);
+      expect(r.bot!.errors).toBe(0);
+    }
+    expect(r.game!.duel!.active).toBe(0);
+    expect(trace.length).toBeGreaterThan(0);
+    expect(r.bot!.pendingEnd).toBeUndefined();
+    expect(r.bot!.nextDecisionAt).toBeNull();
+    const measuredElapsed = Date.now() - start;
+    const completed = r.commandCount;
+    await room.live.webSocketMessage(
+      sock(room.sockets[0]!),
+      JSON.stringify({ type: "surrender" }),
+    );
+    const ended = room.data.get("room") as Room;
+    expect(ended.result).toBeTruthy();
+    if (!process.env.BOT_TEMPO_REALTIME) vi.setSystemTime(Date.now() + 10000);
+    await room.live.alarm();
+    expect((room.data.get("room") as Room).commandCount).toBe(completed);
+    expect(new Set(r.game!.player.hand.map((c) => c.uid)).size).toBe(
+      r.game!.player.hand.length,
+    );
+    if (process.env.BOT_TEMPO_REPORT)
+      writeFileSync(
+        process.env.BOT_TEMPO_REPORT + "-" + seed + ".json",
+        JSON.stringify(
+          {
+            hero: r.bot!.identity.heroId,
+            seed,
+            elapsed: measuredElapsed,
+            old450ms: trace.length * 450,
+            trace,
+          },
+          null,
+          2,
+        ),
+      );
+    console.info(
+      "TEMPO_TRACE",
+      JSON.stringify({
+        hero: r.bot!.identity.heroId,
+        seed,
+        elapsed: measuredElapsed,
+        old450ms: trace.length * 450,
+        trace,
+      }),
+    );
+  },
+  20_000,
+);
+it("cancels a persisted end pause when a result arrives, without replaying its command", async () => {
+  const a = await player("tempo-result"),
+    q = (await queue(a)).body.queue;
+  vi.setSystemTime(Date.now() + 15000);
+  const accepted = await call(a.token, "POST", "/ranked/bot", {
+      since: q.since,
+    }),
+    code = accepted.body.queue.code,
+    room = rooms.get(code)!;
+  let r = room.data.get("room") as Room;
+  r.members[0]!.offlineAt = null;
+  room.sockets.push(new FakeSocket(0));
+  room.live = room.make();
+  await call(a.token, "POST", "/pvp/ready", { code, heroId: "mage" });
+  r = room.data.get("room") as Room;
+  if (r.game!.duel!.active === 0)
+    r.game = applyDuel(
+      r.game!,
+      {
+        type: "END_TURN",
+        discardUid: fallbackDiscardUid(r.game!) ?? undefined,
+      },
+      PVP_CONTENT,
+    ).state;
+  r.bot!.turn = r.game!.duel!.turns;
+  r.bot!.nodes = botTurnBudget(r.bot!.identity.level).nodes;
+  r.bot!.nextDecisionAt = Date.now();
+  room.live = room.make();
+  await room.live.alarm();
+  r = room.data.get("room") as Room;
+  expect(r.bot!.pendingEnd).toBeTruthy();
+  const before = r.commandCount;
+  room.live = room.make();
+  await room.live.webSocketMessage(
+    sock(room.sockets[0]!),
+    JSON.stringify({ type: "surrender" }),
+  );
+  vi.setSystemTime(Date.now() + 10000);
+  await room.live.alarm();
+  r = room.data.get("room") as Room;
+  expect(r.result).toBeTruthy();
+  expect(r.commandCount).toBe(before);
+  expect(r.bot!.pendingEnd).toBeUndefined();
+  expect(r.bot!.nextDecisionAt).toBeNull();
 });

@@ -16,7 +16,8 @@ import {
 } from "../../src/game/ranked/ranked";
 import type { Env } from "./db";
 import { error, json } from "./http";
-import { randomCode, serverLoadout, type RankedSeat } from "./pvp";
+import { playableBotChampions, recentBotChampions } from "./botChampions";
+import { PVP_CONTENT, randomCode, serverLoadout, type RankedSeat } from "./pvp";
 import { currentRp } from "./rankedResults";
 import { rankedTrackBody, reconcileRankedTrack } from "./rankedTrack";
 import {
@@ -284,25 +285,31 @@ async function queueState(
   if (t.room_code === null) {
     if (t.expires_at > now) {
       const rp = await currentRp(db, caller.userId);
-      const botOffer =
-        botsEnabled(env) && now - t.joined_at >= BOT_POLICY.offerAfterMs
-          ? {
-              identity: makeBot(
-                caller.userId,
-                t.joined_at,
-                rp,
-                t.bot_seed ?? t.joined_at,
-                env,
-              ),
-              rewards: await botRewardPreview(
-                db,
-                caller.userId,
-                rp,
-                now,
-                botPolicy(env),
-              ),
-            }
-          : undefined;
+      let botOffer: Extract<QueueState, { state: "SEARCHING" }>["botOffer"];
+      if (
+        botsEnabled(env) &&
+        now - t.joined_at >= BOT_POLICY.offerAfterMs &&
+        playableBotChampions(env, PVP_CONTENT).length
+      ) {
+        botOffer = {
+          identity: makeBot(
+            caller.userId,
+            t.joined_at,
+            rp,
+            t.bot_seed ?? t.joined_at,
+            env,
+            PVP_CONTENT,
+            await recentBotChampions(db, caller.userId, t.joined_at),
+          ),
+          rewards: await botRewardPreview(
+            db,
+            caller.userId,
+            rp,
+            now,
+            botPolicy(env),
+          ),
+        };
+      }
       return {
         state: "SEARCHING",
         heroId: t.hero_id,

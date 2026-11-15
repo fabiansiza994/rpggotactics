@@ -1,3 +1,5 @@
+import { botPause, botActionTiming, pacingCredit } from "./botPacing";
+import { botChampionAvatar } from "./botChampions";
 import { profileAvatar } from "../../src/shared/profileAvatars";
 import {
   BOT_POLICY,
@@ -121,6 +123,9 @@ export interface Room {
     identity: BotIdentity;
     policy: typeof BOT_POLICY;
     nextDecisionAt: number | null;
+    nextDelayMs?: number;
+    pacingCreditMs?: number;
+    pendingEnd?: { turn: number; command: Command };
     turn: number;
     actions: number;
     errors: number;
@@ -403,9 +408,6 @@ export class PvPMatchRoom {
         ),
       );
     };
-    if (this.ctx.storage.transaction)
-      await this.ctx.storage.transaction(persist);
-    else await persist(this.ctx.storage);
     const r = this.room!;
     if (r.bot) {
       const active =
@@ -413,11 +415,47 @@ export class PvPMatchRoom {
         !r.result &&
         r.game.duel?.active === 1 &&
         r.members[0]?.offlineAt === null;
-      if (active && r.bot.nextDecisionAt === null)
-        r.bot.nextDecisionAt = Date.now() + 450;
-      if (!active) r.bot.nextDecisionAt = null;
-      await this.ctx.storage.put("room", r);
+      if (active && r.bot.turn !== r.game!.duel!.turns) {
+        r.bot.turn = r.game!.duel!.turns;
+        r.bot.actions = 0;
+        r.bot.cpuMs = 0;
+        r.bot.nodes = 0;
+        r.bot.pacingCreditMs = 0;
+        delete r.bot.pendingEnd;
+        r.bot.nextDecisionAt = null;
+        r.bot.nextDelayMs = botPause(
+          "first",
+          r.bot.identity.seed,
+          r.bot.turn,
+          0,
+        );
+      }
+      if (active && r.bot.nextDecisionAt === null) {
+        const delay =
+          r.bot.nextDelayMs ??
+          botPause(
+            r.bot.pendingEnd ? "end" : r.bot.actions ? "normal" : "first",
+            r.bot.identity.seed,
+            r.bot.turn,
+            r.bot.actions,
+          );
+        const credit = pacingCredit(delay, r.bot.pacingCreditMs ?? 0);
+        r.bot.pacingCreditMs = (r.bot.pacingCreditMs ?? 0) + credit;
+        if (r.deadline !== null) r.deadline += credit;
+        r.bot.nextDecisionAt = Date.now() + delay;
+        delete r.bot.nextDelayMs;
+      }
+      if (!active) {
+        r.bot.nextDecisionAt = null;
+        if (r.result || r.game?.duel?.active !== 1) {
+          delete r.bot.pendingEnd;
+          delete r.bot.nextDelayMs;
+        }
+      }
     }
+    if (this.ctx.storage.transaction)
+      await this.ctx.storage.transaction(persist);
+    else await persist(this.ctx.storage);
     const times = [
       r.expiresAt,
       r.deadline,
@@ -802,6 +840,7 @@ export class PvPMatchRoom {
             {
               id: null,
               kind: "BOT",
+              avatarId: botChampionAvatar(bot.heroId),
               name: bot.name,
               loadout,
               ready: true,
@@ -1208,6 +1247,18 @@ export class PvPMatchRoom {
     if (!validCommand(action.command)) throw Error("BAD_COMMAND");
     const command = canonicalCommand(action.command);
     const applied = applyDuel(r.game, command, PVP_CONTENT);
+    const botTiming =
+      seat === 1 && r.bot
+        ? botActionTiming(
+            command,
+            applied.events,
+            PVP_CONTENT,
+            r.bot.identity.seed,
+            r.game.duel!.turns,
+            r.bot.actions,
+          )
+        : null;
+    if (botTiming && r.bot) r.bot.nextDelayMs = botTiming.delayMs;
     r.game = applied.state;
     r.version++;
     r.commandCount++;
@@ -1220,7 +1271,8 @@ export class PvPMatchRoom {
           version: r.version,
         },
     };
-    if (command.type === "END_TURN") r.deadline = Date.now() + 90000;
+    if (command.type === "END_TURN")
+      r.deadline = Date.now() + 90000 + (botTiming?.visualMs ?? 0);
     if (r.game.outcome) {
       const winner =
         r.game.dominion?.winner ??
@@ -1361,23 +1413,42 @@ export class PvPMatchRoom {
             r.bot.actions >= limits.maxActions - 1 ||
             r.bot.cpuMs >= limits.wallMs ||
             (r.bot.nodes ?? 0) >= limits.nodes;
-          const planned = exhausted
-            ? { command: fallback(), cpuMs: 0, nodes: 0 }
-            : planBot(
-                botObservation(r.game, 1, PVP_CONTENT),
-                PVP_CONTENT,
-                {
-                  ...r.bot.identity,
-                  seed:
-                    (r.bot.identity.seed + turn * 257 + r.bot.actions) >>> 0,
-                },
-                {
-                  maxCpuMs: Math.max(1, limits.wallMs - r.bot.cpuMs),
-                  maxNodes: Math.max(0, limits.nodes - (r.bot.nodes ?? 0)),
-                },
-              );
+          const pendingEnd =
+            r.bot.pendingEnd?.turn === turn ? r.bot.pendingEnd : null;
+          const planned = pendingEnd
+            ? { command: pendingEnd.command, cpuMs: 0, nodes: 0 }
+            : exhausted
+              ? { command: fallback(), cpuMs: 0, nodes: 0 }
+              : planBot(
+                  botObservation(r.game, 1, PVP_CONTENT),
+                  PVP_CONTENT,
+                  {
+                    ...r.bot.identity,
+                    seed:
+                      (r.bot.identity.seed + turn * 257 + r.bot.actions) >>> 0,
+                  },
+                  {
+                    maxCpuMs: Math.max(1, limits.wallMs - r.bot.cpuMs),
+                    maxNodes: Math.max(0, limits.nodes - (r.bot.nodes ?? 0)),
+                  },
+                );
           const command = planned.command;
           if (!validCommand(command)) throw Error("BAD_BOT_COMMAND");
+          if (command.type === "END_TURN" && !pendingEnd) {
+            r.bot.cpuMs += planned.cpuMs;
+            r.bot.nodes = (r.bot.nodes ?? 0) + planned.nodes;
+            r.bot.pendingEnd = { turn, command };
+            r.bot.nextDecisionAt = null;
+            r.bot.nextDelayMs = botPause(
+              "end",
+              r.bot.identity.seed,
+              turn,
+              r.bot.actions,
+            );
+            await this.save();
+            return;
+          }
+          delete r.bot.pendingEnd;
           const id = `bot:${turn}:${r.bot.actions}`;
           r.bot.actions++;
           r.bot.cpuMs += planned.cpuMs;
