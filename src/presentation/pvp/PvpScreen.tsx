@@ -1,44 +1,58 @@
-import { PvpTerrainInfo } from './PvpTerrainInfo';
-import { altarSlots } from '../../game';
-import { PvpTurnSummary } from './PvpTurnSummary';
-import {drawRitual,classifyDraws} from '../cards/drawRitual';
-import { isActionableTile } from '../input/aim';
-import { CardActivationLabel } from '../react/components/CardActivationLabel';
-import { CONTENT_RELEASE, contentReleaseUrl } from '../cloud/contentRelease';
-import { BattleResultPresentation } from '../results/BattleResultPresentation';
-import '../react/components/BattleStyles';
-import { useMechanismPlayback } from '../mechanisms/mechanismPlayback';
-import { useMasteryBattleFeedback } from '../mastery/MasteryFeedback';
-import { PRESENTATION_CONTENT as DEFAULT_CONTENT } from '../qa/shapeshifter/runtime';
-import {PauseMenu} from '../react/components/PauseMenu';
-import { useEffect, useRef, useState } from 'react';
 import {
-  GameEngine, deckSummaries, DECK_RULES,
+  BOT_LEVELS,
+  BOT_POLICY_VERSION,
+} from "../../game/ai/ranked-bot-policy";
+import { PvpTerrainInfo } from "./PvpTerrainInfo";
+import { altarSlots } from "../../game";
+import { PvpTurnSummary } from "./PvpTurnSummary";
+import { drawRitual, classifyDraws } from "../cards/drawRitual";
+import { isActionableTile } from "../input/aim";
+import { CardActivationLabel } from "../react/components/CardActivationLabel";
+import { CONTENT_RELEASE, contentReleaseUrl } from "../cloud/contentRelease";
+import { BattleResultPresentation } from "../results/BattleResultPresentation";
+import "../react/components/BattleStyles";
+import { useMechanismPlayback } from "../mechanisms/mechanismPlayback";
+import { useMasteryBattleFeedback } from "../mastery/MasteryFeedback";
+import { PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../qa/shapeshifter/runtime";
+import { PauseMenu } from "../react/components/PauseMenu";
+import { useEffect, useRef, useState } from "react";
+import {
+  GameEngine,
+  deckSummaries,
+  DECK_RULES,
   type GameState,
   type GameEvent,
   type Command,
-} from '../../game';
-import { type PvpMode } from '../../game/pvp/dominion';
-import { PVP_MAPS, pvpMap, mapScenario, mapSpawns } from '../../game/pvp/maps';
-import { CLOUD_CONFIG } from '../cloud/config';
-import { loadSession } from '../cloud/session';
-import { useBattleStore } from '../store/battleStore';
-import { presentationBus } from '../events/presentationBus';
-import { BoardView } from '../react/components/BoardView';
-import { BattleScenery } from '../react/components/BattleScenery';
-import { HeroPanel, HandBar } from '../react/components/Hud';
-import { describeEvent, rememberUnits, ERROR_LABEL } from '../react/format';
-import '../../styles/pvp.css';
-import { PvpLobby } from './PvpLobby';
-import { PvpHistory } from './PvpHistory';
-import { MatchChat, useMatchFriend } from '../social/MatchChat';
-import { setPvpReportContext } from '../support/reportContext';
-import { PvpBanter, PvpVictoryLines, pvpMatchKey } from '../dialogue/DialogueGates';
-import { useRankedQueue } from '../ranked/useRankedQueue';
-import { RankedPanel, RankedResult, type QueueKind } from '../ranked/RankedViews';
-import type { RankedSnapshot } from '../ranked/rankedApi';
-import { pvpChampionRestriction } from './eligibility';
-import { VictoryBadge } from '../ranked/RankedCosmetics';
+} from "../../game";
+import { type PvpMode } from "../../game/pvp/dominion";
+import { PVP_MAPS, pvpMap, mapScenario, mapSpawns } from "../../game/pvp/maps";
+import { CLOUD_CONFIG } from "../cloud/config";
+import { loadSession } from "../cloud/session";
+import { useBattleStore } from "../store/battleStore";
+import { presentationBus } from "../events/presentationBus";
+import { BoardView } from "../react/components/BoardView";
+import { BattleScenery } from "../react/components/BattleScenery";
+import { HeroPanel, HandBar } from "../react/components/Hud";
+import { describeEvent, rememberUnits, ERROR_LABEL } from "../react/format";
+import "../../styles/pvp.css";
+import { PvpLobby } from "./PvpLobby";
+import { PvpHistory } from "./PvpHistory";
+import { MatchChat, useMatchFriend } from "../social/MatchChat";
+import { setPvpReportContext } from "../support/reportContext";
+import {
+  PvpBanter,
+  PvpVictoryLines,
+  pvpMatchKey,
+} from "../dialogue/DialogueGates";
+import { useRankedQueue } from "../ranked/useRankedQueue";
+import {
+  RankedPanel,
+  RankedResult,
+  type QueueKind,
+} from "../ranked/RankedViews";
+import type { RankedSnapshot } from "../ranked/rankedApi";
+import { pvpChampionRestriction } from "./eligibility";
+import { VictoryBadge } from "../ranked/RankedCosmetics";
 interface Snapshot {
   mode: PvpMode;
   mapId: string;
@@ -47,10 +61,20 @@ interface Snapshot {
   matchId?: string;
   version: number;
   seat: number;
+  bot?: {
+    identity: import("../../game/ai/ranked-bot-policy").BotIdentity;
+    outcome: {
+      outcome: string;
+      rpDelta: number;
+      xp: number;
+      restrictions: string[];
+    } | null;
+  };
   members: {
     name: string;
     heroId: string;
     deckId?: string;
+    avatarId?: string | null;
     frameId?: string | null;
     titleId?: string | null;
     crestId?: string | null;
@@ -67,88 +91,144 @@ interface Snapshot {
   ranked?: RankedSnapshot | null;
 }
 const REASONS: Record<string, string> = {
-  DOMINION_SCORE: 'Victoria por Dominio Arcano',
-  CHAMPION_DEFEATED: 'Campeón derrotado',
-  SURRENDER: 'Rendición',
-  OPPONENT_DISCONNECTED: 'El rival no volvió a conectarse',
-  ABANDONED: 'Abandono de la partida',
-  BOTH_DISCONNECTED: 'Ambos jugadores perdieron la conexión',
-  MATCH_EXPIRED: 'La partida venció',
+  DOMINION_SCORE: "Victoria por Dominio Arcano",
+  CHAMPION_DEFEATED: "Campeón derrotado",
+  SURRENDER: "Rendición",
+  OPPONENT_DISCONNECTED: "El rival no volvió a conectarse",
+  ABANDONED: "Abandono de la partida",
+  BOTH_DISCONNECTED: "Ambos jugadores perdieron la conexión",
+  MATCH_EXPIRED: "La partida venció",
 };
 const ERRORS: Record<string, string> = {
   ...ERROR_LABEL,
-  NOT_YOUR_TURN: 'Es el turno del rival.',
-  STALE_VERSION: 'La partida cambió. Confirma de nuevo tu acción.',
-  OPPONENT_DISCONNECTED: 'Esperando la reconexión del rival.',
-  TURN_EXPIRED: 'Tu turno terminó.',
-  BATTLE_OVER: 'La partida ya terminó.',
-  BAD_COMMAND: 'La acción no es válida.',
+  NOT_YOUR_TURN: "Es el turno del rival.",
+  STALE_VERSION: "La partida cambió. Confirma de nuevo tu acción.",
+  OPPONENT_DISCONNECTED: "Esperando la reconexión del rival.",
+  TURN_EXPIRED: "Tu turno terminó.",
+  BATTLE_OVER: "La partida ya terminó.",
+  BAD_COMMAND: "La acción no es válida.",
 };
-const LAST_ROOM = 'rpg-go-tactics:pvp-room';
+const LAST_ROOM = "rpg-go-tactics:pvp-room";
 /** Liveness probe while a room is unresolved: a ping every PROBE_MS, a socket without pong after PONG_MS is stale. */
 const PROBE_MS = 10000,
   PONG_MS = 5000;
 async function api(path: string, body?: unknown) {
   const session = loadSession();
-  if (!session) throw Error('Inicia sesión para jugar PvP.');
-  const res = await fetch(contentReleaseUrl(CLOUD_CONFIG.apiUrl + '/api/tactics/pvp/' + path), {
-    method: body ? 'POST' : 'GET',
-    headers: { Authorization: 'Bearer ' + session.token, 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  if (!session) throw Error("Inicia sesión para jugar PvP.");
+  const res = await fetch(
+    contentReleaseUrl(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/" + path),
+    {
+      method: body ? "POST" : "GET",
+      headers: {
+        Authorization: "Bearer " + session.token,
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    },
+  );
   const data = await res.json();
   if (res.status === 401) {
-    if (loadSession()?.token === session.token) useBattleStore.getState().sessionExpired();
-    throw Error('Tu sesión venció. Inicia sesión de nuevo para reconectar.');
+    if (loadSession()?.token === session.token)
+      useBattleStore.getState().sessionExpired();
+    throw Error("Tu sesión venció. Inicia sesión de nuevo para reconectar.");
   }
-  if (!res.ok) throw Error(data.error?.message ?? 'No se pudo conectar.');
+  if (!res.ok) throw Error(data.error?.message ?? "No se pudo conectar.");
   return data;
 }
-export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:boolean;onExit: () => void;onOpponentHistory?:(username:string)=>void }) {
+export function PvpScreen({
+  onExit,
+  onOpponentHistory,
+  mobile = false,
+}: {
+  mobile?: boolean;
+  onExit: () => void;
+  onOpponentHistory?: (username: string) => void;
+}) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
-    [code, setCode] = useState(''),
-    [mode, setMode] = useState<PvpMode>('DUEL'),
-    [mapId, setMapId] = useState('classic'),
-    [error, setError] = useState(''),
-    [network, setNetwork] = useState('Conectando…'),
+    [code, setCode] = useState(""),
+    [mode, setMode] = useState<PvpMode>("DUEL"),
+    [mapId, setMapId] = useState("classic"),
+    [error, setError] = useState(""),
+    [network, setNetwork] = useState("Conectando…"),
     [busy, setBusy] = useState(false),
     [confirm, setConfirm] = useState(false),
     [history, setHistory] = useState(false),
-    [queueKind, setQueueKind] = useState<QueueKind>(()=>new URLSearchParams(location.search).get('queue')==='ranked'?'RANKED':'CASUAL'),
+    [queueKind, setQueueKind] = useState<QueueKind>(() =>
+      new URLSearchParams(location.search).get("queue") === "ranked"
+        ? "RANKED"
+        : "CASUAL",
+    ),
     [clock, setClock] = useState(Date.now());
-  const profile=useBattleStore(s=>s.profile);
-  const selectedHero=profile.selectedChampionId;
-  const [chosenDeck,setChosenDeck]=useState<{heroId:string;deckId:string}|null>(null);
+  const profile = useBattleStore((s) => s.profile);
+  const selectedHero = profile.selectedChampionId;
+  const [chosenDeck, setChosenDeck] = useState<{
+    heroId: string;
+    deckId: string;
+  } | null>(null);
   const socket = useRef<WebSocket | null>(null),
     latest = useRef<Snapshot | null>(null),
     retry = useRef<ReturnType<typeof setTimeout> | null>(null),
     alive = useRef(true),
-    pending = useRef<{ id: string; version: number; command: Command } | null>(null),
+    pending = useRef<{ id: string; version: number; command: Command } | null>(
+      null,
+    ),
     lastRevision = useRef(-1),
     connectionGeneration = useRef(0),
     pingSentAt = useRef<number | null>(null);
   // Ranked queue: a MATCHED ticket opens its server-created room like a joined code.
   const ranked = useRankedQueue((room) => {
-    setQueueKind('RANKED');
+    setQueueKind("RANKED");
     socket.current?.close();
     lastRevision.current = -1;
     setCode(room);
     void connect(room);
   });
-  const hero=snapshot?.members[snapshot.seat]?.heroId ?? (ranked.queue.state==='SEARCHING'?ranked.queue.heroId:selectedHero);
-  const masteryFeedback = useMasteryBattleFeedback({heroId:hero,heroName:DEFAULT_CONTENT.heroes[hero]?.name??'Campeón',battleKey:snapshot?pvpMatchKey(snapshot):null,finished:!!snapshot?.result});
-  const decks=deckSummaries(profile,hero,DEFAULT_CONTENT,DECK_RULES);
-  const queueLocked=ranked.busy || ranked.queue.state !== 'IDLE';
-  const roomDeck=snapshot?.members[snapshot.seat]?.deckId;
-  const queueDeck=ranked.queue.state==='SEARCHING'&&ranked.queue.heroId===hero ? ranked.queue.deckId : undefined;
-  const deckId=roomDeck ?? queueDeck ?? (chosenDeck?.heroId===hero&&decks.some(d=>d.deckId===chosenDeck.deckId)?chosenDeck.deckId:decks.find(d=>d.isDefault)?.deckId);
-  const deckValid=!!decks.find(d=>d.deckId===deckId)?.valid;
-  const loadoutLocked=busy||queueLocked||!!snapshot?.ranked||!!snapshot?.members[snapshot.seat]?.ready;
-  async function chooseDeck(id:string){
-    if(loadoutLocked)return;
-    if(!snapshot){setChosenDeck({heroId:hero,deckId:id});return;}
-    setBusy(true);setError('');
-    try{const next=await api('loadout',{code,heroId:hero,deckId:id});setChosenDeck({heroId:hero,deckId:id});renderSnapshot(next);}catch(e){setError(e instanceof Error?e.message:'No se pudo cambiar el mazo.');}finally{setBusy(false);}
+  const hero =
+    snapshot?.members[snapshot.seat]?.heroId ??
+    (ranked.queue.state === "SEARCHING" ? ranked.queue.heroId : selectedHero);
+  const masteryFeedback = useMasteryBattleFeedback({
+    heroId: hero,
+    heroName: DEFAULT_CONTENT.heroes[hero]?.name ?? "Campeón",
+    battleKey: snapshot ? pvpMatchKey(snapshot) : null,
+    finished: !!snapshot?.result,
+  });
+  const decks = deckSummaries(profile, hero, DEFAULT_CONTENT, DECK_RULES);
+  const queueLocked = ranked.busy || ranked.queue.state !== "IDLE";
+  const roomDeck = snapshot?.members[snapshot.seat]?.deckId;
+  const queueDeck =
+    ranked.queue.state === "SEARCHING" && ranked.queue.heroId === hero
+      ? ranked.queue.deckId
+      : undefined;
+  const deckId =
+    roomDeck ??
+    queueDeck ??
+    (chosenDeck?.heroId === hero &&
+    decks.some((d) => d.deckId === chosenDeck.deckId)
+      ? chosenDeck.deckId
+      : decks.find((d) => d.isDefault)?.deckId);
+  const deckValid = !!decks.find((d) => d.deckId === deckId)?.valid;
+  const loadoutLocked =
+    busy ||
+    queueLocked ||
+    !!snapshot?.ranked ||
+    !!snapshot?.members[snapshot.seat]?.ready;
+  async function chooseDeck(id: string) {
+    if (loadoutLocked) return;
+    if (!snapshot) {
+      setChosenDeck({ heroId: hero, deckId: id });
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const next = await api("loadout", { code, heroId: hero, deckId: id });
+      setChosenDeck({ heroId: hero, deckId: id });
+      renderSnapshot(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo cambiar el mazo.");
+    } finally {
+      setBusy(false);
+    }
   }
   const rankedFinished = !!snapshot?.ranked && !!snapshot.result;
   useEffect(() => {
@@ -157,29 +237,34 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
   }, [rankedFinished]);
   function renderSnapshot(next: Snapshot, liveDraw = false) {
     const previousGame = latest.current?.game;
-    if(next.result)drawRitual.complete();
+    if (next.result) drawRitual.complete();
     if (next.version < lastRevision.current) return;
     const fresh = next.version > lastRevision.current;
     lastRevision.current = next.version;
     latest.current = next;
     setSnapshot(next);
     setCode(next.code);
-    setPvpReportContext({ roomCode: next.code, mode: next.mode, heroId: next.members[next.seat]?.heroId ?? null, inMatch: next.game !== null });
+    setPvpReportContext({
+      roomCode: next.code,
+      mode: next.mode,
+      heroId: next.members[next.seat]?.heroId ?? null,
+      inMatch: next.game !== null,
+    });
     if (fresh) pending.current = null;
     setBusy(false);
     if (next.game) {
-      if(!liveDraw)drawRitual.complete();
+      if (!liveDraw) drawRitual.complete();
 
-      if(next.game.outcome)drawRitual.complete();
+      if (next.game.outcome) drawRitual.complete();
       const state = next.game,
         old = useBattleStore.getState().state;
       rememberUnits(old ?? state);
       const engine = GameEngine.fromSnapshot(
         state,
         DEFAULT_CONTENT,
-        mapScenario(pvpMap(next.mapId ?? 'classic', next.mode), next.mode),
+        mapScenario(pvpMap(next.mapId ?? "classic", next.mode), next.mode),
       );
-      engine.wallOrientation=useBattleStore.getState().wallOrientation;
+      engine.wallOrientation = useBattleStore.getState().wallOrientation;
       useBattleStore.setState({
         engine,
         state,
@@ -188,23 +273,37 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
         pairSelection: null,
         aim: null,
         introLocked: false,
-        introReached: ['unlock'],
+        introReached: ["unlock"],
         notice: null,
         onlineCommand: send,
         log: next.events
           .filter(
             (e) =>
-              e.type === 'CARD_PLAYED' || e.type === 'UNIT_DAMAGED' || e.type === 'SUMMON_ATTACKED',
+              e.type === "CARD_PLAYED" ||
+              e.type === "UNIT_DAMAGED" ||
+              e.type === "SUMMON_ATTACKED",
           )
           .map((e, i) => ({
             id: next.version * 100 + i,
             text: describeEvent(e, state)?.text ?? e.type,
-            tone: 'info',
+            tone: "info",
           })),
       });
 
-      if (fresh && next.events.length) presentationBus.publish(next.events, state);
-      if(fresh)drawRitual.enqueue(classifyDraws({events:next.events,state:next.game,previous:previousGame,content:DEFAULT_CONTENT,online:true,live:liveDraw,revision:`${next.code}:${next.version}`}));
+      if (fresh && next.events.length)
+        presentationBus.publish(next.events, state);
+      if (fresh)
+        drawRitual.enqueue(
+          classifyDraws({
+            events: next.events,
+            state: next.game,
+            previous: previousGame,
+            content: DEFAULT_CONTENT,
+            online: true,
+            live: liveDraw,
+            revision: `${next.code}:${next.version}`,
+          }),
+        );
     }
   }
   function send(command: Command) {
@@ -212,7 +311,7 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
     const s = latest.current;
     if (
       !s?.game ||
-      s.game.phase !== 'PLAYER' ||
+      s.game.phase !== "PLAYER" ||
       pending.current ||
       socket.current?.readyState !== WebSocket.OPEN ||
       s.members.some((m) => !m.connected)
@@ -229,52 +328,61 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
     const oldSocket = socket.current;
     socket.current = null;
     oldSocket?.close();
-    setNetwork('Conectando…');
+    setNetwork("Conectando…");
     try {
-      const token = await api('connect', { code: room });
+      const token = await api("connect", { code: room });
       if (!alive.current || generation !== connectionGeneration.current) return;
-      const url = new URL(CLOUD_CONFIG.apiUrl + '/api/tactics/pvp/socket');
-      url.searchParams.set('clientRelease', CONTENT_RELEASE);
-      url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-      url.searchParams.set('code', room);
-      url.searchParams.set('ticket', token.ticket);
+      const url = new URL(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/socket");
+      url.searchParams.set("clientRelease", CONTENT_RELEASE);
+      url.searchParams.set("botProtocol", BOT_POLICY_VERSION);
+      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      url.searchParams.set("code", room);
+      url.searchParams.set("ticket", token.ticket);
       const ws = new WebSocket(url);
       socket.current = ws;
       pingSentAt.current = null;
       ws.onopen = () => {
-        setNetwork('Conectado');
+        setNetwork("Conectado");
         localStorage.setItem(LAST_ROOM, room);
         if (pending.current) ws.send(JSON.stringify(pending.current));
       };
-      let initialSnapshot=true;
+      let initialSnapshot = true;
       ws.onmessage = (e) => {
         if (socket.current !== ws) return;
         const msg = JSON.parse(e.data);
-        if (msg.type === 'snapshot') {renderSnapshot(msg,!initialSnapshot);initialSnapshot=false;}
-        else if (msg.type === 'pong') {
+        if (msg.type === "snapshot") {
+          renderSnapshot(msg, !initialSnapshot);
+          initialSnapshot = false;
+        } else if (msg.type === "pong") {
           pingSentAt.current = null;
           // The server moved on without this client seeing it (a push was lost): pull the truth.
-          if (msg.version > lastRevision.current) {initialSnapshot=true;ws.send(JSON.stringify({ type: 'resync' }));}
-        } else if (msg.type === 'ack') {
+          if (msg.version > lastRevision.current) {
+            initialSnapshot = true;
+            ws.send(JSON.stringify({ type: "resync" }));
+          }
+        } else if (msg.type === "ack") {
           pending.current = null;
           setBusy(false);
-        } else if (msg.type === 'error') {
-          setError(ERRORS[msg.message] ?? 'No se pudo aplicar la acción.');
+        } else if (msg.type === "error") {
+          setError(ERRORS[msg.message] ?? "No se pudo aplicar la acción.");
           pending.current = null;
           setBusy(false);
-          initialSnapshot=true;ws.send(JSON.stringify({ type: 'resync' }));
+          initialSnapshot = true;
+          ws.send(JSON.stringify({ type: "resync" }));
         }
       };
       ws.onclose = () => {
         if (!alive.current || socket.current !== ws) return;
-        setNetwork('Reconectando…');
+        setNetwork("Reconectando…");
         setBusy(false);
         retry.current = setTimeout(() => void connect(room), 1500);
       };
       ws.onerror = () => ws.close();
     } catch (e) {
       if (generation !== connectionGeneration.current) return;
-      setNetwork(`Sin conexión · ${e instanceof Error ? e.message : 'Error de conexión'}`);
+      setNetwork(
+        `Sin conexión · ${e instanceof Error ? e.message : "Error de conexión"}`,
+      );
       if (alive.current && latest.current) {
         void readState(room);
         retry.current = setTimeout(() => void connect(room), 3000);
@@ -284,8 +392,9 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
   /** Authoritative HTTP read of the room (same view as a socket snapshot); never infers a result. */
   async function readState(room: string) {
     try {
-      const data = await api('state?code=' + encodeURIComponent(room));
-      if (alive.current && latest.current?.code === data.code) renderSnapshot(data);
+      const data = await api("state?code=" + encodeURIComponent(room));
+      if (alive.current && latest.current?.code === data.code)
+        renderSnapshot(data);
       return data as Snapshot;
     } catch {
       return null;
@@ -295,9 +404,15 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
   async function recover(room: string) {
     const generation = connectionGeneration.current;
     await readState(room);
-    if (alive.current && generation === connectionGeneration.current) void connect(room);
+    if (alive.current && generation === connectionGeneration.current)
+      void connect(room);
   }
-  const unresolved = !!snapshot && (!snapshot.result || (!!snapshot.ranked && !snapshot.ranked.outcome));
+  const unresolved =
+    !!snapshot &&
+    (!snapshot.result ||
+      (!!snapshot.ranked &&
+        !snapshot.ranked.outcome &&
+        !snapshot.bot?.outcome));
   // Liveness while the room is unresolved: the terminal state (abandon, timeout, result) is pushed
   // once by the server; a half-open socket or a frozen tab must not keep a stale live view.
   useEffect(() => {
@@ -314,18 +429,18 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
       }
       if (!force && now - lastPing < PROBE_MS) return;
       lastPing = pingSentAt.current = now;
-      ws.send(JSON.stringify({ type: 'ping' }));
+      ws.send(JSON.stringify({ type: "ping" }));
     };
     const visible = () => {
-      if (document.visibilityState === 'visible') probe(true);
+      if (document.visibilityState === "visible") probe(true);
     };
     const timer = setInterval(probe, 1000);
-    document.addEventListener('visibilitychange', visible);
-    window.addEventListener('online', visible);
+    document.addEventListener("visibilitychange", visible);
+    window.addEventListener("online", visible);
     return () => {
       clearInterval(timer);
-      document.removeEventListener('visibilitychange', visible);
-      window.removeEventListener('online', visible);
+      document.removeEventListener("visibilitychange", visible);
+      window.removeEventListener("online", visible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unresolved]);
@@ -333,15 +448,15 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
   useEffect(() => {
     alive.current = true;
     const clockTimer = setInterval(() => setClock(Date.now()), 1000);
-    void api('active')
+    void api("active")
       .then(({ code: active }) => {
         const saved = active ?? localStorage.getItem(LAST_ROOM);
         if (saved) void connect(saved);
-        else setNetwork('Sin sala');
+        else setNetwork("Sin sala");
       })
       .catch((e) => {
         setError(e.message);
-        setNetwork('Sin conexión');
+        setNetwork("Sin conexión");
       });
     return () => {
       alive.current = false;
@@ -361,24 +476,30 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // connection lifecycle is owned by this screen
   async function action(path: string) {
-    if (['create','join','ready','rematch'].includes(path)&&(!deckId||!deckValid)){setError('Corrige el mazo seleccionado antes de entrar a la arena.');return;}
-    setError('');
+    if (
+      ["create", "join", "ready", "rematch"].includes(path) &&
+      (!deckId || !deckValid)
+    ) {
+      setError("Corrige el mazo seleccionado antes de entrar a la arena.");
+      return;
+    }
+    setError("");
     setBusy(true);
     try {
       const data = await api(path, {
         code,
         heroId: hero,
         deckId,
-        ...(path === 'create' ? { mode, mapId } : {}),
+        ...(path === "create" ? { mode, mapId } : {}),
       });
-      if (path === 'create' || path === 'join') {
+      if (path === "create" || path === "join") {
         socket.current?.close();
         lastRevision.current = -1;
         renderSnapshot(data);
         await connect(data.code);
       } else renderSnapshot(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
+      setError(e instanceof Error ? e.message : "Error");
     } finally {
       setBusy(false);
     }
@@ -386,7 +507,7 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
   async function exit() {
     if (snapshot && !snapshot.result) {
       try {
-        await api('leave', { code: snapshot.code });
+        await api("leave", { code: snapshot.code });
       } catch (e) {
         setError((e as Error).message);
         return;
@@ -416,52 +537,79 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
     lastRevision.current = -1;
     latest.current = null;
     setSnapshot(null);
-    setNetwork('Sin sala');
-    useBattleStore.setState({ onlineCommand: null, engine: null, state: null, playbackBusy: false });
+    setNetwork("Sin sala");
+    useBattleStore.setState({
+      onlineCommand: null,
+      engine: null,
+      state: null,
+      playbackBusy: false,
+    });
     ranked.reset();
     void ranked.refresh();
   }
   const game = snapshot?.game,
     engine = useBattleStore((s) => s.engine),
     aim = useBattleStore((s) => s.aim);
-  const selectedCardUid = useBattleStore(s=>s.selectedCardUid);
-  const pairSelection = useBattleStore(s=>s.pairSelection);
-  const playback = useBattleStore(s=>s.playbackBusy || s.introLocked);
-  const presented = useMechanismPlayback(s=>s.state);
-  const displayGame = playback && presented?.scenarioId === game?.scenarioId ? presented : game;
+  const selectedCardUid = useBattleStore((s) => s.selectedCardUid);
+  const pairSelection = useBattleStore((s) => s.pairSelection);
+  const playback = useBattleStore((s) => s.playbackBusy || s.introLocked);
+  const presented = useMechanismPlayback((s) => s.state);
+  const displayGame =
+    playback && presented?.scenarioId === game?.scenarioId ? presented : game;
   // Friend chat beside the match: same 1:1 conversation, separate socket, never battle state.
   const matchFriend = useMatchFriend(game ? snapshot.code : null);
-  const seatHeroes = [snapshot?.members[0]?.heroId ?? '', snapshot?.members[1]?.heroId ?? ''] as const;
+  const seatHeroes = [
+    snapshot?.members[0]?.heroId ?? "",
+    snapshot?.members[1]?.heroId ?? "",
+  ] as const;
   if (game && engine)
     return (
-      <div className={`pvp-match-layout ${matchFriend ? 'has-friend-chat' : ''}`}>
+      <div
+        className={`pvp-match-layout ${matchFriend ? "has-friend-chat" : ""}`}
+      >
         <div
           className="battle pvp-battle"
           data-pvp-mode={snapshot.mode}
-          data-pvp-map={snapshot.mapId ?? 'classic'}
+          data-pvp-map={snapshot.mapId ?? "classic"}
           data-theme="duel"
           data-intro="done"
           data-reveal="unlock deal"
-          data-action={busy ? 'resolving' : 'normal'}
+          data-action={busy ? "resolving" : "normal"}
         >
           <BattleScenery theme="duel" />
-          <PvpTerrainInfo name={pvpMap(snapshot.mapId ?? 'classic', snapshot.mode).name} state={game} />
+          {snapshot.bot && (
+            <div
+              className="pvp-bot-disclosure"
+              role="note"
+              aria-label="Rival automatizado"
+            >
+              {snapshot.bot.identity.name} ·{" "}
+              {BOT_LEVELS[snapshot.bot.identity.level]?.name}
+            </div>
+          )}
+          <PvpTerrainInfo
+            name={pvpMap(snapshot.mapId ?? "classic", snapshot.mode).name}
+            state={game}
+          />
           <header className="top-bar">
             <HeroPanel state={displayGame ?? game} engine={engine} />
             <div className="panel pvp-turn">
               {game.dominion && (
-                <div className="dominion-score" aria-label="Puntuación de Dominio">
+                <div
+                  className="dominion-score"
+                  aria-label="Puntuación de Dominio"
+                >
                   <b>
-                    DOMINIO · {game.dominion.scores[snapshot.seat]} —{' '}
+                    DOMINIO · {game.dominion.scores[snapshot.seat]} —{" "}
                     {game.dominion.scores[1 - snapshot.seat]}
                   </b>
                   <small>
-                    Objetivo: {game.dominion.target} ·{' '}
+                    Objetivo: {game.dominion.target} ·{" "}
                     {game.dominion.suddenDeath
-                      ? 'Muerte súbita'
+                      ? "Muerte súbita"
                       : game.round === 1
-                        ? 'Sin puntos en ronda 1'
-                        : 'Puntos al cerrar ronda'}
+                        ? "Sin puntos en ronda 1"
+                        : "Puntos al cerrar ronda"}
                   </small>
                   <div className="dominion-nodes">
                     {game.dominion.nodes.map((n, i) => (
@@ -469,41 +617,82 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
                         key={n.id}
                         data-control={
                           n.control === snapshot.seat
-                            ? 'own'
-                            : typeof n.control === 'number'
-                              ? 'rival'
+                            ? "own"
+                            : typeof n.control === "number"
+                              ? "rival"
                               : n.control
                         }
-                        title={`Nodo ${i + 1}: ${n.control === snapshot.seat ? 'Tú' : typeof n.control === 'number' ? 'Rival' : n.control === 'CONTESTED' ? 'Disputado' : 'Neutral'}`}
+                        title={`Nodo ${i + 1}: ${n.control === snapshot.seat ? "Tú" : typeof n.control === "number" ? "Rival" : n.control === "CONTESTED" ? "Disputado" : "Neutral"}`}
                       >
-                        ◈ {i + 1}{' '}
+                        ◈ {i + 1}{" "}
                         {n.control === snapshot.seat
-                          ? 'Tú'
-                          : typeof n.control === 'number'
-                            ? 'Rival'
-                            : n.control === 'CONTESTED'
-                              ? '×'
-                              : '○'}
+                          ? "Tú"
+                          : typeof n.control === "number"
+                            ? "Rival"
+                            : n.control === "CONTESTED"
+                              ? "×"
+                              : "○"}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-              <PvpTurnSummary ranked={!!snapshot.ranked} title={busy || playback ? 'Resolviendo…' : game.phase === 'PLAYER' ? 'Tu turno' : 'Esperando al rival'} round={displayGame?.round ?? game.round} network={network} seconds={snapshot.deadline ? Math.max(0, Math.ceil((snapshot.deadline - clock) / 1000)) : null} validating={busy} />
+              <PvpTurnSummary
+                ranked={!!snapshot.ranked}
+                title={
+                  busy || playback
+                    ? "Resolviendo…"
+                    : game.phase === "PLAYER"
+                      ? "Tu turno"
+                      : "Esperando al rival"
+                }
+                round={displayGame?.round ?? game.round}
+                network={network}
+                seconds={
+                  snapshot.deadline
+                    ? Math.max(0, Math.ceil((snapshot.deadline - clock) / 1000))
+                    : null
+                }
+                validating={busy}
+              />
               <button onClick={() => setConfirm(true)}>Rendirse</button>
             </div>
             <div className="panel pvp-rival">
               <strong>{snapshot.members[1 - snapshot.seat]?.name}</strong>
-              {game.units.some(u => u.kind === 'HERO' && u.id !== game.player.heroId && altarSlots(DEFAULT_CONTENT, u.defId) > 0) && <small className="pvp-rival-altar" aria-label="Información pública del altar rival">Altar del rival: {game.pileCounts?.opponentAltar ?? 0} selladas · información pública</small>}
+              {game.units.some(
+                (u) =>
+                  u.kind === "HERO" &&
+                  u.id !== game.player.heroId &&
+                  altarSlots(DEFAULT_CONTENT, u.defId) > 0,
+              ) && (
+                <small
+                  className="pvp-rival-altar"
+                  aria-label="Información pública del altar rival"
+                >
+                  Altar del rival: {game.pileCounts?.opponentAltar ?? 0}{" "}
+                  selladas · información pública
+                </small>
+              )}
               <span>
-                {snapshot.members[1 - snapshot.seat]?.heroId} ·{' '}
-                {game.units.find((u) => u.kind === 'HERO' && u.faction === 'ENEMY')?.hp ?? 0} HP
+                {snapshot.members[1 - snapshot.seat]?.heroId} ·{" "}
+                {game.units.find(
+                  (u) => u.kind === "HERO" && u.faction === "ENEMY",
+                )?.hp ?? 0}{" "}
+                HP
               </span>
             </div>
           </header>
           <main className="battle-main">
             <div className="board-column">
-              <BoardView focusedEnemyId={null} cameraOrigin={mapSpawns(pvpMap(snapshot.mapId ?? 'classic', snapshot.mode), snapshot.mode)[snapshot.seat]} />
+              <BoardView
+                focusedEnemyId={null}
+                cameraOrigin={
+                  mapSpawns(
+                    pvpMap(snapshot.mapId ?? "classic", snapshot.mode),
+                    snapshot.mode,
+                  )[snapshot.seat]
+                }
+              />
             </div>
           </main>
           <PauseMenu online onExit={() => void exit()} />
@@ -512,39 +701,64 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
             matchKey={pvpMatchKey(snapshot)}
             heroes={seatHeroes}
             viewerSeat={snapshot.seat}
-            progress={{ round: game.round, cardsPlayed: game.stats.cardsPlayed, finished: !!snapshot.result }}
+            progress={{
+              round: game.round,
+              cardsPlayed: game.stats.cardsPlayed,
+              finished: !!snapshot.result,
+            }}
           />
           <HandBar key={`hand:${pvpMatchKey(snapshot)}`} state={game} engine={engine} />
           {snapshot.events
-            .filter((e) => e.type === 'DOMINION_SCORED')
+            .filter((e) => e.type === "DOMINION_SCORED")
             .map(
               (e) =>
-                e.type === 'DOMINION_SCORED' && (
-                  <div className="dominion-feedback" role="status" key={e.round}>
-                    Ronda {e.round} · +{e.points[snapshot.seat]} Dominio · Rival +
-                    {e.points[1 - snapshot.seat]}
+                e.type === "DOMINION_SCORED" && (
+                  <div
+                    className="dominion-feedback"
+                    role="status"
+                    key={e.round}
+                  >
+                    Ronda {e.round} · +{e.points[snapshot.seat]} Dominio · Rival
+                    +{e.points[1 - snapshot.seat]}
                   </div>
                 ),
             )}
           {snapshot.events
-            .filter((e) => e.type === 'CARD_PLAYED')
+            .filter((e) => e.type === "CARD_PLAYED")
             .map(
               (e) =>
-                e.type === 'CARD_PLAYED' && (
+                e.type === "CARD_PLAYED" && (
                   <div className="pvp-played" key={e.cardUid} role="status">
                     {DEFAULT_CONTENT.cards[e.cardId]?.name}
                   </div>
                 ),
             )}
-          {aim?.source === 'tap' && (
+          {aim?.source === "tap" && (
             <div className="pvp-confirm">
-              <button disabled={playback || !isActionableTile(engine,selectedCardUid,aim.pos,pairSelection)} onClick={() => useBattleStore.getState().confirmAim()}>
-                <CardActivationLabel card={!!selectedCardUid}/>
+              <button
+                disabled={
+                  playback ||
+                  !isActionableTile(
+                    engine,
+                    selectedCardUid,
+                    aim.pos,
+                    pairSelection,
+                  )
+                }
+                onClick={() => useBattleStore.getState().confirmAim()}
+              >
+                <CardActivationLabel card={!!selectedCardUid} />
               </button>
-              <button className="cancel-action cancel-secondary" onClick={() => useBattleStore.getState().cancelAim()}>Cancelar selección</button>
+              <button
+                className="cancel-action cancel-secondary"
+                onClick={() => useBattleStore.getState().cancelAim()}
+              >
+                Cancelar selección
+              </button>
             </div>
           )}
-          {(network !== 'Conectado' || snapshot.members.some((m) => !m.connected)) &&
+          {(network !== "Conectado" ||
+            snapshot.members.some((m) => !m.connected)) &&
             !snapshot.result && (
               <div className="pvp-overlay" role="status">
                 <h2>Esperando reconexión</h2>
@@ -553,51 +767,97 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
               </div>
             )}
           {snapshot.result && !playback && (
-            <BattleResultPresentation key={`result:${pvpMatchKey(snapshot)}`} identity={pvpMatchKey(snapshot)} tone={snapshot.result.winner < 0 ? 'ended' : snapshot.result.winner === snapshot.seat ? 'victory' : 'defeat'}><div className="pvp-overlay">
-              {snapshot.result.winner === snapshot.seat && (
-                <VictoryBadge badgeId={snapshot.members[snapshot.seat]?.badgeId} />
-              )}
-              <h2>
-                {snapshot.result.winner < 0
-                  ? 'Partida finalizada'
+            <BattleResultPresentation
+              key={`result:${pvpMatchKey(snapshot)}`}
+              identity={pvpMatchKey(snapshot)}
+              tone={
+                snapshot.result.winner < 0
+                  ? "ended"
                   : snapshot.result.winner === snapshot.seat
-                    ? 'Victoria'
-                    : 'Derrota'}
-              </h2>
-              <p>{REASONS[snapshot.result.reason] ?? 'Partida finalizada'}</p>
-              {snapshot.ranked && <RankedResult ranked={snapshot.ranked} />}
-              {masteryFeedback}
-              {matchFriend&&onOpponentHistory&&<button onClick={()=>onOpponentHistory(matchFriend.username)}>Ver historial contra este jugador</button>}
-              <PvpVictoryLines
-                content={DEFAULT_CONTENT}
-                matchKey={pvpMatchKey(snapshot)}
-                heroes={seatHeroes}
-                winnerSeat={snapshot.result.winner}
-              />
-              <div className="pvp-result-actions">
-              <button
-                onClick={() => {
-                  void exit();
-                }}
-              >
-                Salir
-              </button>
-              {snapshot.ranked ? (
-                <button onClick={backToRanked}>Buscar otra partida</button>
-              ) : (
-                <button disabled={busy} onClick={() => void action('rematch')}>
-                  Revancha
-                </button>
-              )}
+                    ? "victory"
+                    : "defeat"
+              }
+            >
+              <div className="pvp-overlay">
+                {snapshot.result.winner === snapshot.seat && (
+                  <VictoryBadge
+                    badgeId={snapshot.members[snapshot.seat]?.badgeId}
+                  />
+                )}
+                <h2>
+                  {snapshot.result.winner < 0
+                    ? "Partida finalizada"
+                    : snapshot.result.winner === snapshot.seat
+                      ? "Victoria"
+                      : "Derrota"}
+                </h2>
+                <p>{REASONS[snapshot.result.reason] ?? "Partida finalizada"}</p>
+                {snapshot.bot ? (
+                  <section aria-label="Resultado contra IA">
+                    <h3>{snapshot.bot.identity.name}</h3>
+                    <p>{BOT_LEVELS[snapshot.bot.identity.level]?.name}</p>
+                    <p>
+                      {snapshot.bot.outcome
+                        ? `${snapshot.bot.outcome.rpDelta >= 0 ? "+" : ""}${snapshot.bot.outcome.rpDelta} RP · ${snapshot.bot.outcome.xp} XP`
+                        : "Liquidando recompensa…"}
+                    </p>
+                    {snapshot.bot.outcome?.restrictions.map((x) => (
+                      <p key={x}>{x}</p>
+                    ))}
+                    <small>
+                      RP sujeto a límite diario y ascenso solo mediante victoria
+                      humana. Track y Premium computan progreso humano.
+                    </small>
+                  </section>
+                ) : (
+                  snapshot.ranked && <RankedResult ranked={snapshot.ranked} />
+                )}
+                {masteryFeedback}
+                {matchFriend && onOpponentHistory && (
+                  <button
+                    onClick={() => onOpponentHistory(matchFriend.username)}
+                  >
+                    Ver historial contra este jugador
+                  </button>
+                )}
+                <PvpVictoryLines
+                  content={DEFAULT_CONTENT}
+                  matchKey={pvpMatchKey(snapshot)}
+                  heroes={seatHeroes}
+                  winnerSeat={snapshot.result.winner}
+                />
+                <div className="pvp-result-actions">
+                  <button
+                    onClick={() => {
+                      void exit();
+                    }}
+                  >
+                    Salir
+                  </button>
+                  {snapshot.ranked ? (
+                    <button onClick={backToRanked}>Buscar otra partida</button>
+                  ) : (
+                    <button
+                      disabled={busy}
+                      onClick={() => void action("rematch")}
+                    >
+                      Revancha
+                    </button>
+                  )}
+                </div>
               </div>
-            </div></BattleResultPresentation>
+            </BattleResultPresentation>
           )}
           {confirm && (
-            <div className="pvp-overlay" role="dialog" aria-label="Confirmar rendición">
+            <div
+              className="pvp-overlay"
+              role="dialog"
+              aria-label="Confirmar rendición"
+            >
               <h2>¿Rendirse?</h2>
               <button
                 onClick={() => {
-                  socket.current?.send(JSON.stringify({ type: 'surrender' }));
+                  socket.current?.send(JSON.stringify({ type: "surrender" }));
                   setConfirm(false);
                 }}
               >
@@ -609,19 +869,24 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
           {error && (
             <div className="pvp-error" role="alert">
               {error}
-              <button onClick={() => setError('')}>Cerrar</button>
+              <button onClick={() => setError("")}>Cerrar</button>
             </div>
           )}
         </div>
         {matchFriend && <MatchChat friend={matchFriend} />}
       </div>
     );
-  if (history && !snapshot) return <PvpHistory onBack={() => setHistory(false)} />;
+  if (history && !snapshot)
+    return <PvpHistory onBack={() => setHistory(false)} />;
   return (
-    <PvpLobby mobile={mobile}
+    <PvpLobby
+      mobile={mobile}
       room={snapshot}
       hero={hero}
-      decks={decks} deckId={deckId} onDeck={id=>void chooseDeck(id)} loadoutLocked={loadoutLocked}
+      decks={decks}
+      deckId={deckId}
+      onDeck={(id) => void chooseDeck(id)}
+      loadoutLocked={loadoutLocked}
       mode={mode}
       mapId={mapId}
       code={code}
@@ -631,18 +896,29 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
       onExit={() => void exit()}
       onHistory={() => setHistory(true)}
       queueKind={queueKind}
-      onQueueKind={q=>{if(!queueLocked)setQueueKind(q);}}
+      onQueueKind={(q) => {
+        if (!queueLocked) setQueueKind(q);
+      }}
       rankedSlot={
         ranked.profile?.enabled ? (
           <RankedPanel
+            mobile={mobile}
             profile={ranked.profile}
             queue={ranked.queue}
             busy={ranked.busy}
             error={ranked.error}
-            blocked={pvpChampionRestriction(hero) || (!deckValid ? 'Selecciona un mazo válido para jugar Ranked.' : null)}
+            blocked={
+              pvpChampionRestriction(hero) ||
+              (!deckValid
+                ? "Selecciona un mazo válido para jugar Ranked."
+                : null)
+            }
             championName={DEFAULT_CONTENT.heroes[hero]?.name ?? hero}
-            onSearch={() => {if(deckValid&&deckId)void ranked.search(hero,deckId);}}
+            onSearch={() => {
+              if (deckValid && deckId) void ranked.search(hero, deckId);
+            }}
             onCancel={() => void ranked.cancel()}
+            onAcceptBot={() => void ranked.acceptBot()}
           />
         ) : undefined
       }
@@ -651,16 +927,28 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
       onMode={(next) => {
         setMode(next);
         // Keep the visual choice legal when a future map supports only one mode.
-        if (!PVP_MAPS.find((map) => map.id === mapId)?.allowedModes.includes(next))
+        if (
+          !PVP_MAPS.find((map) => map.id === mapId)?.allowedModes.includes(next)
+        )
           setMapId(PVP_MAPS.find((map) => map.allowedModes.includes(next))!.id);
       }}
       onHero={(id) => {
-        if(loadoutLocked)return;
-        const nextDeck=deckSummaries(profile,id,DEFAULT_CONTENT,DECK_RULES).find(d=>d.isDefault)?.deckId;
-        if (!snapshot) {useBattleStore.getState().selectChampion(id);setChosenDeck(nextDeck?{heroId:id,deckId:nextDeck}:null);}
-        else
-          void api('loadout', { code, heroId: id, deckId: nextDeck })
-            .then(next=>{useBattleStore.getState().selectChampion(id);renderSnapshot(next);})
+        if (loadoutLocked) return;
+        const nextDeck = deckSummaries(
+          profile,
+          id,
+          DEFAULT_CONTENT,
+          DECK_RULES,
+        ).find((d) => d.isDefault)?.deckId;
+        if (!snapshot) {
+          useBattleStore.getState().selectChampion(id);
+          setChosenDeck(nextDeck ? { heroId: id, deckId: nextDeck } : null);
+        } else
+          void api("loadout", { code, heroId: id, deckId: nextDeck })
+            .then((next) => {
+              useBattleStore.getState().selectChampion(id);
+              renderSnapshot(next);
+            })
             .catch((e) => setError(e.message));
       }}
       onAction={(path) => void action(path)}

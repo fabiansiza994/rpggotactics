@@ -1,0 +1,540 @@
+/* Ranked setup only. Explicit MobileShell prop supplies this class; desktop/Casual/battle stay unchanged. */
+.pvp-lobby.pvp-lobby.ranked-mobile-21 {
+  --r21-gold: #d9b777;
+  --r21-muted: #b4c1cb;
+  padding: 0;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-shell {
+  padding: 12px 14px 18px;
+  gap: 10px;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-header {
+  min-height: 0;
+  padding: 0 0 8px;
+  gap: 8px;
+}
+.pvp-lobby.ranked-mobile-21
+  .lobby-header
+  > div:not(.ranked-tabs)
+  > .lobby-eyebrow {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-header h1 {
+  margin: 0;
+  font-size: 25px;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-header .lobby-history {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-color: #b6955a70;
+  border-radius: 8px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs {
+  gap: 8px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs button {
+  min-height: 46px;
+  padding: 7px 10px;
+  border-radius: 8px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs button b {
+  font-size: 13px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs small {
+  font-size: 10px;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-versus {
+  display: block;
+  margin: 0;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-vs,
+.pvp-lobby.ranked-mobile-21 .lobby-combatant.is-rival {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #b79b6355;
+  border-radius: 12px;
+  background: linear-gradient(125deg, #182b3bda, #0b1725ee);
+  box-shadow: 0 5px 18px #0004;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #c4a264;
+  background: radial-gradient(circle at 50% 15%, #607486, #132537 72%);
+  box-shadow:
+    0 0 0 3px #0b1422,
+    0 0 16px #bd954222;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 15%;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy {
+  min-width: 0;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy > .lobby-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--r21-gold);
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy h2 {
+  font-size: 21px;
+  line-height: 1.2;
+  margin: 3px 0;
+  overflow-wrap: anywhere;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy p {
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--r21-muted);
+}
+.pvp-lobby.ranked-mobile-21 .r21-change {
+  min-height: 44px;
+  border: 1px solid #b6955a65;
+  border-radius: 7px;
+  padding: 6px 8px;
+  background: #132333;
+  color: #e5cf9c;
+  font-size: 11px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-change span {
+  font-size: 18px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--r21-muted);
+}
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice select {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #526778;
+  border-radius: 7px;
+  background: #0d1b29;
+  color: #e9deca;
+  font-size: 12px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-deck-choice small {
+  grid-column: 1/-1;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 10px;
+  padding: 15px 12px 12px;
+  min-width: 0;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #142c41ee, #091522f5);
+  box-shadow: 0 7px 24px #0004;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel::before,
+.pvp-lobby.ranked-mobile-21 .ranked-panel::after {
+  pointer-events: none;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-emblem {
+  width: 68px;
+  min-height: 90px;
+  align-self: center;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-emblem .rank-shield {
+  width: 64px;
+  height: 76px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-orbit {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank {
+  padding: 0;
+  min-width: 0;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank > .lobby-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank h2 {
+  font-size: 23px;
+  letter-spacing: 0.03em;
+  margin: 4px 0;
+  line-height: 1.15;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank .ranked-rp {
+  font-size: 21px;
+  margin: 0 0 8px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-next-milestone {
+  display: none;
+} /* Same information is explicit on the real crystal reward card. */
+.pvp-lobby.ranked-mobile-21 .ranked-progress {
+  height: 7px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+  padding: 5px 0 0;
+  min-width: 0;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action > .lobby-primary {
+  width: 100%;
+  min-height: 54px;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action > small {
+  text-align: center;
+  max-width: none;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-searching {
+  gap: 8px;
+  padding: 8px 0;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action button {
+  min-height: 46px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel > .rrt-entry {
+  grid-column: 1/-1;
+  width: 100%;
+  min-width: 0;
+  margin: 6px 0 0;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards {
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid #c6a4654d;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards header .lobby-eyebrow {
+  font-size: 8px;
+  letter-spacing: 0.13em;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards h3 {
+  margin: 3px 0 0;
+  font-size: 18px;
+  line-height: 1.2;
+  color: #eddbb4;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards header button {
+  min-height: 44px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid #b2965c55;
+  border-radius: 6px;
+  color: #e3c994;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-strip {
+  display: flex;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 3px 2px 10px;
+  scroll-padding-inline: 2px;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y pinch-zoom;
+  scrollbar-width: thin;
+  scrollbar-color: #ad9257 #0e1d2b;
+  position: relative;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card {
+  flex: 0 0 148px;
+  width: 148px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid #536576;
+  border-radius: 9px;
+  background: linear-gradient(150deg, #1c3042, #0c1825);
+  scroll-snap-align: start;
+  text-align: center;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card[data-next="true"] {
+  border-color: #d9b777;
+  box-shadow:
+    inset 0 0 0 1px #d9b77744,
+    0 0 12px #d9b77715;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card[data-status="CLAIMED"] {
+  border-color: #629995;
+  background: linear-gradient(150deg, #1b353d, #0b1d29);
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-state {
+  color: #bbc8d3;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.pvp-lobby.ranked-mobile-21 [data-next="true"] .r21-reward-state {
+  color: #efd08a;
+}
+.pvp-lobby.ranked-mobile-21 [data-status="CLAIMED"] .r21-reward-state {
+  color: #9cdbbd;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-art {
+  height: 60px;
+  width: 76px;
+  display: grid;
+  place-items: center;
+  margin: 3px 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-art > svg,
+.pvp-lobby.ranked-mobile-21 .r21-reward-art > img,
+.pvp-lobby.ranked-mobile-21 .r21-reward-art > div {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-art > span {
+  font-size: 47px;
+  color: #d6b16c;
+  text-shadow: 0 0 16px #9f763955;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-art [data-kind="CRYSTALS"] {
+  color: #84d7e9;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card > strong {
+  font-size: 14px;
+  line-height: 1.3;
+  min-height: 36px;
+  overflow-wrap: anywhere;
+  color: #eee0c2;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-quantity {
+  font-size: 13px;
+  color: #e5c98a;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card > small {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #c2cdd7;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card > .r21-reward-lock {
+  color: #d0af76;
+  font-size: 9px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-carousel-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  color: #a8b9c7;
+  font-size: 10px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-carousel-controls > div {
+  display: flex;
+  gap: 7px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-carousel-controls button {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: #102131;
+  border: 1px solid #7f774e;
+  color: #dabb7d;
+  border-radius: 7px;
+  font-size: 23px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-rules {
+  margin-top: 7px;
+  color: #b8c5d0;
+  font-size: 10px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-rules summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: #dac18e;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-rules p {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-loading {
+  padding: 18px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-loading button {
+  display: block;
+  min-height: 44px;
+  margin-top: 8px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-notice {
+  grid-column: 1/-1;
+  position: static;
+  margin: 0;
+  padding: 10px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-bot-history {
+  grid-column: 1/-1;
+  min-width: 0;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-bot-offer {
+  min-width: 0;
+  font-size: 12px;
+}
+.pvp-lobby.ranked-mobile-21 button:focus-visible,
+.pvp-lobby.ranked-mobile-21 select:focus-visible,
+.pvp-lobby.ranked-mobile-21 .r21-reward-strip:focus-visible {
+  outline: 2px solid #91dcf0;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-lobby.ranked-mobile-21 .r21-reward-strip {
+    scroll-behavior: auto;
+  }
+  .pvp-lobby.ranked-mobile-21 .ranked-searching * {
+    animation: none;
+  }
+}
+
+/* One frame unifies champion, rank and action; keep all domain components intact. */
+.pvp-lobby.ranked-mobile-21 .r21-ranked-card {
+  min-width: 0;
+  border: 1px solid #b79b6380;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #172b3dec, #091522f5);
+  box-shadow: 0 7px 24px #0005;
+  overflow: visible;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion {
+  border: 0;
+  border-radius: 12px 12px 0 0;
+  background: transparent;
+  box-shadow: none;
+  margin: 0 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #b79b6344;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-avatar {
+  width: 52px;
+  height: 52px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-champion-copy > .lobby-eyebrow {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-top: 12px;
+  grid-template-areas: "shield rank" "action action" "rewards rewards" "notice notice" "history history";
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel::before,
+.pvp-lobby.ranked-mobile-21 .ranked-panel::after {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel > .rrt-entry {
+  grid-area: rewards;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-bot-history {
+  grid-area: history;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-panel-rank > .lobby-eyebrow {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-header {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-header > div:not(.ranked-tabs) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs {
+  flex: 1;
+  min-width: 0;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs button {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 7px;
+}
+.pvp-lobby.ranked-mobile-21 .ranked-tabs button b {
+  font-size: 11px;
+}
+.pvp-lobby.ranked-mobile-21 .lobby-history {
+  flex: 0 0 auto;
+  font-size: 11px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards h3 {
+  font-size: 15px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-rewards header .lobby-eyebrow {
+  display: none;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card {
+  flex-basis: 122px;
+  width: 122px;
+  padding: 8px;
+  gap: 4px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-art {
+  height: 42px;
+  width: 60px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-card > strong {
+  font-size: 12px;
+  min-height: 32px;
+}
+.pvp-lobby.ranked-mobile-21 .r21-reward-art > span {
+  font-size: 36px;
+}

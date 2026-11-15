@@ -1,20 +1,25 @@
-import { RankedRewardUnlock } from './RankedRewardUnlock';
-import { MasteryTitleLabel } from '../mastery/MasteryViews';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { RankedAvatar } from "../profile/RankedAvatar";
+import { BOT_LEVELS } from "../../game/ai/ranked-bot-policy";
+import { RankedRewardUnlock } from "./RankedRewardUnlock";
+import { MasteryTitleLabel } from "../mastery/MasteryViews";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   RANKED_SEASON,
   RANKED_TIERS,
   formatRp,
   rankChange,
   rankFor,
-} from '../../game/ranked/ranked';
-import { championPortrait } from '../assets/champions';
-import { PRESENTATION_CONTENT } from '../qa/shapeshifter/runtime';
-import { RankLine, RankShield } from './RankShield';
-import { RankedCrest } from './RankedCosmetics';
-import { RankedRewardsEntry } from './RankedRewardsTrack';
-import type { RankedProfile, RankedQueueState, RankedSnapshot } from './rankedApi';
-import '../../styles/ranked.css';
+} from "../../game/ranked/ranked";
+import { PRESENTATION_CONTENT } from "../qa/shapeshifter/runtime";
+import { RankLine, RankShield } from "./RankShield";
+import { RankedCrest } from "./RankedCosmetics";
+import { RankedRewardsEntry } from "./RankedRewardsTrack";
+import type {
+  RankedProfile,
+  RankedQueueState,
+  RankedSnapshot,
+} from "./rankedApi";
+import "../../styles/ranked.css";
 
 /**
  * Functional Ranked Preseason UI (QA pass). Every number shown comes from the server (RP, deltas,
@@ -22,7 +27,7 @@ import '../../styles/ranked.css';
  * the class names + data-tier / data-change attributes (qa/ranked-preseason/CODEX_HANDOFF.md).
  */
 
-export type QueueKind = 'CASUAL' | 'RANKED';
+export type QueueKind = "CASUAL" | "RANKED";
 
 export function QueueTabs({
   value,
@@ -36,17 +41,17 @@ export function QueueTabs({
   return (
     <div className="ranked-tabs" role="group" aria-label="Tipo de partida">
       <button
-        aria-pressed={value === 'CASUAL'}
+        aria-pressed={value === "CASUAL"}
         disabled={disabled}
-        onClick={() => onChange('CASUAL')}
+        onClick={() => onChange("CASUAL")}
       >
         <b>Casual</b>
         <small>Sin RP</small>
       </button>
       <button
-        aria-pressed={value === 'RANKED'}
+        aria-pressed={value === "RANKED"}
         disabled={disabled}
-        onClick={() => onChange('RANKED')}
+        onClick={() => onChange("RANKED")}
       >
         <b>Ranked · {RANKED_SEASON.name}</b>
         <small>Afecta tu clasificación</small>
@@ -62,13 +67,14 @@ function useElapsed(since: number | null) {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [since]);
-  if (since === null) return '';
+  if (since === null) return "";
   const s = Math.max(0, Math.floor((now - since) / 1000));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
 /** Lobby panel: shield, rank, RP, progress and the single queue action. */
 export function RankedPanel({
+  mobile = false,
   profile,
   queue,
   busy,
@@ -77,7 +83,9 @@ export function RankedPanel({
   championName,
   onSearch,
   onCancel,
+  onAcceptBot,
 }: {
+  mobile?: boolean;
   profile: Extract<RankedProfile, { enabled: true }>;
   queue: RankedQueueState;
   busy: boolean;
@@ -87,9 +95,10 @@ export function RankedPanel({
   championName: string;
   onSearch: () => void;
   onCancel: () => void;
+  onAcceptBot?: () => void;
 }) {
   const rank = rankFor(profile.rp);
-  const searching = queue.state === 'SEARCHING';
+  const searching = queue.state === "SEARCHING";
   const elapsed = useElapsed(searching ? queue.since : null);
   const next = RANKED_TIERS[rank.tierIndex + 1];
   const nextDivision = rank.nextRp === null ? null : rankFor(rank.nextRp);
@@ -122,17 +131,19 @@ export function RankedPanel({
         </div>
         <small>
           {rank.nextRp === null
-            ? 'Rango máximo de pretemporada'
+            ? "Rango máximo de pretemporada"
             : `${rank.nextRp - rank.rp} RP para ${nextDivision?.label}`}
-          {' · '}
+          {" · "}
           {profile.wins} V – {profile.losses} D
           <span className="ranked-next-milestone">
-            {next && next.milestoneCrystals > 0 && !profile.milestones.includes(next.id)
+            {next &&
+            next.milestoneCrystals > 0 &&
+            !profile.milestones.includes(next.id)
               ? ` · Primer ascenso a ${next.name}: ${next.milestoneCrystals} Cristales`
-              : ''}
+              : ""}
           </span>
         </small>
-        <RankedRewardsEntry />
+        {!mobile && <RankedRewardsEntry />}
       </div>
       <div className="ranked-panel-action">
         {searching ? (
@@ -144,20 +155,61 @@ export function RankedPanel({
               <strong>Buscando rival…</strong>
               <b aria-label="Tiempo de búsqueda">{elapsed}</b>
             </div>
+            {queue.state === "SEARCHING" && queue.botOffer && (
+              <aside
+                className="ranked-bot-offer"
+                aria-label="Oferta de rival IA"
+              >
+                <h3>{queue.botOffer.identity.name}</h3>
+                <p>
+                  {
+                    PRESENTATION_CONTENT.heroes[queue.botOffer.identity.heroId]
+                      ?.name
+                  }{" "}
+                  · {BOT_LEVELS[queue.botOffer.identity.level]?.name}
+                </p>
+                <p>
+                  Victoria: hasta +{queue.botOffer.rewards.rpDelta} RP ·{" "}
+                  {queue.botOffer.rewards.xp} XP. Derrota:{" "}
+                  {queue.botOffer.rewards.lossRp} RP /{" "}
+                  {queue.botOffer.rewards.lossXp} XP; abandono:{" "}
+                  {queue.botOffer.rewards.abandonRp} RP / 0 XP.
+                </p>
+                <small>
+                  Máximo 3 victorias y +30 RP IA diarios. El ascenso de rango
+                  requiere victoria humana. El RP IA no desbloquea Track ni
+                  Premium. La recompensa final se valida al terminar; mín. ronda
+                  2 y 30 s.
+                </small>
+                {queue.botOffer.rewards.restrictions.map((x) => (
+                  <p key={x}>{x}</p>
+                ))}
+                <button disabled={busy} onClick={onAcceptBot}>
+                  Aceptar rival IA
+                </button>
+                <p>Si prefieres humanos, continúa esperando.</p>
+              </aside>
+            )}
             <button disabled={busy} onClick={onCancel}>
               Cancelar búsqueda
             </button>
           </>
-        ) : queue.state === 'MATCHED' ? (
+        ) : queue.state === "MATCHED" ? (
           <p role="status" className="ranked-match-found">
             ✧ Rival encontrado
           </p>
         ) : (
           <>
-            <button className="lobby-primary" disabled={busy || !!blocked} onClick={onSearch}>
+            <button
+              className="lobby-primary"
+              disabled={busy || !!blocked}
+              onClick={onSearch}
+            >
               Buscar partida
             </button>
-            <small>{blocked ?? `${championName} · mazo activo · Duelo 1 vs 1`}</small>
+            <small>
+              {blocked ?? `${championName} · mazo activo · Duelo 1 vs 1`}
+            </small>
           </>
         )}
         {error && (
@@ -166,7 +218,34 @@ export function RankedPanel({
           </p>
         )}
       </div>
+      {mobile && <RankedRewardsEntry carousel />}
       <p className="ranked-notice">{RANKED_SEASON.notice}</p>
+      {!!profile.botHistory?.length && (
+        <section
+          className="ranked-bot-history"
+          aria-label="Historial contra IA"
+        >
+          <h3>Últimas partidas contra IA</h3>
+          <ul>
+            {profile.botHistory.map((m) => (
+              <li key={m.matchId}>
+                {m.bot.name} · {BOT_LEVELS[m.bot.level]?.name} ·{" "}
+                {m.outcome === "WIN"
+                  ? "Victoria"
+                  : m.outcome === "DRAW"
+                    ? "Empate"
+                    : m.outcome === "SERVER_ERROR"
+                      ? "Incidencia"
+                      : m.outcome === "ABANDON"
+                        ? "Abandono"
+                        : "Derrota"}{" "}
+                · {m.rpDelta >= 0 ? "+" : ""}
+                {m.rpDelta} RP · {m.xp} XP
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </section>
   );
 }
@@ -177,12 +256,14 @@ export function RankedIntro({
   seat,
   names,
   champions,
+  avatars,
   titles,
   crests,
 }: {
   ranked: RankedSnapshot;
   seat: number;
   names: [string, string];
+  avatars?: [string | null | undefined, string | null | undefined];
   champions?: [string | undefined, string | undefined];
   titles?: [string | null | undefined, string | null | undefined];
   /** Equipped Ranked crests (Reward Track cosmetic) beside each name. */
@@ -191,23 +272,19 @@ export function RankedIntro({
   const side = (s: number) => {
     const hero = champions?.[s as 0 | 1];
     return (
-      <div className={`ranked-intro-side ${s === seat ? 'is-local' : 'is-rival'}`}>
-        {hero && (
-          <img
-            className="ranked-intro-portrait"
-            src={championPortrait(hero)}
-            alt={PRESENTATION_CONTENT.heroes[hero]?.name ?? 'Campeón'}
-          />
-        )}
+      <div
+        className={`ranked-intro-side ${s === seat ? "is-local" : "is-rival"}`}
+      >
+        <RankedAvatar avatarId={avatars?.[s as 0 | 1]} />
         <div>
           <b className="ranked-name-line">
             <RankedCrest crestId={crests?.[s as 0 | 1]} />
             {names[s]}
           </b>
-          <MasteryTitleLabel titleId={titles?.[s as 0|1]}/>
+          <MasteryTitleLabel titleId={titles?.[s as 0 | 1]} />
           {hero && (
             <small className="ranked-intro-champion">
-              {PRESENTATION_CONTENT.heroes[hero]?.name ?? 'Campeón'}
+              {PRESENTATION_CONTENT.heroes[hero]?.name ?? "Campeón"}
             </small>
           )}
           <RankLine rp={ranked.rp[s as 0 | 1]} />
@@ -226,24 +303,25 @@ export function RankedIntro({
         {side(1 - seat)}
       </div>
       <small>
-        El campeón queda fijado. Sin revancha. Abandonar un combate en curso penaliza RP.
+        El campeón queda fijado. Sin revancha. Abandonar un combate en curso
+        penaliza RP.
       </small>
     </section>
   );
 }
 
 const CHANGE_LABEL = {
-  TIER_UP: 'Nuevo rango',
-  DIVISION_UP: 'Ascenso',
-  DIVISION_DOWN: 'Rango actualizado',
-  TIER_DOWN: 'Rango actualizado',
-  SAME: '',
+  TIER_UP: "Nuevo rango",
+  DIVISION_UP: "Ascenso",
+  DIVISION_DOWN: "Rango actualizado",
+  TIER_DOWN: "Rango actualizado",
+  SAME: "",
 } as const;
 const OUTCOME_LABEL = {
-  WIN: 'Victoria',
-  LOSS: 'Derrota',
-  ABANDON: 'Abandono',
-  DRAW: 'Empate',
+  WIN: "Victoria",
+  LOSS: "Derrota",
+  ABANDON: "Abandono",
+  DRAW: "Empate",
 } as const;
 
 /** Only presentation: authoritative deltas/milestones are never inferred from an outcome. */
@@ -258,10 +336,10 @@ export function RankedResult({ ranked }: { ranked: RankedSnapshot }) {
   const change = rankChange(o.rpBefore, o.rpAfter);
   const before = rankFor(o.rpBefore),
     after = rankFor(o.rpAfter);
-  const sign = o.rpDelta > 0 ? '+' : o.rpDelta < 0 ? '−' : '±';
+  const sign = o.rpDelta > 0 ? "+" : o.rpDelta < 0 ? "−" : "±";
   const progress = {
-    '--rp-from': `${before.progress}%`,
-    '--rp-to': `${after.progress}%`,
+    "--rp-from": `${before.progress}%`,
+    "--rp-to": `${after.progress}%`,
   } as CSSProperties;
   return (
     <section
@@ -311,7 +389,7 @@ export function RankedResult({ ranked }: { ranked: RankedSnapshot }) {
           <i style={progress} />
         </div>
       </div>
-      {change !== 'SAME' && (
+      {change !== "SAME" && (
         <p className="ranked-change">
           <b>{CHANGE_LABEL[change].toUpperCase()}</b>
           <span>
@@ -327,22 +405,34 @@ export function RankedResult({ ranked }: { ranked: RankedSnapshot }) {
       )}
       {o.milestones.map((m) => (
         <p className="ranked-milestone" key={m.tierId}>
-          <span>Recompensa de rango · {RANKED_TIERS.find((t) => t.id === m.tierId)?.name}</span>
+          <span>
+            Recompensa de rango ·{" "}
+            {RANKED_TIERS.find((t) => t.id === m.tierId)?.name}
+          </span>
           <strong>+{m.crystals} 💎</strong>
         </p>
       ))}
-      <RankedRewardUnlock key={(o.rewards??[]).map(r=>r.rewardId).join(':')} rewards={o.rewards}/>
+      <RankedRewardUnlock
+        key={(o.rewards ?? []).map((r) => r.rewardId).join(":")}
+        rewards={o.rewards}
+      />
     </section>
   );
 }
-export function RankedHistoryBadge({ rp, delta }: { rp: number; delta: number }) {
+export function RankedHistoryBadge({
+  rp,
+  delta,
+}: {
+  rp: number;
+  delta: number;
+}) {
   return (
     <span className="history-queue ranked-history-badge" data-queue="RANKED">
       <RankShield rp={rp} size="sm" />
       <span>
         <b>Ranked</b>
         <small>
-          {delta > 0 ? '+' : delta < 0 ? '−' : '±'}
+          {delta > 0 ? "+" : delta < 0 ? "−" : "±"}
           {Math.abs(delta)} RP
         </small>
       </span>

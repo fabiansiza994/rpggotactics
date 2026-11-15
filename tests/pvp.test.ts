@@ -562,12 +562,12 @@ describe('room authority and durable recovery', () => {
         new Request('https://api/api/tactics/pvp/create', {
           method: 'POST',
           headers: auth,
-          body: JSON.stringify({ heroId: 'mage', frameId: 'frame_pact_grove' }),
+          body: JSON.stringify({ heroId: 'mage', frameId: 'frame_pact_grove', avatarId: 'forged-avatar' }),
         }),
         { DB: h.db, PVP_ROOMS: ns },
       );
     await create();
-    expect((await calls[0]!.json()).frameId).toBeNull(); // owns nothing: the forged id is dropped
+    const cosmetics=await calls[0]!.json();expect(cosmetics.avatarId).not.toBe('forged-avatar');expect(cosmetics.avatarId).toBeTruthy();expect(cosmetics.frameId).toBeNull(); // owns nothing: the forged id is dropped
     h.db.sql.prepare("INSERT INTO tactics_player_cosmetics VALUES (?, 'frame_arcane_gilt', 'PROFILE_FRAME', 'STORE_PURCHASE', 'pur_x', 0)").run(a.id);
     h.db.sql.prepare("INSERT INTO tactics_equipped_cosmetics VALUES (?, 'PROFILE_FRAME', 'frame_arcane_gilt', 0)").run(a.id);
     await create();
@@ -578,7 +578,7 @@ describe('room authority and durable recovery', () => {
     expect(joined.members.map((m) => m.frameId)).toEqual(['frame_arcane_gilt', null]);
     // Multi-Deck exposes the chosen deck id only to its owner (joiner's seat is 1).
     for (const [seat, member] of joined.members.entries()) {
-      const fields = ['badgeId', 'connected', 'crestId', 'frameId', 'heroId', 'name', 'ready', 'titleId'];
+      const fields = ['avatarId', 'badgeId', 'connected', 'crestId', 'frameId', 'heroId', 'name', 'ready', 'titleId'];
       if (seat === 1) {
         fields.push('deckId');
         expect(member.deckId).toBe(loads[seat].deckId);

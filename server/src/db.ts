@@ -20,6 +20,10 @@ export interface D1Database {
 }
 
 export interface Env {
+  RANKED_BOTS_ENABLED?: string;
+  RANKED_BOTS_HIGHER_LEVEL_BPS?: string;
+  RANKED_BOTS_XP_MATCHES_PER_DAY?: string;
+  RANKED_BOTS_MAX_CONCURRENT?: string;
   /** Dedicated HMAC key (>=32 random bytes encoded), provisioned as a Worker secret only. */
   STORE_QUOTE_SECRET?: string;
   RELEASE2_MAINTENANCE?: string;
@@ -30,12 +34,12 @@ export interface Env {
   SUPPORT_EMAIL_PROVIDER?: string;
   SUPPORT_EMAIL_FROM?: string;
   SUPPORT_EMAIL_TO?: string;
-  SUPPORT_EMAIL?: import('./supportEmail').SupportEmailBinding;
+  SUPPORT_EMAIL?: import("./supportEmail").SupportEmailBinding;
   PUBLIC_SUPPORT_ENABLED?: string;
   PUBLIC_SUPPORT_TURNSTILE_SECRET?: string;
-  PVP_ROOMS?: import('./pvp').RoomNamespace;
+  PVP_ROOMS?: import("./pvp").RoomNamespace;
   /** One SocialHub per user (chat + notification sockets, approximate presence). */
-  SOCIAL_HUBS?: import('./social').HubNamespace;
+  SOCIAL_HUBS?: import("./social").HubNamespace;
   /** The shared `rpggo-auth` database (RPG-GO accounts + Tactics tables). */
   DB: D1Database;
   /**

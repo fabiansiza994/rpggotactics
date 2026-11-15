@@ -1,3 +1,4 @@
+import { RankedMobileRewards } from './RankedMobileRewards';
 import type { PremiumTrackView } from '../../game/ranked/premiumTrack';
 import {
   PremiumNode,
@@ -111,6 +112,7 @@ function useTrack() {
       setPremium(r.data.premium);
       setError('');
     } else if (!r.ok) setError(r.error.message);
+    else { setView(null); setError('Recompensas Ranked no disponibles.'); }
   }, []);
   const load = useCallback(() => void rankedApi.track().then(apply), [apply]);
   useEffect(() => {
@@ -124,13 +126,13 @@ function useTrack() {
 }
 
 /** "Próxima: Salto de Asedio · faltan 60 RP" — compact entry inside the Ranked lobby panel. */
-export function RankedRewardsEntry() {
+export function RankedRewardsEntry({carousel=false}:{carousel?:boolean}) {
   const { view, premium, balance, onPremiumChange, error, load } = useTrack();
   const [open, setOpen] = useState(false);
   const next = view?.nextReward;
   return (
     <div className="rrt-entry">
-      <button
+      {carousel ? <RankedMobileRewards view={view} error={error} onDetails={()=>{setOpen(true);void load();}} onRefresh={load}/> : <button
         type="button"
         className="rrt-entry-button"
         onClick={() => {
@@ -146,7 +148,7 @@ export function RankedRewardsEntry() {
               ? `Próxima: ${next.items.map(itemName).join(' + ')} · ${next.distance > 0 ? `faltan ${next.distance} RP` : 'termina una Ranked'}`
               : 'Todas las recompensas reclamadas'}
         </small>
-      </button>
+      </button>}
       {open &&
         view &&
         createPortal(

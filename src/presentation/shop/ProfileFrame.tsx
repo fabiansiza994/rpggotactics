@@ -1,3 +1,4 @@
+import '../../styles/ranked-avatar.css';
 import { useId, type ReactNode } from 'react';
 import { COSMETICS, DEFAULT_CONTENT } from '../../game';
 import { PROFILE_FRAME_ART } from '../assets/profileFrames';
@@ -67,7 +68,7 @@ export function ProfileFrame({
 /** A framed champion portrait for store previews. */
 export function FramedPortrait({ frameId, heroId }: { frameId: string; heroId: string }) {
   return (
-    <div className="shop-cosmetic-art">
+    <div className="shop-cosmetic-art shop-avatar-preview">
       <ProfileFrame frameId={frameId}>
         <svg
           className="profile-frame-portrait"

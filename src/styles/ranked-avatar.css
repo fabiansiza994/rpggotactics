@@ -1,0 +1,61 @@
+.ranked-player-avatar {
+  display: inline-flex;
+  flex: none;
+  width: 76px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 3px;
+  border: 2px solid #c9aa65;
+  background: #101e30;
+  box-shadow:
+    0 0 0 3px #07111e,
+    0 4px 14px #0008;
+  overflow: hidden;
+}
+.ranked-player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.ranked-player-avatar[data-frame] {
+  border-style: double;
+  border-width: 4px;
+  box-shadow:
+    0 0 0 2px #887044,
+    0 0 15px #c9aa6530;
+}
+.pvp-lobby.is-ranked .lobby-portrait {
+  height: auto;
+  width: auto;
+  min-height: 0;
+  background: none;
+}
+.pvp-lobby.is-ranked .lobby-portrait:after {
+  display: none;
+}
+.pvp-lobby.is-ranked .lobby-portrait .ranked-player-avatar {
+  width: 88px;
+}
+.r21-champion-avatar .ranked-player-avatar {
+  width: 100%;
+  box-shadow: none;
+}
+.ranked-intro-side > .ranked-player-avatar {
+  width: 56px;
+}
+.shop-cosmetic-art > .ranked-player-avatar {
+  width: 112px;
+  max-width: 100%;
+  height: auto;
+}
+.shop-cosmetic-art:has(> .ranked-player-avatar) {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+/* Only profile/avatar previews in the store: the original cosmetic art is retained. */
+.shop-cosmetic-art.shop-avatar-preview{height:auto;min-height:0;padding:0;aspect-ratio:1;border-radius:50%;overflow:hidden;border:2px solid #c9aa65;background:#101e30;display:grid;place-items:center}
+.shop-avatar-preview>.profile-frame{width:100%;height:100%;aspect-ratio:1}
+.shop-avatar-preview .profile-frame-canvas{width:100%;height:100%}

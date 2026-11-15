@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { RANKED_RULES } from '../../game/ranked/ranked';
-import { rankedApi, type RankedProfile, type RankedQueueState } from './rankedApi';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { RANKED_RULES } from "../../game/ranked/ranked";
+import {
+  rankedApi,
+  type RankedProfile,
+  type RankedQueueState,
+} from "./rankedApi";
 
 /**
  * Ranked profile + queue lifecycle for the PvP screen. Polling is the queue heartbeat: while
@@ -9,9 +13,9 @@ import { rankedApi, type RankedProfile, type RankedQueueState } from './rankedAp
  */
 export function useRankedQueue(onMatched: (code: string) => void) {
   const [profile, setProfile] = useState<RankedProfile | null>(null);
-  const [queue, setQueue] = useState<RankedQueueState>({ state: 'IDLE' });
+  const [queue, setQueue] = useState<RankedQueueState>({ state: "IDLE" });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const handed = useRef<string | null>(null);
   const matched = useRef(onMatched);
   useEffect(() => {
@@ -20,7 +24,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
 
   const apply = useCallback((next: RankedQueueState) => {
     setQueue(next);
-    if (next.state === 'MATCHED' && handed.current !== next.code) {
+    if (next.state === "MATCHED" && handed.current !== next.code) {
       handed.current = next.code;
       matched.current(next.code);
     }
@@ -46,7 +50,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
   }, [apply]);
 
   useEffect(() => {
-    if (queue.state !== 'SEARCHING') return;
+    if (queue.state !== "SEARCHING") return;
     const timer = setInterval(() => {
       void rankedApi.poll().then((r) => {
         if (r?.ok) apply(r.data.queue);
@@ -57,10 +61,10 @@ export function useRankedQueue(onMatched: (code: string) => void) {
 
   async function run(call: () => ReturnType<typeof rankedApi.join>) {
     setBusy(true);
-    setError('');
+    setError("");
     const r = await call();
     setBusy(false);
-    if (!r) setError('Inicia sesión para jugar clasificatoria.');
+    if (!r) setError("Inicia sesión para jugar clasificatoria.");
     else if (r.ok) apply(r.data.queue);
     else setError(r.error.message);
   }
@@ -71,12 +75,17 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     busy,
     error,
     refresh,
-    search: (heroId: string, deckId?: string) => run(() => rankedApi.join(heroId, deckId)),
+    search: (heroId: string, deckId?: string) =>
+      run(() => rankedApi.join(heroId, deckId)),
+    acceptBot: () =>
+      queue.state === "SEARCHING"
+        ? run(() => rankedApi.acceptBot(queue.since))
+        : Promise.resolve(),
     cancel: () => run(() => rankedApi.cancel()),
     /** After a ranked room closes: forget the handed code so a new match can be handed. */
     reset: () => {
       handed.current = null;
-      setQueue({ state: 'IDLE' });
+      setQueue({ state: "IDLE" });
     },
   };
 }

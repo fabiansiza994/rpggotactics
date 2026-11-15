@@ -620,3 +620,7 @@
 .rpt-art[data-kind='CARD'] .rpt-art-image { height:100%; }
 .rpt-art[data-compact]:is([data-kind='CARD'],[data-kind='SHOWCASE_CHOICE']) { padding:0; }
 .rpt-art[data-compact] .rpt-art-image { height:100%; aspect-ratio:auto; }
+
+/* Avatar products retain their artwork inside a circular profile frame. */
+.rpt-art[data-kind='PROFILE_AVATAR'],.rpt-art[data-kind='AVATAR']{overflow:hidden;border:2px solid #c9aa65}
+.rpt-art[data-kind='PROFILE_AVATAR'] img,.rpt-art[data-kind='AVATAR'] img{object-fit:cover;border-radius:50%}

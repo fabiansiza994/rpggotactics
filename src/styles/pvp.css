@@ -33,7 +33,8 @@
 @media (orientation: landscape) and (max-height: 500px) {
   .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) {
     box-sizing: border-box;
-    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    padding: max(8px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
       max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
     gap: clamp(4px, 1.5dvh, 8px);
     overflow: hidden;
@@ -49,7 +50,8 @@
     margin: 0;
     line-height: 1.3;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) > .pvp-result-actions {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    > .pvp-result-actions {
     display: flex;
     flex: none;
     align-items: center;
@@ -57,11 +59,14 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) > .pvp-result-actions button {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    > .pvp-result-actions
+    button {
     min-height: 44px;
     margin: 0;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) > .dialogue-result {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    > .dialogue-result {
     display: flex;
     flex-direction: row;
     flex: 0 1 auto;
@@ -72,33 +77,42 @@
     margin: 0;
     overflow-y: auto;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) .dialogue-result-line {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    .dialogue-result-line {
     flex: 1;
     min-width: 0;
     padding: 6px 8px;
     gap: 8px;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) .dialogue-result-line > .dialogue-portrait-stack {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    .dialogue-result-line
+    > .dialogue-portrait-stack {
     flex: none;
     width: 48px;
     height: 56px;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) .dialogue-result-line img {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    .dialogue-result-line
+    img {
     width: 48px;
     height: 56px;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) .dialogue-result-line p {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    .dialogue-result-line
+    p {
     gap: 3px;
     font-size: 12px;
     line-height: 1.35;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) > .mastery-gain {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    > .mastery-gain {
     flex: 0 1 auto;
     min-height: 0;
     max-height: 26dvh;
     overflow-y: auto;
   }
-  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result)) > .ranked-victory-badge {
+  .pvp-overlay:has(> .pvp-result-actions):not(:has(> .ranked-result))
+    > .ranked-victory-badge {
     flex: none;
     width: 40px;
     height: 40px;
@@ -191,10 +205,10 @@
   gap: 8px;
   font-size: 10px;
 }
-.dominion-nodes [data-control='own'] {
+.dominion-nodes [data-control="own"] {
   color: #67d8ff;
 }
-.dominion-nodes [data-control='rival'] {
+.dominion-nodes [data-control="rival"] {
   color: #ff897b;
 }
 .dominion-feedback {
@@ -241,24 +255,24 @@
 
 /* Dominion reserves its three actual rows; it has no PvE utility row. */
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   ) {
   grid-template-rows: 112px minmax(0, 1fr) 244px;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .board-host {
   margin-bottom: 0;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .pvp-turn {
   display: grid;
@@ -267,18 +281,18 @@
   padding: 7px 12px;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .dominion-score {
   grid-column: 1;
   grid-row: 1 / 3;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .pvp-turn
   > strong {
@@ -287,9 +301,9 @@
   font-size: 14px;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .pvp-turn
   > span {
@@ -298,9 +312,9 @@
   font-size: 11px;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .pvp-turn
   > button {
@@ -310,34 +324,34 @@
   margin: 0;
 }
 .battle.pvp-battle:is(
-    [data-pvp-mode='DOMINION'],
-    [data-pvp-map='broken_bridge'],
-    [data-pvp-map='shattered_sanctum']
+    [data-pvp-mode="DOMINION"],
+    [data-pvp-map="broken_bridge"],
+    [data-pvp-map="shattered_sanctum"]
   )
   .dominion-nodes {
   justify-content: flex-start;
 }
 @media (min-height: 501px) and (max-width: 1280px) {
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     ) {
     grid-template-rows: 100px minmax(0, 1fr) 196px;
   }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     ) {
     grid-template-rows: 64px minmax(0, 1fr) var(--mobile-hand-height);
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .top-bar {
     padding: 0 6px;
@@ -345,9 +359,9 @@
     gap: 5px;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .pvp-turn {
     height: 60px;
@@ -356,9 +370,9 @@
     gap: 1px 5px;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .pvp-turn
     > strong {
@@ -367,9 +381,9 @@
     font-size: 10px;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .pvp-turn
     > span {
@@ -379,9 +393,9 @@
     white-space: nowrap;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .pvp-turn
     > button {
@@ -392,25 +406,25 @@
     font-size: 10px;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .dominion-score {
     font-size: 12px;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .dominion-nodes {
     font-size: 9px;
   }
   .battle.pvp-battle:is(
-      [data-pvp-mode='DOMINION'],
-      [data-pvp-map='broken_bridge'],
-      [data-pvp-map='shattered_sanctum']
+      [data-pvp-mode="DOMINION"],
+      [data-pvp-map="broken_bridge"],
+      [data-pvp-map="shattered_sanctum"]
     )
     .dominion-feedback {
     font-size: 11px;
@@ -429,17 +443,17 @@
   background: #53616b;
   border: 1px solid #819299;
 }
-.pvp-map-preview i[data-tile='#'] {
+.pvp-map-preview i[data-tile="#"] {
   background: transparent;
   border-color: transparent;
 }
-.pvp-map-preview i[data-tile='C'] {
+.pvp-map-preview i[data-tile="C"] {
   background: #ac9662;
 }
-.pvp-map-preview i[data-tile='H'] {
+.pvp-map-preview i[data-tile="H"] {
   background: #bd542e;
 }
-.pvp-map-preview i[data-tile='A'] {
+.pvp-map-preview i[data-tile="A"] {
   background: #8664bd;
 }
 .pvp-terrain-info {
@@ -486,15 +500,21 @@
   }
 }
 
-.battle.pvp-battle[data-pvp-mode='DUEL']:not([data-pvp-map='classic']) .pvp-turn > strong {
+.battle.pvp-battle[data-pvp-mode="DUEL"]:not([data-pvp-map="classic"])
+  .pvp-turn
+  > strong {
   grid-column: 1;
   grid-row: 1;
 }
-.battle.pvp-battle[data-pvp-mode='DUEL']:not([data-pvp-map='classic']) .pvp-turn > span {
+.battle.pvp-battle[data-pvp-mode="DUEL"]:not([data-pvp-map="classic"])
+  .pvp-turn
+  > span {
   grid-column: 1;
   grid-row: 2;
 }
-.battle.pvp-battle[data-pvp-mode='DUEL']:not([data-pvp-map='classic']) .pvp-turn > button {
+.battle.pvp-battle[data-pvp-mode="DUEL"]:not([data-pvp-map="classic"])
+  .pvp-turn
+  > button {
   grid-column: 2;
   grid-row: 1 / 3;
 }
@@ -580,33 +600,172 @@
 /* Keep all status lines in normal flow; older direct-child span grid rules no
    longer place the Ranked badge on top of the network/round text. */
 .battle.pvp-battle .pvp-turn > .pvp-turn-summary {
-  display: flex; flex-direction: column; gap: 3px; min-width: 0;
-  grid-column: 1; grid-row: 1 / 4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1 / 4;
 }
 .battle.pvp-battle .pvp-turn:has(> .dominion-score) > .pvp-turn-summary {
-  grid-column: 2; grid-row: 1 / 3;
+  grid-column: 2;
+  grid-row: 1 / 3;
 }
-.pvp-turn-title { line-height: 1.2; }
-.pvp-turn-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 11px; line-height: 1.3; }
-.pvp-turn-meta > span { overflow-wrap: anywhere; }
-.pvp-rival-altar { font-size: 11px; color: #b9ccdc; }
+.pvp-turn-title {
+  line-height: 1.2;
+}
+.pvp-turn-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.pvp-turn-meta > span {
+  overflow-wrap: anywhere;
+}
+.pvp-rival-altar {
+  font-size: 11px;
+  color: #b9ccdc;
+}
 
 /* Touch terrain help uses the reserved control gutter; desktop keeps its inspector. */
-.mobile-terrain-trigger { display:none; }
-.mobile-terrain-overlay { position:fixed; inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); border:0; background:transparent; box-sizing:border-box; }
-.mobile-terrain-overlay[open] { display:grid; place-items:center; }
-.mobile-terrain-overlay::backdrop { background:#040a13b8; }
-.mobile-terrain-dialog { width:min(360px,100%); max-height:100%; overflow-y:auto; padding:12px; box-sizing:border-box; background:#101b28; border:1px solid #b69c60; border-radius:8px; color:#eee3c8; font-size:13px; line-height:1.5; }
-.mobile-terrain-dialog header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.mobile-terrain-dialog h2 { margin:0; font-size:18px; }
-.mobile-terrain-dialog button { min-width:44px; min-height:44px; border:1px solid #b69c60; background:#182c40; color:#eee3c8; border-radius:6px; font-size:22px; }
-.mobile-terrain-dialog .tactical-overview { display:block!important; position:static; width:100%; box-sizing:border-box; }
-@media (orientation:portrait) and (max-width:600px) {
- .battle .pvp-terrain-info { display:none; }
- .battle .mobile-terrain-trigger { display:grid; place-items:center; position:fixed; top:calc(62px + env(safe-area-inset-top)); right:max(6px,env(safe-area-inset-right)); width:44px; height:44px; padding:0; z-index:18; border:1px solid #b69c60; border-radius:6px; background:#101b28ed; color:#efcf86; font-size:24px; }
+.mobile-terrain-trigger {
+  display: none;
 }
-@media (orientation:landscape) and (max-width:900px) and (max-height:500px) {
- .battle .pvp-terrain-info { display:none; }
- .battle .battle-main { padding-right:calc(56px + env(safe-area-inset-right)); }
- .battle .mobile-terrain-trigger { display:grid; place-items:center; position:absolute; right:max(6px,env(safe-area-inset-right)); top:68px; width:44px; height:44px; padding:0; z-index:18; border:1px solid #b69c60; border-radius:6px; background:#101b28ed; color:#efcf86; font-size:24px; }
+.mobile-terrain-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
 }
+.mobile-terrain-overlay[open] {
+  display: grid;
+  place-items: center;
+}
+.mobile-terrain-overlay::backdrop {
+  background: #040a13b8;
+}
+.mobile-terrain-dialog {
+  width: min(360px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #101b28;
+  border: 1px solid #b69c60;
+  border-radius: 8px;
+  color: #eee3c8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.mobile-terrain-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mobile-terrain-dialog h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.mobile-terrain-dialog button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #b69c60;
+  background: #182c40;
+  color: #eee3c8;
+  border-radius: 6px;
+  font-size: 22px;
+}
+.mobile-terrain-dialog .tactical-overview {
+  display: block !important;
+  position: static;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (orientation: portrait) and (max-width: 600px) {
+  .battle .pvp-terrain-info {
+    display: none;
+  }
+  .battle .mobile-terrain-trigger {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    top: calc(62px + env(safe-area-inset-top));
+    right: max(6px, env(safe-area-inset-right));
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    z-index: 18;
+    border: 1px solid #b69c60;
+    border-radius: 6px;
+    background: #101b28ed;
+    color: #efcf86;
+    font-size: 24px;
+  }
+}
+@media (orientation: landscape) and (max-width: 900px) and (max-height: 500px) {
+  .battle .pvp-terrain-info {
+    display: none;
+  }
+  .battle .battle-main {
+    padding-right: calc(56px + env(safe-area-inset-right));
+  }
+  .battle .mobile-terrain-trigger {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    right: max(6px, env(safe-area-inset-right));
+    top: 68px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    z-index: 18;
+    border: 1px solid #b69c60;
+    border-radius: 6px;
+    background: #101b28ed;
+    color: #efcf86;
+    font-size: 24px;
+  }
+}
+/* Bot disclosure only; never captures battlefield input or changes layout. */
+.pvp-bot-disclosure {
+  display: none;
+  pointer-events: none;
+}
+@media (max-width: 760px) and (orientation: portrait) {
+  .pvp-bot-disclosure {
+    display: block;
+    position: absolute;
+    z-index: 12;
+    top: calc(env(safe-area-inset-top, 0px) + 70px);
+    right: calc(64px + env(safe-area-inset-right, 0px));
+    max-width: 65%;
+    padding: 3px 7px;
+    border: 1px solid #8c774c;
+    border-radius: 5px;
+    background: #081725e8;
+    color: #ead9a7;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+}
+/* The IA offer is one wrapping column, not an implicit auto grid track. */
+.ranked-panel-action:has(.ranked-bot-offer) {grid-template-columns:minmax(0,1fr);min-width:0;}
+.ranked-bot-offer {min-width:0;max-width:100%;padding:10px;text-align:left;white-space:normal;overflow-wrap:anywhere;border:1px solid #8c774c;border-radius:6px;background:#0b1a29;}
+.ranked-bot-offer h3 {font:700 17px/1.3 Georgia,serif;color:#e2c58a;margin:0 0 8px;}
+.ranked-bot-offer p {font-size:12px;line-height:1.5;margin:8px 0;white-space:normal;}
+.ranked-panel-action .ranked-bot-offer small {display:block;max-width:none;white-space:normal;line-height:1.5;}
+.ranked-bot-offer button {width:100%;margin-top:10px;}
+.ranked-bot-history {grid-column:1/-1;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:12px;}
+.ranked-bot-history li {margin:8px 0;}
