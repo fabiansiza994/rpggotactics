@@ -56,6 +56,69 @@
 }
 
 /* Only profile/avatar previews in the store: the original cosmetic art is retained. */
-.shop-cosmetic-art.shop-avatar-preview{height:auto;min-height:0;padding:0;aspect-ratio:1;border-radius:50%;overflow:hidden;border:2px solid #c9aa65;background:#101e30;display:grid;place-items:center}
-.shop-avatar-preview>.profile-frame{width:100%;height:100%;aspect-ratio:1}
-.shop-avatar-preview .profile-frame-canvas{width:100%;height:100%}
+.shop-cosmetic-art.shop-avatar-preview{height:auto;min-height:0;padding:0;aspect-ratio:1;border-radius:50%;overflow:hidden;border:2px solid #c9aa65;background:#101e30;display:grid;place-items:center;}
+.shop-avatar-preview>.profile-frame{width:100%;height:100%;aspect-ratio:1;}
+.shop-avatar-preview .profile-frame-canvas{width:100%;height:100%;}
+
+.circular-profile-frame {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  isolation: isolate;
+}
+.circular-frame-portrait {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #101c2d;
+  display: block;
+}
+.circular-frame-portrait > img,
+.circular-frame-portrait > svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.circular-frame-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.desktop-opponent-notices {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  top: 140px;
+  width: min(210px, 22vw);
+  z-index: 25;
+  pointer-events: none;
+  display: grid;
+  gap: 6px;
+}
+.desktop-opponent-notices > div {
+  padding: 10px 12px;
+  border: 1px solid #ab8155;
+  border-radius: 8px;
+  background: #101b2deb;
+  color: #f8eccd;
+  font-size: 13px;
+  box-shadow: 0 3px 14px #0008;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  .desktop-opponent-notices {
+    display: none;
+  }
+}
+/* Frame overlays must retain PNG transparency even in avatar hosts with image backgrounds. */
+.circular-profile-frame > img.circular-frame-art {
+  background: transparent;
+  border-radius: 0;
+  object-fit: contain;
+  object-position: center;
+}

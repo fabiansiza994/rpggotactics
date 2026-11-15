@@ -76,6 +76,13 @@ function harness(
     latest,
     pending,
     clearTimeout: (id: number) => events.push("clear:" + id),
+    navigatePlay: (_mode: string, options: { queue?: string }) =>
+      events.push("route:" + (options.queue ?? "casual")),
+    setEntryPending: () => {},
+    setCode: (value:string) => events.push("code:"+value),
+    setConfirm: () => {},
+    setHistory: () => {},
+    setQueueKind: (x: string) => events.push("queue.kind:" + x),
     setSnapshot: (x: unknown) => events.push("snapshot:" + x),
     setNetwork: (x: string) => events.push("network:" + x),
     useBattleStore: { setState: () => events.push("store.clear") },

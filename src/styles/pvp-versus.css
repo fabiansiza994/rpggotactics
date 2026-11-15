@@ -1,0 +1,200 @@
+.pvp-versus {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 45%, #123b62 0, transparent 50%),
+    radial-gradient(ellipse at 80% 45%, #541b31 0, transparent 50%), #050b15;
+  color: #f4e9cb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: max(24px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom));
+  animation: vs-reveal 3s both;
+}
+.pvp-versus-fighters {
+  width: min(900px, 95vw);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  text-align: center;
+  align-items: start;
+}
+.pvp-versus .ranked-player-avatar {
+  width: clamp(100px, 24vw, 240px);
+  height: clamp(100px, 24vw, 240px);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 40px #248df466;
+}
+.pvp-versus .side-1 .ranked-player-avatar {
+  box-shadow: 0 0 40px #ef314966;
+}
+.pvp-versus-fighter {
+  animation: vs-left 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.pvp-versus-fighter.side-1 {
+  animation-name: vs-right;
+}
+.pvp-versus-fighter h2 {
+  font-family: Georgia, serif;
+  font-size: clamp(18px, 3vw, 32px);
+  overflow-wrap: anywhere;
+  margin: 18px 0 6px;
+}
+.pvp-versus-fighter p {
+  color: #d4bc83;
+}
+.pvp-versus-mark {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  transform: translate(-50%, -50%);
+  font:
+    900 clamp(48px, 9vw, 110px) Georgia,
+    serif;
+  color: #ffe5a1;
+  text-shadow: 0 0 24px #e5b863;
+  animation: vs-impact 0.5s both;
+}
+.pvp-versus-caption {
+  margin-top: 38px;
+  letter-spacing: 0.1em;
+}
+.pvp-versus-controls {
+  display: flex;
+  gap: 12px;
+  position: absolute;
+  bottom: max(20px, env(safe-area-inset-bottom));
+}
+.pvp-versus-controls button {
+  min-height: 44px;
+  border: 1px solid #a7864c;
+  background: #0a1426cc;
+  color: #f2e2bc;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+.pvp-versus-energy {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    115deg,
+    transparent 0 70px,
+    #cfe5ff08 72px,
+    transparent 74px
+  );
+  animation: vs-energy 2s linear infinite;
+  opacity: 0.5;
+}
+@keyframes vs-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes vs-right {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes vs-impact {
+  from {
+    opacity: .4;
+    scale: 1.3;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes vs-energy {
+  to {
+    background-position: 120px 0;
+  }
+}
+@keyframes vs-reveal {
+  0%, 90% { opacity: 1; }
+  100% {
+    opacity: 0;
+  }
+}
+@media (max-width: 600px) {
+  .pvp-versus-fighters {
+    gap: 60px;
+  }
+  .pvp-versus-mark {
+    top: 43%;
+    font-size: 48px;
+  }
+  .pvp-versus-fighter h2 {
+    font-size: 18px;
+  }
+  .pvp-versus-energy {
+    animation: none;
+  }
+  .pvp-versus-fighter small {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-versus,
+  .pvp-versus * {
+    animation: none !important;
+  }
+}
+.pvp-versus::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(#030914bb, #030914ee),
+    url("/art/checkpoint05/environments/duel.webp") center/cover;
+  opacity: 0.4;
+}
+.pvp-versus::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 20%, #85cbff 0 1px, transparent 3px),
+    radial-gradient(circle at 25% 70%, #b1ddff 0 2px, transparent 4px),
+    radial-gradient(circle at 82% 25%, #ff9393 0 2px, transparent 4px),
+    radial-gradient(circle at 72% 82%, #ffcc9f 0 1px, transparent 3px);
+  animation: vs-sparks 2.4s ease-out both;
+}
+@keyframes vs-sparks {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-versus::after {
+    display: none;
+  }
+}
+
+@media(max-width:600px){.pvp-versus .ranked-player-avatar{width:120px;height:120px}.pvp-versus-fighters{gap:52px;align-items:start}}

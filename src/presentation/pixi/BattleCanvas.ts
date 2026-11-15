@@ -87,7 +87,7 @@ const OCCLUDER_ALPHA = 0.42;
 
 export interface BattleCanvasCallbacks {
   onOpponentNotices?(rows: OpponentNotice[]): void;
-  onNoticeLane?(lane: NoticeLane): void;
+  onNoticeLane?(lane: NoticeLane | null): void;
   onTileHover(pos: Pos | null): void;
   /** Mouse click: acts at once (hover already previewed). */
   onTileClick(pos: Pos): void;
@@ -247,7 +247,7 @@ export class BattleCanvas {
     this.journey.tick(elapsed, this.effects.reduced, this.app.screen.width);
     this.dash.tick(elapsed);
     this.walk.tick(elapsed);
-    this.director.tick(elapsed);
+    this.director.tick(Math.min(elapsed, 100));
     this.groundParticles.tick(elapsed,this.effects.reduced);
     if (this.projectionPending && !this.director.busy) {
       this.projectionPending = false;
@@ -347,14 +347,14 @@ export class BattleCanvas {
   constructor(private readonly callbacks: BattleCanvasCallbacks) {
     this.opponentNotices = new OpponentNotices(rows => this.callbacks.onOpponentNotices?.(rows));
     this.director = new VfxDirector(this.effects, {
-      readableCards: import.meta.env.DEV && location.pathname === '/act3-qa',
+      readableCards: true,
       enemyAction: event => presentPublicAction(event),
       castCard: event => presentPublicCast(event),
       redraw: (state) => {
         if (this.vm) this.draw({ ...this.vm, state, mechanisms: mechanismView(state) });
       },
       presentEvent: (event) => {
-        if (this.portraitQuery.matches && this.director.state) this.opponentNotices.present(event, this.director.state);
+        if (this.director.state) this.opponentNotices.present(event, this.director.state);
         if (event.type === 'MECHANISM_CHANGED' && event.kind === 'REGION' && this.director.state) {
           this.sections.playEvents([event], this.director.state, this.effects.reduced);
           if (this.sections.busy) this.reportPlaybackBusy(true);
@@ -739,7 +739,7 @@ export class BattleCanvas {
       const bottom=Math.max(...edge.flatMap(p=>this.proj.getTilePolygon(p).map(v=>rect.top + (fit.y + v.y * fit.scale) * rect.height / height)));
       const lane=noticeLane(rect.left,bottom,rect.right,rect.bottom-4);
       this.opponentNotices.setCapacity(lane.capacity);this.callbacks.onNoticeLane?.(lane);
-    } else this.opponentNotices.setCapacity(0);
+    } else { this.opponentNotices.setCapacity(2); this.callbacks.onNoticeLane?.(null); }
     this.compactAmbient = window.matchMedia(
       '(orientation: landscape) and (max-height: 500px)',
     ).matches;
@@ -845,7 +845,7 @@ export class BattleCanvas {
     this.targetingPreview.reset();
     if (!this.ready || !this.vm) return;
     if(events.some(e=>e.type==='BATTLE_STARTED'))this.resetPlayback();
-    if(this.portraitQuery.matches)this.opponentNotices.register(events,state,this.vm.content,this.vm.heroId,this.director.state ?? this.vm.state);
+    this.opponentNotices.register(events,state,this.vm.content,this.vm.heroId,this.director.state ?? this.vm.state);
     const vm={...this.vm,state,mechanisms:mechanismView(state)};
     const recipes = [
       { key: 'frost_nova', effect: this.effects.mage },
@@ -871,6 +871,16 @@ export class BattleCanvas {
     if(this.mechanisms.busy || this.sections.busy)this.reportPlaybackBusy(true);
     this.director.enqueue(events.filter(e=>!(e.type==='UNIT_TELEPORTED' && e.sourceId?.startsWith('mechanism:'))), state, reduced);
     if (started) this.beginIntro();
+  }
+
+  /** Nonblocking PvP arrival on the existing scene: no root transforms, input lock or extra clock. */
+  presentPvpEntry(): void {
+    if (!this.ready || this.destroyed || !this.vm || this.motionQuery?.matches || visualSettings.reducedEffects) return;
+    for (const unit of this.vm.state.units.filter(unit => unit.kind === 'HERO')) {
+      this.effects.ritual(unit.pos, 'MINOR', 'arrival');
+      this.units.get(unit.id)?.anticipate(260);
+      motionCues.emit(unit.id === this.vm.heroId ? 'player_spawn' : 'enemy_spawn');
+    }
   }
 
   // ── Battle intro ─────────────────────────────────────────────────────────────

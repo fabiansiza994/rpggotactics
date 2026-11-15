@@ -689,6 +689,21 @@ export class PvPMatchRoom {
         return response({ error: { message: "No autorizado." } }, 401);
       const body = (await request.json()) as Record<string, unknown>,
         now = Date.now();
+      // Private Worker→DO operation. A tombstone also defeats a delayed bot-create request.
+      if (path === "/cancel-bot-search") {
+        if (
+          this.room &&
+          (!this.room.bot || this.room.members[0]?.id !== id || this.room.game)
+        )
+          return response({}, 409);
+        await this.ctx.storage.put("cancelledBotSearch", id);
+        if (this.room) {
+          this.room.expiresAt = now;
+          await this.expireLobbyRegistration(now);
+          await this.save();
+        }
+        return response({ cancelled: true });
+      }
       if (path === "/create" && !this.room) {
         this.room = {
           mode: body.mode === "DOMINION" ? "DOMINION" : "DUEL",
@@ -731,6 +746,8 @@ export class PvPMatchRoom {
         await this.save();
       }
       if (path === "/bot-create") {
+        if (await this.ctx.storage.get("cancelledBotSearch"))
+          return response({}, 409);
         if (this.room)
           return this.room.members[0]?.id === id && this.room.bot
             ? response({ code: this.room.code, matchId: this.room.matchId })

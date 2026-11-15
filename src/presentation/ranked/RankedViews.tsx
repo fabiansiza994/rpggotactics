@@ -1,4 +1,4 @@
-import { RankedAvatar } from "../profile/RankedAvatar";
+import { AnimatedReward, useResultProgress } from "../results/ResultProgress";import { RankedAvatar } from "../profile/RankedAvatar";
 import { BOT_LEVELS } from "../../game/ai/ranked-bot-policy";
 import { RankedRewardUnlock } from "./RankedRewardUnlock";
 import { MasteryTitleLabel } from "../mastery/MasteryViews";
@@ -83,7 +83,6 @@ export function RankedPanel({
   championName,
   onSearch,
   onCancel,
-  onAcceptBot,
 }: {
   mobile?: boolean;
   profile: Extract<RankedProfile, { enabled: true }>;
@@ -95,7 +94,6 @@ export function RankedPanel({
   championName: string;
   onSearch: () => void;
   onCancel: () => void;
-  onAcceptBot?: () => void;
 }) {
   const rank = rankFor(profile.rp);
   const searching = queue.state === "SEARCHING";
@@ -155,41 +153,6 @@ export function RankedPanel({
               <strong>Buscando rival…</strong>
               <b aria-label="Tiempo de búsqueda">{elapsed}</b>
             </div>
-            {queue.state === "SEARCHING" && queue.botOffer && (
-              <aside
-                className="ranked-bot-offer"
-                aria-label="Oferta de rival IA"
-              >
-                <h3>{queue.botOffer.identity.name}</h3>
-                <p>
-                  {
-                    PRESENTATION_CONTENT.heroes[queue.botOffer.identity.heroId]
-                      ?.name
-                  }{" "}
-                  · {BOT_LEVELS[queue.botOffer.identity.level]?.name}
-                </p>
-                <p>
-                  Victoria: hasta +{queue.botOffer.rewards.rpDelta} RP ·{" "}
-                  {queue.botOffer.rewards.xp} XP. Derrota:{" "}
-                  {queue.botOffer.rewards.lossRp} RP /{" "}
-                  {queue.botOffer.rewards.lossXp} XP; abandono:{" "}
-                  {queue.botOffer.rewards.abandonRp} RP / 0 XP.
-                </p>
-                <small>
-                  Máximo 3 victorias y +30 RP IA diarios. El ascenso de rango
-                  requiere victoria humana. El RP IA no desbloquea Track ni
-                  Premium. La recompensa final se valida al terminar; mín. ronda
-                  2 y 30 s.
-                </small>
-                {queue.botOffer.rewards.restrictions.map((x) => (
-                  <p key={x}>{x}</p>
-                ))}
-                <button disabled={busy} onClick={onAcceptBot}>
-                  Aceptar rival IA
-                </button>
-                <p>Si prefieres humanos, continúa esperando.</p>
-              </aside>
-            )}
             <button disabled={busy} onClick={onCancel}>
               Cancelar búsqueda
             </button>
@@ -326,6 +289,7 @@ const OUTCOME_LABEL = {
 
 /** Only presentation: authoritative deltas/milestones are never inferred from an outcome. */
 export function RankedResult({ ranked }: { ranked: RankedSnapshot }) {
+  const motionProgress = useResultProgress();
   const o = ranked.outcome;
   if (!o)
     return (
@@ -355,7 +319,7 @@ export function RankedResult({ ranked }: { ranked: RankedSnapshot }) {
           <b>{OUTCOME_LABEL[o.outcome]}</b>
           <strong className="ranked-delta">
             {sign}
-            {Math.abs(o.rpDelta)} RP
+            <AnimatedReward to={Math.abs(o.rpDelta)} suffix=" RP" />
           </strong>
         </div>
       </header>
@@ -369,10 +333,15 @@ export function RankedResult({ ranked }: { ranked: RankedSnapshot }) {
           →
         </span>
         <div className="ranked-result-rank">
-          <RankShield rp={o.rpAfter} size="lg" />
+          <RankShield
+            rp={motionProgress < 0.55 ? o.rpBefore : o.rpAfter}
+            size="lg"
+          />
           <span>
-            <b>{after.label.toUpperCase()}</b>
-            <small>{formatRp(o.rpAfter)}</small>
+            <b>{(motionProgress < .55 ? before.label : after.label).toUpperCase()}</b>
+            <small>
+              <AnimatedReward from={o.rpBefore} to={o.rpAfter} suffix=" RP" />
+            </small>
           </span>
         </div>
       </div>

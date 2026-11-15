@@ -20,8 +20,7 @@ export function compileTimeline(
   reduced: boolean,
   _readable = false,
 ): { cues: VisualCue[]; duration: number } {
-  // Retain the former laboratory argument for existing callers; budgets now apply everywhere.
-  void _readable;
+  // Public card anticipation and inter-action pauses share the existing visual queue.
   const cues: VisualCue[] = [];
   let cursor = 0,
     effectAt = 0,
@@ -69,7 +68,7 @@ export function compileTimeline(
       const nextResolution = events.slice(resolvedIndex + 1).findIndex(e => e.type === 'CARD_RESOLVED');
       const ownEvents = events.slice(resolvedIndex + 1, nextResolution < 0 ? undefined : resolvedIndex + 1 + nextResolution);
       const timing = resolutionTiming(key, reduced, ownEvents.some(e => e.type === 'UNIT_SPAWNED' && e.kind === 'SUMMON'));
-      const cast = isArrowVisual(key) && !reduced ? 300 : timing.cast;
+      const cast = Math.max(isArrowVisual(key) && !reduced ? 300 : timing.cast, _readable && !reduced ? 420 : 0);
       const travel = isArrowVisual(key) && !reduced ? 220 : timing.travel;
       spell = {
         start: cursor,
@@ -131,6 +130,7 @@ export function compileTimeline(
       cursor = Math.max(spell?.end ?? cursor, effectAt, recoveryUntil);
       add(cursor, 'event', event);
       spell = null;
+      if (_readable && !reduced) cursor += 220;
     } else if (
       event.type === 'UNIT_MOVED' ||
       event.type === 'UNIT_PUSHED' ||

@@ -109,9 +109,26 @@ export class VfxDirector {
   enqueue(events: readonly GameEvent[], final: Readonly<GameState>, reduced: boolean): void {
     if (!this.visual || events.some((e) => e.type === 'BATTLE_STARTED')) {
       this.clear();
+      const spawned = new Set(
+        events.flatMap((e) =>
+          e.type === "UNIT_SPAWNED" && e.kind === "SUMMON" ? [e.unitId] : [],
+        ),
+      );
+      if (!spawned.size) {
       this.sync(final);
       this.host.redraw(final);
       return;
+      }
+      // A first live snapshot may include both battle start and subsequent public summons.
+      // Start the display without those units; existing commit cues reveal them one by one.
+      const initial = {
+        ...structuredClone(final),
+        units: final.units
+          .filter((unit) => !spawned.has(unit.id))
+          .map((unit) => structuredClone(unit)),
+      };
+      this.sync(initial);
+      this.host.redraw(initial);
     }
     this.effects.catalog?.beginBatch?.();
     for (const [event, recipe] of catalogBatch(events, id => this.host.card(id))) this.catalogActions.set(event, recipe);
@@ -127,11 +144,11 @@ export class VfxDirector {
     this.effects.fireball?.beginBatch?.();
     this.effects.bastion?.beginBatch?.();
     this.effects.pactSummon?.beginBatch?.();
-    const previous = this.accepted ?? this.visual;
+    const previous = this.accepted ?? this.visual!;
     this.accepted = final;
     const plan = compileTimeline(
       events,
-      (id) => {const card=this.host.card(id);return card&&usesPhysicalArrow(card)?'archer_arrow':card?.presentation.visualKey??id;},
+      (id) => {const card=this.host.card(id);return card&&usesPhysicalArrow(card)?'archer_arrow': (card?.presentation.visualKey??id);},
       reduced,
       this.host.readableCards ?? false,
     );
@@ -213,10 +230,10 @@ export class VfxDirector {
     return true;
   }
   /** Archer cast beat: reads the shot's context once (visual state, same rules as the engine). */
-  private archerShot: { cardId: string; perfect: boolean; passAt?: Pos } | null = null;
+  private archerShot: { cardId: string; perfect: boolean; passAt?: Pos; } | null = null;
   private archerCast(e: EventOfType<'CARD_PLAYED'>, from: Pos, duration: number): void {
     const fx = this.effects, units = this.visual?.units ?? [];
-    const at = (p: Pos | null) => (p ? units.find((u) => u.pos.x === p.x && u.pos.y === p.y) : undefined);
+    const at = (p: Pos | null) =>p ? units.find((u) => u.pos.x === p.x && u.pos.y === p.y) : undefined;
     const target = at(e.target);
     const d = target ? Math.abs(target.pos.x - from.x) + Math.abs(target.pos.y - from.y) : 0;
     const perfect = e.cardId === 'heart_shot' && !!target &&
@@ -320,6 +337,7 @@ export class VfxDirector {
     }
     if (cue.kind === 'cast' && e.type === 'CARD_PLAYED') {
       this.host.castCard?.(e);
+      this.host.presentEvent?.(e);
       const from = this.position(e.casterId) ?? e.impact;
       const caster = this.host.unit(e.casterId);
       if (caster && hasDirectionalArt(caster.defId)) {
@@ -673,7 +691,7 @@ export class VfxDirector {
         if (!e.hpLost && !e.shieldAbsorbed && e.armorMitigated)
           fx.number(e.unitId, e.pos, e.armorMitigated, 'armor');
         if (universal) fx.unitReaction?.(e.unitId, () => this.position(e.unitId), reaction);
-        else fx.sparksAt(fx.lift(e.pos, .45).x, fx.lift(e.pos, .45).y, family(e.damageType), reduced ? 1 : 5, 24);
+        else fx.sparksAt(fx.lift(e.pos, 0.45).x, fx.lift(e.pos, 0.45).y, family(e.damageType), reduced ? 1 : 5, 24);
         if (e.hpLost) this.hit(e.unitId, e.sourceId, reduced, thunder ? 0xb3eaff : universal ? REACTION_COLOR[reaction] : 0xffc3aa);
         const defender = this.host.unit(e.unitId);
         if (reaction !== 'none') defender?.playAnimation(!e.hpLost ? 'block' : 'hit');
@@ -891,7 +909,7 @@ export class VfxDirector {
     if(e.type==='FORM_CHANGED') {
       const view=this.host.unit(e.unitId);
       view?.pulseLight(0x97e4d0,reduced?100:260);
-      if(view&&!reduced){const alpha=view.root.alpha;fx.animate(260,t=>{if(!view.root.destroyed)view.root.alpha=alpha*(.45+.55*t);},()=>{if(!view.root.destroyed)view.root.alpha=alpha;});}
+      if(view&&!reduced){const alpha=view.root.alpha;fx.animate(260,t=>{if(!view.root.destroyed)view.root.alpha=alpha*(0.45+ 0.55*t);},()=>{if(!view.root.destroyed)view.root.alpha=alpha;});}
     }
     if (e.type === 'UNIT_SPAWNED' && e.kind === 'SUMMON') {
       const view = this.host.unit(e.unitId);
@@ -938,8 +956,8 @@ export class VfxDirector {
     const x = body.x,
       y = body.y,
       tint = body.tint;
-    const targetScreen = this.effects.lift(pos, .45);
-    const sourceScreen = source ? this.effects.lift(source, .45) : targetScreen;
+    const targetScreen = this.effects.lift(pos, 0.45);
+    const sourceScreen = source ? this.effects.lift(source, 0.45) : targetScreen;
     const spring = this.reactionSpring && hitReactionPilot.spring && universalReactionsEnabled() && !reduced;
     const angle = spring ? Math.atan2(targetScreen.y - sourceScreen.y, targetScreen.x - sourceScreen.x)
       : source ? Math.atan2(pos.y - source.y, pos.x - source.x) : 0;

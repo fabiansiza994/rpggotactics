@@ -8,7 +8,7 @@ export function noticeLane(left: number, surfaceBottom: number, right: number, b
   return { left: Math.ceil(left + 8), top, width: Math.max(0, Math.floor(right - left - 16)), capacity };
 }
 type Pending = { id: string; arrived: number; actor: string | null; base: string; damage: number; target: string; hits: Record<string,number>; priority: number; duration: number; tail: string };
-const allowed = new Set(['ENEMY_ACTION_STARTED','ENEMY_ACTION_ENDED','CARD_PLAYED','UNIT_MOVED','UNIT_TELEPORTED','ENEMY_ATTACKED','SUMMON_ATTACKED','COUNTER_ATTACK','UNIT_DAMAGED','UNIT_DEFEATED','UNIT_SPAWNED','UNIT_HEALED','SHIELD_GAINED','STATUS_APPLIED','TRAP_PLACED','TRAP_TRIGGERED','RITUAL_ACTIVATED','TURN_STARTED']);
+const allowed = new Set(['ENEMY_ACTION_STARTED','ENEMY_ACTION_ENDED','CARD_PLAYED','UNIT_MOVED','UNIT_TELEPORTED','ENEMY_ATTACKED','SUMMON_ATTACKED','COUNTER_ATTACK','UNIT_DAMAGED','UNIT_DEFEATED','UNIT_SPAWNED','UNIT_HEALED','SHIELD_GAINED','STATUS_APPLIED','TRAP_PLACED','TRAP_TRIGGERED','RITUAL_ACTIVATED','TURN_STARTED','FORM_CHANGED']);
 /** Per-canvas, bounded presentation state. Registration never displays anything. */
 export class OpponentNotices {
   private pending = new WeakMap<GameEvent, Pending>();
@@ -38,14 +38,15 @@ export class OpponentNotices {
       if(e.type==='CARD_RESOLVED'||e.type==='RITUAL_RESOLVED'){action=undefined;continue;}
       let p:Pending|undefined;
       switch(e.type){
-        case 'CARD_PLAYED': action=rival(e.casterId)?fresh(e.casterId,`${name(e.casterId)} · ${content.cards[e.cardId]?.name ?? 'Carta utilizada'}`,2,2800):undefined;p=action;break;
+        case 'CARD_PLAYED': action=rival(e.casterId)?fresh(e.casterId,`${name(e.casterId)} · ${content.cards[e.cardId]?.name ?? 'Carta utilizada'} · ${content.cards[e.cardId]?.cost ?? '?'} EN base`,2,2800):undefined;p=action;break;
+        case 'FORM_CHANGED': if(rival(e.unitId))p=action??fresh(e.unitId,`${name(e.unitId)} cambia de forma`,2,2800);break;
         case 'RITUAL_ACTIVATED': action=rival(e.casterId)?fresh(e.casterId,`${name(e.casterId)} activa un ritual`,2,2800):undefined;p=action;break;
         case 'ENEMY_ATTACKED': if(rival(e.enemyId)){action=action?.actor===e.enemyId?action:fresh(e.enemyId,'');p=action;}break;
         case 'SUMMON_ATTACKED': case 'COUNTER_ATTACK': if(rival(e.unitId)){action=fresh(e.unitId,`${name(e.unitId)} ataca`);p=action;}break;
         case 'UNIT_MOVED': case 'UNIT_TELEPORTED': if(rival(e.unitId))p=action?.actor===e.unitId?action:fresh(e.unitId,`${name(e.unitId)} ${e.type==='UNIT_MOVED'?'avanza':'se desplaza'}`);break;
         case 'UNIT_DAMAGED': if(rival(e.sourceId)||action ){p=action ?? fresh(rival(e.sourceId)?e.sourceId:null,'');}break;
         case 'UNIT_DEFEATED': if(e.faction===own)p=damageByTarget.get(e.unitId)??action??fresh(null,'');break;
-        case 'UNIT_SPAWNED': if(e.faction!==own)p=action??fresh(null,'');break;
+        case 'UNIT_SPAWNED': if(rival(e.unitId))p=action??fresh(null,'');break;
         case 'UNIT_HEALED': if(rival(e.unitId)||rival(e.sourceId))p=action??fresh(null,'');break;
         case 'SHIELD_GAINED': if(rival(e.unitId)||rival(e.sourceId))p=action??fresh(null,'');break;
         case 'STATUS_APPLIED': if(rival(e.sourceId)||rival(e.unitId)||action)p=action??fresh(null,'');break;
@@ -74,6 +75,7 @@ export class OpponentNotices {
         if(e.hpLost===0)p.tail=e.shieldAbsorbed>0?' · escudo absorbe':' · bloqueado';
         if(e.unitId===d.heroId&&e.hpLost>0){p.priority=3;p.duration=3400;}break;
       case 'UNIT_DEFEATED':p.tail=` · ${name(e.unitId)} cae`;p.priority=3;p.duration=3400;break;
+      case 'FORM_CHANGED':p.tail=e.to ? ` · ${e.to==='bear'?'Oso':e.to==='minotaur'?'Minotauro':e.to==='hybrid'?'Forma híbrida':e.to}` : ' · forma original';break;
       case 'UNIT_SPAWNED':p.tail=` · invoca ${name(e.unitId)}`;p.priority=Math.max(2,p.priority);p.duration=Math.max(2800,p.duration);break;
       case 'UNIT_HEALED':p.tail=` · ${name(e.unitId)} +${e.amount} PV`;break;
       case 'SHIELD_GAINED':p.tail=` · ${name(e.unitId)} +${e.amount} escudo`;break;

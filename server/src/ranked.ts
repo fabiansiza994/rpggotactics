@@ -171,6 +171,45 @@ export async function rankedRoute(
       )
       .bind(caller.userId)
       .run();
+    const ticket = await db
+      .prepare(
+        "SELECT room_code,bot_request FROM tactics_ranked_queue WHERE user_id=?",
+      )
+      .bind(caller.userId)
+      .first<{ room_code: string | null; bot_request: string | null }>();
+    if (ticket?.room_code && ticket.bot_request && env.PVP_ROOMS) {
+      const cancelled = await env.PVP_ROOMS.get(
+        env.PVP_ROOMS.idFromName(ticket.room_code),
+      ).fetch(
+        new Request("https://room/cancel-bot-search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Pvp-User": String(caller.userId),
+          },
+          body: "{}",
+        }),
+      );
+      if (cancelled.ok)
+        await db.batch([
+          db
+            .prepare(
+              "DELETE FROM tactics_ranked_queue WHERE user_id=? AND room_code=?",
+            )
+            .bind(caller.userId, ticket.room_code),
+          db
+            .prepare(
+              "DELETE FROM tactics_match_reservations WHERE user_id=? AND room_code=?",
+            )
+            .bind(caller.userId, ticket.room_code),
+        ]);
+      else if (cancelled.status !== 409)
+        return error(
+          503,
+          "CANCEL_PENDING",
+          "No se pudo confirmar la cancelación. Reintenta.",
+        );
+    }
     return json({ queue: await queueState(env, caller, now) });
   }
 

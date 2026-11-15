@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import '../../styles/battle-result-cinematic.css';
+import { ResultProgress } from './ResultProgress';
 
 import { createResultHistory, resultDuration, type ResultTone } from './resultPresentationState';
 const seen = createResultHistory();
 const titles: Record<ResultTone, string> = { victory: 'VICTORIA', defeat: 'DERROTA', draw: 'EMPATE', ended: 'PARTIDA FINALIZADA' };
 /** Cosmetic only. Children retain their existing persistence and navigation handlers. */
-export function BattleResultPresentation({ identity, tone, children }: {
-  identity: object | string; tone: ResultTone; children: ReactNode;
+export function BattleResultPresentation({ identity, tone, children, allowSkip = false }: {
+  identity: object | string; tone: ResultTone; children: ReactNode; allowSkip?: boolean;
 }) {
   const [done, setDone] = useState(() => seen.has(identity) || window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const skip = useRef<HTMLButtonElement>(null);
   const cinema = useRef<HTMLElement>(null);
-  const skippable = tone !== 'victory' && tone !== 'defeat';
+  const skippable = allowSkip || (tone !== 'victory' && tone !== 'defeat');
   const content = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // An interrupted/remounted sequence is not a completed presentation.
@@ -28,7 +29,7 @@ export function BattleResultPresentation({ identity, tone, children }: {
     if (done) content.current?.focus();
   }, [done]);
   return <div className={`battle-result-presentation result-${tone}`}>
-    <div ref={content} tabIndex={-1} inert={!done} aria-hidden={!done} style={!done ? { visibility: 'hidden' } : undefined}>{children}</div>
+    <div ref={content} tabIndex={-1} inert={!done} aria-hidden={!done} style={!done ? { visibility: 'hidden' } : undefined}>{allowSkip ? done && <ResultProgress active>{children}</ResultProgress> : children}</div>
     {!done && <section ref={cinema} tabIndex={-1} className="result-cinema" role="dialog" aria-modal="true" aria-label={titles[tone]} onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); setDone(true); }
       if (event.key === 'Tab') { event.preventDefault(); (skippable ? skip.current : cinema.current)?.focus(); }

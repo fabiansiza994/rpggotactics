@@ -12,7 +12,7 @@ import { archerBattlePreviewEnabled, archerPresentationState } from '../../qa/ar
 const ArcherBoardControls=import.meta.env.DEV?lazy(()=>import('../../qa/archer/ArcherBoardControls').then(m=>({default:m.ArcherBoardControls}))):null;
 
 /** Hosts the Pixi board. React owns the lifecycle; Pixi owns the pixels. */
-export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, cameraOrigin }: { focusedEnemyId: string | null; menuPaused?: boolean; cameraOrigin?: {x:number;y:number}; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
+export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, cameraOrigin, pvpEntry = false }: { focusedEnemyId: string | null; pvpEntry?: boolean; menuPaused?: boolean; cameraOrigin?: {x:number;y:number}; qaSample?: (sample: ReturnType<BattleCanvas['qaFeelSnapshot']>) => void }) {
   const [notices,setNotices] = useState<OpponentNotice[]>([]);
   const [noticeLane,setNoticeLane] = useState<NoticeLane | null>(null);
   const [inspectedId,setInspectedId] = useState<string|null>(null);
@@ -52,7 +52,7 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
       onTurnBanner: useBattleStore.getState().showTurnBanner,
     });
     canvasRef.current = canvas;
-    void canvas.mount(host, initialVm.current ?? undefined);
+    void canvas.mount(host, initialVm.current ?? undefined).then(() => { if (pvpEntry) canvas.presentPvpEntry(); });
     if (import.meta.env.DEV) {
       // Dev-only debug handle for e2e tests and manual inspection in the console.
       (window as unknown as Record<string, unknown>).__RPGGO__ = {
@@ -78,6 +78,8 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
       canvas.destroy();
       canvasRef.current = null;
     };
+    // The entry belongs to this canvas mount; snapshot updates must never replay it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { canvasRef.current?.setMenuPaused(menuPaused); }, [menuPaused]);
@@ -109,6 +111,9 @@ export function BoardView({ focusedEnemyId, menuPaused = false, qaSample, camera
     {noticeLane && <div className="mobile-opponent-notices" role="status" aria-live="polite" aria-atomic="true" style={{left:noticeLane.left,top:noticeLane.top,width:noticeLane.width}}>
       {notices.slice(0,noticeLane.capacity).map(notice=><div key={notice.id} className="mobile-opponent-notice" data-priority={notice.priority}>{notice.text}</div>)}
     </div>}
+    {!noticeLane && <aside className="desktop-opponent-notices" role="status" aria-live="polite" aria-atomic="true">
+      {notices.slice(0,2).map(notice=><div key={notice.id} data-priority={notice.priority}>{notice.text}</div>)}
+    </aside>}
     {Act3AnimationTools && location.pathname==='/act3-qa' && publicState && <Suspense fallback={null}><Act3AnimationTools units={publicState.units} canvas={()=>canvasRef.current}/></Suspense> }
     {engine && vm && <LinkedMechanismAction engine={engine} project={p=>canvasRef.current?.tileToClient(p)??null} polygon={p=>canvasRef.current?.tilePolygonToClient(p)??null}/> }
     {inspected && engine && <UnitInspection key={inspected.id} unit={inspected} content={engine.content} units={publicState?.units} onClose={()=>setInspectedId(null)}/> }

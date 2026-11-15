@@ -1,4 +1,5 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { ProfileFrame } from "../shop/ProfileFrame";
+import { useEffect, useState, type ReactNode } from 'react';
 import { RANKED_PREMIUM_COSMETICS } from '../../game/ranked/premiumCosmetics';
 import { RANKED_COSMETICS } from '../../game/ranked/rewardTrack';
 import { CLOUD_CONFIG } from '../cloud/config';
@@ -107,39 +108,12 @@ export function RankedCosmeticEquip({ cosmeticId, onNotice }: { cosmeticId: stri
   );
 }
 
-/** True for the Ranked profile frames (square art: an octagonal ring around the portrait). */
+/** True for existing Ranked profile-frame cosmetic IDs. */
 export const isRankedFrame = (frameId: string | null | undefined) => !!ofKind(frameId, 'PROFILE_FRAME');
 
 /**
- * A Ranked profile frame around a portrait. The track art is a full square medallion, so the
- * portrait is drawn over its inner octagon (the ring stays visible) instead of under an overlay.
+ * Ranked ownership IDs reuse the same circular artwork renderer as store and social avatars.
  */
 export function RankedProfileFrame({ frameId, children }: { frameId: string; children: ReactNode }) {
-  const id = useId().replace(/:/g, '');
-  if (RANKED_PREMIUM_COSMETICS[frameId]?.kind === 'PROFILE_FRAME') return (
-    <div className="profile-frame ranked-profile-frame premium-profile-frame" data-frame={frameId}>
-      <svg className="profile-frame-canvas" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
-        <defs><clipPath id={`premium-window-${id}`}><circle cx="256" cy="256" r="202" /></clipPath></defs>
-        <foreignObject x="54" y="54" width="404" height="404" clipPath={`url(#premium-window-${id})`}>
-          <div className="profile-frame-window">{children}</div>
-        </foreignObject>
-        <image className="profile-frame-ornament" href={art(frameId)} width="512" height="512" aria-hidden="true" />
-      </svg>
-    </div>
-  );
-  return (
-    <div className="profile-frame ranked-profile-frame" data-frame={frameId}>
-      <svg className="profile-frame-canvas" viewBox="0 0 240 240" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <clipPath id={`ranked-window-${id}`}>
-            <path d="M65 55 120 37 175 55 191 120 175 185 120 203 65 185 49 120Z" />
-          </clipPath>
-        </defs>
-        <image className="profile-frame-ornament" href={art(frameId)} width="240" height="240" aria-hidden="true" />
-        <foreignObject x="49" y="37" width="142" height="166" clipPath={`url(#ranked-window-${id})`}>
-          <div className="profile-frame-window">{children}</div>
-        </foreignObject>
-      </svg>
-    </div>
-  );
+  return <ProfileFrame frameId={frameId}>{children}</ProfileFrame>;
 }

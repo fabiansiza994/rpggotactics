@@ -16,6 +16,9 @@ export function useRankedQueue(onMatched: (code: string) => void) {
   const [queue, setQueue] = useState<RankedQueueState>({ state: "IDLE" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const generation = useRef(0);
+  const accepting = useRef<number | null>(null);
+  const polling = useRef(false);
   const handed = useRef<string | null>(null);
   const matched = useRef(onMatched);
   useEffect(() => {
@@ -31,42 +34,94 @@ export function useRankedQueue(onMatched: (code: string) => void) {
   }, []);
 
   const refresh = useCallback(async () => {
+    const epoch = generation.current;
     const r = await rankedApi.me();
-    if (!r?.ok) return;
+    if (epoch !== generation.current ||!r?.ok) return;
     setProfile(r.data);
     if (r.data.enabled) apply(r.data.queue);
   }, [apply]);
 
   useEffect(() => {
     let alive = true;
+    const epoch = generation.current;
     void rankedApi.me().then((r) => {
-      if (!alive || !r?.ok) return;
+      if (!alive || epoch !== generation.current || !r?.ok) return;
       setProfile(r.data);
       if (r.data.enabled) apply(r.data.queue);
     });
     return () => {
       alive = false;
+      // Deliberately invalidate the current request generation, including requests begun after mount.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      generation.current++;
     };
   }, [apply]);
 
   useEffect(() => {
     if (queue.state !== "SEARCHING") return;
     const timer = setInterval(() => {
+      if (polling.current) return;
+      polling.current = true;
+      const epoch = generation.current;
       void rankedApi.poll().then((r) => {
-        if (r?.ok) apply(r.data.queue);
+        if (epoch === generation.current &&r?.ok) apply(r.data.queue);
+        })
+        .catch(() => {})
+        .finally(() => {
+          polling.current = false;
       });
     }, RANKED_RULES.queuePollMs);
     return () => clearInterval(timer);
   }, [queue.state, apply]);
 
+  // One server-side claim per ticket. Human matching still runs first inside POST bot.
+  useEffect(() => {
+    if (
+      queue.state !== "SEARCHING" ||
+      !queue.botOffer ||
+      accepting.current === queue.since
+    )
+      return;
+    const ticket = queue.since,
+      epoch = generation.current;
+    accepting.current = ticket;
+    void rankedApi
+      .acceptBot(ticket)
+      .then((r) => {
+        if (epoch !== generation.current) return;
+        if (r?.ok) apply(r.data.queue);
+        else {
+          accepting.current = null;
+          setError(r ? r.error.message : "No se pudo preparar el rival.");
+        }
+      })
+      .catch(() => {
+        if (epoch === generation.current) {
+          accepting.current = null;
+          setError(
+            "No se pudo preparar el rival. Puedes cancelar la búsqueda.",
+          );
+        }
+      });
+  }, [queue, apply]);
+
   async function run(call: () => ReturnType<typeof rankedApi.join>) {
+    const epoch = ++generation.current;
+    accepting.current = null;
     setBusy(true);
     setError("");
+    try {
     const r = await call();
-    setBusy(false);
+      if(epoch !== generation.current) return;
     if (!r) setError("Inicia sesión para jugar clasificatoria.");
     else if (r.ok) apply(r.data.queue);
     else setError(r.error.message);
+    } catch {
+      if (epoch === generation.current)
+        setError("No se pudo actualizar la búsqueda.");
+    } finally {
+      if (epoch === generation.current) setBusy(false);
+    }
   }
 
   return {
@@ -77,13 +132,11 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     refresh,
     search: (heroId: string, deckId?: string) =>
       run(() => rankedApi.join(heroId, deckId)),
-    acceptBot: () =>
-      queue.state === "SEARCHING"
-        ? run(() => rankedApi.acceptBot(queue.since))
-        : Promise.resolve(),
     cancel: () => run(() => rankedApi.cancel()),
     /** After a ranked room closes: forget the handed code so a new match can be handed. */
     reset: () => {
+      generation.current++;
+      accepting.current = null;
       handed.current = null;
       setQueue({ state: "IDLE" });
     },

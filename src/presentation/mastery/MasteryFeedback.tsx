@@ -1,3 +1,4 @@
+import { AnimatedReward, useResultProgress, useResultProgressEnabled } from "../results/ResultProgress";
 import { masteryLegendaryName } from '../catalog/CatalogRewards';
 import { PRESENTATION_CONTENT } from '../qa/shapeshifter/runtime';
 import { useEffect, useRef, useState } from 'react';
@@ -32,6 +33,10 @@ export function MasteryGainView({
   compact?: boolean;
 }) {
   const g = masteryGain(before, after, heroId);
+  const progress = useResultProgress();
+  const progressEnabled = useResultProgressEnabled();
+  const displayMastery = masteryFor(
+    Math.round(g.from + (g.to - g.from) * (1 - Math.pow(1-progress, 3))),);
   if (!g.xp) return null;
   return (
     <section
@@ -46,11 +51,16 @@ export function MasteryGainView({
       <div>
         <span className="mastery-eyebrow">{heroName}</span>
         <h3>
-          +{g.xp} XP <small>de maestría</small>
+          +<AnimatedReward to={g.xp} suffix=" XP" /> <small>de maestría</small>
         </h3>
         <p>
-          {g.from} → {g.to} XP
+          {g.from} → <AnimatedReward from={g.from} to= {g.to} suffix=" XP" />
         </p>
+        {progressEnabled && <progress
+          aria-label="Progreso de maestría"
+          value={displayMastery.progress}
+          max={100}
+        />}
         {g.newLevel > g.oldLevel && (
           <strong className="mastery-level-up">
             Maestría {g.oldLevel} → {g.newLevel}
@@ -62,7 +72,8 @@ export function MasteryGainView({
             <b>{titleName(t.id)}</b>
           </div>
         ))}
-        {masteryLegendaryName(heroId,g.oldLevel,g.newLevel,PRESENTATION_CONTENT) && <div className="mastery-title-unlock"><small>Legendaria desbloqueada</small><b>{masteryLegendaryName(heroId,g.oldLevel,g.newLevel,PRESENTATION_CONTENT)}</b></div>}
+        {masteryLegendaryName(heroId,g.oldLevel,g.newLevel,PRESENTATION_CONTENT) && ( <div className="mastery-title-unlock"><small>Legendaria desbloqueada</small><b>{masteryLegendaryName(heroId,g.oldLevel,g.newLevel,PRESENTATION_CONTENT)}</b></div>
+        )}
         {g.crystals > 0 && (
           <strong className="mastery-crystal-gain">+{g.crystals} ✧ Cristales</strong>
         )}
@@ -85,7 +96,7 @@ export function useMasteryBattleFeedback({
   verified?: boolean;
 }) {
   const { state } = useMastery();
-  const [before, setBefore] = useState<{ key: unknown; state: EnabledMastery } | null>(null);
+  const [before, setBefore] = useState<{ key: unknown; state: EnabledMastery; } | null>(null);
   const requested = useRef<unknown>(null);
   if (
     !finished &&

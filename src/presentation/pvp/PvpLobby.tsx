@@ -501,7 +501,7 @@ export function PvpLobby(props: Props) {
                 ? "La batalla comienza cuando ambos estén listos."
                 : rival
                   ? "Confirma tu campeón y pulsa Estoy listo."
-                  : "Puedes marcarte listo mientras esperas al rival."}
+                  : "Cuando entre tu rival, podrás confirmar el enfrentamiento."}
             </small>
           </div>
           <button
@@ -512,6 +512,7 @@ export function PvpLobby(props: Props) {
               !deckValid ||
               !!restriction ||
               network !== "Conectado" ||
+              !rival?.connected ||
               isReady
             }
             onClick={() => onAction("ready")}

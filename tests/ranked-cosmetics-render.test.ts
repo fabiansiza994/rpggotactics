@@ -22,12 +22,12 @@ describe('Ranked cosmetic renderers', () => {
   it('profile frame: Ranked frames ring the portrait; store frames keep their painted overlay; unknown = bare portrait', () => {
     const portrait = createElement('img', { src: 'p.webp', alt: '' });
     const ranked = renderToStaticMarkup(createElement(ProfileFrame, { frameId: 'frame_ranked_diamond_facet', children: portrait }));
-    expect(ranked).toContain('ranked-profile-frame');
-    expect(ranked).toContain('/art/ranked-rewards/frame_ranked_diamond_facet.svg');
+    expect(ranked).toContain("circular-profile-frame");
+    expect(ranked).toContain("/art/profile-frames-v2/diamond.png");
     expect(ranked).toContain('p.webp');
     const store = renderToStaticMarkup(createElement(ProfileFrame, { frameId: 'frame_arcane_gilt', children: portrait }));
-    expect(store).toContain('frame_arcane_gilt-v1.webp');
-    expect(store).not.toContain('ranked-profile-frame');
+    expect(store).toContain("/art/profile-frames-v2/arcane.png");
+    expect(store).toContain("circular-profile-frame");
     const wrongKind = renderToStaticMarkup(createElement(ProfileFrame, { frameId: 'crest_ranked_platinum', children: portrait }));
     expect(wrongKind).toContain('<img src="p.webp" alt=""/>');
     expect(wrongKind).not.toContain('profile-frame');

@@ -47,19 +47,21 @@ for (const Effect of [BastionEffects, PactSummonEffects]) {
     fx.tick(200);
     expect(fx.snapshot.active).toBe(0);
     fx.destroy();
-    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    vi.stubGlobal("matchMedia", () => ({ matches: true }));
     const mobile = new Effect(new Container(), new Container(), geometry);
     await mobile.prepare();
-    expect(vi.mocked(loadSharedTexture).mock.lastCall?.[0]).toContain('512.webp');
+    expect(vi.mocked(loadSharedTexture).mock.lastCall?.[0]).toContain(
+      "512.webp",
+    );
     mobile.destroy();
   });
   it(`${Effect.name}: public host off and disposed load cannot resurrect sprites`, async () => {
-    vi.stubGlobal('location', { hostname: 'rpg-go-tactics.com' });
+    vi.stubGlobal("location", { hostname: "rpg-go-tactics.com" });
     const off = new Effect(new Container(), new Container(), geometry);
     await off.prepare();
     expect(loadSharedTexture).not.toHaveBeenCalled();
     off.destroy();
-    vi.stubGlobal('location', { hostname: 'localhost' });
+    vi.stubGlobal("location", { hostname: "localhost" });
     let resolve!: (t: Texture) => void;
     vi.mocked(loadSharedTexture).mockReturnValue(
       new Promise((r) => {
@@ -77,40 +79,53 @@ for (const Effect of [BastionEffects, PactSummonEffects]) {
 }
 function fixture(cardId: string) {
   const scenario: ScenarioDef = {
-    id: 'phase-two',
-    name: 'QA',
-    description: '',
-    layout: Array(5).fill('.......'),
-    legend: { '.': {} },
-    hero: { heroId: cardId === 'bastion_blow' ? 'warrior' : 'summoner', pos: { x: 2, y: 2 } },
+    id: "phase-two",
+    name: "QA",
+    description: "",
+    layout: Array(5).fill("......."),
+    legend: { ".": {} },
+    hero: {
+      heroId: cardId === "bastion_blow" ? "warrior" : "summoner",
+      pos: { x: 2, y: 2 },
+    },
     structures: [],
-    enemies: [{ id: 'target', enemyId: 'orc_warrior', pos: { x: 3, y: 2 } }],
+    enemies: [{ id: "target", enemyId: "orc_warrior", pos: { x: 3, y: 2 } }],
     waves: [],
-    objectives: [{ type: 'ELIMINATE_ALL' }],
+    objectives: [{ type: "ELIMINATE_ALL" }],
     defaultSeed: 42,
   };
   const base = new GameEngine(scenario, DEFAULT_CONTENT, 42),
     s = structuredClone(base.state) as GameState;
   s.player.energy = 20;
-  s.player.hand = [{ uid: 'qa', cardId }];
-  s.units.find((u) => u.kind === 'HERO')!.shield = 4;
+  s.player.hand = [{ uid: "qa", cardId }];
+  s.units.find((u) => u.kind === "HERO")!.shield = 4;
   const engine = GameEngine.fromSnapshot(s, DEFAULT_CONTENT, scenario),
     before = structuredClone(engine.state),
     r = engine.dispatch({
-      type: 'PLAY_CARD',
-      cardUid: 'qa',
-      target: cardId === 'bastion_blow' ? { x: 3, y: 2 } : { x: 2, y: 3 },
+      type: "PLAY_CARD",
+      cardUid: "qa",
+      target: cardId === "bastion_blow" ? { x: 3, y: 2 } : { x: 2, y: 3 },
     });
   if (!r.ok) throw Error(r.error);
-  const bastion = { ready: true, beginBatch: vi.fn(), anticipate: vi.fn(), impact: vi.fn() },
-    pactSummon = { ready: true, beginBatch: vi.fn(), prepareCircle: vi.fn(), arrive: vi.fn() };
+  const bastion = {
+      ready: true,
+      beginBatch: vi.fn(),
+      anticipate: vi.fn(),
+      impact: vi.fn(),
+    },
+    pactSummon = {
+      ready: true,
+      beginBatch: vi.fn(),
+      prepareCircle: vi.fn(),
+      arrive: vi.fn(),
+    };
   const effects = new Proxy(
     { bastion, pactSummon },
     {
       get: (o, k) =>
         k in o
           ? o[k as keyof typeof o]
-          : k === 'lift' || k === 'center'
+          : k === "lift" || k === "center"
             ? (p: unknown) => p
             : vi.fn(),
       set: () => true,
@@ -118,6 +133,7 @@ function fixture(cardId: string) {
   ) as unknown as ElementEffects;
   const host: DirectorHost = {
     redraw: vi.fn(),
+    presentEvent: vi.fn(),
     unit: () => undefined,
     obstacle: () => undefined,
     walk: vi.fn(),
@@ -129,9 +145,16 @@ function fixture(cardId: string) {
   };
   const director = new VfxDirector(effects, host);
   director.sync(before);
-  return { director, bastion, pactSummon, events: r.events, after: engine.state };
+  return {
+    director,
+    host,
+    bastion,
+    pactSummon,
+    events: r.events,
+    after: engine.state,
+  };
 }
-for (const card of ['bastion_blow', 'summon_pact_golem'])
+for (const card of ["bastion_blow", "summon_pact_golem"])
   for (const reduced of [false, true]) {
     it(`${card}: unique confirmed contact/spawn, replay and reconnect (reduced=${reduced})`, () => {
       const f = fixture(card),
@@ -149,9 +172,9 @@ for (const card of ['bastion_blow', 'summon_pact_golem'])
         ),
       ).toEqual(plan);
       f.director.enqueue(f.events, f.after, reduced);
-      const arrival = card === 'summon_pact_golem',
+      const arrival = card === "summon_pact_golem",
         cue = plan.cues.find((c) =>
-          arrival ? c.event.type === 'UNIT_SPAWNED' : c.kind === 'spellImpact',
+          arrival ? c.event.type === "UNIT_SPAWNED" : c.kind === "spellImpact",
         )!;
       const spy = arrival ? f.pactSummon.arrive : f.bastion.impact;
       expect(spy).not.toHaveBeenCalled();
@@ -168,16 +191,60 @@ for (const card of ['bastion_blow', 'summon_pact_golem'])
       g.director.clear();
       g.director.sync(g.after);
       g.director.tick(5000);
-      expect(arrival ? g.pactSummon.arrive : g.bastion.impact).not.toHaveBeenCalled();
+      expect(
+        arrival ? g.pactSummon.arrive : g.bastion.impact,
+      ).not.toHaveBeenCalled();
     });
   }
-it('summon decoration is not played without authoritative UNIT_SPAWNED', () => {
-  const f = fixture('summon_pact_golem');
+it("summon decoration is not played without authoritative UNIT_SPAWNED", () => {
+  const f = fixture("summon_pact_golem");
   f.director.enqueue(
-    f.events.filter((e) => e.type !== 'UNIT_SPAWNED'),
+    f.events.filter((e) => e.type !== "UNIT_SPAWNED"),
     f.after,
     false,
   );
   f.director.tick(5000);
   expect(f.pactSummon.arrive).not.toHaveBeenCalled();
+});
+it("first live batch retains sequential summon arrivals instead of displaying the final units immediately", () => {
+  const f = fixture("summon_pact_golem");
+  const spawned = f.events.find((e) => e.type === "UNIT_SPAWNED")!;
+  if (spawned.type !== "UNIT_SPAWNED") throw Error("spawn fixture");
+  f.director.clear();
+  f.director.enqueue(
+    [{ type: "BATTLE_STARTED" } as never, ...f.events],
+    f.after,
+    false,
+  );
+  expect(f.director.state!.units.some((u) => u.id === spawned.unitId)).toBe(
+    false,
+  );
+  expect(f.pactSummon.arrive).not.toHaveBeenCalled();
+  f.director.tick(5000);
+  expect(f.pactSummon.arrive).toHaveBeenCalledOnce();
+  expect(f.director.state).toEqual(f.after);
+});
+it("two summon cards expose separate anticipation, impact and readable intervals", () => {
+  const f = fixture("summon_pact_golem");
+  const second = f.events.map((e) =>
+    e.type === "UNIT_SPAWNED" ? { ...e, unitId: "second-summon" } : e,
+  );
+  const plan = compileTimeline(
+    [...f.events, ...second],
+    () => "summon_pact_golem",
+    false,
+    true,
+  );
+  const casts = plan.cues.filter((c) => c.kind === "cast");
+  const arrivals = plan.cues.filter((c) => c.event.type === "UNIT_SPAWNED");
+  expect(casts).toHaveLength(2);
+  expect(arrivals.length).toBeGreaterThanOrEqual(2);
+  expect(casts[1]!.at - casts[0]!.at).toBeGreaterThan(900);
+  expect(arrivals[0]!.at).toBeGreaterThanOrEqual(420);
+});
+
+it('announces a public card at its visual cast cue, before the summon contact',()=>{
+ const f=fixture('summon_pact_golem');f.director.enqueue(f.events,f.after,false);f.director.tick(0);
+ expect(f.host.presentEvent).toHaveBeenCalledWith(f.events.find(e=>e.type==='CARD_PLAYED'));
+ expect(f.pactSummon.arrive).not.toHaveBeenCalled();f.director.destroy();
 });

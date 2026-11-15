@@ -32,4 +32,4 @@ it("circular store styling is scoped to avatar products, not card illustrations"
   );
 });
 
-it('store avatar frame previews retain original cosmetic art and do not change card renderers',()=>{const source=readFileSync(new URL('../src/presentation/shop/ProfileFrame.tsx',import.meta.url),'utf8');expect(source).toContain('shop-cosmetic-art shop-avatar-preview');expect(source).toContain('href={art}');expect(source).toContain('PROFILE_FRAME_ART')});
+it("store avatar frame previews use circular cosmetic art and do not change card renderers",()=>{const source=readFileSync(new URL('../src/presentation/shop/ProfileFrame.tsx',import.meta.url),'utf8');expect(source).toContain('shop-cosmetic-art shop-avatar-preview');expect(source).toContain("src={art}");expect(source).toContain('PROFILE_FRAME_ART');});

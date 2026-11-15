@@ -203,6 +203,72 @@ describe("ranked bot authoritative room integration", () => {
     ).toBe(409);
     expect(rooms.size).toBe(0);
   });
+  it("cancel after automatic claim expires only the unstarted bot lobby and blocks late creation", async () => {
+    const a = await player("auto-cancel");
+    const q = (await queue(a)).body.queue;
+    vi.setSystemTime(Date.now() + 15_000);
+    db.sql
+      .prepare("UPDATE tactics_ranked_queue SET expires_at=?")
+      .run(Date.now() + 20_000);
+    const claimed = await call(a.token, "POST", "/ranked/bot", {
+      since: q.since,
+    });
+    expect(claimed.body.queue.state).toBe("MATCHED");
+    const code = claimed.body.queue.code;
+    const cancelled = await call(a.token, "POST", "/ranked/cancel");
+    expect(cancelled.body.queue.state).toBe("IDLE");
+    expect(count("tactics_match_reservations")).toBe(0);
+    const late = await env
+      .PVP_ROOMS!.get(env.PVP_ROOMS!.idFromName(code))
+      .fetch(
+        new Request("https://room/bot-create", {
+          method: "POST",
+          headers: { "X-Pvp-User": String(a.id) },
+          body: "{}",
+        }),
+      );
+    expect(late.status).toBe(409);
+    expect(count("tactics_ranked_bot_results")).toBe(0);
+  });
+  it("cancellation tombstone wins against a delayed bot-create and survives recovery", async () => {
+    const a = await player("cancel-delayed"),
+      q = (await queue(a)).body.queue;
+    vi.setSystemTime(Date.now() + 15_000);
+    db.sql
+      .prepare("UPDATE tactics_ranked_queue SET expires_at=?")
+      .run(Date.now() + 20_000);
+    const namespace = env.PVP_ROOMS!;
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let delayed = false;
+    env.PVP_ROOMS = {
+      ...namespace,
+      get: (id: Parameters<typeof namespace.get>[0]) => {
+        const stub = namespace.get(id);
+        return {
+          fetch: async (request: Request) => {
+            if (new URL(request.url).pathname === "/bot-create" && !delayed) {
+              delayed = true;
+              await gate;
+            }
+            return stub.fetch(request);
+          },
+        } as unknown as ReturnType<typeof namespace.get>;
+      },
+    };
+    const claim = call(a.token, "POST", "/ranked/bot", { since: q.since });
+    await vi.waitFor(() => expect(delayed).toBe(true));
+    expect(
+      (await call(a.token, "POST", "/ranked/cancel")).body.queue.state,
+    ).toBe("IDLE");
+    release!();
+    expect((await claim).status).toBe(503);
+    expect((await poll(a)).body.queue.state).toBe("IDLE");
+    expect(count("tactics_match_reservations")).toBe(0);
+    expect(count("tactics_ranked_bot_encounters")).toBe(0);
+  });
   it("claims one bot without a fake user, runs legal alarm commands and restores identity after restart", async () => {
     env.RANKED_BOTS_HIGHER_LEVEL_BPS = "10000";
     const a = await player("human-bot");
