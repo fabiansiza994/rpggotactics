@@ -384,7 +384,7 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
     }
   }
   async function exit() {
-    if (snapshot) {
+    if (snapshot && !snapshot.result) {
       try {
         await api('leave', { code: snapshot.code });
       } catch (e) {
@@ -394,8 +394,15 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
     }
     localStorage.removeItem(LAST_ROOM);
     alive.current = false;
-      drawRitual.reset();
-    socket.current?.close();
+    connectionGeneration.current++;
+    if (retry.current) clearTimeout(retry.current);
+    retry.current = null;
+    pending.current = null;
+    latest.current = null;
+    const oldSocket = socket.current;
+    socket.current = null;
+    drawRitual.reset();
+    oldSocket?.close();
     onExit();
   }
   /** Ranked result → back to the ranked panel (the room is finished; nothing to leave). */
@@ -507,7 +514,7 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
             viewerSeat={snapshot.seat}
             progress={{ round: game.round, cardsPlayed: game.stats.cardsPlayed, finished: !!snapshot.result }}
           />
-          <HandBar key={pvpMatchKey(snapshot)} state={game} engine={engine} />
+          <HandBar key={`hand:${pvpMatchKey(snapshot)}`} state={game} engine={engine} />
           {snapshot.events
             .filter((e) => e.type === 'DOMINION_SCORED')
             .map(
@@ -546,7 +553,7 @@ export function PvpScreen({ onExit,onOpponentHistory,mobile=false }: { mobile?:b
               </div>
             )}
           {snapshot.result && !playback && (
-            <BattleResultPresentation key={pvpMatchKey(snapshot)} identity={pvpMatchKey(snapshot)} tone={snapshot.result.winner < 0 ? 'ended' : snapshot.result.winner === snapshot.seat ? 'victory' : 'defeat'}><div className="pvp-overlay">
+            <BattleResultPresentation key={`result:${pvpMatchKey(snapshot)}`} identity={pvpMatchKey(snapshot)} tone={snapshot.result.winner < 0 ? 'ended' : snapshot.result.winner === snapshot.seat ? 'victory' : 'defeat'}><div className="pvp-overlay">
               {snapshot.result.winner === snapshot.seat && (
                 <VictoryBadge badgeId={snapshot.members[snapshot.seat]?.badgeId} />
               )}
