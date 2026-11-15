@@ -59,3 +59,13 @@ describe("confirmed-room presentation", () => {
     expect(html).not.toContain("/characters/");
   });
 });
+
+it('reserves an independent external frame space for both participants and long names', () => {
+  const html = renderToStaticMarkup(createElement(PvpVersus, {
+    room: {...room, members: room.members.map(m => ({...m, name: 'NombreLargoDeJugadorConMarco'}))},
+    onFinish: () => {}, onCancel: () => {},
+  }));
+  expect((html.match(/class="pvp-versus-avatar-space"/g) || [])).toHaveLength(2);
+  expect((html.match(/NombreLargoDeJugadorConMarco/g) || [])).toHaveLength(2);
+  expect(PVP_VERSUS_MS).toBe(3000);
+});

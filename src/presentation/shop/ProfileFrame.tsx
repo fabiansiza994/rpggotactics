@@ -5,9 +5,10 @@ import { PROFILE_FRAME_ART } from '../assets/profileFrames';
 import '../../styles/cosmetics.css';
 
 /**
- * Profile frame cosmetic: decorates a champion portrait (store, PvP lobby). Pure presentation;
+ * Profile frame cosmetic: decorates a portrait (store, PvP lobby). Pure presentation;
  * an unknown/absent id renders the portrait unframed. The shared circular PNG overlay keeps
  * the transparent portrait opening centered without changing cosmetic IDs or ownership.
+ * The portrait occupies the full base diameter; only the artwork extends outward.
  */
 export function ProfileFrame({
   frameId,

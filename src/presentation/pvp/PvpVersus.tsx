@@ -103,10 +103,12 @@ export function PvpVersus({
         <div className="pvp-versus-fighters">
           {seats.map((member, index) => (
             <article className={`pvp-versus-fighter side-${index}`} key={index}>
-              <RankedAvatar
-                avatarId={member?.avatarId}
-                frameId={member?.frameId}
-              />
+              <div className="pvp-versus-avatar-space">
+                <RankedAvatar
+                  avatarId={member?.avatarId}
+                  frameId={member?.frameId}
+                />
+              </div>
               <h2>{member?.name ?? "Rival"}</h2>
               <p>
                 {PRESENTATION_CONTENT.heroes[member?.heroId ?? ""]?.name ??

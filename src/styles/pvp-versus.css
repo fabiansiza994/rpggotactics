@@ -303,3 +303,37 @@
     background: #050b15ed;
   }
 }
+
+/* Reserve the full authored frame bounds in normal flow, even without a frame.
+   Portrait size remains unchanged; only the external 28.125% adornment needs space. */
+.pvp-versus { --vs-portrait-size: clamp(100px, 24vw, 240px); }
+.pvp-versus .ranked-player-avatar {
+  width: var(--vs-portrait-size);
+  height: var(--vs-portrait-size);
+}
+.pvp-versus-avatar-space {
+  display: inline-flex;
+  flex: none;
+  padding: calc(var(--vs-portrait-size) * .28125 + 4px);
+  line-height: 0;
+}
+.pvp-versus-fighter { min-width: 0; }
+.pvp-versus-mark { font-size: clamp(40px, 6vw, 72px); }
+.pvp-versus-fighter h2 { margin-top: 8px; }
+@media (max-width: 600px) {
+  .pvp-versus { --vs-portrait-size: 120px; }
+}
+@media (max-width: 460px) {
+  .pvp-versus {
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+  .pvp-versus-fighters { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .pvp-versus-mark { top: 50%; font-size: 40px; }
+  .pvp-versus-fighter h2 { margin: 4px 0; }
+  .pvp-versus-fighter p { margin: 4px 0; }
+  .pvp-versus-controls { position: static; flex: none; margin-top: 12px; padding-bottom: env(safe-area-inset-bottom); }
+}
+@media (max-height: 600px) {
+  .pvp-versus { --vs-portrait-size: 86px; }
+}

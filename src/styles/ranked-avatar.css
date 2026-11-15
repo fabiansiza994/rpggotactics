@@ -10,7 +10,7 @@
   box-shadow:
     0 0 0 3px #07111e,
     0 4px 14px #0008;
-  overflow: hidden;
+  overflow: visible;
 }
 .ranked-player-avatar img {
   width: 100%;
@@ -18,13 +18,7 @@
   object-fit: cover;
   border-radius: 50%;
 }
-.ranked-player-avatar[data-frame] {
-  border-style: double;
-  border-width: 4px;
-  box-shadow:
-    0 0 0 2px #887044,
-    0 0 15px #c9aa6530;
-}
+
 .pvp-lobby.is-ranked .lobby-portrait {
   height: auto;
   width: auto;
@@ -70,7 +64,7 @@
 }
 .circular-frame-portrait {
   position: absolute;
-  inset: 18%;
+  inset: 0;
   border-radius: 50%;
   overflow: hidden;
   background: #101c2d;
@@ -84,9 +78,10 @@
 }
 .circular-frame-art {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -28.125%;
+  width: 156.25% !important;
+  height: 156.25% !important;
+  max-width: none;
   object-fit: contain;
   pointer-events: none;
 }
@@ -121,4 +116,39 @@
   border-radius: 0;
   object-fit: contain;
   object-position: center;
+}
+
+/* Portrait diameter is invariant. Only the independent artwork exceeds its bounds.
+   The authored transparent opening is 64% of the PNG: 1 / .64 = 1.5625. */
+:is(.ranked-player-avatar,.profile-avatar-circle,.social-avatar,.shop-avatar-preview):has(> .circular-profile-frame) {
+  overflow: visible;
+  border-color: transparent !important; /* Keep the optional default ring off on hover too. */
+  background: transparent;
+  box-shadow: none;
+}
+.circular-profile-frame { overflow: visible; }
+.circular-profile-frame > img.circular-frame-art {
+  width: 156.25% !important;
+  height: 156.25% !important;
+  max-width: none;
+  border: 0;
+  z-index: 1;
+}
+
+/* Reserve decoration clearance in shared identity rows, not inside the portrait. */
+.profile-popover header:has(.circular-profile-frame) { gap: 28px; padding: 12px 10px; }
+.shop-avatar-preview:has(> .circular-profile-frame) { margin: 24px; }
+.lobby-portrait:has(> .ranked-player-avatar .circular-profile-frame),
+.lobby-portrait:has(> .circular-profile-frame) {
+  overflow: visible;
+  mask-image: none;
+}
+.r21-champion-avatar:has(.circular-profile-frame) { overflow: visible; }
+
+.pvp-lobby.ranked-mobile-21 .r21-champion-avatar:has(.circular-profile-frame) {
+  overflow: visible;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  margin: 16px;
 }
