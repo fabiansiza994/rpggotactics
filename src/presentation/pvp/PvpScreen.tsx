@@ -136,7 +136,10 @@ async function api(path: string, body?: unknown) {
       useBattleStore.getState().sessionExpired();
     throw Error("Tu sesión venció. Inicia sesión de nuevo para reconectar.");
   }
-  if (!res.ok) throw Error(data.error?.message ?? "No se pudo conectar.");
+  if (!res.ok)
+    throw Object.assign(new Error(data.error?.message ?? "No se pudo conectar."), {
+      status: res.status,
+    });
   return data;
 }
 export function PvpScreen({
@@ -531,8 +534,13 @@ export function PvpScreen({
       try {
         await api("leave", { code: snapshot.code });
       } catch (e) {
-        setError((e as Error).message);
-        return;
+        // A confirmed missing/expired room has nothing left to abandon. Network,
+        // permission and server failures must still retain the authoritative room.
+        const status = (e as { status?: number } | null)?.status;
+        if (status !== 404 && status !== 410) {
+          setError((e as Error).message);
+          return;
+        }
       }
     }
     localStorage.removeItem(LAST_ROOM);

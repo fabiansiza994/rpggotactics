@@ -34,7 +34,8 @@ function harness(
   {
     finished = true,
     fail = false,
-  }: { finished?: boolean; fail?: boolean } = {},
+    status,
+  }: { finished?: boolean; fail?: boolean; status?: number } = {},
 ) {
   const events: string[] = [],
     alive = { current: true },
@@ -61,7 +62,7 @@ function harness(
     snapshot,
     api: async (path: string) => {
       events.push("api:" + path);
-      if (fail) throw Error("fixture failure");
+      if (fail) throw Object.assign(Error("fixture failure"), { status });
       old.close();
     },
     localStorage: { removeItem: () => events.push("forget") },
@@ -195,4 +196,17 @@ test("finished exit advances connection generation before navigation to invalida
   assert.equal(h.connectionGeneration.current, n + 1);
   assert.equal(h.latest.current, null);
   assert.equal(h.socket.current, null);
+});
+
+for(const status of [404,410])test(`expired room HTTP ${status} exits cleanly without ghost recovery`,async()=>{
+ const h=harness(fixed,{finished:false,fail:true,status});
+ const recovery=h.recover('LOCAL');await h.exit();h.resolveRead();await recovery;
+ assert(h.events.includes('api:leave'));assert(h.events.includes('exit'));
+ assert(!h.events.some(e=>e.startsWith('error:')||e.startsWith('connect:')));
+ assert.equal(h.socket.current,null);assert.equal(h.latest.current,null);assert.equal(h.pending.current,null);
+});
+for(const status of [401,403,409,429,500,503])test(`non-terminal HTTP ${status} never silently abandons a live room`,async()=>{
+ const h=harness(fixed,{finished:false,fail:true,status});await h.exit();
+ assert(h.events.includes('error:fixture failure'));assert(!h.events.includes('exit'));
+ assert(h.alive.current);assert(h.socket.current);
 });
