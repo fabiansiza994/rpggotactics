@@ -823,3 +823,7 @@
 .market-home-hero {grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);}
 .market-home-hero>img {min-width:0;}
 @media(max-width:650px){.market-home-hero {grid-template-columns:minmax(0,1fr);}}
+
+/* Useful deck progress is capped visually; actual owned copies are never capped. */
+.market-copy-indicator {display:inline-flex;align-items:center;gap:4px;}
+.market-copy-indicator small {font-size:10px;color:#b9d8e8;line-height:inherit;}

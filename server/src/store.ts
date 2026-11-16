@@ -12,6 +12,8 @@ import {
   isOfferActive,
   ownedFor,
   sharedPool,
+  starterHeroProfile,
+  starterShared,
   SHARED_POOL_ID,
   offerView,
   planPurchase,
@@ -184,17 +186,25 @@ export function cardGrantStatements(
   now: number,
 ): D1PreparedStatement[] {
   const acquisitions = new Map<string, number>();
+  const starterFloors = new Map<string, Record<string, {copies: number}>>();
   return cards.map((g) => {
     const owner = collectionOwner(content, g.heroId, g.cardId);
     const counter = owner === SHARED_POOL_ID ? sharedPool(record.profile, content).acquisitions : heroProfile(record.profile, g.heroId, content).acquisitions;
+    if (!starterFloors.has(owner)) starterFloors.set(owner, owner === SHARED_POOL_ID
+      ? starterShared(content).collection
+      : starterHeroProfile(content.heroes[g.heroId]!, content).collection);
+    const floor = starterFloors.get(owner)![g.cardId]?.copies ?? 0;
     const next = (acquisitions.get(owner) ?? counter) + 1;
     acquisitions.set(owner, next);
     return db
       .prepare(
         `INSERT INTO tactics_player_cards (user_id, hero_id, card_id, copies, acquired, source, unlocked_at) VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = copies + excluded.copies, acquired = MAX(acquired, excluded.acquired), source = excluded.source`,
+         ON CONFLICT (user_id, hero_id, card_id) DO UPDATE SET copies = MAX(copies, ?) + ?, acquired = MAX(acquired, excluded.acquired), source = excluded.source`,
       )
-      .bind(userId, owner, g.cardId, g.copies, next, source, now);
+      // Reads already guarantee starter ownership, including missing/legacy rows.
+      // Materialize that SAME floor and add only the new grant atomically. Never
+      // use a deck cap or an old request snapshot as an inventory ceiling.
+      .bind(userId, owner, g.cardId, floor + g.copies, next, source, now, floor, g.copies);
   });
 }
 
@@ -210,6 +220,17 @@ export function cardInventoryGuards(userId: number, content: GameContent, cards:
     binds.push(userId, collectionOwner(content, g.heroId, g.cardId), g.cardId);
   }
   return { guards, binds };
+}
+
+/** Receipt totals are finalized from rows INSIDE the granting transaction, not a stale
+ * preflight snapshot. Each reveal keeps its own position among repeated copies. */
+function finalizePurchaseReceipt(db: D1Database, userId: number, purchaseId: string, openings: boolean): D1PreparedStatement[] {
+  const count = (alias: string) => `(SELECT copies FROM tactics_player_cards WHERE user_id = ? AND card_id = json_extract(${alias}.value, '$.cardId') AND hero_id IN ('*', json_extract(${alias}.value, '$.heroId')) ORDER BY (hero_id = '*') DESC LIMIT 1)`;
+  const cards = `json((SELECT json_group_array(json_set(g.value, '$.total', ${count('g')})) FROM json_each(p.granted_json, '$.cards') g))`;
+  const packs = openings ? `, '$.openings', json((SELECT json_group_array(json_set(op.value, '$.cards', json((SELECT json_group_array(json_set(slot.value, '$.total', ${count('slot')} - (SELECT COUNT(*) FROM json_each(p.granted_json, '$.openings') later_op, json_each(later_op.value, '$.cards') later_slot WHERE json_extract(later_slot.value, '$.cardId') = json_extract(slot.value, '$.cardId') AND (CAST(later_op.key AS INTEGER) > CAST(op.key AS INTEGER) OR (later_op.key = op.key AND CAST(later_slot.key AS INTEGER) > CAST(slot.key AS INTEGER)))))) FROM json_each(op.value, '$.cards') slot)))) FROM json_each(p.granted_json, '$.openings') op))` : '';
+  const out = [db.prepare(`UPDATE tactics_store_purchases AS p SET granted_json = json_set(p.granted_json, '$.cards', ${cards}${packs}) WHERE purchase_id = ?`).bind(userId, ...(openings ? [userId] : []), purchaseId)];
+  if (openings) out.push(db.prepare("UPDATE tactics_store_purchases SET granted_json = json_set(granted_json, '$.opening', json_extract(granted_json, '$.openings[0]')) WHERE purchase_id = ?").bind(purchaseId));
+  return out;
 }
 
 function purchaseStatements(
@@ -272,6 +293,7 @@ function purchaseStatements(
         )
         .bind(...binds, ids.purchaseId),
     );
+  out.push(...finalizePurchaseReceipt(db, userId, ids.purchaseId, !!plan.openings));
   out.push(db.prepare('UPDATE tactics_profiles SET updated_at = ? WHERE user_id = ?').bind(now, userId));
   return out;
 }

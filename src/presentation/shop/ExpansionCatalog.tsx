@@ -149,7 +149,13 @@ export function ExpansionCatalog({
             title={`${have(id)} copias poseídas · máximo ${copyLimit(c, DECK_RULES)} por mazo`}
             aria-label={`${have(id)} copias poseídas; límite por mazo ${copyLimit(c, DECK_RULES)}`}
           >
-            {have(id)}/{copyLimit(c, DECK_RULES)}
+            <span>
+              {Math.min(have(id), copyLimit(c, DECK_RULES))}/
+              {copyLimit(c, DECK_RULES)}
+            </span>
+            {have(id) > copyLimit(c, DECK_RULES) && (
+              <small aria-hidden="true">×{have(id)}</small>
+            )}
           </span>
         </button>
       </article>

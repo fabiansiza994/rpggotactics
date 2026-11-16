@@ -110,9 +110,10 @@ describe("expansion detail and deterministic receipt presentation", () => {
       (m) => m[1],
     );
     expect(labels).toEqual(expected.map((c) => c.name));
-    expect(html).toContain("5/1</span>");
+    expect(html).toContain("1/1</span>");
+    expect(html).toContain("×5</small>");
     profile.heroes.mage!.collection.elemental_detonation.copies = 6;
-    expect(render()).toContain("6/1</span>");
+    expect(render()).toContain("×6</small>");
     expect(html).not.toContain("<select");
     expect(labels).toHaveLength(ids.length);
   });

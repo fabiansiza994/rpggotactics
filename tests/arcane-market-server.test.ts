@@ -4,7 +4,7 @@ import {
   addCard,
   validateDeck,
 } from "../src/game/collection/deck-rules";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_CONTENT,
   COSMETICS,
@@ -708,4 +708,299 @@ describe("five free packs per player and expansion", () => {
       ),
     ).toBe(true);
   });
+});
+
+describe("legacy starter ownership must be preserved by real acquisitions", () => {
+  it("regresses Blink: persisted 2 is visible as starter 3, so one delivered copy must become 4", async () => {
+    db.sql
+      .prepare(
+        "UPDATE tactics_player_cards SET copies=2 WHERE user_id=? AND hero_id='mage' AND card_id='blink'",
+      )
+      .run(account.id);
+    const before = await call("GET", "/state");
+    expect(ownedFor(before.data.profile!, "mage", content)("blink")).toBe(3);
+    // A real published single-card SKU, same authoritative grant path as packs.
+    store.catalog = [
+      {
+        ...pack,
+        id: "qa_blink_regression",
+        booster: undefined,
+        type: "CARD",
+        heroId: "mage",
+        contents: [{ kind: "CARD", cardId: "blink", copies: 1 }],
+        purchaseLimit: null,
+      },
+    ];
+    const q = (await call("GET", "/store/catalog")).data.offers.find(
+      (o) => o.id === "qa_blink_regression",
+    )!;
+    const r = await call("POST", "/store/purchase", {
+      offerId: q.id,
+      idempotencyKey: "blink-floor-regression",
+      quoteToken: q.purchaseQuote!.token,
+    });
+    expect(r.status).toBe(200);
+    expect(r.data.purchase.granted.cards[0]!.total).toBe(4);
+    expect(ownedFor(r.data.profile!, "mage", content)("blink")).toBe(4);
+    const fresh = await call("GET", "/state");
+    expect(ownedFor(fresh.data.profile!, "mage", content)("blink")).toBe(4);
+  });
+});
+
+describe("receipt, persisted collection and useful deck progress", () => {
+  const raw = (hero: string, id: string) =>
+    (
+      db.sql
+        .prepare(
+          "SELECT copies FROM tactics_player_cards WHERE user_id=? AND hero_id=? AND card_id=?",
+        )
+        .get(account.id, hero, id) as { copies: number } | undefined
+    )?.copies ?? 0;
+  const repeatBlink = () => {
+    const common = pack.contents.filter(
+      (c) =>
+        c.kind === "CARD" && rarityOf(content.cards[c.cardId]!) === "COMMON",
+    );
+    const idx = common.findIndex(
+      (c) => c.kind === "CARD" && c.cardId === "blink",
+    );
+    let n = 0;
+    return vi.spyOn(crypto, "getRandomValues").mockImplementation((array) => {
+      (array as Uint32Array)[0] = n++ % 2 === 0 ? 0 : idx;
+      return array;
+    });
+  };
+  async function purchase(offerId: string, key: string) {
+    const q = (await call("GET", "/store/catalog")).data.offers.find(
+      (o) => o.id === offerId,
+    )!;
+    return call("POST", "/store/purchase", {
+      offerId,
+      idempotencyKey: key,
+      quoteToken: q.purchaseQuote!.token,
+      packRevision: q.booster?.revision,
+    });
+  }
+  it.each([0, 1, 2, 3, 5])(
+    "a real non-starter common at %s/3 gains a copy without a collection cap",
+    async (count) => {
+      expect(content.cards.grapple!.rarity).toBe("COMMON");
+      if (count)
+        db.sql
+          .prepare(
+            "INSERT INTO tactics_player_cards(user_id,hero_id,card_id,copies,acquired,source,unlocked_at) VALUES (?,'warrior','grapple',?,0,'QA_BALANCE',?) ON CONFLICT(user_id,hero_id,card_id) DO UPDATE SET copies=excluded.copies",
+          )
+          .run(account.id, count, now);
+      store.catalog = [
+        {
+          ...pack,
+          id: "qa_grapple_copy",
+          booster: undefined,
+          type: "CARD",
+          heroId: "warrior",
+          contents: [{ kind: "CARD", cardId: "grapple", copies: 1 }],
+          purchaseLimit: null,
+        },
+      ];
+      const before = (await call("GET", "/state")).data;
+      expect(ownedFor(before.profile!, "warrior", content)("grapple")).toBe(
+        count,
+      );
+      const r = await purchase("qa_grapple_copy", "grapple-copy-" + count);
+      expect(r.status).toBe(200);
+      expect(r.data.purchase.granted.cards[0]!.copies).toBe(1);
+      expect(r.data.purchase.granted.cards[0]!.total).toBe(count + 1);
+      expect(raw("warrior", "grapple")).toBe(count + 1);
+      expect(
+        ownedFor(
+          (await call("GET", "/state")).data.profile!,
+          "warrior",
+          content,
+        )("grapple"),
+      ).toBe(count + 1);
+      expect(balance()).toBe(800);
+      const replay = await purchase("qa_grapple_copy", "grapple-copy-" + count);
+      expect(replay.data.purchase).toEqual(r.data.purchase);
+      expect(raw("warrior", "grapple")).toBe(count + 1);
+      expect(balance()).toBe(800);
+    },
+  );
+  it.each([
+    ["free", 1, 0],
+    ["paid", 1, 200],
+    ["paid", 5, 1000],
+    ["paid", 10, 2000],
+  ] as const)(
+    "%s x%s: repeated Blink, reload, receipt-only recovery and concurrent same-key retry",
+    async (kind, qty, price) => {
+      db.sql.exec(
+        qaGrantSql({
+          username: "tactics_qa_market",
+          amount: 5000,
+          reference: "pack-regression",
+          transactionId: "txn_qa_00000000-0000-4000-8000-000000000009",
+          now,
+        }),
+      );
+      db.sql
+        .prepare(
+          "UPDATE tactics_player_cards SET copies=2 WHERE user_id=? AND hero_id='mage' AND card_id='blink'",
+        )
+        .run(account.id);
+      const q = (await call("GET", "/store/catalog")).data.offers.find((o) =>
+        kind === "free"
+          ? o.booster?.freeGrant
+          : !o.booster?.freeGrant && o.booster?.packs === qty,
+      )!;
+      const payload = {
+        offerId: q.id,
+        idempotencyKey: "all-blink-" + kind + "-" + qty,
+        quoteToken: q.purchaseQuote!.token,
+        packRevision: q.booster!.revision,
+      };
+      const rng = repeatBlink();
+      let r;
+      try {
+        r = await call("POST", "/store/purchase", payload);
+      } finally {
+        rng.mockRestore();
+      }
+      expect(r.status).toBe(200);
+      expect(r.data.purchase.price).toBe(price);
+      expect(r.data.purchase.granted.cards).toHaveLength(1);
+      expect(r.data.purchase.granted.cards[0]).toMatchObject({
+        cardId: "blink",
+        copies: qty * 4,
+        total: 3 + qty * 4,
+      });
+      const slots = r.data.purchase.granted.openings!.flatMap((o) => o.cards);
+      expect(slots).toHaveLength(qty * 4);
+      expect(slots.map((s) => s.total)).toEqual(
+        Array.from({ length: qty * 4 }, (_, i) => 4 + i),
+      );
+      expect(raw("mage", "blink")).toBe(3 + qty * 4);
+      expect(balance()).toBe(6000 - price);
+      const fresh = (await call("GET", "/state")).data;
+      expect(ownedFor(fresh.profile!, "mage", content)("blink")).toBe(
+        3 + qty * 4,
+      );
+      const recoveries = await Promise.all(
+        Array.from({ length: 6 }, () =>
+          call("POST", "/store/purchase", {
+            ...payload,
+            quoteToken: undefined,
+            receiptOnly: true,
+          }),
+        ),
+      );
+      for (const replay of recoveries) {
+        expect(replay.status).toBe(200);
+        expect(replay.data.purchase).toEqual(r.data.purchase);
+        expect(ownedFor(replay.data.profile!, "mage", content)("blink")).toBe(
+          3 + qty * 4,
+        );
+      }
+      expect(raw("mage", "blink")).toBe(3 + qty * 4);
+      expect(balance()).toBe(6000 - price);
+      const after = (await call("GET", "/store/catalog")).data.offers.find(
+        (o) => o.booster?.freeGrant,
+      )!;
+      expect(after.freeRemaining).toBe(kind === "free" ? 4 : 5);
+      const history = await call("GET", "/store/purchases");
+      expect(
+        (history.data as unknown as { purchases: unknown[] }).purchases,
+      ).toContainEqual(r.data.purchase);
+    },
+  );
+  it("a missing starter row is materialized plus grant, never just the new copy", async () => {
+    db.sql
+      .prepare(
+        "DELETE FROM tactics_player_cards WHERE user_id=? AND hero_id='mage' AND card_id='blink'",
+      )
+      .run(account.id);
+    const rng = repeatBlink();
+    let r;
+    try {
+      r = await purchase(pack.id, "missing-blink-starter");
+    } finally {
+      rng.mockRestore();
+    }
+    expect(r.status).toBe(200);
+    expect(raw("mage", "blink")).toBe(7);
+    expect(
+      ownedFor(
+        (await call("GET", "/state")).data.profile!,
+        "mage",
+        content,
+      )("blink"),
+    ).toBe(7);
+  });
+});
+
+it("concurrent distinct free receipts retain all copies and get transaction-local reveal totals", async () => {
+  db.sql
+    .prepare(
+      "UPDATE tactics_player_cards SET copies=2 WHERE user_id=? AND hero_id='mage' AND card_id='blink'",
+    )
+    .run(account.id);
+  const q = (await call("GET", "/store/catalog")).data.offers.find(
+    (o) => o.booster?.freeGrant,
+  )!;
+  const common = pack.contents.filter(
+    (c) => c.kind === "CARD" && rarityOf(content.cards[c.cardId]!) === "COMMON",
+  );
+  const idx = common.findIndex(
+    (c) => c.kind === "CARD" && c.cardId === "blink",
+  );
+  let n = 0;
+  const rng = vi
+    .spyOn(crypto, "getRandomValues")
+    .mockImplementation((array) => {
+      (array as Uint32Array)[0] = n++ % 2 === 0 ? 0 : idx;
+      return array;
+    });
+  let results;
+  try {
+    results = await Promise.all(
+      ["a", "b"].map((k) =>
+        call("POST", "/store/purchase", {
+          offerId: q.id,
+          idempotencyKey: "concurrent-blink-" + k,
+          quoteToken: q.purchaseQuote!.token,
+          packRevision: q.booster!.revision,
+        }),
+      ),
+    );
+  } finally {
+    rng.mockRestore();
+  }
+  expect(results.every((r) => r.status === 200)).toBe(true);
+  expect(
+    results
+      .map((r) => r.data.purchase.granted.cards[0]!.total)
+      .sort((a, b) => a - b),
+  ).toEqual([7, 11]);
+  expect(
+    results
+      .map((r) =>
+        r.data.purchase.granted.openings![0]!.cards.map((c) => c.total),
+      )
+      .sort((a, b) => a[0]! - b[0]!),
+  ).toEqual([
+    [4, 5, 6, 7],
+    [8, 9, 10, 11],
+  ]);
+  expect(
+    ownedFor(
+      (await call("GET", "/state")).data.profile!,
+      "mage",
+      content,
+    )("blink"),
+  ).toBe(11);
+  expect(balance()).toBe(1000);
+  expect(
+    (await call("GET", "/store/catalog")).data.offers.find(
+      (o) => o.booster?.freeGrant,
+    )!.freeRemaining,
+  ).toBe(3);
 });
