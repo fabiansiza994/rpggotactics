@@ -25,6 +25,8 @@ export interface Env {
   RANKED_BOTS_XP_MATCHES_PER_DAY?: string;
   RANKED_BOTS_MAX_CONCURRENT?: string;
   /** Dedicated HMAC key (>=32 random bytes encoded), provisioned as a Worker secret only. */
+  /** New random packs remain OFF until explicitly enabled for a release. */
+  ARCANE_MARKET_PACKS_ENABLED?: string;
   STORE_QUOTE_SECRET?: string;
   RELEASE2_MAINTENANCE?: string;
   RELEASE2_QA_USERS?: string;

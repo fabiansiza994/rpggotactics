@@ -43,6 +43,7 @@ export function quotedTerms(offer: StoreOffer, quote: QuotedTerms): string {
     heroId: offer.heroId ?? null,
     currencyId: offer.currencyId,
     price: quote.price,
+    ...(offer.booster ? { booster: offer.booster } : {}),
     contents,
   });
 }

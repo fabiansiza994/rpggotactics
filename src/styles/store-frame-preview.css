@@ -1,0 +1,48 @@
+/* A bounded presentation stage, independent of the equipped avatar's base diameter.
+   The full decoration is 156.25% of the portrait; .56 leaves safe exterior clearance. */
+.shop-frame-stage {
+  --frame-stage-size: clamp(160px, 32vw, 340px);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: var(--frame-stage-size);
+  min-width: 0;
+  flex: none;
+  overflow: visible;
+  isolation: isolate;
+}
+.shop-frame-stage > .shop-cosmetic-art.shop-avatar-preview {
+  width: calc(var(--frame-stage-size) * 0.56);
+  height: calc(var(--frame-stage-size) * 0.56);
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  aspect-ratio: 1;
+  border: 0;
+  overflow: visible;
+  contain: layout;
+  background: transparent;
+}
+.shop-offer > .shop-frame-stage {
+  --frame-stage-size: 190px;
+}
+.shop-content-frame:has(.shop-frame-stage) {
+  width: 80px;
+  height: 80px;
+  overflow: visible;
+}
+.shop-content-frame .shop-frame-stage {
+  --frame-stage-size: 80px;
+}
+.shop-grant > .shop-frame-stage {
+  --frame-stage-size: 180px;
+}
+@media (max-width: 600px) {
+  .shop-offer > .shop-frame-stage {
+    --frame-stage-size: 180px;
+  }
+  .shop-detail-art > .shop-frame-stage {
+    --frame-stage-size: min(70vw, 280px);
+  }
+}

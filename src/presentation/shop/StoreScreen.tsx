@@ -1,4 +1,13 @@
-import {storeCategories} from '../mobile/mobileUx';
+import { MarketHome } from "./MarketHome";
+import { ExpansionCatalog } from './ExpansionCatalog';
+import { MARKET_SECTIONS, marketOffers, RARITY_LABELS } from './market';
+import { PackOpening } from './PackOpening';
+import { PackBatchOpening } from './PackBatchOpening';
+import {useMarketNavigation} from './marketNavigation';
+import { PackConfirmation } from './PackConfirmation';
+import { packExpansion } from './PackArt';
+import { BoosterOdds } from './BoosterOdds';
+import '../../styles/arcane-market.css';
 import { ThunderNews, THUNDER_NEWS_IDS } from './ThunderNews';
 import { EarnCrystalsModal } from './EarnCrystalsModal';
 import { realMoneyPurchasesEnabled } from './paymentAvailability';
@@ -6,8 +15,8 @@ import { StoreNewsCarousel, type StoreNewsItem } from './StoreNewsCarousel';
 import { ShapeshifterNews } from './ShapeshifterNews';
 import { shapeshifterBuildEnabled } from '../shapeshifterRelease';
 import { availableChampionsIn } from '../store/battleStore';
-import { useCardPremiumEffect } from '../cards/useCardPremiumEffect';
-import { CardPremiumFx } from '../react/components/CardPremiumFx';
+import { MarketCard } from './MarketCard';
+import {MarketCardPreview} from './MarketCardPreview';
 import type { CardDefinition } from '../../game';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { COSMETICS, DEFAULT_CONTENT, isChampionUnlocked, rarityOf } from '../../game';
@@ -18,7 +27,6 @@ import { CrystalPurchaseModal } from './CrystalPurchaseModal';
 import { GiftPanel } from '../gifts/GiftPanel';
 import { GiftHistoryPanel } from '../gifts/GiftInbox';
 import { useBattleStore } from '../store/battleStore';
-import { CATEGORY_LABEL } from '../react/format';
 import { SpellArt } from '../react/components/SpellArt';
 import { CrystalIcon, StoreArt } from './StoreArt';
 import { featuredCardOf, isPremiumOffer, StoreHeroShot } from './StoreHeroShot';
@@ -43,6 +51,7 @@ import '../../styles/shop.css';
 const heroName = (id?: string) => (id && DEFAULT_CONTENT.heroes[id]?.name) || 'Todos los campeones';
 /** Server price; a prorated bundle also shows its catalog price struck through. */
 function Price({ offer }: { offer: CatalogOffer }) {
+  if(offer.booster?.freeGrant)return <span className="shop-price">GRATIS</span>;
   return (
     <span className="shop-price">
       <CrystalIcon />
@@ -57,24 +66,8 @@ function CardPreview({ id }: { id: string }) {
   if (!c) return <p>Contenido de colección · {id}</p>;
   return <CardPreviewFace card={c} />;
 }
-export function CardPreviewFace({ card: c }: { card: CardDefinition }) {
-  const premiumRef = useCardPremiumEffect<HTMLElement>(c, 'large');
-  return (
-    <article ref={premiumRef} className={`shop-card-preview rarity-${rarityOf(c).toLowerCase()}`} data-premium={c.id === 'summon_war_drake' || undefined}>
-      <div className="shop-card-image"><CardPremiumFx def={c} />
-        <SpellArt cardId={c.id} spell={c.presentation.visualKey} />
-        <span className="shop-cost" aria-label={`Coste de energía: ${c.cost}`}>
-          {c.cost}
-        </span>
-      </div>
-      <h3>{c.name}</h3>
-      <span className="shop-label">
-        {rarityName[rarityOf(c)]} · {heroName(c.heroId)} · {CATEGORY_LABEL[c.category]}
-      </span>
-      <p>{c.rulesText}</p>
-    </article>
-  );
-}
+export function CardPreviewFace({ card:c }: {card:CardDefinition}) {return <article className="market-card-detail"><MarketCard card={c} accessible/></article>;}
+
 function Wallet({ balance }: { balance: number }) {
   const [display, setDisplay] = useState(balance);
   const previous = useRef(balance);
@@ -97,7 +90,7 @@ function Wallet({ balance }: { balance: number }) {
     <div className="shop-wallet" aria-label={`Cristales Arcanos: ${balance}`}>
       <CrystalIcon />
       <div>
-        <span>Cristales Arcanos</span>
+        <span className="market-wallet-label">Cristales Arcanos</span>
         <strong>{display.toLocaleString('es')}</strong>
       </div>
     </div>
@@ -116,7 +109,13 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
   const claimLock = useRef(false);
   const [session] = useState(loadSession);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [category,setCategory]=useState<string|null>(null);
+  const {category,expansionId,navigate:navigateMarket,up:marketUp}=useMarketNavigation();
+  const setCategory=(id:typeof category)=>navigateMarket(id);
+  const setExpansionId=(id:string|null)=>id?navigateMarket('packs',id):marketUp();
+  const [heroFilter,setHeroFilter]=useState('');
+  const [rarityFilter,setRarityFilter]=useState('');
+  const [availableOnly,setAvailableOnly]=useState(false);
+  const [catalogCard,setCatalogCard]=useState<string|null>(null);
   const [selected, setSelected] = useState<CatalogOffer | null>(null);
   const [inspect, setInspect] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
@@ -186,13 +185,22 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
   const close = () => {
     if (!lock.current) {
       setSelected(null);
+      setCatalogCard(null);
       setReceipt(null);
       setConfirm(false);
       setInspect(null);
     }
   };
+  const finishOpening = () => {
+    if(lock.current)return;
+    const e=receipt?.granted.opening&&packExpansion(receipt.granted.opening.packId);
+    if(e){navigateMarket('packs',e.id);}
+    if(session&&intent)try{saveIntent(null,session.username);setIntent(null);}catch{/* Server receipt remains recoverable. */}
+    close();
+  };
   const open = (offer: CatalogOffer) => {
     opener.current = document.activeElement as HTMLElement;
+    setCatalogCard(null);
     setSelected(offer);
     setInspect(null);
     setConfirm(false);
@@ -214,6 +222,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
       offerId: chosen!.id,
       key: retry?.key ?? crypto.randomUUID(),
       quote: chosen!.purchaseQuote,
+      packRevision: chosen!.booster?.revision,
     };
     try {
       saveIntent(next);
@@ -228,9 +237,9 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
     setIntent(next);
     setConfirm(false);
     setError(null);
-    const result = await storeApi.purchase(session.token, next.offerId, next.key, recovering ? undefined : next.quote?.token, recovering);
+    const result = await storeApi.purchase(session.token, next.offerId, next.key, recovering ? undefined : next.quote?.token, recovering, next.packRevision);
     if (result.ok && result.data?.purchase && result.data.wallet && result.data.profile) {
-      if (readIntent(session.username)?.key === next.key) {
+      if (!result.data.purchase.granted.opening && readIntent(session.username)?.key === next.key) {
         try {
           saveIntent(null, session.username);
         } catch {
@@ -238,7 +247,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
         }
       }
       if (mounted.current && loadSession()?.token === session.token) {
-        setIntent(null);
+        setIntent(result.data.purchase.granted.opening ? next : null);
         setQuoteReview(false);
         setReceipt(result.data.purchase);
         setCatalog((old) => (old ? { ...old, wallet: result.data.wallet } : old));
@@ -278,6 +287,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
       setError('La oferta ya no está disponible. Conservamos el identificador para recuperar su recibo.');
       return;
     }
+    setCatalogCard(null);
     setSelected(offer);
     setReceipt(null);
     setQuoteReview(true);
@@ -300,8 +310,9 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
   const featured = catalog?.offers.find((o) => o.categories.includes('FEATURED'));
   const blocked = selected ? availabilityText(selected) : null;
   const insufficient = !!selected && !!catalog && catalog.wallet.balance < selected.price;
-  const categoryOptions=catalog?.categories.filter(cat=>catalog.offers.some(o=>o.categories.includes(cat.id)))??[];
-  const activeCategory=categoryOptions.some(c=>c.id===category)?category:categoryOptions[0]?.id;
+  const activeCategory=category;
+  const visibleOffers=marketOffers(catalog?.offers??[],activeCategory,heroFilter,rarityFilter,availableOnly).filter(o=>(activeCategory!=='featured'||o.id!==featured?.id)&&(!o.booster||activeCategory!=='packs'||o.booster.expansionId===expansionId)&&(!o.booster||activeCategory!=='featured'||(o.booster.packs??1)===1));
+  const heroOptions=[...new Set((catalog?.offers??[]).map(o=>o.heroId).filter((id):id is string=>!!id))];
   const offerCard = (offer: CatalogOffer) => (
     <button
       className="shop-offer"
@@ -311,10 +322,10 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
       key={offer.id}
       onClick={() => open(offer)}
     >
-      {isPremiumOffer(offer) && (
+      {!offer.booster && isPremiumOffer(offer) && (
         <span className="shop-premium-ribbon">{offer.ritualPreview ? '✦ Ritual Premium' : '✦ Premium'}</span>
       )}
-      {offer.contents.some(item=>item.kind==='CARD'&&THUNDER_NEWS_IDS.includes(item.cardId))&&<span className="shop-thunder-new">NUEVO · TRUENO</span>}
+      {!offer.booster&&offer.contents.some(item=>item.kind==='CARD'&&THUNDER_NEWS_IDS.includes(item.cardId))&&<span className="shop-thunder-new">NUEVO · TRUENO</span>}
       <StoreArt offer={offer} heroId={champion} />
       <div className="shop-offer-body">
         <span className="shop-label">
@@ -339,22 +350,19 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
     </button>
   );
   return (
-    <main className="shop-screen">
-      <header className="shop-header">
-        <button onClick={onExit} disabled={busy}>
-          ‹ Menú
+    <main className="shop-screen" data-market="arcane-2" data-mobile={mobile}>
+      <header className="shop-header" hidden={activeCategory==='packs'&&!!expansionId}>
+        <button onClick={activeCategory==='packs'?marketUp:onExit} disabled={busy}>
+          {activeCategory==='packs'?'← Mercado Arcano':'‹ Menú'}
         </button>
         <div>
           <span className="shop-label">RPG-GO TACTICS</span>
-          <h1>Tienda arcana</h1>
+          <h1>{activeCategory==='packs'&&expansionId?'Expansión':'Mercado Arcano'}</h1>
         </div>
         {catalog && <Wallet balance={catalog.wallet.balance} />}
-        <button className="crystal-topup-trigger" onClick={() => {setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled() ? '+ Cristales' : 'Cómo conseguir cristales'}</button>
-        <button onClick={() => void reload()} disabled={busy || loading}>
-          Actualizar
-        </button>
       </header>
-      {mobile&&catalog&&<nav className="m2-store-categories" aria-label="Categorías de tienda">{categoryOptions.map(cat=><button key={cat.id} aria-pressed={activeCategory===cat.id} onClick={()=>setCategory(cat.id)}>{cat.label}</button>)}</nav>}
+      {activeCategory!=='featured'&&!(activeCategory==='packs'&&expansionId)&&<nav className="market-nav" aria-label="Categorías del mercado">{MARKET_SECTIONS.map(cat=><button key={cat.id} aria-pressed={activeCategory===cat.id} onClick={()=>{setCategory(cat.id);setHeroFilter('');setRarityFilter('');setAvailableOnly(false);}}>{cat.label}</button>)}</nav>}
+
       <div className="shop-scroll">
         {!session && (
           <div className="shop-message">
@@ -385,7 +393,12 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
             Abriendo el grimorio de ofertas…
           </p>
         )}
-        <ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={open} />
+        {activeCategory==='featured'&&catalog&&<MarketHome expansions={catalog.expansions??[]} offers={catalog.offers} profile={profile} heroId={champion} onExpansion={id=>navigateMarket('packs',id)} onCategory={setCategory} onOffer={open}/>}
+        {activeCategory==='featured'&&<details className="market-home-additional"><summary>Más novedades y promociones</summary><div className="market-home-tools">        <button className="crystal-topup-trigger" onClick={() => {setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled() ? '+ Cristales' : 'Cómo conseguir cristales'}</button>
+        <button onClick={() => void reload()} disabled={busy || loading}>
+          Actualizar
+        </button>
+</div><ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={open} />
         <StoreNewsCarousel items={[
           ...(shapeshifterBuildEnabled() && (!session || serverHasShapeshifter) ? [{id:'shapeshifter',label:'Cambiaformas gratis',content:
             <ShapeshifterNews owned={isChampionUnlocked(profile,'shapeshifter')} busy={claimBusy||busy}
@@ -436,6 +449,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
             onAuthExpired={() => useBattleStore.getState().sessionExpired()}
           />
         )}
+        </details>}
         {crystalsVisited && !realMoneyPurchasesEnabled() && <EarnCrystalsModal open={crystalsOpen} onClose={() => setCrystalsOpen(false)} />}
         {crystalsVisited && realMoneyPurchasesEnabled() && (
           <CrystalPurchaseModal
@@ -446,18 +460,19 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
             onAuthExpired={() => useBattleStore.getState().sessionExpired()}
           />
         )}
-        {(!session || catalog) && <GiftHistoryPanel token={session?.token ?? null} />}
-        {storeCategories(categoryOptions,mobile,category).map((cat) => (
-            <section className="shop-section" data-category={cat.id} key={cat.id}>
-              <div className="shop-section-title">
-                <h2>{cat.label}</h2>
-                <span>Elige tu próxima táctica</span>
-              </div>
-              <div className="shop-offers">
-                {(catalog?.offers??[]).filter((o) => o.categories.includes(cat.id)).map(offerCard)}
-              </div>
-            </section>
-          ))}
+        {activeCategory==='featured' && (!session || catalog) && <details className="market-home-additional"><summary>Historial de regalos</summary><GiftHistoryPanel token={session?.token ?? null} /></details>}
+        {activeCategory==='crystals'&&<section className="shop-section"><h2>Cristales Arcanos</h2><p>Utiliza tu saldo habitual. No se habilitan nuevos cobros.</p>{catalog&&<Wallet balance={catalog.wallet.balance}/>}<button className="shop-primary" onClick={()=>{setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled()?'Consultar paquetes disponibles':'Cómo conseguir cristales jugando'}</button></section>}
+        {catalog&&activeCategory==='packs'&&<ExpansionCatalog expansions={catalog.expansions??[]} offers={catalog.offers} balance={catalog.wallet.balance} busy={busy||loading||!!intent} onBuy={open} selectedId={expansionId} onSelect={setExpansionId} profile={profile} onInspect={id=>{opener.current=document.activeElement as HTMLElement;setCatalogCard(id);setSelected(null);setReceipt(null);}}/>}
+        {catalog&&activeCategory!=='featured'&&activeCategory!=='crystals'&&activeCategory!=='packs'&&<section className="shop-section" data-category={activeCategory}>
+          <div className="shop-section-title"><h2>{MARKET_SECTIONS.find(c=>c.id===activeCategory)?.label}</h2><span>Tu próxima estrategia comienza aquí</span></div>
+          {activeCategory==='cards'&&<div className="market-filters">
+            <label>Campeón<select value={heroFilter} onChange={e=>setHeroFilter(e.target.value)}><option value="">Todos</option>{heroOptions.map(id=><option key={id} value={id}>{heroName(id)}</option>)}</select></label>
+            {activeCategory==='cards'&&<label>Rareza<select value={rarityFilter} onChange={e=>setRarityFilter(e.target.value)}><option value="">Todas</option>{Object.entries(RARITY_LABELS).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>}
+            <label className="market-filter-available"><input type="checkbox" checked={availableOnly} onChange={e=>setAvailableOnly(e.target.checked)}/>Solo disponibles</label>
+          </div>}
+          <div className="shop-offers">{visibleOffers.map(offerCard)}</div>
+          {!visibleOffers.length&&<p role="status">No hay artículos que coincidan con estos filtros.</p>}
+        </section>}
         {catalog && (
           <footer className="shop-note">
             Las cartas también se obtienen jugando. Las compras amplían tu colección y no cambian tu
@@ -498,18 +513,22 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
         <button className="shop-close" onClick={close} disabled={busy} aria-label="Cerrar producto">
           ×
         </button>
-        {receipt ? (
+        {receipt?.granted.opening ? (
+          <div className="pack-receipt"><PackBatchOpening key={receipt.purchaseId} receiptId={receipt.purchaseId} openings={receipt.granted.openings??[receipt.granted.opening]} onInspect={setInspect} onDone={finishOpening}/></div>
+        ) : receipt ? (
           <div className="shop-success" aria-live="polite">
             <span className="shop-label">COLECCIÓN ACTUALIZADA</span>
-            <h2 id="shop-detail-title">Adquirido</h2>
+            <h2 id="shop-detail-title">{receipt.granted.opening?'Sobre confirmado':'Adquirido'}</h2>
             <p>
               Tu compra está confirmada.{' '}
               {receipt.granted.cards.length > 0 && 'Las cartas ya están en tu colección. '}
               {receipt.granted.cosmetics.length > 0 &&
                 'Puedes equipar tu cosmético desde su ficha.'}
             </p>
+            {receipt.granted.opening&&<PackOpening key={receipt.purchaseId} opening={receipt.granted.opening} onInspect={setInspect}/>}
+
             <div className="shop-grants">
-              {receipt.granted.cards.map((c) => (
+              {(!receipt.granted.opening?receipt.granted.cards:[]).map((c) => (
                 <div className="shop-grant" key={c.cardId}>
                   <CardPreview id={c.cardId} />
                   <p>
@@ -529,12 +548,15 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
               Seguir explorando
             </button>
           </div>
+        ) : selected?.booster ? (
+          <><PackConfirmation offer={selected} balance={catalog?.wallet.balance??0} busy={busy||loading||!synced||!!intent&&!quoteReview} onConfirm={()=>void buy(intent&&quoteReview?intent:undefined,selected)} onCancel={close}/>{error&&<p role="alert">{error}</p>}</>
         ) : (
           selected && (
             <div className="shop-detail">
               <div className="shop-detail-art">
                 {(() => {
                   // Hero shot: the inspected card, else the offer's star card (angled, with depth).
+                  if(selected.booster&&!inspect)return <StoreArt offer={selected} heroId={champion}/>;
                   const star = featuredCardOf(selected);
                   const shown = inspect ?? star;
                   // Ritual pack: the summoned creature is the hero shot until a piece is inspected.
@@ -570,7 +592,8 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
                     <p className="shop-expiry">{remainingTime(selected.endAt, serverNow)}</p>
                   )}
                   {selected.ritualPreview && <RitualRecipe offer={selected} />}
-                  <h3>{selected.ritualPreview ? 'Piezas incluidas' : 'Contenido incluido'}</h3>
+                  <h3>{selected.booster?'Contenido posible':selected.ritualPreview ? 'Piezas incluidas' : 'Contenido incluido'}</h3>
+                  {selected.booster&&<BoosterOdds offer={selected}/>}
                   <div className="shop-contents">
                     {selected.contents.map((c, i) =>
                       c.kind === 'CARD' ? (
@@ -651,7 +674,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
                       ),
                   )}
                   <p className="shop-note">
-                    {selected.type === 'COSMETIC'
+                    {selected.booster ? 'Recibes cuatro cartas aleatorias del contenido posible. Sin garantía de rareza. Los duplicados se acumulan y los límites por mazo no cambian.' : selected.type === 'COSMETIC'
                       ? 'Solo estético: no cambia reglas ni estadísticas.'
                       : selected.excluded.length
                         ? 'Solo se entrega lo que aún no tienes. No se equipa automáticamente.'
@@ -716,6 +739,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
           )
         )}
       </dialog>
+      <MarketCardPreview cardId={catalogCard??inspect} onClose={()=>{setCatalogCard(null);setInspect(null);}}/>
     </main>
   );
 }

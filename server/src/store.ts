@@ -1,3 +1,5 @@
+import { boosterOffers, rollBooster, expansionViews, validBooster } from './boosters';
+import type { BoosterPolicy } from '../../src/game/store/boosters';
 import {issueQuote,readQuote,quotedTerms,quoteSecretReady,quoteFailure,quoteResponse} from './storeQuote';
 import {
   COSMETICS,
@@ -44,6 +46,8 @@ export interface StoreDeps {
   cosmetics: Readonly<Record<string, CosmeticDef>>;
   /** Unique ids for purchases / ledger transactions. */
   newId(): string;
+  packPolicy?: BoosterPolicy;
+  packPrice?: number;
 }
 
 export const defaultStoreDeps: StoreDeps = {
@@ -220,7 +224,7 @@ function purchaseStatements(
   now: number,
 ): D1PreparedStatement[] {
   // Snapshot = what was sold to THIS buyer: final price + final contents (+ what was left out).
-  const sold = { ...offer, price: quote.price, contents: quote.contents, basePrice: quote.basePrice, excluded: quote.excluded };
+  const sold = { ...offer, price: quote.price, contents: plan.opening ? plan.cards.map(c=>({kind:'CARD',cardId:c.cardId,copies:c.copies})) : quote.contents, possibleContents: plan.opening ? quote.contents : undefined, basePrice: quote.basePrice, excluded: quote.excluded };
   const out: D1PreparedStatement[] = [
     // First: the idempotency receipt (UNIQUE (user_id, idempotency_key)).
     db
@@ -229,7 +233,9 @@ function purchaseStatements(
          VALUES (?, ?, ?, ?, ?, ?, 'COMPLETED', ?, ?, ?, ?)`,
       )
       .bind(ids.purchaseId, userId, ids.key, offer.id, offer.currencyId, quote.price, JSON.stringify(sold), JSON.stringify(plan), now, now),
-    ledgerStatement(db, {
+
+  ];
+  if(quote.price>0)out.push(ledgerStatement(db, {
       transactionId: ids.transactionId,
       userId,
       currencyId: offer.currencyId,
@@ -238,8 +244,7 @@ function purchaseStatements(
       referenceId: ids.purchaseId,
       note: offer.id,
       now,
-    }),
-  ];
+    }));
   out.push(...cardGrantStatements(db, userId, record, content, plan.cards, 'STORE_PURCHASE', now));
   for (const c of plan.cosmetics)
     out.push(
@@ -322,6 +327,7 @@ export async function equippedPublic(
 
 export interface StoreRequest {
   quoteSecret?: string;
+  packsEnabled?: boolean;
   quoteNow?(): number;
   db: D1Database;
   userId: number;
@@ -344,7 +350,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
   const { db, userId, now } = r;
   const ctx: StoreContext = { content: r.content, rules: DECK_RULES, cosmetics: r.store.cosmetics };
   const offers = () =>
-    validOffers(r.store.catalog, ctx).filter((o) => o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true));
+    validOffers([...r.store.catalog, ...(r.packsEnabled ? boosterOffers(ctx,r.store.packPolicy,r.store.packPrice) : [])], ctx).filter(o=>!o.booster||(r.packsEnabled&&validBooster(o,ctx))).filter((o) => o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true));
 
   if (route === 'GET /api/tactics/wallet') {
     const ledger = await db
@@ -376,12 +382,13 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
       serverTime: now,
       currencies: Object.values(CURRENCIES),
       categories: STORE_CATEGORIES,
+      expansions: expansionViews(ctx,offers().filter(o=>!!o.booster)),
       offers: await Promise.all(offers()
         .filter((o) => isOfferActive(o, now))
         .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
         .map(async (o) => {
           const view = offerView(o, owned, ctx, now);
-          return {...view, purchaseQuote: view.availability.purchasable ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
+          return {...view,freeRemaining:o.booster?.freeGrant?Math.max(0,(o.purchaseLimit??0)-owned.purchases(o.id)):undefined, purchaseQuote: view.availability.purchasable ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
         })),
       wallet: await walletView(db, userId),
       cosmetics: await cosmeticsView(db, userId, r.store),
@@ -473,9 +480,17 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
         return { ok: false as const, fail: error(409, 'INSUFFICIENT_FUNDS', 'Saldo insuficiente.', { balance, price: plan.quote.price }) };
       return { ok: true as const, plan: plan.plan, quote: plan.quote, expiresAt:signed.quote.expiresAt };
     };
+    if(offer.booster?.poolType==='GENERAL'&&r.body.packFormat!=='GENERAL_BATCH_V1')return reject(error(409,'PACK_CLIENT_UPDATE_REQUIRED','Actualiza la página para revisar este sobre general. No se ha cobrado.'));
+    if (offer.booster && r.body.packRevision !== offer.booster.revision) return reject(error(409,'PACK_CLIENT_UPDATE_REQUIRED','Actualiza la página para revisar y abrir este sobre. No se ha cobrado.'));
     const checked = await check(r.record);
     if (!checked.ok) return reject(checked.fail);
 
+    if ((r.quoteNow?.() ?? now) >= checked.expiresAt) return reject(quoteFailure('QUOTE_EXPIRED'));
+    let granted = checked.plan;
+    if (offer.booster) {
+      try { granted = rollBooster(offer,await ownership(db,userId,r.record,r.content),ctx,now); }
+      catch { return reject(error(503,'PACK_UNAVAILABLE','El sobre no está disponible. No se ha cobrado.')); }
+    }
     if ((r.quoteNow?.() ?? now) >= checked.expiresAt) return reject(quoteFailure('QUOTE_EXPIRED'));
     const purchaseId = `pur_${r.store.newId()}`;
     try {
@@ -486,7 +501,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
           r.record,
           r.content,
           offer,
-          checked.plan,
+          granted,
           checked.quote,
           { purchaseId, transactionId: `txn_${r.store.newId()}`, key },
           now,

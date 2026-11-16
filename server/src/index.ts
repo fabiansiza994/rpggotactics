@@ -394,6 +394,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     content,
     store: deps.store ?? defaultStoreDeps,
     quoteSecret: env.STORE_QUOTE_SECRET,
+    packsEnabled: env.ARCANE_MARKET_PACKS_ENABLED === '1',
     quoteNow: deps.now,
     heroAllowed: (heroId) => championAllowed(heroId, env, caller.username),
     state: async () => stateBody(caller, await loadReconciled(), env, deps),

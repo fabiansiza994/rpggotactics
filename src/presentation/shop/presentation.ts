@@ -38,6 +38,8 @@ export function purchaseError(error: CloudError): string {
   if (error.kind === 'NETWORK' || error.kind === 'TIMEOUT' || error.kind === 'SERVER')
     return 'No pudimos confirmar el resultado. Reintenta esta misma compra; no se cobrará dos veces.';
   switch (error.code) {
+    case 'PACK_CLIENT_UPDATE_REQUIRED': return 'Actualiza la página para revisar este sobre. Este intento no se ha cobrado.';
+    case 'PACK_UNAVAILABLE': return 'Este sobre no está disponible ahora. No se han descontado Cristales.';
     case 'QUOTE_REQUIRED':
     case 'QUOTE_UPDATE_REQUIRED':
       return 'Recarga la página: esta compra necesita una cotización actualizada. Conservamos el identificador para recuperar cualquier recibo anterior.';
@@ -63,13 +65,14 @@ export function purchaseError(error: CloudError): string {
   }
 }
 /** A rejection must not discard an identifier whose first request may still be in flight. */
-export const needsQuoteReview = (code:string) => ['QUOTE_REQUIRED','QUOTE_UPDATE_REQUIRED','QUOTE_EXPIRED','QUOTE_CHANGED','QUOTE_INVALID','PURCHASE_NOT_FOUND'].includes(code);
+export const needsQuoteReview = (code:string) => ['PACK_CLIENT_UPDATE_REQUIRED','QUOTE_REQUIRED','QUOTE_UPDATE_REQUIRED','QUOTE_EXPIRED','QUOTE_CHANGED','QUOTE_INVALID','PURCHASE_NOT_FOUND'].includes(code);
 export interface PurchaseIntent {
   username: string;
   offerId: string;
   key: string;
   /** The exact signed quote confirmed by the user; never refreshed automatically on retry. */
   quote?: CatalogOffer['purchaseQuote'];
+  packRevision?: string;
 }
 const KEY = 'rpg-go-tactics:store-pending';
 export function readIntent(username: string): PurchaseIntent | null {
@@ -78,7 +81,7 @@ export function readIntent(username: string): PurchaseIntent | null {
     if (x?.username !== username || typeof x.offerId !== 'string' || typeof x.key !== 'string') return null;
     const quote = typeof x.quote?.token === 'string' && Number.isSafeInteger(x.quote?.expiresAt)
       ? {token:x.quote.token,expiresAt:x.quote.expiresAt} : undefined;
-    return {username:x.username,offerId:x.offerId,key:x.key,...(quote ? {quote} : {})};
+    return {username:x.username,offerId:x.offerId,key:x.key,...(typeof x.packRevision==='string'?{packRevision:x.packRevision}:{}),...(quote ? {quote} : {})};
   } catch {
     return null;
   }
@@ -97,6 +100,7 @@ export function remainingTime(endAt: number | null, serverNow: number): string |
 
 /** What the store calls an offer (merchandising type). */
 export function offerKind(offer: CatalogOffer, detail = false): string {
+  if (offer.booster) return 'Sobre de 4 cartas';
   if (offer.ritualPreview) return detail ? 'Pack ritual · Invocación ritual' : 'Pack ritual';
   if (offer.type === 'CARD') return detail ? 'Carta de colección' : 'Carta';
   if (offer.type === 'COSMETIC') return detail ? 'Cosmético de perfil' : 'Cosmético';

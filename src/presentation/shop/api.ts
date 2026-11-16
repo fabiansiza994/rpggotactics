@@ -1,3 +1,4 @@
+import type { MarketExpansionView } from '../../game/store/market-expansions';
 import type { OfferView, PurchasePlan, CurrencyDef, StoreCategoryId } from '../../game/store/store';
 import type { PromoResult } from '../../game/store/promo';
 import type { CloudState } from '../cloud/api';
@@ -17,6 +18,7 @@ export interface Cosmetics {
 }
 export interface Catalog {
   serverTime: number;
+  expansions?: MarketExpansionView[];
   currencies: CurrencyDef[];
   categories: { id: StoreCategoryId; label: string }[];
   offers: CatalogOffer[];
@@ -51,11 +53,11 @@ export const storeApi = {
       token,
       timeoutMs: CLOUD_CONFIG.timeoutMs,
     }),
-  purchase: (token: string, offerId: string, idempotencyKey: string, quoteToken?: string, receiptOnly = false) =>
+  purchase: (token: string, offerId: string, idempotencyKey: string, quoteToken?: string, receiptOnly = false, packRevision?: string) =>
     request<PurchaseResponse>(CLOUD_CONFIG.apiUrl, '/api/tactics/store/purchase', {
       method: 'POST',
       token,
-      body: { offerId, idempotencyKey, ...(quoteToken ? { quoteToken } : {}), ...(receiptOnly ? { receiptOnly:true } : {}) },
+      body: { offerId, idempotencyKey, ...(quoteToken ? { quoteToken } : {}), ...(receiptOnly ? { receiptOnly:true } : {}), ...(packRevision ? {packRevision,packFormat:"GENERAL_BATCH_V1"} : {}) },
       timeoutMs: CLOUD_CONFIG.timeoutMs,
     }),
   /** The client sends ONLY the code text; the reward is decided by the server. */

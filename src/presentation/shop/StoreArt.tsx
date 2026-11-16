@@ -19,6 +19,7 @@ export function CrystalIcon() {
   );
 }
 export function StoreArt({ offer, heroId = 'mage' }: { offer: CatalogOffer; heroId?: string }) {
+  if(offer.booster)return <div className="market-pack-art" aria-label="Sobre arcano de cuatro cartas"><span aria-hidden="true">✦</span><small>4 CARTAS · {DEFAULT_CONTENT.heroes[offer.heroId??'']?.name??'ARCANO'}</small></div>;
   // Ritual pack: the summoned creature headlines, the seals sit below it.
   if (offer.ritualPreview)
     return <RitualPreviewArt ritualId={offer.ritualPreview} pieces={DEFAULT_CONTENT.rituals?.[offer.ritualPreview]?.pieces ?? []} />;

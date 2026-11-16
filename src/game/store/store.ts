@@ -1,3 +1,4 @@
+import type { BoosterPolicy } from './boosters';
 import { hasGuaranteedFreeCatalogRoute } from '../data/free-catalog';
 import { isExclusiveCard } from '../domain/cards/card';
 import type { GameContent } from '../domain/content';
@@ -202,6 +203,8 @@ export interface StoreOffer {
    * piece of that ritual, for the offer's champion (validateCatalog BAD_RITUAL_PREVIEW).
    */
   ritualPreview?: string;
+  /** contents is the possible pool, never a promise to grant every listed card. */
+  booster?: BoosterPolicy;
 }
 
 export interface StoreContext {
@@ -272,7 +275,7 @@ export function validateCatalog(offers: readonly StoreOffer[], ctx: StoreContext
     const offerId = o.id;
     if (seen.has(offerId)) issues.push({ code: 'DUPLICATE_OFFER', offerId });
     seen.add(offerId);
-    if (!Number.isInteger(o.price) || o.price <= 0) issues.push({ code: 'BAD_PRICE', offerId });
+    if (!Number.isInteger(o.price) || o.price < 0 || (o.price===0&&!(o.booster?.freeGrant&&o.booster.packs===1&&(o.purchaseLimit??0)>0))) issues.push({ code: 'BAD_PRICE', offerId });
     if (!currencies[o.currencyId]) issues.push({ code: 'UNKNOWN_CURRENCY', offerId });
     if (!o.contents.length) issues.push({ code: 'EMPTY_OFFER', offerId });
     if (o.startAt !== null && o.endAt !== null && o.endAt <= o.startAt) issues.push({ code: 'BAD_WINDOW', offerId });
@@ -297,7 +300,7 @@ export function validateCatalog(offers: readonly StoreOffer[], ctx: StoreContext
       if (c.kind === 'CARD') {
         const card = ctx.content.cards[c.cardId];
         if (!card) issues.push({ code: 'UNKNOWN_CARD', offerId, cardId: c.cardId });
-        else if (o.heroId === undefined || !isCardForHero(card, o.heroId))
+        else if (o.booster?.poolType !== 'GENERAL' && (o.heroId === undefined || !isCardForHero(card, o.heroId)))
           issues.push({ code: 'WRONG_HERO', offerId, cardId: c.cardId });
         else if (!Number.isSafeInteger(c.copies) || c.copies < 1)
           issues.push({ code: 'OVER_COPY_LIMIT', offerId, cardId: c.cardId });
@@ -345,6 +348,9 @@ export interface CosmeticGrant {
   kind: CosmeticKind;
 }
 export interface PurchasePlan {
+  /** Ordered, persisted slots; duplicated cards remain separate during reveal. */
+  openings?: { packId: string; revision: string; cards: CardGrant[] }[];
+  opening?: { packId: string; revision: string; cards: CardGrant[] };
   cards: CardGrant[];
   cosmetics: CosmeticGrant[];
 }
@@ -411,7 +417,7 @@ export function planPurchase(
     const value = contentValue(c, ctx);
     fullValue += value;
     if (c.kind === 'CARD') {
-      const heroId = offer.heroId!; // validated: card offers always name their champion
+      const heroId = offer.booster?.poolType==='GENERAL' ? (ctx.content.cards[c.cardId]!.heroId??(ctx.content.defaultHeroId??Object.keys(ctx.content.heroes)[0]!)) : offer.heroId!;
       const cap = copyLimit(ctx.content.cards[c.cardId]!, ctx.rules);
       const have = owned.copies(heroId, c.cardId);
       const grant = c.copies;
@@ -441,6 +447,7 @@ export function planPurchase(
  */
 export type OfferView = StoreOffer & {
   basePrice: number;
+  freeRemaining?:number;
   excluded: ExcludedContent[];
   availability: { purchasable: boolean; reason?: Unavailable };
 };

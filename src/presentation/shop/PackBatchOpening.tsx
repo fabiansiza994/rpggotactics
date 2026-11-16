@@ -1,0 +1,137 @@
+import { useEffect, useState } from "react";
+import type { PurchasePlan } from "../../game/store/store";
+import { DEFAULT_CONTENT, rarityOf } from "../../game";
+import { PackOpening } from "./PackOpening";
+export const batchSceneKey = (id: string) => `rpggo.pack-batch.v1:${id}`;
+export function restoreBatch(raw: string | null, count: number) {
+  try {
+    const v = JSON.parse(raw ?? "null");
+    if (
+      v &&
+      Number.isInteger(v.index) &&
+      v.index >= 0 &&
+      v.index < count &&
+      typeof v.summary === "boolean"
+    )
+      return { index: v.index as number, summary: v.summary as boolean };
+  } catch {
+    /* Only presentation progress. */
+  }
+  return { index: 0, summary: false };
+}
+export function PackBatchOpening({
+  openings,
+  receiptId,
+  onInspect,
+  onDone,
+}: {
+  openings: NonNullable<PurchasePlan["openings"]>;
+  receiptId: string;
+  onInspect: (id: string) => void;
+  onDone: () => void;
+}) {
+  const [state, setState] = useState(() => {
+    try {
+      return restoreBatch(
+        localStorage.getItem(batchSceneKey(receiptId)),
+        openings.length,
+      );
+    } catch {
+      return { index: 0, summary: false };
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(batchSceneKey(receiptId), JSON.stringify(state));
+    } catch {
+      /* A saved server receipt remains sufficient to recover all cards. */
+    }
+  }, [receiptId, state]);
+  const cards = openings.flatMap((o) => o.cards),
+    fresh = cards.filter((c) => c.total === 1).length;
+  const rarityCounts = cards.reduce(
+    (a, c) => {
+      const r = rarityOf(DEFAULT_CONTENT.cards[c.cardId]!);
+      a[r] = (a[r] ?? 0) + 1;
+      return a;
+    },
+    {} as Record<string, number>,
+  );
+  const grouped = new Map<string, { count: number; isNew: boolean }>();
+  for (const c of cards) {
+    const old = grouped.get(c.cardId);
+    grouped.set(c.cardId, {
+      count: (old?.count ?? 0) + 1,
+      isNew: !!old?.isNew || c.total === 1,
+    });
+  }
+  const next = () =>
+    setState((s) =>
+      s.index + 1 < openings.length
+        ? { index: s.index + 1, summary: false }
+        : { ...s, summary: true },
+    );
+  if (state.summary)
+    return (
+      <section className="pack-batch-summary">
+        <h2 id="shop-detail-title">{cards.length} cartas obtenidas</h2>
+        <p>
+          {fresh} nuevas · {cards.length - fresh} copias adicionales
+        </p>
+        <div className="pack-summary-rarities">
+          {Object.entries(rarityCounts).map(([r, n]) => (
+            <span key={r}>
+              {
+                (
+                  {
+                    COMMON: "Comunes",
+                    UNCOMMON: "Infrecuentes",
+                    RARE: "Raras",
+                    LEGENDARY: "Legendarias",
+                    ULTRA: "Ultra",
+                  } as Record<string, string>
+                )[r]
+              }
+              : {n}
+            </span>
+          ))}
+        </div>
+        <div className="pack-summary-grid">
+          {[...grouped].map(([id, c]) => (
+            <button key={id} onClick={() => onInspect(id)}>
+              <strong>{DEFAULT_CONTENT.cards[id]?.name ?? id}</strong>
+              <span>
+                ×{c.count} · {c.isNew ? "Nueva" : "+ copias"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <button className="shop-primary" onClick={onDone}>
+          Volver a la expansión
+        </button>
+      </section>
+    );
+  return (
+    <div className="pack-batch">
+      <header className="pack-batch-bar">
+        <strong>
+          Sobre {state.index + 1} de {openings.length}
+        </strong>
+        <button onClick={() => setState((s) => ({ ...s, summary: true }))}>
+          Abrir todos
+        </button>
+      </header>
+      <PackOpening
+        key={`${receiptId}:${state.index}`}
+        receiptId={`${receiptId}:pack:${state.index}`}
+        opening={openings[state.index]!}
+        onInspect={onInspect}
+        onDone={next}
+        onPackComplete={next}
+        completeLabel={
+          state.index + 1 < openings.length ? "Siguiente sobre" : "Ver resumen"
+        }
+      />
+    </div>
+  );
+}

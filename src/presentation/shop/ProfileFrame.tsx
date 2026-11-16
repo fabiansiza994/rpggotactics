@@ -1,3 +1,5 @@
+import {championPortrait} from '../assets/champions';
+import '../../styles/store-frame-preview.css';
 import '../../styles/ranked-avatar.css';
 import { type ReactNode } from 'react';
 import { DEFAULT_CONTENT } from '../../game';
@@ -42,23 +44,10 @@ export function FramedPortrait({
   heroId: string;
 }) {
   return (
-    <div className="shop-cosmetic-art shop-avatar-preview">
+    <div className="shop-frame-stage"><div className="shop-cosmetic-art shop-avatar-preview">
       <ProfileFrame frameId={frameId}>
-      <svg
-        className="profile-frame-portrait"
-        viewBox="0 0 90 120"
-          role="img"
-          aria-label={`Vista del marco para ${DEFAULT_CONTENT.heroes[heroId]?.name ?? 'Mago'}`}
-        >
-          <rect width="90" height="120" fill="#152333" />
-          <ellipse cx="45" cy="56" rx="31" ry="42" fill="#24364a" />
-          <path
-            d="M25 61Q24 32 45 23Q66 32 65 61L57 70Q78 78 81 120H9Q12 78 33 70Z"
-            fill="#080f1b"
-            stroke="#526174"
-          />
-        </svg>
+      <img className="profile-frame-portrait" src={championPortrait(heroId)} alt={`Vista del marco para ${DEFAULT_CONTENT.heroes[heroId]?.name??'Mago'}`} />
       </ProfileFrame>
-    </div>
+    </div></div>
   );
 }
