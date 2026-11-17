@@ -3,6 +3,7 @@ import type { PurchasePlan } from "../../game/store/store";
 import { rarityOf } from "../../game";
 import { resolvePresentationCard } from "../catalog/cardPresentation";
 import {useReceiptCardDiagnostics} from "./UnknownReceiptCard";
+import {packExpansion} from "./PackArt";
 import { PackOpening } from "./PackOpening";
 export const batchSceneKey = (id: string) => `rpggo.pack-batch.v1:${id}`;
 export function restoreBatch(raw: string | null, count: number) {
@@ -78,7 +79,12 @@ export function PackBatchOpening({
   if (state.summary)
     return (
       <section className="pack-batch-summary">
-        <h2 id="shop-detail-title">{cards.length} cartas obtenidas</h2>
+        <header className="pack-scene-heading">
+          <span className="pack-eyebrow">COLECCIÓN ACTUALIZADA</span>
+          <h2 id="shop-detail-title">{cards.length} cartas obtenidas</h2>
+          <p>{packExpansion(openings[0]?.packId??"")?.name??"Tu colección arcana"}</p>
+          <span className="pack-heading-ornament" aria-hidden="true">✧</span>
+        </header>
         <p>
           {fresh} nuevas · {cards.length - fresh} copias adicionales
         </p>
@@ -118,17 +124,12 @@ export function PackBatchOpening({
     );
   return (
     <div className="pack-batch">
-      <header className="pack-batch-bar">
-        <strong>
-          Sobre {state.index + 1} de {openings.length}
-        </strong>
-        <button onClick={() => setState((s) => ({ ...s, summary: true }))}>
-          Abrir todos
-        </button>
-      </header>
       <PackOpening
         key={`${receiptId}:${state.index}`}
         receiptId={`${receiptId}:pack:${state.index}`}
+        packNumber={state.index+1}
+        packCount={openings.length}
+        onOpenAll={()=>setState(s=>({...s,summary:true}))}
         opening={openings[state.index]!}
         onInspect={onInspect}
         onDone={next}

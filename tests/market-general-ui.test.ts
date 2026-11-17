@@ -85,7 +85,7 @@ it("batch recovery retains the current pack and treats open-all as presentation 
   });
 });
 
-it("prioritizes five free packs, last-free messaging and hides paid controls until exhausted", () => {
+it("preserves five Origins free packs, shows remaining counter and hides paid controls until exhausted", () => {
   for (const remaining of [5, 1]) {
     const html = renderToStaticMarkup(
       createElement(ExpansionCatalog, {
@@ -103,10 +103,8 @@ it("prioritizes five free packs, last-free messaging and hides paid controls unt
         busy: false,
       }),
     );
-    expect(html).toContain(
-      remaining === 1 ? "Último sobre gratis" : "5 sobres gratis disponibles",
-    );
-    expect(html).toContain("Abrir sobre GRATIS");
+    expect(html).toContain("Sobres gratuitos restantes: "+remaining+"/5");
+    expect(html).toContain("ABRIR SOBRE GRATIS");
     expect(html).not.toContain("Comprar x5");
   }
 });

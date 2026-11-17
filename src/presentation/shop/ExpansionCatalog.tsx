@@ -1,3 +1,4 @@
+import {expansionVisual} from "./expansionVisuals";
 import {CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../catalog/cardPresentation';
 import { useRef } from "react";
 import {
@@ -69,7 +70,7 @@ export function ExpansionCatalog({
               className="market-expansion-box"
               data-status={e.status}
             >
-              <img src={e.art} alt="" />
+              <img src={expansionVisual(e.id,e.art).cover} alt="" />
               <span>
                 <small>
                   {e.status === "AVAILABLE"

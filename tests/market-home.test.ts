@@ -27,7 +27,7 @@ it("leads with the real expansion and collection, without selling packs on Home"
   const html = render();
   expect(html).toContain("Expansión destacada");
   expect(html).toContain("Explorar expansión");
-  expect(html).toContain("Colección: 6/22");
+  expect(html).toContain("Colección: 6/"+expansions.find(e=>e.id==="origins_arcanos")!.cardIds.length);
   expect(html).toContain("5 sobres gratis disponibles");
   expect(html).not.toContain("Abrir sobre GRATIS");
   expect(html).not.toContain("Comprar x");
@@ -37,13 +37,14 @@ it("leads with the real expansion and collection, without selling packs on Home"
 });
 it("uses only existing expansions and at most three real purchasable products", () => {
   const html = render();
-  expect(demoShowcase.some((o) => o.type === "CARD")).toBe(true);
+  expect(demoShowcase.some((o) => o.type === "CARD")).toBe(false);
   expect(demoShowcase.some((o) => o.type === "COSMETIC")).toBe(true);
   expect(html.match(/class="market-home-expansion"/g)).toHaveLength(
     expansions.length,
   );
   const count = (html.match(/class="market-home-product"/g) ?? []).length;
-  expect(count).toBeGreaterThanOrEqual(2);
+  // The approved commercial catalog retired CARD offers; this fixture now has one cosmetic.
+  expect(count).toBe(1);
   expect(count).toBeLessThanOrEqual(3);
   expect(html).toContain("PRÓXIMAMENTE");
   expect(html).toContain("Ver todas las expansiones");

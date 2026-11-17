@@ -93,7 +93,7 @@ describe("deliberate pack discovery, no acquisition in animation", () => {
     advancePack(s, { type: "CONTINUE" });
     expect(JSON.stringify(receipt)).toBe(json);
   });
-  it("confirmation shows real offer price and balance delta without charging", () => {
+  it("paid entry shows real offer price before the explicit confirmation step, without charging", () => {
     const o = offers.find(
       (o) => o.booster?.packs === 1 && !o.booster.freeGrant,
     )!;
@@ -112,12 +112,9 @@ describe("deliberate pack discovery, no acquisition in animation", () => {
     for (const text of [
       "Orígenes Arcanos",
       "4 cartas",
-      "Saldo actual",
-      "Saldo después",
-      "Sobre general",
-      "Comprar x1 · 200",
+      "COMPRAR Y ABRIR · 200",
       "Cancelar",
-      "demostración",
+      "Demostración",
     ])
       expect(html).toContain(text);
   });

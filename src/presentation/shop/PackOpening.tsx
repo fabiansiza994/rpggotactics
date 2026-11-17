@@ -21,6 +21,9 @@ export function PackOpening({
   receiptId,
   onPackComplete,
   completeLabel,
+  packNumber = 1,
+  packCount = 1,
+  onOpenAll,
 }: {
   opening: NonNullable<PurchasePlan["opening"]>;
   onInspect: (id: string) => void;
@@ -28,6 +31,9 @@ export function PackOpening({
   receiptId?: string;
   onPackComplete?: () => void;
   completeLabel?: string;
+  packNumber?: number;
+  packCount?: number;
+  onOpenAll?: () => void;
 }) {
   useReceiptCardDiagnostics(opening.cards.map(c=>c.cardId));
   const key = receiptId ? packSceneKey(receiptId) : null;
@@ -126,9 +132,17 @@ export function PackOpening({
       data-reduced={reduced}
       data-paused={paused}
     >
-      <h2 id="shop-detail-title">
-        {packExpansion(opening.packId)?.name ?? "Tu sobre arcano"}
-      </h2>
+      <header className="pack-scene-heading">
+        <span className="pack-eyebrow">UN NUEVO DESCUBRIMIENTO</span>
+        <h2 id="shop-detail-title">{packExpansion(opening.packId)?.name ?? "Tu sobre arcano"}</h2>
+        <span className="pack-heading-ornament" aria-hidden="true">✧</span>
+        <div className="pack-batch-bar"><strong>Sobre {packNumber} de {packCount}</strong>
+          {onOpenAll&&<button onClick={onOpenAll}>Abrir todos</button>}
+        </div>
+        {scene.phase!=="sealed"&&scene.phase!=="opening"&&<p role="status">
+          {scene.phase==="summary"?"Las cuatro cartas están en tu colección.":`${count} de 4 cartas reveladas · Toca una carta para descubrirla`}
+        </p>}
+      </header>
       {scene.phase === "sealed" || scene.phase === "opening" ? (
         <div className="pack-stage">
           <div className="pack-aura" aria-hidden="true" />
@@ -153,17 +167,10 @@ export function PackOpening({
           ) : (
             <p role="status">El sello se abre…</p>
           )}
-          <button className="pack-skip" onClick={() => send({ type: "SKIP" })}>
-            Omitir
-          </button>
+          <button className="pack-skip" onClick={() => send({ type: "SKIP" })}>Omitir</button>
         </div>
       ) : (
         <>
-          <p role="status">
-            {scene.phase === "summary"
-              ? "Las cuatro cartas están en tu colección."
-              : `${count} de 4 cartas reveladas · Toca una carta para descubrirla`}
-          </p>
           <div className="market-reveal-grid">
             {opening.cards.map((slot, i) => {
               const card = resolvePresentationCard(slot.cardId),

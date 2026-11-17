@@ -1,3 +1,4 @@
+import {expansionVisual} from "./expansionVisuals";
 import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../catalog/cardPresentation";
 import {marketOfferPrimary} from './market';
 import { ownedFor, type PlayerProfile } from "../../game";
@@ -56,7 +57,7 @@ export function MarketHome({
     <div className="market-home">
       {featured && (
         <section className="market-home-hero" aria-label="Expansión destacada">
-          <img src={featured.art} alt="" />
+          <img src={expansionVisual(featured.id,featured.art).cover} alt="" />
           <div className="market-home-hero-copy">
             <span className="shop-label">EXPANSIÓN DESTACADA</span>
             <h2>{featured.name}</h2>
@@ -101,16 +102,18 @@ export function MarketHome({
               className="market-home-expansion"
               onClick={() => onExpansion(e.id)}
             >
-              <img src={e.art} alt="" loading="lazy" />
+              <img src={expansionVisual(e.id,e.art).cover} alt="" loading="lazy" />
               <span className="shop-label">
                 {e.status === "AVAILABLE" ? "DISPONIBLE" : e.status === "CATALOG_ONLY" ? "CATÁLOGO" : "PRÓXIMAMENTE"}
               </span>
               <strong>{e.name}</strong>
               {e.status !== "COMING_SOON" ? (
-                <small>
-                  {e.cardIds.length} cartas · Colección {count(e)}/
-                  {e.cardIds.length}
-                </small>
+                <>
+                <small>{e.cardIds.length} cartas · Colección {count(e)}/{e.cardIds.length}</small>
+                <span className="market-home-expansion-description">{e.description}</span>
+                <progress aria-label={"Progreso de "+e.name} max={e.cardIds.length} value={count(e)}/>
+                {free(e)>0&&<span className="market-home-free">✧ {free(e)} sobres gratis disponibles</span>}
+                </>
               ) : (
                 <small>Contenido por anunciar</small>
               )}

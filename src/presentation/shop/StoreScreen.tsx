@@ -3,6 +3,7 @@ import {LaunchReward} from './LaunchReward';
 import { MarketHome } from "./MarketHome";
 import { ExpansionCatalog } from './ExpansionCatalog';
 import { MARKET_SECTIONS, marketOffers, marketOfferPrimary, RARITY_LABELS } from './market';
+import { PackExperience } from './PackExperience';
 import { PackOpening } from './PackOpening';
 import { PackBatchOpening } from './PackBatchOpening';
 import {useMarketNavigation} from './marketNavigation';
@@ -306,6 +307,7 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
     else setError('No pudimos equipar el cosmético. Actualiza la tienda e inténtalo de nuevo.');
     setEquipping(false);
   };
+  const scenePackId=receipt?.granted.opening?.packId??(selected?.booster?selected.id:undefined);
   const serverNow = clock.server + Math.max(0, now - clock.local);
   const champion = profile.selectedChampionId;
   const ownsCosmetic = (id: string) => !!catalog?.cosmetics?.owned.some((c) => c.cosmeticId === id);
@@ -488,7 +490,7 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
         )}
       </div>
       <dialog
-        className="shop-dialog"
+        className={"shop-dialog"+(scenePackId?" pack-experience-dialog":"")}
         ref={modal}
         data-ritual-offer={selected?.ritualPreview && !receipt ? '' : undefined}
         onKeyDown={(e) => {
@@ -517,8 +519,9 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
         }}
         aria-labelledby="shop-detail-title"
       >
-        <button className="shop-close" onClick={close} disabled={busy} aria-label="Cerrar producto">
-          ×
+        <PackExperience packId={scenePackId}>
+        <button className="shop-close" onClick={close} disabled={busy} aria-label={scenePackId?"Salir de la apertura":"Cerrar producto"}>
+          {scenePackId?"‹":"×"}
         </button>
         {receipt?.granted.opening ? (
           <div className="pack-receipt"><PackBatchOpening key={receipt.purchaseId} receiptId={receipt.purchaseId} openings={receipt.granted.openings??[receipt.granted.opening]} onInspect={setInspect} onDone={finishOpening}/></div>
@@ -745,6 +748,7 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
             </div>
           )
         )}
+        </PackExperience>
       </dialog>
       <MarketCardPreview onExpansion={id=>navigateMarket('packs',id)} cardId={catalogCard??inspect} onClose={()=>{setCatalogCard(null);setInspect(null);}}/>
     </main>
