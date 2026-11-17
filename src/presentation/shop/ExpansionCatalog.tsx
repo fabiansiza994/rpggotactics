@@ -1,4 +1,4 @@
-import {PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../qa/shapeshifter/runtime';
+import {CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../catalog/cardPresentation';
 import { useRef } from "react";
 import {
   ownedFor,

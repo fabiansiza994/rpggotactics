@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { PurchasePlan } from "../../game/store/store";
-import { DEFAULT_CONTENT, rarityOf } from "../../game";
+import { rarityOf } from "../../game";
+import { resolvePresentationCard } from "../catalog/cardPresentation";
+import {useReceiptCardDiagnostics} from "./UnknownReceiptCard";
 import { PackOpening } from "./PackOpening";
 export const batchSceneKey = (id: string) => `rpggo.pack-batch.v1:${id}`;
 export function restoreBatch(raw: string | null, count: number) {
@@ -30,6 +32,7 @@ export function PackBatchOpening({
   onInspect: (id: string) => void;
   onDone: () => void;
 }) {
+  useReceiptCardDiagnostics(openings.flatMap(o=>o.cards.map(c=>c.cardId)));
   const [state, setState] = useState(() => {
     try {
       return restoreBatch(
@@ -51,7 +54,8 @@ export function PackBatchOpening({
     fresh = cards.filter((c) => c.total === 1).length;
   const rarityCounts = cards.reduce(
     (a, c) => {
-      const r = rarityOf(DEFAULT_CONTENT.cards[c.cardId]!);
+      const card = resolvePresentationCard(c.cardId);
+      const r = card ? rarityOf(card) : "UNKNOWN";
       a[r] = (a[r] ?? 0) + 1;
       return a;
     },
@@ -89,6 +93,7 @@ export function PackBatchOpening({
                     RARE: "Raras",
                     LEGENDARY: "Legendarias",
                     ULTRA: "Ultra",
+                    UNKNOWN: "Sin datos visuales",
                   } as Record<string, string>
                 )[r]
               }
@@ -99,7 +104,7 @@ export function PackBatchOpening({
         <div className="pack-summary-grid">
           {[...grouped].map(([id, c]) => (
             <button key={id} onClick={() => onInspect(id)}>
-              <strong>{DEFAULT_CONTENT.cards[id]?.name ?? id}</strong>
+              <strong>{resolvePresentationCard(id)?.name ?? id}</strong>
               <span>
                 ×{c.count} · {c.isNew ? "Nueva" : "+ copias"}
               </span>

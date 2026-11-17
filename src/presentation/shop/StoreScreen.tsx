@@ -1,3 +1,4 @@
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT, resolvePresentationCard } from "../catalog/cardPresentation";
 import {LaunchReward} from './LaunchReward';
 import { MarketHome } from "./MarketHome";
 import { ExpansionCatalog } from './ExpansionCatalog';
@@ -20,7 +21,7 @@ import { MarketCard } from './MarketCard';
 import {MarketCardPreview} from './MarketCardPreview';
 import type { CardDefinition } from '../../game';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { COSMETICS, DEFAULT_CONTENT, isChampionUnlocked, rarityOf } from '../../game';
+import { COSMETICS, isChampionUnlocked, rarityOf } from '../../game';
 import { tacticsApi } from '../cloud/api';
 import { loadSession } from '../cloud/session';
 import { PromoCodePanel } from './PromoCodePanel';
@@ -619,7 +620,7 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
                           <span>
                             <strong>{DEFAULT_CONTENT.cards[c.cardId]?.name ?? c.cardId}</strong>
                             <small>
-                              ×{c.copies} · {rarityName[rarityOf(DEFAULT_CONTENT.cards[c.cardId]!)]}
+                              ×{c.copies} · {((card)=>card ? rarityName[rarityOf(card)] : "Sin datos visuales")(resolvePresentationCard(c.cardId))}
                             </small>
                             <small>
                               Poseídas: {ownership(selected, c.cardId, profile).owned} · Límite por mazo: {ownership(selected, c.cardId, profile).cap}

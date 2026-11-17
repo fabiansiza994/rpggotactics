@@ -827,3 +827,6 @@
 /* Useful deck progress is capped visually; actual owned copies are never capped. */
 .market-copy-indicator {display:inline-flex;align-items:center;gap:4px;}
 .market-copy-indicator small {font-size:10px;color:#b9d8e8;line-height:inherit;}
+
+/* Receipt metadata may be unavailable; preserve a readable card-shaped placeholder. */
+.market-unknown-card{display:flex;flex-direction:column;justify-content:center;gap:.6rem;aspect-ratio:63/88;padding:1rem;border:1px solid #a58b58;border-radius:.7rem;background:#102333;color:#f0dfb9;overflow-wrap:anywhere;text-align:center}.market-unknown-card small{line-height:1.4}

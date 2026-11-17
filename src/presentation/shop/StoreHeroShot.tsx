@@ -1,5 +1,6 @@
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../catalog/cardPresentation";
 import type { ReactNode } from 'react';
-import { DEFAULT_CONTENT, rarityOf, type StoreOffer } from '../../game';
+import { rarityOf, type StoreOffer } from '../../game';
 import '../../styles/shop-hero.css';
 
 const RARITY_RANK = { COMMON: 0, UNCOMMON: 1, RARE: 2, LEGENDARY: 3, ULTRA: 4 } as const;

@@ -1,4 +1,5 @@
-import { DEFAULT_CONTENT, rarityOf } from "../../game";
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../catalog/cardPresentation";
+import { rarityOf } from "../../game";
 import { BOOSTER_RARITIES } from "../../game/store/boosters";
 import type { CatalogOffer } from "./api";
 import { RARITY_LABELS } from "./market";

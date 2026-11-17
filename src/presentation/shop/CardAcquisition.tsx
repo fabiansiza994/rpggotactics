@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PRESENTATION_CONTENT } from "../qa/shapeshifter/runtime";
+import { CARD_PRESENTATION_CONTENT as PRESENTATION_CONTENT } from "../catalog/cardPresentation";
 import {
   describeCardAcquisition,
   type CardAcquisitionView,

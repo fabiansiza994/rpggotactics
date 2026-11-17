@@ -1,5 +1,6 @@
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../catalog/cardPresentation";
 import {primaryMarketExpansionId} from '../../game/store/market-primary';
-import { rarityOf, DEFAULT_CONTENT } from "../../game";
+import { rarityOf } from "../../game";
 import type { CatalogOffer } from "./api";
 export const MARKET_SECTIONS = [
   { id: "featured", label: "Destacados" },

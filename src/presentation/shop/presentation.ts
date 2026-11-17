@@ -1,4 +1,5 @@
-import { COSMETICS, DEFAULT_CONTENT, copyLimit, DECK_RULES, isNeutral, ownedFor, sharedPool, type PlayerProfile } from '../../game';
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT, resolvePresentationCard } from "../catalog/cardPresentation";
+import { COSMETICS, copyLimit, DECK_RULES, isNeutral, ownedFor, sharedPool, type PlayerProfile } from '../../game';
 
 function neutralOrFor(profile: PlayerProfile, heroId: string | undefined, cardId: string): number {
   const card = DEFAULT_CONTENT.cards[cardId];
@@ -23,12 +24,13 @@ export function availabilityText(offer: CatalogOffer): string | null {
 }
 export function ownership(offer: CatalogOffer, cardId: string, profile: PlayerProfile) {
   const reason = offer.availability.reason;
+  const card = resolvePresentationCard(cardId);
   if (reason?.code === 'CARD_AT_CAP' && reason.cardId === cardId)
     return { owned: reason.owned, cap: reason.cap };
   return {
     // A neutral card is owned by the account whichever champion the offer shows.
     owned: neutralOrFor(profile, offer.heroId, cardId),
-    cap: copyLimit(DEFAULT_CONTENT.cards[cardId]!, DECK_RULES),
+    cap: (card ? copyLimit(card, DECK_RULES) : null),
   };
 }
 export function purchaseError(error: CloudError): string {

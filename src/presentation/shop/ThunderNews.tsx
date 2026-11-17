@@ -1,6 +1,7 @@
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../catalog/cardPresentation";
 import {CardAcquisition,openMarketExpansion} from './CardAcquisition';
 import { useEffect, useRef, useState } from 'react';
-import { DEFAULT_CONTENT, ownedFor, type PlayerProfile } from '../../game';
+import { ownedFor, type PlayerProfile } from '../../game';
 import { MAGE_THUNDER_CORE } from '../../game/data/mage-thunder-core';
 import { MAGE_THUNDER_EXPANSION } from '../../game/data/mage-thunder-expansion';
 import { SpellArt } from '../react/components/SpellArt';

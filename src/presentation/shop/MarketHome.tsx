@@ -1,5 +1,6 @@
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../catalog/cardPresentation";
 import {marketOfferPrimary} from './market';
-import { DEFAULT_CONTENT, ownedFor, type PlayerProfile } from "../../game";
+import { ownedFor, type PlayerProfile } from "../../game";
 import type { MarketExpansionView } from "../../game/store/market-expansions";
 import type { CatalogOffer } from "./api";
 import type { MarketSection } from "./market";

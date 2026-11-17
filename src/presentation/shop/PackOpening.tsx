@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { PurchasePlan } from "../../game/store/store";
-import { DEFAULT_CONTENT, rarityOf } from "../../game";
+import { rarityOf } from "../../game";
+import { resolvePresentationCard } from "../catalog/cardPresentation";
+import {UnknownReceiptCard,useReceiptCardDiagnostics} from "./UnknownReceiptCard";
 import { MarketCard } from "./MarketCard";
 import { PackArt, packExpansion } from "./PackArt";
 import {
@@ -27,6 +29,7 @@ export function PackOpening({
   onPackComplete?: () => void;
   completeLabel?: string;
 }) {
+  useReceiptCardDiagnostics(opening.cards.map(c=>c.cardId));
   const key = receiptId ? packSceneKey(receiptId) : null;
   const [scene, setScene] = useState(() => {
     try {
@@ -94,9 +97,8 @@ export function PackOpening({
       onInspect(opening.cards[i]!.cardId);
       return;
     }
-    const legendary =
-      rarityOf(DEFAULT_CONTENT.cards[opening.cards[i]!.cardId]!) ===
-      "LEGENDARY";
+    const card = resolvePresentationCard(opening.cards[i]!.cardId);
+    const legendary = card && rarityOf(card) === "LEGENDARY";
     if (legendary && !reduced) {
       pendingRef.current = i;
       setPending(i);
@@ -164,7 +166,7 @@ export function PackOpening({
           </p>
           <div className="market-reveal-grid">
             {opening.cards.map((slot, i) => {
-              const card = DEFAULT_CONTENT.cards[slot.cardId],
+              const card = resolvePresentationCard(slot.cardId),
                 revealed = !!(scene.mask & (1 << i));
               return (
                 <button
@@ -191,7 +193,7 @@ export function PackOpening({
                   </span>
                   {revealed && (
                     <span className="market-reveal-face">
-                      {card && <MarketCard card={card} />}
+                      {card ? <MarketCard card={card} /> : <UnknownReceiptCard cardId={slot.cardId}/>}
                       <small
                         className="pack-acquired"
                         data-new={slot.total === 1}

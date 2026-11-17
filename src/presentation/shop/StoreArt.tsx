@@ -1,4 +1,5 @@
-import { DEFAULT_CONTENT } from '../../game';
+import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT, resolvePresentationCard } from "../catalog/cardPresentation";
+
 import { CHARACTER_PAINTINGS } from '../assets/paintedAssets';
 import { championPortrait } from '../assets/champions';
 import { SpellArt } from '../react/components/SpellArt';
@@ -74,7 +75,7 @@ export function StoreArt({ offer, heroId = 'mage' }: { offer: CatalogOffer; hero
               <div className={`shop-bundle-spell spell-${i}`} key={c.cardId}>
                 <SpellArt
                   cardId={c.cardId}
-                  spell={DEFAULT_CONTENT.cards[c.cardId]!.presentation.visualKey}
+                  spell={resolvePresentationCard(c.cardId)?.presentation.visualKey ?? c.cardId}
                 />
               </div>
             ),
