@@ -1,0 +1,20 @@
+import type {RuleContext} from '../src/game/domain/context';
+import {describe,it,expect} from 'vitest';
+import {GameEngine,DEFAULT_CONTENT,createProfile,type GameEvent} from '../src/game';
+import {makeEngine,mutable,p,setHand,ctxFor,unit} from './helpers';
+import {snowVisualAge} from '../src/presentation/pixi/snowSoldierAnimations';
+import {snowTurnEnd} from '../src/game/domain/combat/snow';
+import {dealDamage} from '../src/game/domain/combat/damage';
+import {expireTurnStartStatuses,applyStatus} from '../src/game/domain/statuses/status-rules';
+import {spawnSummon} from '../src/game/domain/summons/summons';
+import {createDuel,validateLoadout,duelView} from '../src/game/pvp/duel';
+const setup=(remaining:number,world=false)=>{const e=makeEngine({hero:{heroId:'mage',pos:p(1,2)},enemies:[{id:'orc',enemyId:'orc_warrior',pos:p(5,2)}]});mutable(e).player.energy=30;const [uid]=setHand(e,['snow_soldier']);expect(e.dispatch({type:'PLAY_CARD',cardUid:uid!,target:p(2,2)}).ok).toBe(true);const s=e.state.units.find(u=>u.defId==='snow_soldier')!;s.summon!.meltTurnsLeft=remaining;if(world)applyStatus(ctxFor(e),unit(e,e.heroId),'ABSOLUTE_ZERO',10,e.heroId);return e;};
+const soldier=(e:GameEngine)=>e.state.units.find(u=>u.defId==='snow_soldier')!;
+describe('Snapshot → snow melting state; logic only, not visual atlas certification',()=>{
+ for(const remaining of [5,4,3,2,1]){
+  it(`snapshot restores stage${remaining}, HP and age directly`,()=>{const e=setup(remaining);soldier(e).hp=3;const restored=GameEngine.fromSnapshot(JSON.parse(JSON.stringify(e.state)),e.content,e.scenario);const s=soldier(restored);expect(snowVisualAge(s.summon!.meltTurnsLeft!,false)).toBe(remaining);expect(s.hp).toBe(3);expect(s.summon!.meltTurnsLeft).toBe(remaining);});
+  for(const world of [false,true])it(`FIRE defeats stage${remaining}, World=${world}, exactly once`,()=>{const e=setup(remaining,world),s=soldier(e),events:GameEvent[]=[];dealDamage(ctxFor(e,events),s,1,'orc','FIRE','DIRECT_RANGED');expect(e.state.units.some(u=>u.id===s.id)).toBe(false);expect(events.filter(e=>e.type==='UNIT_DEFEATED')).toMatchObject([{unitId:s.id,reason:'FIRE'}]);});
+ }
+ it('World activated on age2 restores appearance, pauses age, then resumes age2 without HP reset',()=>{let e=setup(2);soldier(e).hp=3;applyStatus(ctxFor(e),unit(e,e.heroId),'ABSOLUTE_ZERO',10,e.heroId);snowTurnEnd(ctxFor(e),soldier(e));expect(soldier(e).summon!.meltTurnsLeft).toBe(2);expect(snowVisualAge(2,true)).toBe(5);e=GameEngine.fromSnapshot(JSON.parse(JSON.stringify(e.state)),e.content,e.scenario);expect(soldier(e).hp).toBe(3);for(let i=0;i<10;i++)expireTurnStartStatuses(ctxFor(e),unit(e,e.heroId));expect(snowVisualAge(soldier(e).summon!.meltTurnsLeft!,false)).toBe(2);snowTurnEnd(ctxFor(e),soldier(e));expect(soldier(e).summon!.meltTurnsLeft).toBe(1);expect(snowVisualAge(1,false)).toBe(1);});
+ it('both public duel projections carry the same age/HP/climate before and after snapshot restore',()=>{const profile=createProfile(DEFAULT_CONTENT),d=createDuel([validateLoadout(profile,'mage'),validateLoadout(profile,'mage')],42),owner=d.units.find(u=>u.id===d.player.heroId)!;const ctx:RuleContext={state:d,content:DEFAULT_CONTENT,emit:()=>{}};const cell=d.board.tiles.find((_,i)=>spawnSummon(ctx,owner,'snow_soldier',p(i%d.board.width,Math.floor(i/d.board.width))))!;expect(cell).toBeTruthy();const s=d.units.find(u=>u.defId==='snow_soldier')!;s.hp=3;for(const remaining of [4,2]){s.summon!.meltTurnsLeft=remaining;for(const world of [false,true]){owner.statuses=[];if(world)applyStatus(ctx,owner,'ABSOLUTE_ZERO',10,owner.id);const restored=JSON.parse(JSON.stringify(d));const readings=([0,1] as const).map(seat=>{const v=duelView(restored,seat),u=v.units.find(u=>u.id===s.id)!,h=v.units.find(u=>u.id===owner.id)!;return {hp:u.hp,remaining:u.summon!.meltTurnsLeft,stage:snowVisualAge(u.summon!.meltTurnsLeft!,h.statuses.some(s=>s.id==='ABSOLUTE_ZERO'))};});expect(readings[0]).toEqual(readings[1]);expect(readings[0]).toEqual({hp:3,remaining,stage:world?5:remaining});}}});
+});

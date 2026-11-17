@@ -188,3 +188,13 @@ for (const id of ["thunder_discharge", "chain_lightning", "arcane_overload", "pa
 
 // Thunder expansion: individual optimized illustrations, loaded by card on demand.
 for (const id of ["fulminating_spear", "voltaic_armor", "lightning_step", "storm_orb", "conductive_mark", "thunder_hammer", "static_field", "electric_frenzy", "lightning_wall", "storm_avatar"]) FINAL_CARD_ART[id] = `/art/mage-thunder/${id}.webp`;
+
+// Explicit temporary art; replace before an art-final production release.
+for(const id of ['frozen_step', 'sudden_frost', 'slippery_ground', 'shatter_ice', 'frost_mantle', 'ice_prison', 'arcane_skating', 'permafrost', 'glacial_reflection', 'avalanche', 'winter_domain', 'absolute_zero']) FINAL_CARD_ART[id]=`/art/antarctic-qa/${id}.svg`;
+
+// Individual generated Antarctic illustrations; UI owns all names/costs/text.
+for(const id of ['absolute_zero', 'frozen_step', 'sudden_frost', 'slippery_ground', 'shatter_ice', 'frost_mantle', 'ice_prison', 'arcane_skating', 'permafrost', 'glacial_reflection', 'avalanche', 'winter_domain', 'glacial_storm', 'glacier_claw', 'snow_soldier', 'snow_war']) FINAL_CARD_ART[id]=`/art/antarctic-cards/${id}.jpg`;
+CHARACTER_PAINTINGS.snow_soldier='/art/antarctic-market/snow-soldier-unit.png';
+
+// Horizontal master corrected by lateral expansion; original retained in QA archive.
+for(const id of ['winter_domain', 'frost_comet', 'avalanche', 'frozen_step', 'arcane_skating', 'absolute_zero', 'glacial_storm', 'shatter_ice', 'snow_soldier', 'sudden_frost', 'glacier_claw', 'glacial_reflection', 'snow_war', 'ice_prison', 'permafrost', 'frost_mantle', 'slippery_ground']) FINAL_CARD_ART[id]=`/art/antarctic-cards-horizontal/${id}.jpg`;

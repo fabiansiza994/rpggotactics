@@ -24,7 +24,7 @@ describe('Release 2 boundary and acquisition',()=>{
  afterEach(()=>vi.unstubAllEnvs());
  it('Premium is explicitly available in production and can be disabled without local-only gates',()=>{vi.stubEnv('DEV',false);vi.stubEnv('VITE_PREMIUM_VFX_ENABLED','1');expect(premiumVfxEnabled()).toBe(true);expect(fireballPilotAllowed()).toBe(true);vi.stubEnv('VITE_PREMIUM_VFX_ENABLED','0');expect(premiumVfxEnabled()).toBe(false);expect(fireballPilotAllowed()).toBe(false);});
  it('registers exactly 15 Thunder cards, with no Nature definitions, rewards, offers or assets',()=>{
-  expect(Object.values(DEFAULT_CONTENT.cards).filter(c=>c.tags.includes('thunder')).map(c=>c.id).sort()).toEqual(cards.map(c=>c.id).sort());
+  expect(Object.values(DEFAULT_CONTENT.cards).filter(c=>c.tags.includes('thunder')&&!c.tags.includes('legendary-state')).map(c=>c.id).sort()).toEqual(cards.map(c=>c.id).sort());
   for(const id of nature){expect(DEFAULT_CONTENT.cards[id]).toBeUndefined();expect(PVP_CONTENT.cards[id]).toBeUndefined();expect(FINAL_CARD_ART[id]).toBeUndefined();expect(STORE_CATALOG.some(o=>o.contents.some(c=>c.kind==='CARD'&&c.cardId===id))).toBe(false);}
   expect(Object.values(DEFAULT_CONTENT.cards).filter(c=>c.tags.includes('nature'))).toEqual([]);
   expect(DEFAULT_CONTENT.cards.arcane_surge!.heroId).toBe('mage');

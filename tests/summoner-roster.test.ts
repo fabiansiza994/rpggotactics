@@ -224,8 +224,9 @@ describe('Summoner roster and tactical roles', () => {
       count: 3,
     });
     const cards = roll.options.filter((o) => o.kind === 'ADD_CARD');
-    expect(cards.some((o) => o.cardId === 'summon_wolf')).toBe(true);
-    expect(cards.every((o) => DEFAULT_CONTENT.cards[o.cardId]?.heroId === 'summoner')).toBe(true);
+    // One fixed seed changes when legal neutral cards enter the pool; wolf must remain attainable.
+    expect(Array.from({length:100},(_,seed)=>rollReward({content:DEFAULT_CONTENT,heroId:'summoner',owned:ownedFor(createProfile(DEFAULT_CONTENT),'summoner',DEFAULT_CONTENT),pity:4,rules:DECK_RULES,poolId:'BOSS',seed,count:3})).some(r=>r.options.some(o=>o.kind==='ADD_CARD'&&o.cardId==='summon_wolf'))).toBe(true);
+    expect(cards.every((o) => !DEFAULT_CONTENT.cards[o.cardId]?.heroId || DEFAULT_CONTENT.cards[o.cardId]?.heroId === 'summoner')).toBe(true);
   });
   it('summon timeline separates caster gesture, portal and visible arrival; attack precedes retreat', () => {
     const e = make();

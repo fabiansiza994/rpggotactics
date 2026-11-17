@@ -634,7 +634,7 @@ export function PvpScreen({
             state={game}
           />
           <header className="top-bar">
-            <HeroPanel state={displayGame ?? game} engine={engine} />
+            <HeroPanel state={displayGame ?? game} engine={engine} finished={!!snapshot.result} />
             <div className="panel pvp-turn">
               {game.dominion && (
                 <div

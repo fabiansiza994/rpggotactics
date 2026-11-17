@@ -1,3 +1,5 @@
+import {worldFrozenCard} from '../domain/cards/world-frozen';
+import {LEGENDARY_STEP_SELECTION,legendaryStepTargets} from '../domain/combat/legendary-step';
 import type { IntentPlan } from '../domain/ai/ai';
 import { getHero } from '../domain/board/occupancy';
 import type { PathNode } from '../domain/board/pathfinding';
@@ -147,6 +149,7 @@ export class GameEngine {
     if (this.current.phase !== 'PLAYER') {
       return { playable: false, reason: 'NOT_PLAYER_TURN', message: 'Not the player turn.' };
     }
+    if(cardUid===LEGENDARY_STEP_SELECTION)return legendaryStepTargets(this.query()).length?{playable:true}:{playable:false,reason:'INVALID_TARGET',message:'Desplazamiento no disponible.'};
     const ritualId = ritualIdOf(cardUid);
     const check = ritualId ? checkRitual(this.query(), ritualId) : checkPlayability(this.query(), cardUid);
     return check.ok
@@ -156,14 +159,17 @@ export class GameEngine {
 
   /** Targeting of a selection key (hand card or ritual), or null when it does not exist. */
   selectionTargeting(key: string): TargetingDef | null {
+    if(key===LEGENDARY_STEP_SELECTION)return {type:'TILE',range:1,tileFilter:'EMPTY'};
     const ritualId = ritualIdOf(key);
     if (ritualId) return (Object.hasOwn(this.content.rituals ?? {}, ritualId) && this.content.rituals![ritualId]?.targeting) || null;
     const card = this.current.player.hand.find((c) => c.uid === key);
-    return (card && this.content.cards[card.cardId]?.targeting) || null;
+    const def=card&&this.content.cards[card.cardId];
+    return def?worldFrozenCard(def,this.current.units.find(u=>u.id===this.heroId)).targeting:null;
   }
 
   /** The command that acting with this selection on `target` sends (`secondary`: pairSwap cards only). */
   selectionCommand(key: string, target: Pos | null, secondary?: Pos | null): Command {
+    if(key===LEGENDARY_STEP_SELECTION && target)return {type:'LEGENDARY_STEP',to:target};
     const ritualId = ritualIdOf(key);
     if (ritualId) return { type: 'ACTIVATE_RITUAL', ritualId, target };
     return { type: 'PLAY_CARD', cardUid: key, target, ...(secondary ? {secondary} : {}), ...(this.wallChoice(key) ? {wallOrientation:this.wallChoice(key)} : {}) };
@@ -194,6 +200,7 @@ export class GameEngine {
   }
 
   getValidTargets(cardUid: string): Pos[] {
+    if(cardUid===LEGENDARY_STEP_SELECTION)return legendaryStepTargets(this.query());
     const ctx = this.query();
     if (this.current.phase !== 'PLAYER') return [];
     const ritualId = ritualIdOf(cardUid);
@@ -212,6 +219,10 @@ export class GameEngine {
 
   previewCard(cardUid: string, target: Pos | null, secondary?: Pos | null): CardPreview {
     const none: CardPreview = { valid: false, resolved: null, predictedEvents: [] };
+    if(cardUid===LEGENDARY_STEP_SELECTION) {
+      if(!target || !legendaryStepTargets(this.query()).some(p=>p.x===target.x&&p.y===target.y))return none;
+      return {valid:true,resolved:{target,impact:target,affectedTiles:[target],direction:null,hitUnitId:null},predictedEvents:[]};
+    }
     const ctx = this.query();
     if (this.current.phase !== 'PLAYER') return none;
     const ritualId = ritualIdOf(cardUid);

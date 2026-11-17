@@ -72,9 +72,9 @@ describe("expansion detail and deterministic receipt presentation", () => {
     expect(html).not.toContain("<progress");
     expect(html).not.toContain("market-content-tabs");
     expect(html).not.toContain("market-expansion-cover");
-    expect(html).toContain("Frost Nova");
-    expect(html).toContain("Invocar Lobo");
-    expect(html).toContain("Glacial Field");
+    expect(html).toContain("Inversión Arcana");
+    expect(html).toContain("Arcane Burst");
+    expect(html).not.toContain("Glacial Field");
     expect(html).not.toContain("market-filters");
     expect(html).not.toContain("con los filtros actuales");
     expect(html).toContain("market-copy-indicator");
@@ -82,7 +82,7 @@ describe("expansion detail and deterministic receipt presentation", () => {
   });
   it("orders every card by real rarity then name and updates uncapped ownership badges", () => {
     const profile = createProfile(ctx.content);
-    profile.heroes.mage!.collection.elemental_detonation = {
+    profile.heroes.mage!.collection.arcane_inversion = {
       copies: 5,
       acquired: 5,
     };
@@ -112,7 +112,7 @@ describe("expansion detail and deterministic receipt presentation", () => {
     expect(labels).toEqual(expected.map((c) => c.name));
     expect(html).toContain("1/1</span>");
     expect(html).toContain("×5</small>");
-    profile.heroes.mage!.collection.elemental_detonation.copies = 6;
+    profile.heroes.mage!.collection.arcane_inversion.copies = 6;
     expect(render()).toContain("×6</small>");
     expect(html).not.toContain("<select");
     expect(labels).toHaveLength(ids.length);

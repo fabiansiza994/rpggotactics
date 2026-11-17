@@ -1,3 +1,5 @@
+import {worldFrozenCard} from '../../../game/domain/cards/world-frozen';
+import '../../../styles/world-frozen.css';
 import { CardTypeVisual } from './CardTypeVisual';
 import { CardOriginBadge } from './CardOriginBadge';
 import { useCardPremiumEffect } from '../../cards/useCardPremiumEffect';
@@ -213,7 +215,7 @@ function kindLabel(def: CardDefinition): string {
 
 /** The card face itself: frame, cost, rarity gem, uncropped art, type line and rules text. */
 export function FeatureCard({
-  def,
+  def: baseDef,
   engine,
   className,
   extras,
@@ -227,6 +229,7 @@ export function FeatureCard({
   ariaHidden?: boolean;
   scrollableDescription?: boolean;
 }) {
+  const def=engine?worldFrozenCard(baseDef,engine.state.units.find(u=>u.id===engine.heroId)):baseDef;
   const premiumRef = useCardPremiumEffect<HTMLElement>(def, 'large', true, !ariaHidden);
   const premium = def.id === 'summon_war_drake';
   const rarity = def.rarity ?? 'COMMON';
@@ -237,6 +240,7 @@ export function FeatureCard({
     <aside ref={premiumRef}
       className={`feature-card ${className}`}
       data-card-id={def.id}
+      data-world-frozen={def.worldFrozenActive||undefined}
       data-rarity={rarity}
       data-premium={premium || undefined}
       data-ritual-piece={def.ritualPiece || undefined}
@@ -281,7 +285,10 @@ export function FeatureCard({
           )}
         </div>
         <WorldRewardBadge def={def} compact />
-        <p className="fc-text" tabIndex={scrollableDescription ? 0 : undefined}>{def.rulesText}</p>
+        <p className="fc-text" tabIndex={scrollableDescription ? 0 : undefined}>{def.rulesText}
+         {def.worldFrozenUpgrade&&!def.worldFrozenActive&&<span className="fc-world-upgrade"><b>🌨 Mundo Gélido</b>{def.worldFrozenUpgrade.rulesText}</span>}
+         {def.worldFrozenActive&&<span className="fc-world-active">🌨 Potenciada por Mundo Gélido</span>}
+        </p>
         <footer className="fc-support">
           <CardPattern targeting={def.targeting} />
           <span className="fc-range">

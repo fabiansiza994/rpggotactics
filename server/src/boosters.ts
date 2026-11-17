@@ -1,3 +1,4 @@
+import {primaryMarketExpansionId} from '../../src/game/store/market-primary';
 import {
   MARKET_EXPANSIONS,
   type MarketExpansionView,
@@ -146,7 +147,7 @@ export function boosterOffers(
           };
           const cards = Object.values(ctx.content.cards).filter(
             (card) =>
-              expansion.cardIds.includes(card.id) &&
+              primaryMarketExpansionId(card.id) === expansion.id && expansion.cardIds.includes(card.id) &&
               (general || !card.heroId || card.heroId === hero?.id) &&
               !card.tags.some((t) =>
                 ["qa", "experimental", "prototype"].includes(t.toLowerCase()),
@@ -286,11 +287,8 @@ export function expansionViews(
     };
     return {
       ...display,
-      status:
-        e.status === "AVAILABLE" && available.length
-          ? "AVAILABLE"
-          : "COMING_SOON",
-      cardIds: e.cardIds.filter((id) => ids.has(id) && !!ctx.content.cards[id]),
+      status:e.status,
+      cardIds: e.cardIds.filter((id) => !!ctx.content.cards[id] && primaryMarketExpansionId(id)===e.id),
       highlights: e.highlights?.filter((h) => ids.has(h.cardId)),
       synergies: e.synergies?.filter((s) =>
         s.cardIds.every((id) => ids.has(id)),

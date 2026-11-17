@@ -118,6 +118,7 @@ export function PackOpening({
     <section
       className="market-opening pack-scene"
       aria-label="Abrir sobre confirmado"
+      data-expansion={packExpansion(opening.packId)?.id}
       data-phase={scene.phase}
       data-complete={scene.mask === 15}
       data-reduced={reduced}

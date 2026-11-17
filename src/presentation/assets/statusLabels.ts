@@ -1,6 +1,15 @@
 import type { StatusId } from '../../game';
 
 export const STATUS_LABEL: Record<StatusId, string> = {
+ SNOW_WAR:'Guerra de Nieve',GLACIER_CLAW:'Garra del Glaciar',
+ ABSOLUTE_ZERO:'Mundo Gélido',
+ FROZEN:'Congelado: próximo movimiento +1 PM',
+ FROST_MANTLE:'Manto de Escarcha',
+ ICE_PRISON:'Prisión de Hielo',
+ ARCANE_SKATING:'Patinaje Arcano',
+ GLACIAL_REFLECTION:'Reflejo Glacial',
+ AVALANCHE_SLOW:'Avalancha: -1 PM',
+ ARCANE_INVERSION:'Inversión Arcana',THUNDER_INCARNATION:'Encarnación del Dios del Trueno',
   VOLTAIC_ARMOR: 'Armadura de Voltios',
   CONDUCTIVE_MARK: 'Marca Conductora',
   ELECTRIC_FRENZY: 'Frenesí: +1 ataque / +1 daño recibido',

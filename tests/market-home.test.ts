@@ -27,7 +27,7 @@ it("leads with the real expansion and collection, without selling packs on Home"
   const html = render();
   expect(html).toContain("Expansión destacada");
   expect(html).toContain("Explorar expansión");
-  expect(html).toContain("Colección: 6/40");
+  expect(html).toContain("Colección: 6/22");
   expect(html).toContain("5 sobres gratis disponibles");
   expect(html).not.toContain("Abrir sobre GRATIS");
   expect(html).not.toContain("Comprar x");

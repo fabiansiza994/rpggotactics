@@ -119,6 +119,8 @@ export interface StructureDef {
  * custom content and the domain never imports concrete data files.
  */
 export interface SummonDef {
+  maxPerOwner?:number;
+  meltTurns?:number;
   /** Roles are deterministic behaviors, independent of presentation. */
   behavior?: 'SCOUT' | 'SKIRMISHER' | 'GUARD' | 'RANGED' | 'PRESSURE';
   attackRange?: number;

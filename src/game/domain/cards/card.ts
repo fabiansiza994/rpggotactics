@@ -12,7 +12,7 @@ export type UnitFilter = 'ENEMY' | 'ALLY' | 'ANY' | 'SUMMON';
  * - EMPTY:          no unit, no obstacle, walkable terrain (where a wall/teleport can go)
  * - NOT_BLOCKED:    any tile whose terrain is not BLOCKED (units allowed)
  */
-export type TileFilter = 'ANY' | 'EMPTY' | 'NOT_BLOCKED';
+export type TileFilter = 'ANY' | 'EMPTY' | 'NOT_BLOCKED' | 'OWN_TEMPORARY_ICE' | 'STANDABLE';
 
 /**
  * Shape of the affected area, centred on the resolved target tile.
@@ -164,6 +164,11 @@ export interface EffectBonus {
 }
 
 export type EffectDef =
+  | {type:'ICE_WALK';duration:number}
+  | {type:'ICE_LINE';duration:number;slideSteps?:number}
+  | {type:'SHATTER_ICE';energy?:number}
+  | {type:'EXTEND_ICE';amount:number;cap:number}
+  | {type:'AVALANCHE';distance:number;freezeOnIce?:boolean}
   | { type: 'TRANSFORM'; formId: string | null }
   | {
       type: 'DAMAGE';
@@ -224,6 +229,7 @@ export type EffectDef =
        * THIS effect (Último Bastión challenges all adjacent enemies); older marks still move.
        */
       everyTarget?: boolean;
+      power?: number;
     }
   | { type: 'CLEANSE'; to: UnitSelector }
   /** Pushes away from the caster. Collision with unit/obstacle/edge deals `collisionDamage`. */
@@ -268,7 +274,7 @@ export type EffectDef =
     }
   /** `emptyOnly`: skip tiles holding a unit (ground control, not damage under someone's feet). */
   /** `replaceOnly`: paint only tiles whose CURRENT terrain is listed (Humo never erases fire, ice, exits…). */
-  | { type: 'CREATE_TERRAIN'; terrain: TerrainType; duration: number | null; on: TileSelector; emptyOnly?: boolean; replaceOnly?: readonly TerrainType[] }
+  | { type: 'CREATE_TERRAIN'; terrain: TerrainType; duration: number | null; on: TileSelector; emptyOnly?: boolean; standableOnly?: boolean; iceExitBonus?:number; whileWorldFrozen?:boolean; replaceOnly?: readonly TerrainType[] }
   | { type: 'REMOVE_HAZARDS'; on: TileSelector }
   | { type: 'CREATE_OBSTACLE'; obstacleId: string; duration: number | null; on: TileSelector }
   | { type: 'RECALL_SUMMON' }
@@ -349,6 +355,8 @@ export interface CardDefinition {
    * uid, validated against the real pile); it returns to the hand locked until the next own turn.
    */
   discardSearch?: 'RITUAL_PIECE';
+  worldFrozenUpgrade?: {effects?: EffectDef[];targeting?: TargetingDef;rulesText:string};
+  worldFrozenActive?: boolean;
   id: string;
   name: string;
   /**

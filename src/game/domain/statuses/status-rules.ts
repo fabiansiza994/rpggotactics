@@ -1,3 +1,4 @@
+import {clearFrozenWorldTerrain} from '../terrain/terrain-rules';
 import { dealDamage } from '../combat/damage';
 import type { RuleContext } from '../context';
 import type { Unit } from '../entities/unit';
@@ -41,11 +42,12 @@ export function removeStatus(
   ctx: RuleContext,
   unit: Unit,
   statusId: StatusId,
-  reason: 'EXPIRED' | 'CLEANSED' | 'CONSUMED',
+  reason: 'EXPIRED' | 'CLEANSED' | 'CONSUMED' | 'FIRE',
 ): void {
   const before = unit.statuses.length;
   unit.statuses = unit.statuses.filter((s) => s.id !== statusId);
   if (unit.statuses.length !== before) {
+    if(statusId==='ABSOLUTE_ZERO')clearFrozenWorldTerrain(ctx,unit.id);
     ctx.emit({ type: 'STATUS_REMOVED', unitId: unit.id, status: statusId, reason });
   }
 }
@@ -71,7 +73,7 @@ export function tickStatuses(ctx: RuleContext, unit: Unit, timing: StatusTiming)
 export function decrementStatuses(ctx: RuleContext, unit: Unit): void {
   for (const instance of [...unit.statuses]) {
     const def = ctx.content.statuses[instance.id];
-    if (def.expiresAtOwnerTurnStart || def.permanent || def.summonActivationClock) continue;
+    if (def.ownerStartLifetime || def.expiresAtOwnerTurnStart || def.permanent || def.summonActivationClock) continue;
     instance.turnsLeft -= 1;
     if (instance.turnsLeft <= 0) removeStatus(ctx, unit, instance.id, 'EXPIRED');
   }
@@ -79,6 +81,12 @@ export function decrementStatuses(ctx: RuleContext, unit: Unit): void {
 
 /** Start of the owner's turn: statuses that only cover the opponent's turn (Riposte) end here. */
 export function expireTurnStartStatuses(ctx: RuleContext, unit: Unit): void {
-  for (const instance of [...unit.statuses])
-    if (ctx.content.statuses[instance.id].expiresAtOwnerTurnStart) removeStatus(ctx, unit, instance.id, 'EXPIRED');
+  for (const instance of [...unit.statuses]) {
+    const def=ctx.content.statuses[instance.id];
+    if(def.ownerStartLifetime) {
+      instance.turnsLeft-=1;
+      if(instance.turnsLeft<=0) removeStatus(ctx,unit,instance.id,'EXPIRED');
+      else { delete instance.discountUsed; delete instance.stepUsed; delete instance.stepReady; }
+    } else if (def.expiresAtOwnerTurnStart) removeStatus(ctx, unit, instance.id, 'EXPIRED');
+  }
 }

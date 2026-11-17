@@ -87,6 +87,7 @@ export function SpellArt({ spell, cardId }: { spell: string; cardId?: string }) 
       <img
         className="painted-card-art"
         data-tactical-art={painting.startsWith('/art/tactical-cards/') || painting.startsWith('/art/arsenal-cards/') || undefined}
+        data-landscape-art={painting.includes('/antarctic-cards-horizontal/')||undefined}
         data-final-art={!!(cardId && FINAL_CARD_ART[cardId])}
         src={painting}
         alt=""

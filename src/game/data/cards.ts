@@ -1,3 +1,6 @@
+import {withWorldUpgrade} from './antarctic-upgrades';
+import {ANTARCTIC_CARDS} from './antarctic-magic';
+import { MARKET_LEGENDARIES } from './market-legendaries';
 import { MAGE_THUNDER_EXPANSION } from './mage-thunder-expansion';
 import { MAGE_THUNDER_CORE } from './mage-thunder-core';
 import { UNLEASHED_HUNT } from './unleashed-hunt';
@@ -20,6 +23,8 @@ import { FREE_CATALOG_CORE_CARDS } from './free-catalog';
  * domain never reads). Balance numbers live here only.
  */
 const list: CardDefinition[] = [
+  ...MARKET_LEGENDARIES,
+  ...ANTARCTIC_CARDS,
   {
     id: 'magic_missile',
     name: 'Magic Missile',
@@ -500,5 +505,5 @@ list.push({
 });
 
 export const CARDS: Readonly<Record<string, CardDefinition>> = Object.fromEntries(
-  list.map((c) => [c.id, c]),
+  list.map((c) => [c.id, withWorldUpgrade(c)]),
 );

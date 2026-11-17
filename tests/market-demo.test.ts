@@ -14,8 +14,8 @@ describe("sessionless market lab isolation", () => {
     expect(css).toContain(".shop-dialog:has(.market-opening)::backdrop");
     expect(css).toContain("backdrop-filter: none");
   });
-  it("uses the actual 40 card collection and starts independently of authentication", () => {
-    expect(expansions[0]!.cardIds).toHaveLength(40);
+  it("uses the actual arcane collection and starts independently of authentication", () => {
+    expect(expansions[0]!.cardIds).toHaveLength(22);
     expect(freshDemo().balance).toBe(2000);
     expect(DEMO_KEY).toContain("qa-demo");
   });
@@ -58,7 +58,7 @@ describe("sessionless market lab isolation", () => {
   });
   it("future collections never become demo purchase offers", () => {
     expect(
-      offers.every((o) => o.booster?.expansionId === "origins_arcanos"),
+      offers.every((o) => ["origins_arcanos","thunder_god","antarctic_magic"].includes(o.booster!.expansionId!)),
     ).toBe(true);
     expect(() => simulatePurchase(freshDemo(), "furia_elemental")).toThrow();
   });

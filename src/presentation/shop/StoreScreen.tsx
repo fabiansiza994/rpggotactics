@@ -1,6 +1,6 @@
 import { MarketHome } from "./MarketHome";
 import { ExpansionCatalog } from './ExpansionCatalog';
-import { MARKET_SECTIONS, marketOffers, RARITY_LABELS } from './market';
+import { MARKET_SECTIONS, marketOffers, marketOfferPrimary, RARITY_LABELS } from './market';
 import { PackOpening } from './PackOpening';
 import { PackBatchOpening } from './PackBatchOpening';
 import {useMarketNavigation} from './marketNavigation';
@@ -313,6 +313,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
   const activeCategory=category;
   const visibleOffers=marketOffers(catalog?.offers??[],activeCategory,heroFilter,rarityFilter,availableOnly).filter(o=>(activeCategory!=='featured'||o.id!==featured?.id)&&(!o.booster||activeCategory!=='packs'||o.booster.expansionId===expansionId)&&(!o.booster||activeCategory!=='featured'||(o.booster.packs??1)===1));
   const heroOptions=[...new Set((catalog?.offers??[]).map(o=>o.heroId).filter((id):id is string=>!!id))];
+  const exploreOffer=(offer:CatalogOffer)=>{if(offer.type==='CARD')navigateMarket('packs',marketOfferPrimary(offer));else open(offer);};
   const offerCard = (offer: CatalogOffer) => (
     <button
       className="shop-offer"
@@ -393,12 +394,12 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
             Abriendo el grimorio de ofertas…
           </p>
         )}
-        {activeCategory==='featured'&&catalog&&<MarketHome expansions={catalog.expansions??[]} offers={catalog.offers} profile={profile} heroId={champion} onExpansion={id=>navigateMarket('packs',id)} onCategory={setCategory} onOffer={open}/>}
+        {activeCategory==='featured'&&catalog&&<MarketHome expansions={catalog.expansions??[]} offers={catalog.offers} profile={profile} heroId={champion} onExpansion={id=>navigateMarket('packs',id)} onCategory={setCategory} onOffer={exploreOffer}/>}
         {activeCategory==='featured'&&<details className="market-home-additional"><summary>Más novedades y promociones</summary><div className="market-home-tools">        <button className="crystal-topup-trigger" onClick={() => {setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled() ? '+ Cristales' : 'Cómo conseguir cristales'}</button>
         <button onClick={() => void reload()} disabled={busy || loading}>
           Actualizar
         </button>
-</div><ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={open} />
+</div><ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={exploreOffer} />
         <StoreNewsCarousel items={[
           ...(shapeshifterBuildEnabled() && (!session || serverHasShapeshifter) ? [{id:'shapeshifter',label:'Cambiaformas gratis',content:
             <ShapeshifterNews owned={isChampionUnlocked(profile,'shapeshifter')} busy={claimBusy||busy}
@@ -426,7 +427,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
               <span className="shop-label">
                 {featured.contents.filter((c) => c.kind === 'CARD').length} cartas para tu colección
               </span>
-              <button className="shop-primary" onClick={() => open(featured)}>
+              <button className="shop-primary" onClick={() => exploreOffer(featured)}>
                 {featured.ritualPreview ? 'Descubrir el ritual' : 'Descubrir pack'} <Price offer={featured} />
               </button>
               <small>

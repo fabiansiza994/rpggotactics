@@ -1,3 +1,5 @@
+import {tileAt} from './board';
+import {iceWalkQuote} from '../combat/ice-movement';
 import type { RuleContext } from '../context';
 import { comparePos, DIRECTIONS, posKey, step, type Pos } from '../core/position';
 import type { Unit } from '../entities/unit';
@@ -17,7 +19,7 @@ export function stepCost(ctx: RuleContext, from: Pos, to?: Pos): number {
   const def = terrainDefAt(ctx, from);
   if (!def?.exitCostBonus) return 1;
   if (def.exitCostOnlyLeavingZone && to && terrainDefAt(ctx, to)?.type === def.type) return 1;
-  return 1 + def.exitCostBonus;
+  return 1 + (tileAt(ctx.state.board,from)?.iceExitBonus??def.exitCostBonus);
 }
 
 /**
@@ -29,6 +31,7 @@ export function computeReachable(
   unit: Unit,
   maxCost = Number.POSITIVE_INFINITY,
 ): Map<string, PathNode> {
+  if(unit.statuses.some(s=>s.id==='FROZEN'||s.id==='ARCANE_SKATING'))return iceReachable(ctx,unit,maxCost);
   const done = new Map<string, PathNode>();
   const frontier: PathNode[] = [{ pos: unit.pos, cost: 0, path: [] }];
 
@@ -64,6 +67,12 @@ export function reachableDestinations(ctx: RuleContext, unit: Unit, budget: numb
  * (possibly the start tile with an empty path).
  */
 export function truncatePath(ctx: RuleContext, start: Pos, path: Pos[], budget: number): PathNode {
+  const mover=ctx.state.units.find(u=>u.pos.x===start.x&&u.pos.y===start.y);
+  if(mover?.statuses.some(s=>s.id==='FROZEN'||s.id==='ARCANE_SKATING')){
+    const taken:Pos[]=[];let cost=0;
+    for(const p of path){const quoted=iceWalkQuote(ctx,mover,[...taken,p]).cost;if(quoted>budget)break;taken.push(p);cost=quoted;}
+    return {pos:taken.at(-1)??start,cost,path:taken};
+  }
   let spent = 0;
   let prev = start;
   const taken: Pos[] = [];
@@ -75,4 +84,22 @@ export function truncatePath(ctx: RuleContext, start: Pos, path: Pos[], budget: 
     prev = p;
   }
   return { pos: prev, cost: spent, path: taken };
+}
+
+/** At most board × 4 skating states; free travel is limited to two steps. */
+function iceReachable(ctx:RuleContext,unit:Unit,maxCost:number):Map<string,PathNode>{
+ const result=new Map<string,PathNode>(),done=new Set<string>();
+ const queue:PathNode[]=[{pos:unit.pos,cost:0,path:[]}];
+ while(queue.length){
+  queue.sort((a,b)=>a.cost-b.cost||a.path.length-b.path.length||comparePos(a.pos,b.pos));
+  const n=queue.shift()!,q=iceWalkQuote(ctx,unit,n.path);
+  const key=posKey(n.pos)+':'+q.free+':'+q.ended;
+  if(done.has(key))continue;done.add(key);
+  if(!result.has(posKey(n.pos)))result.set(posKey(n.pos),n);
+  for(const dir of DIRECTIONS){const next=step(n.pos,dir);if(!canEnter(ctx,next,unit.id))continue;
+   const path=[...n.path,next],cost=iceWalkQuote(ctx,unit,path).cost;
+   if(cost<=maxCost)queue.push({pos:next,cost,path});
+  }
+ }
+ return result;
 }

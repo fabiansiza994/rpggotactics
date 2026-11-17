@@ -144,7 +144,7 @@ describe("authoritative four-card packs", () => {
     expect(pack.booster).toEqual({
       ...ARCANE_PACK_POLICY,
       expansionId: "origins_arcanos",
-      revision: "origins-40-free-batch-v3",
+      revision: "origins-arcane-v4",
       poolType: "GENERAL",
       packs: 1,
     });
@@ -154,7 +154,7 @@ describe("authoritative four-card packs", () => {
         p.contents.every(
           (c) =>
             c.kind === "CARD" &&
-            !!content.heroes[content.cards[c.cardId]!.heroId!] &&
+            !!content.heroes[content.cards[c.cardId]!.heroId ?? content.defaultHeroId!] &&
             rarityOf(content.cards[c.cardId]!) !== "ULTRA",
         ),
       ).toBe(true);
@@ -536,7 +536,7 @@ describe("general expansion batches", () => {
       (c) =>
         c.kind === "CARD" && rarityOf(content.cards[c.cardId]!) === "COMMON",
     );
-    const indexes = ["mage", "summoner", "warrior", "mage"].map((hero) =>
+    const indexes = ["mage", "summoner", "mage", "summoner"].map((hero) =>
       common.findIndex(
         (c) => c.kind === "CARD" && content.cards[c.cardId]!.heroId === hero,
       ),
@@ -546,9 +546,9 @@ describe("general expansion batches", () => {
       bound === 100 ? 0 : indexes[n++]!,
     );
     expect(new Set(rolled.opening!.cards.map((c) => c.heroId))).toEqual(
-      new Set(["mage", "summoner", "warrior"]),
+      new Set(["mage", "summoner"]),
     );
-    expect(pack.contents).toHaveLength(40);
+    expect(pack.contents).toHaveLength(21);
     expect(pack.heroId).toBeUndefined();
   });
 });
@@ -847,10 +847,11 @@ describe("receipt, persisted collection and useful deck progress", () => {
           "UPDATE tactics_player_cards SET copies=2 WHERE user_id=? AND hero_id='mage' AND card_id='blink'",
         )
         .run(account.id);
+      // This is specifically the Blink/Orígenes receipt regression, independent of catalog ordering.
       const q = (await call("GET", "/store/catalog")).data.offers.find((o) =>
-        kind === "free"
+        o.booster?.expansionId === "origins_arcanos" && (kind === "free"
           ? o.booster?.freeGrant
-          : !o.booster?.freeGrant && o.booster?.packs === qty,
+          : !o.booster?.freeGrant && o.booster?.packs === qty),
       )!;
       const payload = {
         offerId: q.id,

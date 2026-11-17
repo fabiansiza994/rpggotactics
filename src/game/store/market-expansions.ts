@@ -1,3 +1,4 @@
+import {primaryMarketCardIds} from './market-primary';
 import {
   ARCANE_PACK_POLICY,
   ARCANE_PACK_PRICE,
@@ -9,7 +10,8 @@ export interface MarketExpansion {
   name: string;
   description: string;
   art: string;
-  status: "AVAILABLE" | "COMING_SOON";
+  packArt?:string;
+  status: "AVAILABLE" | "CATALOG_ONLY" | "COMING_SOON";
   poolType?: "GENERAL" | "CHAMPION" | "THEMATIC";
   championId?: string;
   freePacksPerPlayer?: number;
@@ -132,7 +134,7 @@ export const ORIGINAL_ORIGINS_CARD_IDS: readonly string[] = [
   "warrior_charge",
 ];
 /** Curated historical collection: Mage14, Summoner14, Warrior12. */
-export const ORIGINS_CARD_IDS: readonly string[] = [
+export const LEGACY_ORIGINS_CARD_IDS: readonly string[] = [
   "magic_missile",
   "fireball",
   "blink",
@@ -175,70 +177,26 @@ export const ORIGINS_CARD_IDS: readonly string[] = [
   "bastion_blow",
 ];
 
+export const ORIGINS_CARD_IDS=primaryMarketCardIds('origins_arcanos');
+export const THUNDER_CARD_IDS=primaryMarketCardIds('thunder_god');
 export const MARKET_EXPANSIONS: readonly MarketExpansion[] = [
-  {
-    id: "origins_arcanos",
-    poolType: "GENERAL",
-    freePacksPerPlayer: 5,
-    name: "Orígenes Arcanos",
-    description:
-      "Los primeros pactos, hechizos y armas de la arena. Cuatro cartas de los campeones incluidos en cada sobre.",
-    art: "/art/checkpoint05/cards/arcane_burst.webp",
-    status: "AVAILABLE",
-    cardIds: ORIGINS_CARD_IDS,
-    highlights: [
-      { cardId: "frost_nova", caption: "Control cercano" },
-      { cardId: "summon_wolf", caption: "Presencia en el tablero" },
-      { cardId: "glacial_field", caption: "Control del terreno" },
-      { cardId: "entangle", caption: "Enraizamiento" },
-      { cardId: "execution", caption: "Remate condicionado" },
-    ],
-    synergies: [
-      {
-        id: "ice-control",
-        title: "Hielo y control cercano",
-        cardIds: ["glacial_field", "frost_nova"],
-        reason:
-          "Dos herramientas de control del Mago: terreno que encarece la salida y enraizamiento cercano. Sus costes y objetivos se mantienen.",
-      },
-      {
-        id: "pact-control",
-        title: "Presencia y enraizamiento",
-        cardIds: ["summon_wolf", "entangle"],
-        reason:
-          "El Invocador puede combinar presencia en el tablero con control del movimiento. Consulta el coste, alcance y condiciones de cada carta.",
-      },
-    ],
-    pack: {
-      policy: { ...ARCANE_PACK_POLICY, revision: "origins-40-free-batch-v3" },
-      price: ARCANE_PACK_PRICE,
-    },
-  },
-  {
-    id: "furia_elemental",
-    name: "Furia Elemental",
-    description:
-      "Fuego, hielo, trueno y naturaleza. Su catálogo estará disponible cuando sus cartas se publiquen.",
-    art: "/art/checkpoint05/cards/fireball.webp",
-    status: "COMING_SOON",
-    cardIds: [],
-  },
-  {
-    id: "guerra_psicologica",
-    name: "Guerra Psicológica",
-    description:
-      "Una futura colección de desgaste, descarte y recuperación. Cartas y mecánicas pendientes de validación.",
-    art: "/art/checkpoint05/cards/dispel.webp",
-    status: "COMING_SOON",
-    cardIds: [],
-  },
-  {
-    id: "pactos_bestias",
-    name: "Pactos y Bestias",
-    description:
-      "Próximos caminos para Invocador y Cambiaformas. Sin contenido definitivo anunciado.",
-    art: "/art/store-cards/entangle.webp",
-    status: "COMING_SOON",
-    cardIds: [],
-  },
+ {id:'origins_arcanos',name:'Orígenes Arcanos',description:'Magia arcana fundamental: movilidad, teletransporte, barreras, disipación y control.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'AVAILABLE',poolType:'GENERAL',freePacksPerPlayer:5,cardIds:ORIGINS_CARD_IDS,pack:{price:ARCANE_PACK_PRICE,policy:{...ARCANE_PACK_POLICY,revision:'origins-arcane-v4'}}},
+ {id:'thunder_god',name:'Dios del Trueno',description:'Conducción, impactos eléctricos y dominio de la tormenta. Avatar de la Tormenta conserva su fuente exclusiva.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'AVAILABLE',poolType:'GENERAL',cardIds:THUNDER_CARD_IDS,pack:{price:ARCANE_PACK_PRICE,policy:{...ARCANE_PACK_POLICY,revision:'thunder-god-v1'}}},
+ {id:"antarctic_magic",name:"Magia Antártica",description:'Control del campo mediante frío, hielo y desplazamientos. Flecha de Hielo conserva su fuente exclusiva.',art:'/art/antarctic-market/expansion_hero.jpg',packArt:'/art/antarctic-market/booster.jpg',status:'AVAILABLE',poolType:'GENERAL',cardIds:primaryMarketCardIds("antarctic_magic"),pack:{price:ARCANE_PACK_PRICE,policy:{...ARCANE_PACK_POLICY,revision:'antarctic-magic-v2-world'}}},
+ {id:"pack_pact",name:"Pacto de la Manada",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("pack_pact")},
+ {id:"pendiente_hibridos_elementales",name:"Pendiente: Híbridos elementales",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("pendiente_hibridos_elementales")},
+ {id:"pendiente_sabueso_de_ceniza",name:"Pendiente: Sabueso de Ceniza",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("pendiente_sabueso_de_ceniza")},
+ {id:"reserva_cambiaformas_formas",name:"Reserva: Cambiaformas — Formas",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_cambiaformas_formas")},
+ {id:"reserva_cambiaformas_legado",name:"Reserva: Cambiaformas — Legado",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_cambiaformas_legado")},
+ {id:"reserva_cazador",name:"Reserva: Cazador",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_cazador")},
+ {id:"reserva_dragones",name:"Reserva: Dragones",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_dragones")},
+ {id:"reserva_fuego",name:"Reserva: Fuego",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_fuego")},
+ {id:"reserva_naturaleza",name:"Reserva: Naturaleza",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_naturaleza")},
+ {id:"reserva_recursos_tacticos",name:"Reserva: Recursos tácticos",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_recursos_tacticos")},
+ {id:"reserva_rituales_y_constructos",name:"Reserva: Rituales y constructos",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_rituales_y_constructos")},
+ {id:"reserva_umbral",name:"Reserva: Umbral",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("reserva_umbral")},
+ {id:"warrior_promise",name:"Promesa del Guerrero",description:'Catálogo temático. Sin sobre disponible; las fuentes exclusivas se conservan.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'CATALOG_ONLY',cardIds:primaryMarketCardIds("warrior_promise")},
+ {id:'furia_elemental',name:'Furia Elemental',description:'Colección futura; sin sobre disponible.',art:'/art/checkpoint05/cards/fireball.webp',status:'COMING_SOON',cardIds:[]},
+ {id:'guerra_psicologica',name:'Guerra Psicológica',description:'Colección futura; sin sobre disponible.',art:'/art/checkpoint05/cards/dispel.webp',status:'COMING_SOON',cardIds:[]},
+ {id:'pactos_bestias',name:'Pactos y Bestias',description:'Colección futura; sin sobre disponible.',art:'/art/store-cards/entangle.webp',status:'COMING_SOON',cardIds:[]},
 ];

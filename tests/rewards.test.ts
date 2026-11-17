@@ -1,3 +1,5 @@
+import {ANTARCTIC_CARDS} from '../src/game/data/antarctic-magic';
+import {MARKET_LEGENDARIES} from '../src/game/data/market-legendaries';
 import { MAGE_THUNDER_CORE } from '../src/game/data/mage-thunder-core';
 import { MAGE_THUNDER_EXPANSION } from '../src/game/data/mage-thunder-expansion';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -49,6 +51,7 @@ describe('starter vs unlockable Mage cards', () => {
     for (const id of ['flame_tile', 'glacial_field', 'repulse']) expect(starterOwned(id)).toBe(2);
     expect(mageCards.filter((c) => starterOwned(c.id) === 0).map((c) => c.id).sort()).toEqual([
       ...MAGE_THUNDER_CORE.map(c=>c.id), ...MAGE_THUNDER_EXPANSION.map(c=>c.id),
+      ...ANTARCTIC_CARDS.filter(c=>c.heroId==='mage').map(c=>c.id), ...MARKET_LEGENDARIES.map(c=>c.id),
       'arcane_surge', // Still Mage-only, as in published Release 1.
       'arcane_burst_ii',
       'arcane_chain', // «Arsenal I» (QA-gated until released)

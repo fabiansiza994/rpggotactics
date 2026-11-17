@@ -1,3 +1,4 @@
+import {snowSoldierLayout,snowSoldierVariant} from './snowSoldierAtlas';
 import { archerPresentationEnabled } from '../archerRelease';
 import { ARCHER_ANIMATION, ARCHER_VISUAL_ID } from '../qa/archer/visuals';
 import { shapeshifterQaEnabled } from '../qa/shapeshifter/access';
@@ -299,3 +300,6 @@ CHARACTER_ANIMATIONS.pact_golem = {
   death:{start:22,count:2,frameMs:310,loop:false,terminal:true},
  },
 };
+
+// Artist-approved Snow Soldier atlas is the normal candidate renderer.
+for(const age of [5,4,3,2,1])CHARACTER_ANIMATIONS[snowSoldierVariant(age)]=snowSoldierLayout(age);

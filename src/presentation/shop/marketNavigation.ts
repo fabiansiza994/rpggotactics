@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { MARKET_SECTIONS, type MarketSection } from "./market";
 export function readMarketNavigation(search: string) {
   const q = new URLSearchParams(search);
+  if(q.get("market")==="cards")q.set("market","packs");
   const category = MARKET_SECTIONS.some((s) => s.id === q.get("market"))
     ? (q.get("market") as MarketSection)
     : "featured";
@@ -26,6 +27,7 @@ export function marketNavigationUrl(
 export function useMarketNavigation(
   defaultCategory: MarketSection = "featured",
 ) {
+  if(defaultCategory==="cards")defaultCategory="packs";
   const [nav, setNav] = useState(() => {
     const x = readMarketNavigation(location.search);
     return new URLSearchParams(location.search).has("market")
@@ -50,6 +52,7 @@ export function useMarketNavigation(
     category: MarketSection,
     expansionId: string | null = null,
   ) => {
+    if(category==="cards")category="packs";
     const url = marketNavigationUrl(location.href, category, expansionId);
     if (url !== location.pathname + location.search + location.hash)
       history.pushState(

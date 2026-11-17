@@ -8,6 +8,7 @@ import { WORLD_REWARD_SUMMONS } from './world-rewards';
 import { FREE_CATALOG_SUMMONS } from './free-catalog';
 
 export const SUMMONS: Readonly<Record<string, SummonDef>> = {
+ snow_soldier:{id:'snow_soldier',name:'Soldado de Nieve',maxHp:5,armor:0,moveRange:2,damage:2,capacityCost:0,maxPerOwner:1,meltTurns:5,visualKey:'snow_soldier',behavior:'PRESSURE',attackRange:1,damageType:'PHYSICAL'},
   chicken: {
     id: 'chicken',
     behavior: 'SCOUT',

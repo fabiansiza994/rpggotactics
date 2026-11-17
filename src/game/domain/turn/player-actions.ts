@@ -1,5 +1,7 @@
 import { getHero, isMovementPrevented, unitById } from '../board/occupancy';
-import { computeReachable, reachableDestinations, stepCost, type PathNode } from '../board/pathfinding';
+import {cutPathAtTrap} from '../combat/traps';
+import {iceWalkQuote} from '../combat/ice-movement';
+import { computeReachable, reachableDestinations, type PathNode } from '../board/pathfinding';
 import { setMovePoints } from '../cards/deck';
 import { walkUnit } from '../combat/movement';
 import type { RuleContext } from '../context';
@@ -26,11 +28,9 @@ export function moveUnit(ctx: RuleContext, unitId: string, to: Pos): RuleResult 
   const node = computeReachable(ctx, unit, ctx.state.player.movePoints).get(posKey(to));
   if (!node) return fail('UNREACHABLE', 'Tile is not reachable with the remaining movement.');
 
-  const from = unit.pos;
-  const walked = walkUnit(ctx, unit, node.path, node.cost);
-  // A trap can stop the walk early: only the steps actually taken are paid.
-  const paid = walked.length === node.path.length ? node.cost
-    : walked.reduce((sum, p, i) => sum + stepCost(ctx, i === 0 ? from : walked[i - 1]!, p), 0);
+  const path=cutPathAtTrap(ctx,unit,node.path);
+  const paid=iceWalkQuote(ctx,unit,path).cost;
+  walkUnit(ctx,unit,path,paid);
   setMovePoints(ctx, ctx.state.player.movePoints - paid);
   return OK;
 }

@@ -1,3 +1,4 @@
+import {snowTurnEnd} from '../combat/snow';
 import { actSummons } from '../summons/summons';
 import { declareAllIntents, executeIntent, planIntent, type IntentPlan } from '../ai/ai';
 import { canEnter, effectiveMoveRange, getHero, terrainDefAt, unitAt } from '../board/occupancy';
@@ -26,6 +27,7 @@ const unitsOf = (ctx: RuleContext, faction: Faction): Unit[] =>
   ctx.state.units.filter((u) => u.faction === faction);
 
 export function startFactionTurn(ctx: RuleContext, faction: Faction): void {
+  for(const unit of ctx.state.units)for(const s of unit.statuses)if(ctx.content.statuses[s.id]?.damageToHealingCap)delete s.absorptionUsed;
   ctx.state.activeFaction = faction;
   ctx.state.phase = faction;
   ctx.emit({ type: 'TURN_STARTED', faction, round: ctx.state.round });
@@ -39,6 +41,8 @@ export function startFactionTurn(ctx: RuleContext, faction: Faction): void {
 
 export function endFactionTurn(ctx: RuleContext, faction: Faction): void {
   for (const unit of unitsOf(ctx, faction)) {
+    snowTurnEnd(ctx,unit);
+    if(!ctx.state.units.includes(unit))continue;
     applyEndTurnTerrain(ctx, unit);
     if (!ctx.state.units.includes(unit)) continue;
     tickStatuses(ctx, unit, 'TURN_END');

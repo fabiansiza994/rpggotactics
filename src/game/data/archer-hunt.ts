@@ -1,3 +1,4 @@
+import {ANTARCTIC_UPGRADES} from './antarctic-upgrades';
 import type { CardDefinition, EffectDef, TargetingDef } from '../domain/cards/card';
 import type { EnemyDef } from '../domain/content';
 
@@ -78,6 +79,7 @@ export const ARCHER_HUNT_CARDS: CardDefinition[] = [
   // III · Flecha de Hielo (control / tempo): a slow, not a lock.
   card({
     id: 'ice_arrow',
+    worldFrozenUpgrade: ANTARCTIC_UPGRADES.ice_arrow,
     name: 'Flecha de Hielo',
     cost: 2,
     category: 'ATTACK',

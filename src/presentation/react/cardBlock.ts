@@ -127,6 +127,8 @@ export function explainCardBlock(
     case 'NOT_PLAYER_TURN':
       return { code: check.reason, chip: 'Espera tu turno', icon: 'wait', quiet: true, detail: 'Solo puedes jugar cartas durante tu turno.' };
     case 'CASTER_INCAPACITATED': {
+      const hero=state.units.find(u=>u.id===engine.heroId);
+      if(def.category==='ATTACK'&&hero?.statuses.some(s=>s.id==='SNOW_WAR')&&!hero.statuses.some(s=>engine.content.statuses[s.id]?.preventsActions))return {code:check.reason,chip:'Guerra de Nieve',icon:'frost',detail:'Guerra de Nieve está activa: no puedes jugar otras cartas de ataque. Puedes moverte y usar las demás categorías; la Bola de Nieve se lanza al finalizar tu turno.'};
       const name = heroName(engine, state);
       return { code: check.reason, chip: 'No puede actuar', icon: 'wait', detail: `${name} no puede actuar ahora (aturdido): no puede jugar cartas este turno.` };
     }

@@ -13,7 +13,7 @@ import { reboundChain } from '../combat/rebound';
 import { tileAt } from '../board/board';
 import type { RuleContext } from '../context';
 import { alignedDirection, comparePos, DIRECTIONS, dominantDirection, manhattan, posKey, samePos, step, type Pos } from '../core/position';
-import { canEnter, isEmptyTile, isMovementPrevented, unitAt } from '../board/occupancy';
+import { canEnter, isStandable, isEmptyTile, isMovementPrevented, unitAt } from '../board/occupancy';
 import type { Unit } from '../entities/unit';
 import { applyStatus, cleanseUnit, removeStatus } from '../statuses/status-rules';
 import { createObstacle, createTerrain, removeHazard } from '../terrain/terrain-rules';
@@ -148,6 +148,39 @@ function consumeElectricalTargetBonus(e: EffectContext, target: Unit, electrical
 }
 
 const HANDLERS: { [K in EffectType]: Handler<K> } = {
+  ICE_WALK: (e,fx)=>{
+    const path=stepPath(e.ctx,e.caster,e.resolved.impact);
+    if(!path)return;
+    const walked=walkUnit(e.ctx,e.caster,path,0,'SLIDE');
+    for(const p of walked)if(isStandable(e.ctx,p))createTerrain(e.ctx,p,'ICE',fx.duration,e.caster.id);
+  },
+  ICE_LINE: (e,fx)=>{
+    for(const p of e.resolved.affectedTiles){
+      if(!isStandable(e.ctx,p))break;
+      if(createTerrain(e.ctx,p,'ICE',fx.duration,e.caster.id)){const tile=tileAt(e.ctx.state.board,p)!;tile.slippery=true;tile.slipDistance=fx.slideSteps??1;}
+    }
+  },
+  SHATTER_ICE: (e,fx)=>{
+    const tile=tileAt(e.ctx.state.board,e.resolved.impact);
+    if(tile?.terrain==='ICE' && tile.terrainTurnsLeft!==null && tile.terrainOwnerId===e.caster.id && removeHazard(e.ctx,e.resolved.impact))
+      setEnergy(e.ctx,Math.min(e.ctx.state.player.maxEnergy,e.ctx.state.player.energy+(fx.energy??1)));
+  },
+  EXTEND_ICE: (e,fx)=>{
+    const tile=tileAt(e.ctx.state.board,e.resolved.impact);
+    if(tile?.terrain==='ICE' && tile.terrainTurnsLeft!==null && tile.terrainOwnerId===e.caster.id){
+      tile.terrainTurnsLeft=Math.min(fx.cap,tile.terrainTurnsLeft+fx.amount);
+      e.ctx.emit({type:'TERRAIN_CREATED',pos:e.resolved.impact,terrain:'ICE',previous:'ICE',turnsLeft:tile.terrainTurnsLeft,sourceId:e.caster.id});
+    }
+  },
+  AVALANCHE: (e,fx)=>{
+    for(const u of selectUnits(e,'UNITS')){
+      if(u.id===e.caster.id || u.kind==='STRUCTURE')continue;
+      const dir=dominantDirection(e.caster.pos,u.pos);
+      if(!dir)continue;
+      pushUnit(e.ctx,u,dir,fx.distance,0,e.caster.id);
+      if(e.ctx.state.units.includes(u) && tileAt(e.ctx.state.board,u.pos)?.terrain==='ICE'){applyStatus(e.ctx,u,'AVALANCHE_SLOW',1,e.caster.id);if(fx.freezeOnIce)applyStatus(e.ctx,u,'FROZEN',1,e.caster.id);}
+    }
+  },
   TRANSFORM: (e, fx) => transform(e.ctx, e.caster, fx.formId),
   DAMAGE: (e, fx) => {
     // Snapshot before the hit spends Guardia; later effects must not test the depleted shield.
@@ -175,7 +208,7 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
       const amount = base + bonusFor(e, fx.bonus, u) + electricalBonus + consumeElectricalTargetBonus(e, u, fx.electrical);
       if (fx.shieldBreak) breakShield(e.ctx, u, fx.shieldBreak, e.caster.id);
       if (guard > 0) breakShield(e.ctx, e.caster, fx.fromCasterShield!.consumeAll ? e.caster.shield : guard, e.caster.id);
-      dealDamage(e.ctx, u, attackDamage(e.ctx, e.caster, u, amount), e.caster.id, fx.damageType, fx.attackKind, fx.attackKind === 'RANGED' && e.directAttack ? 'DIRECT_RANGED' : e.directAttack);
+      dealDamage(e.ctx, u, attackDamage(e.ctx, e.caster, u, amount), e.caster.id, fx.damageType, fx.attackKind, fx.attackKind === 'RANGED' && e.directAttack ? 'DIRECT_RANGED' : e.directAttack, e.cardId&&e.ctx.content.cards[e.cardId]?.tags.some(t=>t.toLowerCase()==='fire')?'FIRE':undefined);
     }
     let from = first?.pos;
     bounces.forEach((u, i) => {
@@ -214,7 +247,10 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
   APPLY_STATUS: (e, fx) => {
     const marked: Unit[] = [];
     for (const u of selectUnits(e, fx.to)) {
+      const prior=u.statuses.some(s=>s.id===fx.status);
       applyStatus(e.ctx, u, fx.status, fx.duration, e.caster.id, fx.everyTarget ? marked : undefined);
+      const instance=u.statuses.find(s=>s.id===fx.status);
+      if(!prior && instance && fx.power!==undefined)instance.power=fx.power;
       marked.push(u);
       // A challenged enemy re-declares its (public) intent at once: the telegraph shows the new target.
       if (e.ctx.content.statuses[fx.status].taunt && u.kind === 'ENEMY' && e.ctx.state.units.includes(u)) {
@@ -292,9 +328,14 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
   CREATE_TERRAIN: (e, fx) => {
     for (const p of selectTiles(e, fx.on)) {
       if (fx.emptyOnly && unitAt(e.ctx.state, p)) continue;
+      if (fx.standableOnly && !isStandable(e.ctx,p))continue;
       const current = tileAt(e.ctx.state.board, p)?.terrain;
       if (fx.replaceOnly && (!current || !fx.replaceOnly.includes(current))) continue;
-      createTerrain(e.ctx, p, fx.terrain, fx.duration, e.caster.id);
+      if(createTerrain(e.ctx,p,fx.terrain,fx.duration,e.caster.id)){
+        const tile=tileAt(e.ctx.state.board,p)!;
+        if(fx.iceExitBonus!==undefined)tile.iceExitBonus=fx.iceExitBonus;
+        if(fx.whileWorldFrozen&&e.caster.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0))tile.frozenWorldOwnerId=e.caster.id;
+      }
     }
   },
   REMOVE_HAZARDS: (e, fx) => {

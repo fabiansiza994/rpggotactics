@@ -1,6 +1,17 @@
 import type { DamageType } from '../combat/damage-types';
 
 export type StatusId =
+  | 'SNOW_WAR'
+  | 'GLACIER_CLAW'
+  | 'ABSOLUTE_ZERO'
+  | 'FROZEN'
+  | 'FROST_MANTLE'
+  | 'ICE_PRISON'
+  | 'ARCANE_SKATING'
+  | 'GLACIAL_REFLECTION'
+  | 'AVALANCHE_SLOW'
+  | 'ARCANE_INVERSION'
+  | 'THUNDER_INCARNATION'
   | 'VOLTAIC_ARMOR'
   | 'CONDUCTIVE_MARK'
   | 'ELECTRIC_FRENZY'
@@ -134,6 +145,10 @@ export interface StatusDef {
    * surviving unit it hit this many tiles away (no collision damage); the status is then consumed.
    */
   nextAttackPush?: number;
+  /** Counts down on subsequent owner starts: application turn + next two own turns. */
+  ownerStartLifetime?: boolean;
+  damageToHealingCap?: number;
+  thunderEconomy?: boolean;
 }
 
 /** Statuses whose instance stores who applied it (one per source on the whole board). */
@@ -143,6 +158,17 @@ export const isSourcedStatus = (def: Pick<StatusDef, 'preyMark' | 'taunt'>): boo
 export interface StatusInstance {
   id: StatusId;
   turnsLeft: number;
+  /** Serialized battle-only trigger consumption; never reset by a snapshot. */
+  lastTriggerTurn?: number;
+  discountUsed?: boolean;
+  stepReady?: boolean;
+  stepUsed?: boolean;
+  triggerCount?: number;
+  absorptionUsed?: boolean;
+  power?:number;
+  lastShotTurn?:number;
+  skatingUsed?: number;
+  skatingEnded?: boolean;
   /** Only for sourced statuses (`preyMark`, `taunt`): the unit that applied it. Absent otherwise. */
   sourceId?: string;
   /** Uses left of a counted trigger (`StatusDef.onFormChange`). Absent for other statuses. */

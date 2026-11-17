@@ -1,3 +1,4 @@
+import {primaryMarketExpansionId} from './market-primary';
 import type { BoosterPolicy } from './boosters';
 import { hasGuaranteedFreeCatalogRoute } from '../data/free-catalog';
 import { isExclusiveCard } from '../domain/cards/card';
@@ -250,6 +251,7 @@ export type CatalogIssue =
   | { code: 'BAD_LIMIT'; offerId: string }
   | { code: 'UNKNOWN_CHAMPION'; offerId: string }
   | { code: 'UNKNOWN_CARD'; offerId: string; cardId: string }
+  | {code:'MISSING_MARKET_PRIMARY';offerId:string;cardId:string}
   | { code: 'WRONG_HERO'; offerId: string; cardId: string }
   | { code: 'OVER_COPY_LIMIT'; offerId: string; cardId: string }
   /** The card has an exclusive source (world reward…) and cannot be sold. */
@@ -299,6 +301,7 @@ export function validateCatalog(offers: readonly StoreOffer[], ctx: StoreContext
     for (const c of o.contents) {
       if (c.kind === 'CARD') {
         const card = ctx.content.cards[c.cardId];
+        if(card && !primaryMarketExpansionId(card.id))issues.push({code:'MISSING_MARKET_PRIMARY',offerId,cardId:card.id});
         if (!card) issues.push({ code: 'UNKNOWN_CARD', offerId, cardId: c.cardId });
         else if (o.booster?.poolType !== 'GENERAL' && (o.heroId === undefined || !isCardForHero(card, o.heroId)))
           issues.push({ code: 'WRONG_HERO', offerId, cardId: c.cardId });

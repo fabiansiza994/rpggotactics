@@ -1,3 +1,7 @@
+import {snowSoldierVariant} from './snowSoldierAtlas';
+import {snowVisualAge} from './snowSoldierAnimations';
+import {GlacierClawView} from './GlacierClawView';
+import {LegendaryStatusView} from './LegendaryStatusView';
 import { premiumVfxEnabled } from '../vfx/premiumVfxRelease';
 import { lightEnvelope, litTint, contactShadow, blendLight } from './localLighting';
 import { HealthBarAnimation } from './HealthBarAnimation';
@@ -80,6 +84,25 @@ export class UnitView {
   private readonly aura = new Graphics();
   private readonly worldLight = new Graphics();
   private readonly crystalDamage = new Graphics();
+  private readonly legendaryFx = new LegendaryStatusView();
+  private readonly glacierClaw=new GlacierClawView();
+  beginGlacierClaw():void {this.glacierClaw.enter();}
+  releaseGlacierClaw(fire:boolean):void {this.glacierClaw.release(fire);}
+  private snowAge=5;private snowWorld=false;private snowRefreezeFrom=5;private snowClimateReady=false;private snowRefreezePlayed=false;
+  setSnowClimate(turns:number,world:boolean):void {
+    const age=snowVisualAge(turns,world);
+    if(this.snowClimateReady&&!this.snowWorld&&world)this.snowRefreezeFrom=this.snowAge;
+    if(this.snowWorld&&!world)this.snowRefreezePlayed=false;
+    this.snowAge=age;this.snowWorld=world;this.snowClimateReady=true;
+    if(this.animator&&this.body instanceof PaintedFigure)this.body.setAnimationVariant(snowSoldierVariant(Math.max(1,age)),false);
+  }
+  beginSnowRefreeze(reduced:boolean):void {
+    if(this.defId!=='snow_soldier'||!this.animator||this.animator.dead||this.snowRefreezePlayed)return;
+    const from=this.snowWorld?this.snowRefreezeFrom:this.snowAge;this.snowRefreezePlayed=true;
+    if(from>=5||reduced)return;
+    if(this.body instanceof PaintedFigure)this.body.setAnimationVariant('snow_soldier',false);
+    this.animator.play('ability',180,Math.max(0,Math.min(3,from-1)));
+  }
   private readonly conditionFx = new VeilStatusView();
   private veilPhase: string | undefined;
   private crystalCrackLevel = 0;
@@ -194,7 +217,7 @@ export class UnitView {
           .fill({ color: accent, alpha: 0.55 });
     }
     this.figure.addChild(this.worldLight, this.body, this.crystalDamage, this.aura);
-    this.scaler.addChild(this.contact, this.base, this.selection, this.conditionFx, this.figure);
+    this.scaler.addChild(this.contact, this.base, this.selection, this.conditionFx, this.glacierClaw.back, this.figure, this.legendaryFx, this.glacierClaw.front);
     const roots = paintedCharacter('root_snare');
     this.rootSnare = roots ? new RootSnareView(roots) : null;
     if (this.rootSnare) this.scaler.addChild(this.rootSnare);
@@ -354,7 +377,8 @@ export class UnitView {
   }
 
   playAnimation(motion: CharacterMotion, cueMs = 90): boolean {
-    if(motion==='death'){this.pulseRemaining=0;this.drawWorldLight();for(const marker of this.chrome.children)if(marker.label==='prey-mark'||marker.label==='hunter-prey-mark')marker.visible=false;}
+    if(['melt','fire_death'].includes(motion)&&!this.animator)return false;
+    if(['death','melt','fire_death'].includes(motion)){this.pulseRemaining=0;this.drawWorldLight();for(const marker of this.chrome.children)if(marker.label==='prey-mark'||marker.label==='hunter-prey-mark')marker.visible=false;}
     const requestedGait = motion === 'walk' || motion === 'run';
     const authoredVertical = !!verticalAsset(this.defId) && isVerticalView(cardinalView(this.wizardDirection));
     const hasGaitProfile = shapeshifterPresentationEnabled && requestedGait;
@@ -397,7 +421,8 @@ export class UnitView {
       this.familiarRemaining = this.familiarDuration;
       return true;
     }
-    const played = this.animator?.play(clip, cueMs) ?? false;
+    const snowStart=this.defId==='snow_soldier'?(motion==='death'?Math.floor((5-this.snowAge)/2):motion==='fire_death'&&this.snowAge<=2?1:0):0;
+    const played = this.animator?.play(clip, cueMs,snowStart) ?? false;
     if (played && (CHARACTER_ANIMATIONS[this.defId]?.locomotionOnly || authoredVertical) && !['walk','run'].includes(motion)) {
       this.familiarMotion=motion;
       this.familiarDuration=Math.max(100,cueMs);
@@ -516,6 +541,8 @@ export class UnitView {
     this.healthAnimation.tick(ms, reduced);
     this.drawHealth();
     this.conditionFx.advance(this.clock, reduced);
+    this.legendaryFx.advance(ms,this.clock,reduced);
+    this.glacierClaw.advance(ms,reduced);
     this.clock += ms;
     this.rootSnare?.advance(ms, reduced);
     this.selection.alpha = reduced ? 0.8 : 0.78 + Math.sin((this.clock / 2100) * Math.PI * 2) * 0.1;
@@ -608,6 +635,8 @@ export class UnitView {
     if(phaseName && phaseName!==this.veilPhase)this.pulseLight(0xb994d5,260);
     this.veilPhase=phaseName;
     this.conditionFx.update(unit, phaseName);
+    this.legendaryFx.update(unit);
+    const claw=unit.statuses.find(s=>s.id==='GLACIER_CLAW');this.glacierClaw.sync(!!claw,!!claw?.power);
     if(this.defId==='pact_golem')this.aura.visible=unit.hp>0;
     this.rootSnare?.setActive(unit.hp > 0 && unit.statuses.some(s => s.id === 'ROOTED'));
     if (CHARACTER_ANIMATIONS[this.defId]?.clips.guard)
@@ -840,6 +869,7 @@ export class UnitView {
   }
 
   destroy(): void {
+    this.glacierClaw.destroy();
     this.body.filters = null;
     this.clarity.destroy();
     this.chrome.destroy({ children: true });

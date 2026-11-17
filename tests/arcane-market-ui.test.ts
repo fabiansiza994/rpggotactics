@@ -24,11 +24,10 @@ const offers = [...boosterOffers(ctx), ...STORE_CATALOG].map((o) =>
   offerView(o, owned, ctx, Date.now()),
 );
 describe("market presentation and ownership-preserving frame stage", () => {
-  it("has five independent sections and no duplicate offer ids", () => {
+  it("has four independent sections and no duplicate offer ids", () => {
     expect(MARKET_SECTIONS.map((c) => c.id)).toEqual([
       "featured",
       "packs",
-      "cards",
       "cosmetics",
       "crystals",
     ]);

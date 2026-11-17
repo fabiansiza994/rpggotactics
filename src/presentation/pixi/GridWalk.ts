@@ -56,15 +56,15 @@ export class GridWalk {
   enqueue(
     id: string,
     view: WalkView,
-    move: { from: Pos; to: Pos; path: readonly Pos[] },
+    move: { from: Pos; to: Pos; path: readonly Pos[]; mode?: string },
     reduced: boolean,
   ): void {
     const route = locomotionRoute(move);
     const cells = [move.from, ...move.path];
     if (cells.length === 1 || cells.at(-1)!.x !== move.to.x || cells.at(-1)!.y !== move.to.y)
       cells.push(move.to);
-    const motion = reduced ? 'idle' as const : route.mode;
-    const segments: Segment[] = this.qaLocomotion ? route.segments.map(s=>({...s,motion})) : cells.slice(1).map((to, i) => ({ from: cells[i]!, to }));
+    const motion = reduced || move.mode==='SLIDE' ? 'idle' as const : route.mode;
+    const segments: Segment[] = this.qaLocomotion ? route.segments.map(s=>({...s,motion})) : cells.slice(1).map((to, i) => ({ from: cells[i]!, to, ...(move.mode==='SLIDE'?{motion:'idle' as const}:{}) }));
     if (!segments.length) return;
     const active = this.playing.get(id);
     if (active) {
@@ -77,7 +77,7 @@ export class GridWalk {
     view.root.position.set(this.center(move.from).x, this.center(move.from).y);
     if (view.faceMovement) view.faceMovement(segments[0]!.from, segments[0]!.to);
     else view.faceHorizontal(segments[0]!.to.x - segments[0]!.from.x);
-    view.playAnimation(this.qaLocomotion ? motion : 'walk');
+    view.playAnimation(move.mode==='SLIDE'?'idle':this.qaLocomotion ? motion : 'walk');
     this.playing.set(id, { view, segments, elapsed: 0, reduced, enter: false, leave: straightJoin(segments[0], segments[1]) });
   }
 
@@ -96,7 +96,7 @@ export class GridWalk {
           const next = state.segments[0]!;
           if (state.view.faceMovement) state.view.faceMovement(next.from, next.to);
           else state.view.faceHorizontal(next.to.x - next.from.x);
-          if (this.qaLocomotion) state.view.playAnimation(next.motion ?? 'walk');
+          if (this.qaLocomotion || next.motion) state.view.playAnimation(next.motion ?? 'walk');
         }
       }
       const segment = state.segments[0];

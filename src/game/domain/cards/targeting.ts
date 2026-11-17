@@ -1,11 +1,12 @@
 import { summonCanActNow } from '../summons/summons';
-import { allPositions, inBounds, isPlayable, type Board } from '../board/board';
+import { allPositions, tileAt, inBounds, isPlayable, type Board } from '../board/board';
 import { hasLineOfSight } from '../board/line-of-sight';
 import {
   areHostile,
   blocksLineOfSightAt,
   canEnter,
   isEmptyTile,
+  isStandable,
   isMovementPrevented,
   terrainDefAt,
   unitAt,
@@ -62,6 +63,11 @@ export function matchesUnitFilter(caster: Unit, unit: Unit, filter: UnitFilter):
 
 function matchesTileFilter(ctx: RuleContext, p: Pos, filter: TileFilter): boolean {
   switch (filter) {
+    case 'STANDABLE': return isStandable(ctx,p);
+    case 'OWN_TEMPORARY_ICE': {
+      const tile=tileAt(ctx.state.board,p);
+      return tile?.terrain==='ICE' && tile.terrainTurnsLeft!==null && tile.terrainOwnerId===ctx.state.player.heroId;
+    }
     case 'ANY':
       return true;
     case 'EMPTY':

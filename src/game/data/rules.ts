@@ -7,6 +7,17 @@ import { RANKED_PREMIUM_STATUSES } from './ranked-premium-cards';
 
 /** 02_MVP_RULES §10: each status declares duration handling, tick timing and stacking. */
 export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
+  SNOW_WAR:{id:'SNOW_WAR',name:'Guerra de Nieve',negative:false,tick:'NEVER',stacking:'IGNORE'},
+  GLACIER_CLAW:{id:'GLACIER_CLAW',name:'Garra del Glaciar',negative:true,tick:'NEVER',stacking:'IGNORE',preventsMovement:true},
+  ABSOLUTE_ZERO: {id:'ABSOLUTE_ZERO',name:'Mundo Gélido',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true},
+  FROZEN: {id:'FROZEN',name:'Congelado: próximo movimiento +1 PM',negative:true,tick:'NEVER',stacking:'IGNORE',permanent:true},
+  FROST_MANTLE: {id:'FROST_MANTLE',name:'Manto de Escarcha',negative:false,tick:'NEVER',stacking:'IGNORE'},
+  ICE_PRISON: {id:'ICE_PRISON',name:'Prisión de Hielo',negative:true,tick:'NEVER',stacking:'IGNORE',moveReduction:2},
+  ARCANE_SKATING: {id:'ARCANE_SKATING',name:'Patinaje Arcano',negative:false,tick:'NEVER',stacking:'IGNORE'},
+  GLACIAL_REFLECTION: {id:'GLACIAL_REFLECTION',name:'Reflejo Glacial',negative:false,tick:'NEVER',stacking:'IGNORE'},
+  AVALANCHE_SLOW: {id:'AVALANCHE_SLOW',name:'Avalancha: -1 PM',negative:true,tick:'NEVER',stacking:'IGNORE',moveReduction:1},
+  ARCANE_INVERSION: {id:'ARCANE_INVERSION',name:'Inversión Arcana',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true,damageToHealingCap:3},
+  THUNDER_INCARNATION: {id:'THUNDER_INCARNATION',name:'Encarnación del Dios del Trueno',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true,thunderEconomy:true},
   VOLTAIC_ARMOR: { id: 'VOLTAIC_ARMOR', name: 'Armadura de Voltios', negative: false, tick: 'NEVER', stacking: 'IGNORE', counterDamage: 1, counterDamageType: 'ARCANE', expiresAtOwnerTurnStart: true },
   CONDUCTIVE_MARK: { id: 'CONDUCTIVE_MARK', name: 'Marca Conductora', negative: true, tick: 'NEVER', stacking: 'IGNORE', receivedElectricalBonus: 1 },
   ELECTRIC_FRENZY: { id: 'ELECTRIC_FRENZY', name: 'Frenesí Eléctrico', negative: false, tick: 'NEVER', stacking: 'IGNORE', outgoingDamageBonus: 1, incomingDamageBonus: 1 },

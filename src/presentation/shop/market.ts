@@ -1,13 +1,13 @@
+import {primaryMarketExpansionId} from '../../game/store/market-primary';
 import { rarityOf, DEFAULT_CONTENT } from "../../game";
 import type { CatalogOffer } from "./api";
 export const MARKET_SECTIONS = [
   { id: "featured", label: "Destacados" },
   { id: "packs", label: "Expansiones" },
-  { id: "cards", label: "Cartas individuales" },
   { id: "cosmetics", label: "Cosméticos" },
   { id: "crystals", label: "Cristales Arcanos" },
 ] as const;
-export type MarketSection = (typeof MARKET_SECTIONS)[number]["id"];
+export type MarketSection = (typeof MARKET_SECTIONS)[number]["id"] | "cards";
 export function marketOffers(
   offers: readonly CatalogOffer[],
   section: MarketSection,
@@ -65,3 +65,9 @@ export const RARITY_LABELS = {
   LEGENDARY: "Legendaria",
   ULTRA: "Ultra",
 } as const;
+
+/** A direct-card promotion leads to its sole commercial home; never creates a global catalog. */
+export function marketOfferPrimary(offer:CatalogOffer):string|null {
+ const ids=new Set(offer.contents.flatMap(c=>c.kind==='CARD'?[primaryMarketExpansionId(c.cardId)]:[]));
+ return ids.size===1 && !ids.has(undefined) ? [...ids][0]! : null;
+}

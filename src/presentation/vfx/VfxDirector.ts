@@ -411,6 +411,7 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'projectile') {
+      if(e.type==='SNOWBALL_FIRED'){const caster=this.host.unit(e.unitId);caster?.faceTarget(e.from,e.to,true);fx.snowball(e.from,e.to,cue.duration,caster?.castOrigin()??undefined);return;}
       if (e.type === 'ARROW_REBOUNDED') {
         if (e.element === 'THUNDER' && fx.catalog) fx.catalog.projectile({...familyRecipe('arcane','projectile'),mageElement:'thunder',bank:'mage-elements',tint:0xa5dfff},e.fromPos,e.pos,cue.duration);
         else fx.specialArrow(e.fromPos, e.pos, 'rebound_arrow', cue.duration);
@@ -464,6 +465,7 @@ export class VfxDirector {
         if (from && to) fx.fireball.projectile(from, to, Math.max(1, cue.duration), origin);
         return;
       }
+      if(cue.key==='glacial_storm')return;
       if (e.type === 'PROJECTILE_LAUNCHED')
         fx.projectile(e.from, e.to, f, Math.max(1, cue.duration), origin);
       else if (e.type === 'CARD_PLAYED')
@@ -477,6 +479,14 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'spellImpact' && e.type === 'CARD_PLAYED') {
+      if(e.cardId==='glacial_storm'){fx.glacialStorm(e.affectedTiles,!!e.worldFrozen);return;}
+      if(this.host.card(e.cardId)?.tags.includes('antarctic')){
+        const origin=this.position(e.casterId)??e.impact;
+        fx.area(e.affectedTiles,'ICE',reduced?100:e.cardId==='absolute_zero'?650:320);
+        fx.glyph(origin,'ICE',reduced?100:400,e.cardId==='absolute_zero'?65:28);
+        if(e.cardId==='avalanche'){fx.streak(origin,e.impact);fx.burst(e.impact,'ICE');}
+        return;
+      }
       const caster = this.host.unit(e.casterId);
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
@@ -616,6 +626,21 @@ export class VfxDirector {
     let deferCommit = false;
     // Read the pre-event position for removals / shield responses before projection commits.
     switch (e.type) {
+      case 'SNOWBALL_FIRED': {
+        const caster=this.host.unit(e.unitId);caster?.faceTarget(e.from,e.to,true);caster?.playAnimation('cast',cue.duration||180);
+        fx.glyph(e.from,'ICE',reduced?70:180,18);
+        if(e.global){fx.burst(e.from,'ICE');fx.glyph(e.to,'ICE',reduced?70:300,28);}
+        break;
+      }
+      case 'LEGENDARY_TRIGGER': {
+        const pos=oldPosition??e.pos;
+        fx.catalog?.pulse?.(e.kind==='ABSORB'?'defense':'tactic',pos);
+        this.host.unit(e.unitId)?.pulseLight(e.kind==='ABSORB'?0xb27bff:0x73dcff,reduced?100:300);
+        if(e.kind==='THUNDER')fx.number(e.unitId,pos,e.amount,'move');
+        if(e.kind==='ABSORB')fx.catalog?.impact({...familyRecipe('arcane'),tint:0xb27bff},pos,pos,[pos]);
+        if(e.kind==='STEP')fx.catalog?.impact({...familyRecipe('arcane'),mageElement:'thunder',bank:'mage-elements',tint:0x73dcff},pos,pos,[pos]);
+        break;
+      }
       case 'GLYPH_ACTIVATED': {
         const recipe=this.catalogActions.get(e);
         if(recipe&&fx.catalog?.handles?.(recipe))for(const target of e.targets)fx.catalog.projectile(recipe,e.origin,target.pos,reduced?60:180);
@@ -708,7 +733,10 @@ export class VfxDirector {
         if(this.catalogActions.get(e)?.recall && oldPosition && fx.catalog?.pulse?.('summon',oldPosition)) {
           defeated?.playAnimation('idle');
           if(defeated&&!reduced){const alpha=defeated.root.alpha;fx.animate(cue.duration||600,t=>{if(!defeated.root.destroyed)defeated.root.alpha=alpha*(1-t);},()=>{if(!defeated.root.destroyed)defeated.root.alpha=alpha;});}
-        } else defeated?.playAnimation('death', cue.duration || 600);
+        } else {
+          const motion=defeated?.defId==='snow_soldier'&&e.reason==='MELT'?'melt':defeated?.defId==='snow_soldier'&&e.reason==='FIRE'?'fire_death':'death';
+          if(!defeated?.playAnimation(motion,cue.duration||600))defeated?.playAnimation('death',cue.duration||600);
+        }
         if (defeated?.defId === 'temple_guardian' && oldPosition) this.host.groundImpact?.(e.unitId, oldPosition, true);
         deferCommit = true;
         break;
@@ -796,6 +824,12 @@ export class VfxDirector {
         break;
       }
       case 'STATUS_APPLIED':
+        if(e.status==='ABSOLUTE_ZERO')for(const u of this.visual?.units??[])if(u.defId==='snow_soldier'&&u.summon?.ownerId===e.unitId)this.host.unit(u.id)?.beginSnowRefreeze(reduced);
+        if(e.status==='GLACIER_CLAW')this.host.unit(e.unitId)?.beginGlacierClaw();
+        if(oldPosition && ['FROZEN','FROST_MANTLE','GLACIAL_REFLECTION','ABSOLUTE_ZERO','ARCANE_SKATING'].includes(e.status)){
+          fx.glyph(oldPosition,'ICE',reduced?80:300,e.status==='ABSOLUTE_ZERO'?58:26);
+          fx.burst(oldPosition,'ICE');
+        }
         if(cue.key==='paralyzing_pulse'&&e.status==='SLOWED'&&oldPosition){
           const recipe=this.catalogActions.get(e);
           if(recipe&&fx.catalog?.handles?.(recipe)){fx.catalog.pulseStatus(recipe,oldPosition,e.turnsLeft);break;}
@@ -819,6 +853,11 @@ export class VfxDirector {
         this.host.impulse('LIGHT', reduced);
         break;
       case 'STATUS_REMOVED':
+        if(e.status==='GLACIER_CLAW'){this.host.unit(e.unitId)?.releaseGlacierClaw(e.reason==='FIRE');if(e.reason==='FIRE'&&oldPosition)fx.burst(oldPosition,'FIRE');}
+        if(oldPosition && ['FROZEN','FROST_MANTLE','GLACIAL_REFLECTION','ABSOLUTE_ZERO'].includes(e.status)){
+          fx.glyph(oldPosition,'ICE',180,24);
+          fx.sparksAt(fx.center(oldPosition).x,fx.center(oldPosition).y,'ICE',reduced?1:5,20);
+        }
         if (
           e.reason === 'CLEANSED' &&
           oldPosition &&

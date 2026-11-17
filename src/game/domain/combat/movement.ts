@@ -1,3 +1,7 @@
+import {iceWalkQuote} from './ice-movement';
+import {setMovePoints} from '../cards/deck';
+import {tileAt} from '../board/board';
+import {removeStatus} from '../statuses/status-rules';
 import { faceTravel } from './qa-depth';
 import { inBounds } from '../board/board';
 import { blocksMovementAt, canEnter, terrainDefAt, unitAt } from '../board/occupancy';
@@ -20,15 +24,26 @@ export function walkUnit(
   unit: Unit,
   fullPath: Pos[],
   cost: number,
-  mode: 'WALK' | 'CHARGE' = 'WALK',
+  mode: 'WALK' | 'CHARGE' | 'SLIDE' = 'WALK',
 ): Pos[] {
   const path = cutPathAtTrap(ctx, unit, fullPath);
   const to = path[path.length - 1];
   if (!to) return [];
   const from = unit.pos;
+  const quote=iceWalkQuote(ctx,unit,path);
+  const frozen=unit.statuses.some(s=>s.id==='FROZEN');
+  if(frozen){
+    if(cost===0 && unit.id===ctx.state.player.heroId){
+      if(ctx.state.player.movePoints<1)return [];
+      setMovePoints(ctx,ctx.state.player.movePoints-1);
+    }
+    removeStatus(ctx,unit,'FROZEN','CONSUMED');
+  }
+  const skate=unit.statuses.find(s=>s.id==='ARCANE_SKATING');
+  if(skate){skate.skatingUsed=(skate.skatingUsed??0)+quote.free;skate.skatingEnded=quote.ended;}
   faceTravel(ctx, unit, path.length > 1 ? path[path.length - 2]! : from, to);
   unit.pos = to;
-  ctx.emit({ type: 'UNIT_MOVED', unitId: unit.id, from, to, path, cost, mode });
+  ctx.emit({ type: 'UNIT_MOVED', unitId: unit.id, from, to, path, cost, mode:skate&&!quote.ended?'SLIDE':mode });
   collectAlong(ctx, unit, path);
   onUnitMoved(ctx, unit, from);
   springTrap(ctx, unit);
@@ -78,6 +93,9 @@ export function pushUnit(
   sourceId: string,
 ): void {
   const from = unit.pos;
+  if(distance>0 && unit.statuses.some(s=>s.id==='FROST_MANTLE')){
+    distance=unit.statuses.find(s=>s.id==='FROST_MANTLE')?.power===-1?0:Math.max(0,distance-1);removeStatus(ctx,unit,'FROST_MANTLE','CONSUMED');
+  }
   let current = from;
   let collision: PushCollision | null = null;
   let blocker: Unit | undefined;
@@ -94,6 +112,11 @@ export function pushUnit(
     if (hostileTrapAt(ctx, unit, current)) break;
   }
 
+  // At most ONE extra tile per forced displacement; no recursive call.
+  if(!collision && !samePos(from,current) && tileAt(ctx.state.board,current)?.slippery && !hostileTrapAt(ctx,unit,current)){
+    const extraSteps=Math.min(2,tileAt(ctx.state.board,current)?.slipDistance??1);
+    for(let i=0;i<extraSteps;i++){const extra=step(current,dir);if(!canEnter(ctx,extra,unit.id))break;current=extra;if(hostileTrapAt(ctx,unit,current))break;}
+  }
   unit.pos = current;
   ctx.emit({ type: 'UNIT_PUSHED', unitId: unit.id, from, to: current, direction: dir, sourceId, collision });
   collectAlong(ctx, unit, [current]);

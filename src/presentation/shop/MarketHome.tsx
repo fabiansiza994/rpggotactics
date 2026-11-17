@@ -1,3 +1,4 @@
+import {marketOfferPrimary} from './market';
 import { DEFAULT_CONTENT, ownedFor, type PlayerProfile } from "../../game";
 import type { MarketExpansionView } from "../../game/store/market-expansions";
 import type { CatalogOffer } from "./api";
@@ -101,10 +102,10 @@ export function MarketHome({
             >
               <img src={e.art} alt="" loading="lazy" />
               <span className="shop-label">
-                {e.status === "AVAILABLE" ? "DISPONIBLE" : "PRÓXIMAMENTE"}
+                {e.status === "AVAILABLE" ? "DISPONIBLE" : e.status === "CATALOG_ONLY" ? "CATÁLOGO" : "PRÓXIMAMENTE"}
               </span>
               <strong>{e.name}</strong>
-              {e.status === "AVAILABLE" ? (
+              {e.status !== "COMING_SOON" ? (
                 <small>
                   {e.cardIds.length} cartas · Colección {count(e)}/
                   {e.cardIds.length}
@@ -124,7 +125,7 @@ export function MarketHome({
               <button
                 key={o.id}
                 className="market-home-product"
-                onClick={() => onOffer(o)}
+                onClick={() => {if(o.type==='CARD'){const id=marketOfferPrimary(o);if(id)onExpansion(id);else onCategory('packs');}else onOffer(o);}}
               >
                 <div className="market-home-product-art">
                   <StoreArt offer={o} heroId={heroId} />
@@ -142,7 +143,6 @@ export function MarketHome({
         <nav className="market-home-shortcuts" aria-label="Accesos del mercado">
           {(
             [
-              ["cards", "♧", "Cartas"],
               ["cosmetics", "✧", "Cosméticos"],
               ["crystals", "◇", "Cristales"],
               ["packs", "▥", "Expansiones"],

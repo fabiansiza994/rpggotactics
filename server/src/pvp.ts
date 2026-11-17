@@ -1545,6 +1545,7 @@ export function validCommand(c: unknown): c is Command {
     Number.isInteger((p as { y: number }).y) &&
     Math.abs((p as { x: number }).x) < 100 &&
     Math.abs((p as { y: number }).y) < 100;
+  if(v.type === "LEGENDARY_STEP")return pos(v.to);
   if (v.type === "END_TURN")
     return (
       v.discardUid === undefined ||
@@ -1583,6 +1584,7 @@ export function validCommand(c: unknown): c is Command {
 }
 
 function canonicalCommand(command: Command): Command {
+  if(command.type==='LEGENDARY_STEP')return {type:command.type,to:{x:command.to.x,y:command.to.y}};
   if (command.type === "SEARCH_SUMMON")
     return {
       type: command.type,

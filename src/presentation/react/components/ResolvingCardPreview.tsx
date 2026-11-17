@@ -33,7 +33,8 @@ function PublicActionPreview({ engine }: { engine: GameEngine }) {
     );
   }
   if (!cast) return null;
-  const card = engine.content.cards[cast.cardId];
+  const source = engine.content.cards[cast.cardId];
+  const card=source&&cast.worldFrozen&&source.worldFrozenUpgrade?{...source,...source.worldFrozenUpgrade,worldFrozenActive:true}:source;
   if (!card) return null;
   return (
     <aside
@@ -49,7 +50,7 @@ function PublicActionPreview({ engine }: { engine: GameEngine }) {
       </div>
       <div>
         <small>{cast.casterId === engine.heroId ? 'EN RESOLUCIÓN' : 'RIVAL · EN RESOLUCIÓN'}</small>
-        <strong>{card.name}</strong>
+        <strong>{card.name}{cast.worldFrozen?' · 🌨 Potenciada':''}</strong>
         <span>
           {card.cost} EN · {RARITY_LABEL[card.rarity ?? 'COMMON']}
         </span>

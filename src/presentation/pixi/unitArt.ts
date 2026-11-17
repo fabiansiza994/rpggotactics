@@ -158,9 +158,9 @@ export class PaintedFigure extends Container {
     if (this.unitId === 'mage' && !directionalAtlas && this.directional && (motion === 'idle' || motion === 'cast'))
       this.scale.x = wizardView(this.directional).mirror ? -1 : 1;
     if (previousTexture !== this.sprite.texture) this.discardIdleMesh();
-    this.sprite.anchor.set(0.5, 0.875);
+    this.sprite.anchor.set(0.5, this.unitId==='snow_soldier'?230/256:0.875);
     this.sprite.scale.set(
-      this.unitId === 'mage' ? wizardSpriteScale(this.sprite.texture.height) : (hasDirectionalAtlas(this.unitId) || CHARACTER_ANIMATIONS[this.unitId]?.locomotionOnly || this.unitId.startsWith('qa_form_')) ? spriteScale(characterSpec(this.unitId),this.sprite.texture.height,TILE) : displayScale,
+      this.unitId === 'mage' ? wizardSpriteScale(this.sprite.texture.height) : (this.unitId==='snow_soldier' || hasDirectionalAtlas(this.unitId) || CHARACTER_ANIMATIONS[this.unitId]?.locomotionOnly || this.unitId.startsWith('qa_form_')) ? spriteScale(characterSpec(this.unitId),this.sprite.texture.height,TILE) : displayScale,
     );
     const geometry = CHARACTER_ANIMATIONS[this.unitId]?.locomotionOnly
       ? gaitGeometry(this.unitId, characterSpec(this.unitId), TILE, this.sprite.texture.height)
@@ -199,7 +199,7 @@ export class PaintedFigure extends Container {
       view === 'front' ? paintedAnimationFrame('mage', 'idle', 0) : wizardTexture(view);
     if (!texture) return;
     this.sprite.texture = texture;
-    this.sprite.anchor.set(0.5, 0.875);
+    this.sprite.anchor.set(0.5, this.unitId==='snow_soldier'?230/256:0.875);
     this.sprite.scale.set(wizardSpriteScale(texture.height));
     this.sprite.position.set(0, FOOT_Y);
     this.scale.x = mirror ? -1 : 1;

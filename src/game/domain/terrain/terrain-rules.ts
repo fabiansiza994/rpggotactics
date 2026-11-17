@@ -19,7 +19,13 @@ export function createTerrain(
   const tile = tileAt(ctx.state.board, p);
   if (!tile) return false;
   if (!ctx.content.terrain[tile.terrain].canBeOverwritten) return false;
+
   const previous = tile.terrain;
+  delete tile.frozenWorldOwnerId;
+  tile.terrainOwnerId=sourceId;
+  delete tile.slippery;
+  delete tile.slipDistance;
+  delete tile.iceExitBonus;
   tile.terrain = terrain;
   tile.terrainTurnsLeft = turnsLeft;
   if (turnsLeft === null) tile.baseTerrain = terrain;
@@ -31,9 +37,19 @@ function revertTerrain(ctx: RuleContext, p: Pos, reason: 'EXPIRED' | 'CLEANSED')
   const tile = tileAt(ctx.state.board, p);
   if (!tile) return;
   const removed = tile.terrain;
+  delete tile.frozenWorldOwnerId;
+  delete tile.terrainOwnerId;
+  delete tile.slippery;
+  delete tile.slipDistance;
+  delete tile.iceExitBonus;
   tile.terrain = tile.baseTerrain;
   tile.terrainTurnsLeft = null;
   ctx.emit({ type: 'TERRAIN_REMOVED', pos: p, terrain: removed, revertedTo: tile.terrain, reason });
+}
+
+/** Climate-owned terrain never rewrites baseTerrain. Expiration, dispel and owner death remove it. */
+export function clearFrozenWorldTerrain(ctx:RuleContext,ownerId:string):void {
+ for(const p of allPositions(ctx.state.board))if(tileAt(ctx.state.board,p)?.frozenWorldOwnerId===ownerId)revertTerrain(ctx,p,'EXPIRED');
 }
 
 /** Removes hazard terrain (temporary or permanent) from a tile. Permanent hazards become NORMAL. */
@@ -97,7 +113,13 @@ export function tickBoardDurations(ctx: RuleContext): void {
   tickTraps(ctx);
   for (const p of allPositions(ctx.state.board)) {
     const tile = tileAt(ctx.state.board, p);
-    if (!tile || tile.terrainTurnsLeft === null) continue;
+    if (!tile) continue;
+    if(tile.frozenWorldOwnerId){
+      const owner=ctx.state.units.find(u=>u.id===tile.frozenWorldOwnerId);
+      if(owner?.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0))continue;
+      revertTerrain(ctx,p,'EXPIRED');continue;
+    }
+    if(tile.terrainTurnsLeft===null)continue;
     tile.terrainTurnsLeft -= 1;
     if (tile.terrainTurnsLeft <= 0) revertTerrain(ctx, p, 'EXPIRED');
   }

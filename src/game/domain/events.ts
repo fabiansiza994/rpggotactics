@@ -19,6 +19,8 @@ import type { TerrainType } from './terrain/terrain';
  * `sourceId` conventions: a unit id, `terrain:<TYPE>` or `status:<ID>`.
  */
 export type GameEvent =
+  | {type:'SNOWBALL_FIRED';unitId:string;targetId:string;from:Pos;to:Pos;global:boolean}
+
   | { type: 'GLYPH_ACTIVATED'; glyphId: string; kind: string; ownerId: string; origin: Pos; targets: {unitId:string;pos:Pos}[]; remaining: number }
   | { type: 'BACKSTAB'; unitId: string; sourceId: string; pos: Pos; bonus: 1 }
   | { type: 'FORM_CHANGED'; unitId: string; from: string | null; to: string | null }
@@ -103,7 +105,9 @@ export type GameEvent =
       direction: Direction | null;
       /** The card spent Momentum and resolved its empowered effects. */
       empowered?: boolean;
+      worldFrozen?:boolean;
     }
+  | {type:'LEGENDARY_TRIGGER';unitId:string;status:import('./statuses/status').StatusId;kind:'ABSORB'|'THUNDER'|'STEP';amount:number;pos:Pos}
   | { type: 'CARD_RESOLVED'; cardUid: string; cardId: string }
 
   // ── Rituals ────────────────────────────────────────────────────────
@@ -138,7 +142,7 @@ export type GameEvent =
       /** Every tile stepped on, excluding `from`, ending with `to`. */
       path: Pos[];
       cost: number;
-      mode: 'WALK' | 'CHARGE';
+      mode: 'WALK' | 'CHARGE' | 'SLIDE';
     }
   | { type: 'UNIT_TELEPORTED'; unitId: string; from: Pos; to: Pos; sourceId: string }
   | {
@@ -181,7 +185,7 @@ export type GameEvent =
   | { type: 'HP_SACRIFICED'; unitId: string; cardId?: string; amount: number; hpAfter: number }
   /** `unitId`'s summon capacity changed for this battle (`from` → `to` points, `bonus` = battle total). Public. */
   | { type: 'SUMMON_CAPACITY_CHANGED'; unitId: string; cardId?: string; from: number; to: number; bonus: number }
-  | { type: 'UNIT_DEFEATED'; unitId: string; faction: Faction; kind: UnitKind; pos: Pos }
+  | { type: 'UNIT_DEFEATED'; unitId: string; faction: Faction; kind: UnitKind; pos: Pos; reason?: 'DAMAGE'|'MELT'|'FIRE' }
   | {
       type: 'SUMMON_ATTACKED';
       unitId: string;
@@ -245,7 +249,7 @@ export type GameEvent =
       type: 'STATUS_REMOVED';
       unitId: string;
       status: StatusId;
-      reason: 'EXPIRED' | 'CLEANSED' | 'CONSUMED';
+      reason: 'EXPIRED' | 'CLEANSED' | 'CONSUMED' | 'FIRE';
     }
 
   // ── Terrain / obstacles ────────────────────────────────────────────

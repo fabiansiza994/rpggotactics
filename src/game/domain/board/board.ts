@@ -3,6 +3,12 @@ import type { TerrainType } from '../terrain/terrain';
 
 export interface Tile {
   terrain: TerrainType;
+  terrainOwnerId?: string;
+  /** ICE sustained only while this caster retains Mundo Gélido; never permanent base terrain. */
+  frozenWorldOwnerId?: string;
+  slippery?: boolean;
+  slipDistance?:number;
+  iceExitBonus?:number;
   /** Terrain the tile reverts to when temporary terrain expires. */
   baseTerrain: TerrainType;
   /** Rounds left for temporary terrain. `null` = permanent. */

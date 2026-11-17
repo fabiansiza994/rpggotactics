@@ -1,3 +1,7 @@
+import {worldFrozenCard} from '../../../game/domain/cards/world-frozen';
+import {WinterAtmosphere} from './WinterAtmosphere';
+import '../../../styles/legendary-status.css';
+import {LEGENDARY_STEP_SELECTION} from '../../../game/domain/combat/legendary-step';
 import { HandScrollRegion } from './HandScrollRegion';
 import {DrawRitual,useDrawVisual} from './DrawRitual';
 import { CardActivationLabel } from './CardActivationLabel';
@@ -46,13 +50,14 @@ import { NoDropResult, RewardChoice, RunComplete } from './RunPanels';
 import { ArcherHudLine } from '../../qa/archer/ArcherHud';
 import { isArcherPrey } from '../../qa/archer/archerBoard';
 
-export function HeroPanel({ state, engine }: { state: Readonly<GameState>; engine: GameEngine }) {
+export function HeroPanel({ state, engine, finished=false }: { state: Readonly<GameState>; engine: GameEngine; finished?:boolean }) {
   const hero = state.units.find((u) => u.id === engine.heroId);
   const heroDef = engine.content.heroes[hero?.defId ?? engine.scenario.hero.heroId];
   const p = state.player;
   const guardLabel = heroDef?.momentum ? 'Guardia' : 'Escudo';
   return (
     <section className="panel hero-panel">
+      <WinterAtmosphere state={state} finished={finished}/>
       <div className="hero-portrait" aria-hidden="true">
         <CharacterPortrait unit={unitVisualId(heroDef?.id ?? 'mage')} />
         {!!hero?.shield && (
@@ -369,7 +374,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   const [detailUid, setDetailUid] = useState<string | null>(null);
   const hero = state.units.find(u => u.id === engine.heroId);
   const aimedCard = state.player.hand.find(c => c.uid === selectedCardUid);
-  const aimedName = aimedCard ? engine.content.cards[aimedCard.cardId]?.name : null;
+  const aimedName = selectedCardUid===LEGENDARY_STEP_SELECTION?'Desplazamiento eléctrico':aimedCard ? engine.content.cards[aimedCard.cardId]?.name : null;
   const canActivateAim = !busy && aim?.source === 'tap' && isActionableTile(engine, selectedCardUid, aim.pos, pair);
   const hint = !discarding && inspected ? blocks.get(inspected) : undefined;
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
@@ -439,7 +444,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''}`}>
         {dealt &&
           state.player.hand.map((card, i) => {
-            const def = engine.content.cards[card.cardId];
+            const source=engine.content.cards[card.cardId];
+            const def=source?worldFrozenCard(source,state.units.find(u=>u.id===engine.heroId)):undefined;
             if (!def) return null;
             const block = discarding ? undefined : blocks.get(card.uid);
             return (
@@ -473,6 +479,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       </HandScrollRegion>
       <div className="end-turn-box">
         <IceWallRotation/>
+        {engine.getCardPlayability(LEGENDARY_STEP_SELECTION).playable && (!selectedCardUid || selectedCardUid===LEGENDARY_STEP_SELECTION) && <button type="button" className="legendary-step-control" disabled={busy} onClick={()=>useBattleStore.getState().selectCard(LEGENDARY_STEP_SELECTION)}>⚡ Desplazamiento eléctrico</button>}
         <HandCounter state={state} />
         <div
           className="energy-pips"

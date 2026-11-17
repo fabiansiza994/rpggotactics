@@ -1,6 +1,7 @@
+import {PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../qa/shapeshifter/runtime';
+import {primaryMarketExpansionId} from '../../game/store/market-primary';
 import { useRef } from "react";
 import {
-  DEFAULT_CONTENT,
   ownedFor,
   copyLimit,
   DECK_RULES,
@@ -74,11 +75,11 @@ export function ExpansionCatalog({
                 <small>
                   {e.status === "AVAILABLE"
                     ? "COLECCIÓN DISPONIBLE"
-                    : "PRÓXIMAMENTE"}
+                    : e.status === "CATALOG_ONLY" ? "CATÁLOGO · SIN SOBRES" : "PRÓXIMAMENTE"}
                 </small>
                 <strong>{e.name}</strong>
                 <span>{e.description}</span>
-                {e.status === "AVAILABLE" && (
+                {e.status !== "COMING_SOON" && (
                   <>
                     <span>{e.cardIds.length} cartas diferentes</span>
                     <span>
@@ -144,6 +145,7 @@ export function ExpansionCatalog({
           aria-label={`Consultar ${c.name}; ${have(id) > 0 ? `${have(id)} copias poseídas` : "Faltante"}`}
         >
           <MarketCard card={c} />
+          {!offers.some(o=>o.booster?.expansionId===selected.id && o.contents.some(x=>x.kind==='CARD'&&x.cardId===id)) && <small className="market-card-source">{c.acquisition?.source ? 'Fuente exclusiva · fuera del sobre' : 'Fuera del sobre disponible'}</small>}
           <span
             className="market-copy-indicator"
             title={`${have(id)} copias poseídas · máximo ${copyLimit(c, DECK_RULES)} por mazo`}
@@ -172,7 +174,7 @@ export function ExpansionCatalog({
         <p>
           Saldo: <strong>{balance.toLocaleString("es-CO")} Cristales</strong>
         </p>
-        {selected.status === "AVAILABLE" && (
+        {selected.status === "AVAILABLE" && selected.packs.length>0 && (
           <div className="market-hero-purchase">
             {freeOffer && freeRemaining > 0 ? (
               <div className="market-free-packs">
@@ -245,7 +247,10 @@ export function ExpansionCatalog({
           <p>No hay sobres disponibles.</p>
         )}
       </dialog>
-      {selected.status !== "AVAILABLE" ? (
+      <section aria-label="Compras directas de la expansión" className="market-direct-offers">
+        {offers.filter(o=>!o.booster && o.type==='CARD' && o.contents.filter(c=>c.kind==='CARD').length>0 && o.contents.every(c=>c.kind!=='CARD'||primaryMarketExpansionId(c.cardId)===selected.id)).map(o=><button key={o.id} disabled={busy||!o.availability.purchasable} onClick={()=>onBuy(o)}>{o.title} · {o.price} Cristales</button>)}
+      </section>
+      {selected.status === "COMING_SOON" ? (
         <p className="shop-message">
           Próximamente. Catálogo pendiente de publicación; compras
           deshabilitadas.

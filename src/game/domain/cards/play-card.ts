@@ -1,3 +1,5 @@
+import {worldFrozenCard,worldFrozen} from './world-frozen';
+import {isThunderCard} from './card-family';
 import { effectsForCard, allCardEffects, effectiveCost } from './form-effects';
 import { checkFormRequirement, checkTransformation } from '../transformations/transformations';
 import { summonCapacityOf, summonUsage } from '../summons/summons';
@@ -7,6 +9,7 @@ import type { Pos } from '../core/position';
 import type { Unit } from '../entities/unit';
 import { fail, OK, type RuleResult } from '../result';
 import type { CardDefinition, CardInstance } from './card';
+import { setMovePoints } from './deck';
 import { setEnergy } from './deck';
 import { depthEnabled } from '../combat/qa-depth';
 import { applyEffects } from './effects';
@@ -23,12 +26,16 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
   const card = ctx.state.player.hand.find((c) => c.uid === cardUid);
   if (!card) return fail('CARD_NOT_IN_HAND', 'Card is not in hand.') as Playability;
   if (card.unavailableThisTurn) return fail('CARD_UNAVAILABLE_THIS_TURN', 'No disponible durante este turno.') as Playability;
-  const def = ctx.content.cards[card.cardId];
+  let def = ctx.content.cards[card.cardId];
   if (!def) return fail('CARD_NOT_IN_HAND', `Unknown card "${card.cardId}".`) as Playability;
   const caster = getHero(ctx.state);
   if (!caster || isActionPrevented(ctx, caster)) {
     return fail('CASTER_INCAPACITATED', 'The hero cannot act.') as Playability;
   }
+  def=worldFrozenCard(def,caster);
+  if(def.id==='absolute_zero'&&worldFrozen(caster))return fail('INVALID_TARGET','Mundo Gélido ya está activo: no se renueva ni se consume otra copia.') as Playability;
+  if(def.category==='ATTACK'&&caster.statuses.some(s=>s.id==='SNOW_WAR'))return fail('CASTER_INCAPACITATED','Guerra de Nieve impide jugar otras cartas ATTACK; puedes usar las demás categorías.') as Playability;
+  if(caster.statuses.some(s=>s.id==='GLACIER_CLAW') && allCardEffects(def).some(fx=>['STEP_CASTER','ICE_WALK','CHARGE_CASTER','TELEPORT_CASTER','SWAP_WITH_TARGET','SWAP_PAIR'].includes(fx.type)))return fail('MOVEMENT_PREVENTED','Garra del Glaciar impide desplazamientos voluntarios; todavía puedes atacar y jugar otras cartas.') as Playability;
   if (def.heroId && def.heroId !== caster.defId) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as Playability;
   const formRequirement = checkFormRequirement(caster, def.requiredForms);
   if (!formRequirement.ok) return formRequirement as Playability;
@@ -37,10 +44,17 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
     const valid = checkTransformation(ctx.content, caster, fx.formId);
     if (!valid.ok) return valid as Playability;
   }
+  for(const fx of effectsForCard(ctx.content,caster,def))if(fx.type==='SUMMON'){
+    const summon=ctx.content.summons?.[fx.summonId];
+    if(summon?.maxPerOwner && ctx.state.units.filter(u=>u.defId===summon.id&&u.summon?.ownerId===caster.id).length>=summon.maxPerOwner)
+      return fail('SUMMON_CAPACITY','Ya tienes el máximo de esta invocación.') as Playability;
+  }
   const needed = (def.formEffects ? effectsForCard(ctx.content, caster, def) : def.effects).reduce((n, fx) => n + (fx.type === 'SUMMON' ? (ctx.content.summons?.[fx.summonId]?.capacityCost ?? Infinity) : 0), 0);
   const capacity = summonCapacityOf(ctx.content, caster);
   if (needed > 0 && summonUsage(ctx.state, caster.id) + needed > capacity)
     return fail('SUMMON_CAPACITY', 'Capacidad de invocación insuficiente.') as Playability;
+  if(caster.statuses.some(s=>s.id==='FROZEN') && allCardEffects(def).some(fx=>fx.type==='ICE_WALK'||fx.type==='STEP_CASTER'||fx.type==='CHARGE_CASTER') && ctx.state.player.movePoints<1)
+    return fail('MOVEMENT_PREVENTED','Congelado requiere 1 PM para el próximo movimiento voluntario.') as Playability;
   const { cost } = effectiveCost(ctx.content, caster, def);
   if (ctx.state.player.energy < cost) {
     return fail('NOT_ENOUGH_ENERGY', `Needs ${cost} energy.`) as Playability;
@@ -91,6 +105,9 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   const empowered = !!def.empowered && (caster.momentum?.value ?? 0) >= def.empowered.momentum;
   // Pending discount decided from the authoritative state before payment; spent with the card.
   const price = effectiveCost(ctx.content, caster, def);
+  const incarnation=caster.statuses.find(s=>ctx.content.statuses[s.id]?.thunderEconomy);
+  const thunder=isThunderCard(def);
+  if(incarnation && thunder) incarnation.discountUsed=true;
   setEnergy(ctx, player.energy - price.cost);
   if (price.scope) {
     caster.costDiscounts = caster.costDiscounts!.filter((d) => d.scope !== price.scope);
@@ -103,6 +120,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     type: 'CARD_PLAYED',
     cardUid: card.uid,
     cardId: def.id,
+    ...(def.worldFrozenActive?{worldFrozen:true}:{}),
     casterId: caster.id,
     target: resolved.target,
     impact: resolved.impact,
@@ -150,6 +168,13 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   } else {
     player.discard.push(card);
     ctx.emit({ type: 'CARD_DISCARDED', cardUid: card.uid, cardId: def.id, reason: 'PLAYED' });
+  }
+  // The activating card does not trigger its own state; rejected cards never reach this hook.
+  if(incarnation && thunder && ctx.state.units.includes(caster) && !ctx.state.outcome) {
+    incarnation.triggerCount=(incarnation.triggerCount??0)+1;
+    setMovePoints(ctx,player.movePoints+1);
+    if(!incarnation.stepUsed) incarnation.stepReady=true;
+    ctx.emit({type:'LEGENDARY_TRIGGER',unitId:caster.id,status:incarnation.id,kind:'THUNDER',amount:1,pos:caster.pos});
   }
   ctx.emit({ type: 'CARD_RESOLVED', cardUid: card.uid, cardId: def.id });
   return OK;

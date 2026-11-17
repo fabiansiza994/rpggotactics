@@ -1,0 +1,7 @@
+/* Optional action uses the reserved floating action lane, never changes board/hand geometry. */
+.end-turn-box .legendary-step-control{position:absolute;left:0;right:0;top:-48px;min-height:44px;padding:8px 10px;z-index:25;border:1px solid #b69c60;border-radius:7px;background:#102a3c;color:#b6eaff}
+@media(orientation:portrait) and (max-width:600px){
+ .battle .legendary-step-control{position:fixed;left:12px;right:auto;top:auto;bottom:calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom) + 6px);max-width:110px;padding:6px;font-size:12px}
+ .battle:has(.legendary-step-control) .mobile-aim-controls>span{visibility:hidden}
+ .battle:has(.legendary-step-control) .end-turn-box{z-index:17}
+}

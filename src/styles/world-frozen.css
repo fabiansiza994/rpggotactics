@@ -1,0 +1,17 @@
+.fc-world-upgrade{display:block;margin-top:.6em;padding-top:.4em;border-top:1px solid #94dbed66;font-size:.82em;color:#b9eafa;line-height:1.3}.fc-world-upgrade b{display:block;font-size:.95em;color:#e4fbff;margin-bottom:.2em}.market-game-card .fc-world-upgrade{display:none}.market-card-preview-dialog .fc-world-upgrade{display:block}.fc-world-active{display:block;color:#bfefff;font-size:.8em;margin-top:.4em}.card[data-world-frozen=true]{box-shadow:0 0 0 2px #a2e7ff,0 0 14px #58c9ed55}.card-world-badge{position:absolute;right:7px;top:40px;color:#e7fbff;z-index:4;pointer-events:none}
+/* One cheap foil surface, using the existing pointer/touch variables and no GPU blur filter. */
+[data-card-id=absolute_zero] .fc-art::after,[data-card-id=absolute_zero] .card-art::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;opacity:.38;background:linear-gradient(115deg,transparent 18%,#90dfff44 35%,#f4ffffbb 45%,#9cbbff44 53%,transparent 68%);background-size:240% 100%;background-position:var(--cp-lx,50%) 50%;mix-blend-mode:screen;animation:world-foil 8s ease-in-out infinite}
+[data-card-id=absolute_zero]{--card-tone:#b3edff}[data-card-id=absolute_zero] .fc-frame{border-color:#b4edff;box-shadow:inset 0 0 0 1px #7f9ecd,0 0 13px #79d8ef44}
+.card[data-card-id=absolute_zero] .card-art::after{animation:none;opacity:.24}
+@keyframes world-foil{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce){[data-card-id=absolute_zero] .fc-art::after,[data-card-id=absolute_zero] .card-art::after{animation:none;background-position:55% 50%;opacity:.22}}
+
+.arcane-pack[data-expansion=antarctic_magic]{border-color:#b8edff;box-shadow:0 0 24px #82dcff55,inset 0 0 14px #d6fcff33}.arcane-pack[data-expansion=antarctic_magic] .arcane-pack-sigil{color:#d1fbff}
+.pack-scene[data-expansion=antarctic_magic]{--pack-glow:#8fdfff;background:radial-gradient(ellipse at center,#0d354c88,transparent 70%)}
+.pack-scene[data-expansion=antarctic_magic] .pack-aura{background:radial-gradient(ellipse,#b4edff66,transparent 65%)}
+.pack-scene[data-expansion=antarctic_magic] .market-opening-motes i{background:#d9f8ff;box-shadow:0 0 5px #8bdcff}
+.pack-scene[data-expansion=antarctic_magic] .sealed-pack-button{filter:none}
+
+/* Only validated horizontal masters: normal safe crop between 16:10, 16:9 and 2:1. */
+.feature-card .fc-art .featured-art>img[data-landscape-art=true]{object-fit:cover;object-position:50% 20%}
+.feature-card .fc-art-backdrop:has(>img[data-landscape-art=true]){display:none}

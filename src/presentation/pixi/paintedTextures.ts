@@ -1,3 +1,4 @@
+import {snowSoldierVariant} from './snowSoldierAtlas';
 import { AssetQueue } from '../loading/AssetQueue';
 import { loadingMark } from '../performance/marks';
 import { VERTICAL_ASSETS } from '../qa/locomotion/directionalProfiles';
@@ -90,6 +91,7 @@ async function loadCharacter(id: string): Promise<void> {
       catch { console.warn(`Character artwork unavailable: ${key}; using vector fallback.`); }
     }),
     ...(CHARACTER_ANIMATIONS[id] ? [loadCharacterAnimation(id,CHARACTER_ANIMATIONS[id]!)] : []),
+    ...(id==='snow_soldier'?[4,3,2,1].map(age=>loadCharacterAnimation(snowSoldierVariant(age),CHARACTER_ANIMATIONS[snowSoldierVariant(age)]!)):[]),
     ...(shapeshifterPresentationEnabled && VERTICAL_ASSETS[id] && !verticalFrames.has(id) ? [(async()=>{
       const asset=VERTICAL_ASSETS[id]!,views=new Map<string,Texture[]>();
       try {

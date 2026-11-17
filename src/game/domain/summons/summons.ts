@@ -1,3 +1,4 @@
+import {worldFrozen} from '../cards/world-frozen';
 import { depthEnabled } from '../combat/qa-depth';
 import {
   canEnter,
@@ -43,6 +44,7 @@ export function spawnSummon(
   pos: Pos,
 ): Unit | null {
   const def = requireDef(ctx.content.summons ?? {}, summonId, 'summon');
+  if(def.maxPerOwner && ctx.state.units.filter(u=>u.defId===def.id&&u.summon?.ownerId===owner.id).length>=def.maxPerOwner)return null;
   const capacity = summonCapacityOf(ctx.content, owner);
   if (!isEmptyTile(ctx, pos) || summonUsage(ctx.state, owner.id) + def.capacityCost > capacity)
     return null;
@@ -65,6 +67,7 @@ export function spawnSummon(
       capacityCost: def.capacityCost,
       lastActedRound: 0,
       readyRound: ctx.state.round + 1,
+      ...(def.meltTurns?{meltTurnsLeft:def.meltTurns}:{}),
     },
   };
   if (depthEnabled(ctx)) unit.combatFacing = unit.faction === 'PLAYER' ? 'RIGHT' : 'LEFT';
@@ -261,7 +264,9 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     if(pursuit)removeStatus(ctx,unit,'HUNT_PURSUIT','CONSUMED');
     try {
     if (isActionPrevented(ctx, unit)) continue;
-    const def = requireDef(ctx.content.summons ?? {}, unit.defId, 'summon');
+    const baseDef = requireDef(ctx.content.summons ?? {}, unit.defId, 'summon');
+    const snowball=unit.defId==='snow_soldier'&&worldFrozen(unitById(ctx.state,unit.summon.ownerId));
+    const def=snowball?{...baseDef,damageType:'ICE' as const}:baseDef;
     const statusSum = (key: 'summonDamageBonus' | 'summonMoveBonus' | 'summonPreyDamageBonus') =>
       unit.statuses.reduce((n, s) => n + (ctx.content.statuses[s.id]?.[key] ?? 0), 0);
     // Llamado de la Manada: planning sees the longer reach; the walk itself is the real unit's.
@@ -385,8 +390,9 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
         targetId: adjacent.id,
         from: { ...unit.pos },
         to: { ...adjacent.pos },
-        ranged: range > 1,
+        ranged: range > 1 || snowball,
       });
+      if(snowball)ctx.emit({type:'SNOWBALL_FIRED',unitId:unit.id,targetId:adjacent.id,from:unit.pos,to:adjacent.pos,global:false});
       // Temporary empowerment (Manada Ancestral's PACK_FURY, Instinto Alfa) adds to the base attack.
       const bonus = statusSum('summonDamageBonus') + (adjacent === prey ? statusSum('summonPreyDamageBonus') : 0);
       dealDamage(
@@ -395,7 +401,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
         attackDamage(ctx, unit, adjacent, def.damage + bonus),
         unit.id,
         def.damageType ?? (range > 1 ? 'ARCANE' : 'PHYSICAL'),
-        range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
+        snowball?'DIRECT_RANGED':range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
       );
       if (def.onHitStatus && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
         applyStatus(ctx, adjacent, def.onHitStatus.status, def.onHitStatus.duration, unit.id);

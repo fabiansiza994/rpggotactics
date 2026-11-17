@@ -8,6 +8,8 @@ export type CharacterMotion =
   | 'attack'
   | 'hit'
   | 'death'
+  | 'melt'
+  | 'fire_death'
   | 'bash'
   | 'charge'
   | 'charge_stop'
@@ -43,6 +45,8 @@ const PRIORITY: Record<CharacterMotion, number> = {
   attack: 2,
   hit: 3,
   death: 4,
+  melt: 4,
+  fire_death: 4,
 };
 
 /** Presentation-only animation state: stable, prioritized, and independent of game state. */
@@ -95,7 +99,7 @@ export class CharacterAnimator {
     return this.facing;
   }
   get dead(): boolean {
-    return this.motion === 'death';
+    return ['death','melt','fire_death'].includes(this.motion);
   }
 
   face(direction: Facing): void {
@@ -114,7 +118,7 @@ export class CharacterAnimator {
     if (this.motion === 'idle' || this.motion === 'guard') this.play(this.restMotion);
   }
 
-  play(motion: CharacterMotion, cueMs = 90): boolean {
+  play(motion: CharacterMotion, cueMs = 90, startFrame = 0): boolean {
     const returningRest = motion === 'idle';
     if (returningRest && PRIORITY[this.motion] > PRIORITY.walk) return false;
     if (returningRest) motion = this.restMotion;
@@ -130,7 +134,7 @@ export class CharacterAnimator {
       }
       return false;
     }
-    if (motion === 'death') this.pending = null;
+    if (['death','melt','fire_death'].includes(motion)) this.pending = null;
     if (
       motion === this.motion &&
       (motion === 'idle' ||
@@ -157,7 +161,8 @@ export class CharacterAnimator {
     } else if (motion === 'hit') {
       this.durations = config.count === 1 ? [config.frameMs] : this.durations.map(() => 40);
     }
-    this.onFrame(this.motion, this.sequence[0] ?? 0);
+    this.frame=Math.max(0,Math.min(this.sequence.length-1,Math.trunc(startFrame)));
+    this.onFrame(this.motion, this.sequence[this.frame] ?? 0);
     return true;
   }
 

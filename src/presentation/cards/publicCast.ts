@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { EventOfType } from '../../game';
-export type PublicCast = Pick<EventOfType<'CARD_PLAYED'>, 'cardId' | 'cardUid' | 'casterId'>;
+export type PublicCast = Pick<EventOfType<'CARD_PLAYED'>, 'cardId' | 'cardUid' | 'casterId' | 'worldFrozen'>;
 /** Only a publicly resolved CARD_PLAYED fact, never an opponent hand or altar contents. */
 export const usePublicCast = create<{ cast: PublicCast | null; action: PublicEnemyAction | null; ritual: PublicRitual | null }>(
   () => ({ cast: null, action: null, ritual: null }),

@@ -33,11 +33,16 @@ export function compileTimeline(
     key: string;
     cast: number;
     travel: number;
+    path?: {x:number;y:number}[];
   } | null = null;
   const add = (at: number, kind: CueKind, event: GameEvent, duration = 0, key = spell?.key ?? '') =>
     cues.push({ at, kind, event, duration, key });
   for (const event of events) {
-    if (event.type === 'GLYPH_ACTIVATED') {
+    if(event.type==='SNOWBALL_FIRED'){
+      const start=Math.max(cursor,recoveryUntil,effectAt),prepare=reduced?40:180,travel=reduced?100:420;
+      add(start,'event',event,prepare,'snowball');add(start+prepare,'projectile',event,travel,'snowball');
+      cursor=effectAt=start+prepare+travel;recoveryUntil=cursor;
+    } else if (event.type === 'GLYPH_ACTIVATED') {
       cursor=Math.max(cursor,recoveryUntil);add(cursor,'event',event);
       cursor+=reduced?60:180;effectAt=cursor;
     } else if (event.type === 'COUNTER_ATTACK') {
@@ -56,8 +61,10 @@ export function compileTimeline(
       add(at,'event',event,duration);
       recoveryUntil=Math.max(recoveryUntil,at+duration);
     } else if (event.type === 'UNIT_DEFEATED') {
-      const at = (spell ? effectAt : cursor) + (reduced ? 40 : 120);
-      const duration = reduced ? 160 : 600;
+      const stormIndex=spell?.key==='glacial_storm'&&spell.path?spell.path.findIndex(p=>p.x===event.pos.x&&p.y===event.pos.y):-1;
+      const tileImpact=stormIndex>=0?spell!.impact+(reduced?0:stormIndex*180):(spell?effectAt:cursor);
+      const at = Math.max(tileImpact,lastDamageAt) + (reduced ? 40 : 120);
+      const duration = reduced ? 160 : event.reason==='MELT'?900:event.reason==='FIRE'?450:600;
       add(at, 'event', event, duration);
       add(at + duration, 'commit', event);
       recoveryUntil = Math.max(recoveryUntil, at + duration);
@@ -77,7 +84,9 @@ export function compileTimeline(
         key,
         cast,
         travel,
+        ...(key==='glacial_storm'?{path:event.affectedTiles}:{}),
       };
+      if(key==='glacial_storm')spell.end=Math.max(spell.end,spell.impact+(reduced?120:event.affectedTiles.length*180));
       effectAt = spell.impact;
       add(cursor, 'cast', event, cast);
       // LINE cards emit PROJECTILE_LAUNCHED themselves; UNIT shots need the cue here.
@@ -119,12 +128,16 @@ export function compileTimeline(
       effectAt = cursor;
       add(cursor,'attackImpact',event);
     } else if (event.type === 'SUMMON_ATTACKED') {
+      const next=events[events.indexOf(event)+1];
+      if(next?.type==='SNOWBALL_FIRED'&&next.unitId===event.unitId&&next.targetId===event.targetId)continue;
       cursor = Math.max(cursor, recoveryUntil);
       add(cursor, 'event', event, reduced ? 40 : 180);
       cursor += reduced ? 40 : 180;
       effectAt = cursor;
       add(cursor,'attackImpact',event);
     } else if (event.type === 'PROJECTILE_LAUNCHED') {
+      // Storm has its own travelling front; do not add a second generic blue projectile.
+      if(spell?.key==='glacial_storm')continue;
       add((spell?.start ?? cursor) + (spell?.cast ?? 0), 'projectile', event, spell?.travel ?? 100);
     } else if (event.type === 'CARD_RESOLVED') {
       cursor = Math.max(spell?.end ?? cursor, effectAt, recoveryUntil);
@@ -138,7 +151,7 @@ export function compileTimeline(
     ) {
       const at = Math.max(spell ? effectAt : cursor, recoveryUntil);
       const duration =
-        event.type === 'UNIT_MOVED' && event.mode === 'WALK'
+        event.type === 'UNIT_MOVED' && (event.mode === 'WALK'||event.mode==='SLIDE')
           ? Math.max(1, event.path.length) * (reduced ? 100 : 300)
           : reduced
             ? 0
@@ -184,7 +197,8 @@ export function compileTimeline(
       add(cursor, 'event', event);
       effectAt = cursor;
     } else {
-      const at = spell ? effectAt : cursor;
+      let at = spell ? effectAt : cursor;
+      if(spell?.key==='glacial_storm'&&spell.path&&'pos' in event&&event.pos){const index=spell.path.findIndex(p=>p.x===event.pos.x&&p.y===event.pos.y);if(index>=0)at=spell.impact+(reduced?0:index*180);}
       if (event.type === 'UNIT_DAMAGED') lastDamageAt = at;
       add(at, 'event', event);
     }

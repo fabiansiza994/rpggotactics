@@ -77,7 +77,7 @@ export function hasStatus(unit: Unit, statusId: string): boolean {
  */
 export function effectiveMoveRange(ctx: RuleContext, unit: Unit, base = unit.moveRange): number {
   const slow = Math.max(0, ...unit.statuses.map((s) => ctx.content.statuses[s.id]?.moveReduction ?? 0));
-  return base <= 0 || slow === 0 ? base : Math.max(1, base - slow);
+  return base<=0?base:Math.max(1,base-slow);
 }
 
 export function isMovementPrevented(ctx: RuleContext, unit: Unit): boolean {

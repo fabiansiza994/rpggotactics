@@ -20,46 +20,13 @@ const ctx = {
   cosmetics: COSMETICS,
   rules: DECK_RULES,
 };
-it("has four stable identities and existing project art without inventing future content", () => {
-  expect(MARKET_EXPANSIONS.map((e) => e.id)).toEqual([
-    "origins_arcanos",
-    "furia_elemental",
-    "guerra_psicologica",
-    "pactos_bestias",
-  ]);
-  for (const e of MARKET_EXPANSIONS)
-    expect(existsSync("public" + e.art)).toBe(true);
-  for (const e of MARKET_EXPANSIONS.slice(1)) {
-    expect(e.status).toBe("COMING_SOON");
-    expect(e.cardIds).toEqual([]);
-    expect(e.pack).toBeUndefined();
-  }
-});
-it("Origins is useful: three general quantity offers with real commons, uncommons, rares and legendary cards", () => {
-  const packs = boosterOffers(ctx);
-  expect(packs).toHaveLength(4);
-  expect(ORIGINS_CARD_IDS.length).toBe(40);
-  for (const p of packs) {
-    expect(p.contents.length).toBeGreaterThanOrEqual(20);
-    expect(
-      p.contents.every(
-        (c) => c.kind === "CARD" && ORIGINS_CARD_IDS.includes(c.cardId),
-      ),
-    ).toBe(true);
-    expect(p.booster!.expansionId).toBe("origins_arcanos");
-  }
-  const views = expansionViews(ctx, packs);
-  expect(views[0]!.packs).toHaveLength(4);
-  expect(
-    views
-      .slice(1)
-      .every(
-        (e) =>
-          e.packs.length === 0 &&
-          e.cardIds.length === 0 &&
-          e.status === "COMING_SOON",
-      ),
-  ).toBe(true);
+it('registers two packs and inspectable thematic catalogs without selling empty or exclusive pools',()=>{
+ for(const e of MARKET_EXPANSIONS)expect(existsSync('public'+e.art)).toBe(true);
+ const packs=boosterOffers(ctx);expect(packs.filter(p=>p.booster?.expansionId!=='antarctic_magic')).toHaveLength(7);
+ expect(ORIGINS_CARD_IDS).toHaveLength(22);
+ expect(expansionViews(ctx,packs)[0]!.packs).toHaveLength(4);
+ expect(expansionViews(ctx,packs)[1]!.packs).toHaveLength(3);
+ expect(packs.every(p=>['origins_arcanos','thunder_god','antarctic_magic'].includes(p.booster!.expansionId!))).toBe(true);
 });
 it("newly published cards do not silently enter the first edition", () => {
   const sample = Object.values(ctx.content.cards).find(
@@ -91,21 +58,11 @@ it("an incomplete or empty collection never creates a buyable box or redistribut
   ).toEqual([]);
   expect(
     expansionViews(ctx, []).every(
-      (e) => e.packs.length === 0 && e.status === "COMING_SOON",
+      (e) => e.packs.length === 0,
     ),
   ).toBe(true);
 });
-it("a new authored collection can be added through metadata using the same pack infrastructure", () => {
-  const extension = {
-    ...MARKET_EXPANSIONS[0]!,
-    id: "future_test_collection",
-    name: "QA metadata",
-  };
-  expect(
-    boosterOffers(ctx, undefined, undefined, [extension]).every(
-      (p) =>
-        p.booster!.expansionId === extension.id &&
-        p.id.startsWith("booster_future_test_collection_"),
-    ),
-  ).toBe(true);
+it('cloning expansion metadata alone cannot duplicate another primary pool',()=>{
+ const extension={...MARKET_EXPANSIONS[0]!,id:'future_test_collection',name:'QA metadata'};
+ expect(boosterOffers(ctx,undefined,undefined,[extension])).toEqual([]);
 });

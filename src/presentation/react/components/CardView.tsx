@@ -1,3 +1,4 @@
+import '../../../styles/world-frozen.css';
 import '../../../styles/combat-clarity.css';
 import { CardTypeVisual } from './CardTypeVisual';
 import { CardOriginBadge } from './CardOriginBadge';
@@ -106,6 +107,7 @@ export function CardView({
   return (
     <div
       ref={premiumRef}
+      data-world-frozen={def.worldFrozenActive||undefined}
       data-disabled={disabled || undefined}
       data-draw-hidden={presentationHidden||undefined}
       aria-hidden={presentationHidden||undefined}
@@ -220,6 +222,7 @@ export function CardView({
         </span>
         <CardPattern targeting={def.targeting} />
       </span>
+      {def.worldFrozenActive&&<span className="card-world-badge" aria-label="Potenciada por Mundo Gélido">🌨</span>}
       <span className="card-summary">{compactText(def.rulesText)}</span>
       <span className="card-text">{def.rulesText}</span>
     </div>

@@ -195,6 +195,35 @@ export class ElementEffects {
     this.freeGraphics.push(g);
   }
 
+  /** Small snow projectile; one pooled graphic, authored trajectory, no per-frame textures. */
+  snowball(from:Pos,to:Pos,duration:number,origin?:Point):void {
+    const g=this.graphic();if(!g)return;
+    const a=origin??this.lift(from,.55),b=this.lift(to,.35);let arrived=false;
+    g.circle(0,0,5).fill(0xf5fdff).stroke({color:0xa6d7ed,width:1});
+    g.circle(-7,1,1.5).fill({color:0xe4f8ff,alpha:.6});
+    this.animate(Math.max(1,duration),t=>{arrived=t>=1;g.position.set(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t-(this.reduced?0:Math.sin(t*Math.PI)*16));g.zIndex=this.geometry.depth(g.position);},()=>{this.release(g);if(arrived)this.burst(to,'ICE',false,this.reduced?80:180);});
+  }
+
+  /** Travelling volume: geometry is built once; only transforms/opacity change per frame. */
+  glacialStorm(path:readonly Pos[],enhanced:boolean):void {
+    if(!path.length)return;
+    const points=path.map(p=>this.geometry.center(p));
+    const sheets:Graphics[]=[];
+    for(let ring=0;ring<7;ring++){
+      const g=this.graphic();if(!g)break;
+      const w=(12+ring*4)*(enhanced?1.2:1);
+      g.ellipse(0,0,w,5+ring).stroke({color:ring%2?0xc9f8ff:0x69b9df,width:2,alpha:.65});
+      for(let shard=0;shard<3;shard++){const a=shard*Math.PI*2/3+ring;g.poly([Math.cos(a)*w,Math.sin(a)*6,Math.cos(a)*w+4,Math.sin(a)*6-9,Math.cos(a)*w+7,Math.sin(a)*6]).fill({color:0xe6fbff,alpha:.8});}
+      sheets.push(g);
+    }
+    const duration=this.reduced?120:Math.max(1,path.length-1)*180+180;let arrived=-1;
+    this.animate(duration,t=>{
+      const travel=Math.min(points.length-1,t*points.length),i=Math.floor(travel),a=points[i]!,b=points[Math.min(i+1,points.length-1)]!;
+      if(i>arrived){for(let tile=arrived+1;tile<=i;tile++)this.burst(path[tile]!,'ICE',false,this.reduced?60:150);arrived=i;}
+      sheets.forEach((g,n)=>{g.position.set(a.x+(b.x-a.x)*(travel-i),a.y+(b.y-a.y)*(travel-i)-n*11);g.rotation=this.reduced?0:Math.sin(t*18+n)*.18;g.alpha=Math.min(1,t*8,(1-t)*8);g.zIndex=this.geometry.depth({x:g.x,y:g.y+n*11});});
+    },()=>sheets.forEach(g=>this.release(g)));
+  }
+
   /** Short pooled bond: no persistent link, blur, particle loop or new renderer. */
   tacticalBond(from:Pos,to:Pos,boosted=false):void {
     const g=this.graphic();if(!g)return;
@@ -1045,11 +1074,11 @@ export class ElementEffects {
     }
   }
 
-  number(id: string, pos: Pos, amount: number, kind: 'damage' | 'heal' | 'shield' | 'armor'): void {
+  number(id: string, pos: Pos, amount: number, kind: 'damage' | 'heal' | 'shield' | 'armor' | 'move'): void {
     const key = `${id}:${kind}:${this.clock}`;
     const existing = this.numbers.get(key);
     const format = (n: number) =>
-      kind === 'damage'
+      kind === 'move' ? `+${n} PM` : kind === 'damage'
         ? `−${n}`
         : kind === 'heal'
           ? `+${n}`

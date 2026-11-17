@@ -151,6 +151,8 @@ export class BattleCanvas {
   private readonly platformLayer = new Container();
   private readonly terrainLayer = new Container();
   private readonly terrainPulse = new Container();
+  private readonly frozenWorldDust = new Graphics();
+  private frozenWorldDustKey='';
   private readonly tacticalLayer = new Container();
   private readonly objectiveLayer = new Container();
   private terrainTime = 0;
@@ -409,8 +411,10 @@ export class BattleCanvas {
       walk: (event, reduced) => {
         const view = this.units.get(event.unitId);
         if (!view) return;
-        if (event.mode === 'WALK') this.walk.enqueue(event.unitId, view, event, reduced);
-        else {
+        if (event.mode === 'WALK' || event.mode==='SLIDE') {
+          if(event.mode==='SLIDE'&&!reduced)this.effects.area(event.path,'ICE',250);
+          this.walk.enqueue(event.unitId, view, event, reduced);
+        } else {
           view.faceMovement(event.from, event.to);
           if (view.hasChargeAnimation) {
             view.playAnimation('charge');
@@ -524,6 +528,7 @@ export class BattleCanvas {
     );
     this.world.addChild(
       this.immersionScenery,
+      this.frozenWorldDust,
       this.targetingPreview.root,
       this.tacticalLayer,
       this.objectiveLayer,
@@ -859,6 +864,12 @@ export class BattleCanvas {
       );
       this.layout();
     }
+    const frozen= !vm.state.outcome&&vm.state.units.some(u=>u.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0));
+    const dustKey=JSON.stringify([frozen,this.lastSceneKey,this.proj.frontWidth,this.proj.height]);
+    if(dustKey!==this.frozenWorldDustKey){
+      this.frozenWorldDustKey=dustKey;this.frozenWorldDust.clear();this.frozenWorldDust.eventMode='none';this.frozenWorldDust.visible=frozen;
+      if(frozen)vm.state.board.tiles.forEach((tile,index)=>{if(!vm.content.terrain[tile.terrain].walkable)return;const p={x:index%vm.state.board.width,y:Math.floor(index/vm.state.board.width)},poly=this.proj.getInsetPolygon(p,.09);this.frozenWorldDust.poly(poly.flatMap(v=>[v.x,v.y])).fill({color:0xb8e9f9,alpha:.045}).stroke({color:0xc8f3ff,width:.7,alpha:.18});const a=poly[index%4]!,b=poly[(index+1)%4]!;this.frozenWorldDust.moveTo(a.x,a.y).lineTo(a.x+(b.x-a.x)*.27,a.y+(b.y-a.y)*.27).stroke({color:0xe2fcff,width:1.2,alpha:.3});});
+    }
     this.templeEnvironment.react(vm.state);
     this.drawUnits(vm); // Persistent art; update status chrome only when its data changes.
     this.drawPickups(vm);
@@ -1098,7 +1109,7 @@ export class BattleCanvas {
         this.terrainPulse.addChild(glyph);
       }
       if (tile.terrainTurnsLeft !== null) {
-        const turns = label(`${tile.terrainTurnsLeft}`, {
+        const turns = label(tile.frozenWorldOwnerId?'❄':`${tile.terrainTurnsLeft}`, {
           fontSize: 12,
           fontWeight: '700',
           fill: 0xffe0b0,
@@ -1238,6 +1249,7 @@ export class BattleCanvas {
       const intent = vm.state.intents.find((i) => i.enemyId === unit.id);
       const def = vm.content.enemies[unit.defId];
       const phaseName = unit.defId.startsWith('veil_') && def ? enemyPhase(def,unit)?.name : undefined;
+      if(unit.defId==='snow_soldier')view.setSnowClimate(unit.summon?.meltTurnsLeft??5,!!vm.state.units.find(u=>u.id===unit.summon?.ownerId)?.statuses.some(s=>s.id==='ABSOLUTE_ZERO'));
       view.update(unit, intent, vm.focusedEnemyId === unit.id, phaseName);
       if(unit.defId === 'forge_king' && [3,5,6].includes(vm.state.round) && this.forgePhaseRound !== vm.state.round && unit.hp > 0) {
         this.forgePhaseRound = vm.state.round;

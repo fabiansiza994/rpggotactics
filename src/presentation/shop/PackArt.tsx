@@ -5,9 +5,9 @@ export function packExpansion(packId: string) {
 export function PackArt({ packId }: { packId: string }) {
   const e = packExpansion(packId);
   return (
-    <span className="arcane-pack" aria-hidden="true">
+    <span className="arcane-pack" data-expansion={e?.id} aria-hidden="true">
       <span className="arcane-pack-crimp" />
-      <img src={e?.art ?? "/art/checkpoint05/cards/arcane_burst.webp"} alt="" />
+      <img src={e?.packArt ?? e?.art ?? "/art/checkpoint05/cards/arcane_burst.webp"} alt="" />
       <span className="arcane-pack-sigil">✧</span>
       <strong>{e?.name ?? "Sobre arcano"}</strong>
       <small>RPG-GO TACTICS · 4 CARTAS</small>
