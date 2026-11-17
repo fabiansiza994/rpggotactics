@@ -19,13 +19,13 @@ describe("sessionless market lab isolation", () => {
     expect(freshDemo().balance).toBe(2000);
     expect(DEMO_KEY).toContain("qa-demo");
   });
-  it("deducts exactly 200 and grants four copies only to a cloned demo draft", () => {
+  it("deducts exactly 50 and grants four copies only to a cloned demo draft", () => {
     const before = freshDemo(),
       snapshot = structuredClone(before),
       o = offers.find((o) => o.booster?.packs === 1 && !o.booster.freeGrant)!;
     const after = simulatePurchase(before, o.id, () => 0);
     expect(before).toEqual(snapshot);
-    expect(after.balance).toBe(1800);
+    expect(after.balance).toBe(1950);
     expect(after.purchases).toHaveLength(1);
     const id = after.purchases[0]!.opening.cards[0]!.cardId;
     expect(
@@ -46,14 +46,14 @@ describe("sessionless market lab isolation", () => {
   });
   it("rejects insufficient balance without mutating state", () => {
     const state = freshDemo();
-    state.balance = 199;
+    state.balance = 49;
     expect(() =>
       simulatePurchase(
         state,
         offers.find((o) => !o.booster?.freeGrant && o.booster?.packs === 1)!.id,
       ),
     ).toThrow();
-    expect(state.balance).toBe(199);
+    expect(state.balance).toBe(49);
     expect(state.purchases).toHaveLength(0);
   });
   it("future collections never become demo purchase offers", () => {

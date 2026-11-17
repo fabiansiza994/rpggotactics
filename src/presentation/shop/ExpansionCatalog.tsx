@@ -11,7 +11,7 @@ import {
 import type { MarketExpansionView } from "../../game/store/market-expansions";
 import type { CatalogOffer } from "./api";
 import { MarketCard } from "./MarketCard";
-import { BOOSTER_RARITIES } from "../../game/store/boosters";
+import { ARCANE_PACK_PRICE, BOOSTER_RARITIES } from "../../game/store/boosters";
 import { BoosterOdds } from "./BoosterOdds";
 
 export function ExpansionCatalog({
@@ -143,7 +143,7 @@ export function ExpansionCatalog({
                   ABRIR SOBRE GRATIS
                 </button>
                 <small>
-                  Después: {chosen?.price ?? 200} Cristales por sobre. Mismo
+                  Después: {chosen?.price ?? ARCANE_PACK_PRICE} Cristales por sobre. Mismo
                   contenido y probabilidades.
                 </small>
               </div>

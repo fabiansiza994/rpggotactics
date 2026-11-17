@@ -176,8 +176,8 @@ describe("authoritative store compatibility", () => {
         const before = (await f.call("GET", "/state")).data.profile;
         const out = await f.buy(`booster_${id}_x${n}`, "buy-" + id + "-" + n);
         expect(out.status).toBe(200);
-        expect(out.data.purchase.price).toBe(n * 200);
-        expect(out.data.wallet.balance).toBe(30000 - n * 200);
+        expect(out.data.purchase.price).toBe(n * 50);
+        expect(out.data.wallet.balance).toBe(30000 - n * 50);
         expect(out.data.purchase.granted.openings).toHaveLength(n);
         expect(
           out.data.purchase.granted.openings.flatMap(
@@ -191,7 +191,7 @@ describe("authoritative store compatibility", () => {
         });
         expect(replay.data.replayed).toBe(true);
         expect(replay.data.purchase).toEqual(out.data.purchase);
-        expect(replay.data.wallet.balance).toBe(30000 - n * 200);
+        expect(replay.data.wallet.balance).toBe(30000 - n * 50);
         const reload = (await f.call("GET", "/state")).data.profile;
         expect(reload).toEqual(out.data.profile);
         for (const h of Object.keys(before.heroes))
@@ -217,7 +217,7 @@ describe("authoritative store compatibility", () => {
     expect(out[0]!.data.purchase.purchaseId).toBe(
       out[1]!.data.purchase.purchaseId,
     );
-    expect((await f.call("GET", "/wallet")).data.wallet.balance).toBe(28000);
+    expect((await f.call("GET", "/wallet")).data.wallet.balance).toBe(29500);
   });
   it("keeps five free Origins packs under the same historic offer id", async () => {
     for (let i = 0; i < 5; i++)
@@ -244,7 +244,7 @@ describe("authoritative store compatibility", () => {
     await f.buy("booster_origins_arcanos_x1", "after-launch");
     expect(
       (await f.call("POST", "/store/launch-reward/claim", {})).data,
-    ).toMatchObject({ credited: 0, wallet: { balance: 30300 } });
+    ).toMatchObject({ credited: 0, wallet: { balance: 30450 } });
   });
   it("rejects new deterministic purchases even with injected legacy catalog", async () => {
     f.deps.store.catalog = LEGACY_STORE_CATALOG;

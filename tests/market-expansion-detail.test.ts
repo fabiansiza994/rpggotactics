@@ -61,7 +61,7 @@ describe("expansion detail and deterministic receipt presentation", () => {
     );
     for (const text of [
       "Cartas de la expansión",
-      "200 Cristales",
+      "50 Cristales",
       "55%",
       "30%",
       "12%",

@@ -17,7 +17,7 @@ export const ARCANE_PACK_POLICY: BoosterPolicy = {
   duplicates: true,
   weights: { COMMON: 55, UNCOMMON: 30, RARE: 12, LEGENDARY: 3, ULTRA: 0 },
 };
-export const ARCANE_PACK_PRICE = 200;
+export const ARCANE_PACK_PRICE = 50;
 export const BOOSTER_RARITIES = [
   "COMMON",
   "UNCOMMON",

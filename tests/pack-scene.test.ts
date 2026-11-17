@@ -112,7 +112,7 @@ describe("deliberate pack discovery, no acquisition in animation", () => {
     for (const text of [
       "Orígenes Arcanos",
       "4 cartas",
-      "COMPRAR Y ABRIR · 200",
+      "COMPRAR Y ABRIR · 50",
       "Cancelar",
       "Demostración",
     ])

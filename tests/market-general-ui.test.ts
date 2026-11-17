@@ -30,7 +30,7 @@ it("preserves the game route and other URL parameters across all market levels",
     "/play?mode=store&invite=abc",
   );
 });
-it("offers x1 and x5, blocks x10 at1600, and never renders a champion purchase selector", () => {
+it("offers x1 and x5, blocks x10 at400, and never renders a champion purchase selector", () => {
   const html = renderToStaticMarkup(
     createElement(ExpansionCatalog, {
       expansions,
@@ -40,7 +40,7 @@ it("offers x1 and x5, blocks x10 at1600, and never renders a champion purchase s
       profile: freshDemo().profile,
       onInspect: () => {},
       onBuy: () => {},
-      balance: 1600,
+      balance: 400,
       busy: false,
     }),
   );
@@ -66,7 +66,7 @@ it.each([1, 5, 10] as const)(
     expect(after.purchases[0]!.openings!.flatMap((o) => o.cards)).toHaveLength(
       qty * 4,
     );
-    expect(after.balance).toBe(2000 - qty * 200);
+    expect(after.balance).toBe(2000 - qty * 50);
     expect(before.balance).toBe(2000);
   },
 );

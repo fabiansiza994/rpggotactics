@@ -136,11 +136,11 @@ describe("authoritative four-card packs", () => {
             (content.cards[c.cardId]!.heroId ?? content.defaultHeroId),
         ),
       ).toBe(true);
-      expect(balance()).toBe(800);
+      expect(balance()).toBe(950);
     },
   );
-  it("checks all real buckets and retains the approved 200 price / exact odds", async () => {
-    expect(pack.price).toBe(200);
+  it("checks all real buckets and retains the approved 50 price / exact odds", async () => {
+    expect(pack.price).toBe(50);
     expect(pack.booster).toEqual({
       ...ARCANE_PACK_POLICY,
       expansionId: "origins_arcanos",
@@ -180,7 +180,7 @@ describe("authoritative four-card packs", () => {
   it("persists four slots, charges once, accumulates all duplicates and returns the fresh collection", async () => {
     const r = await buy("first-pack");
     expect(r.status).toBe(200);
-    expect(balance()).toBe(800);
+    expect(balance()).toBe(950);
     expect(r.data.purchase.granted.opening!.cards).toHaveLength(4);
     expect(
       r.data.purchase.granted.cards.reduce((n, c) => n + c.copies, 0),
@@ -205,7 +205,7 @@ describe("authoritative four-card packs", () => {
     expect(replay.status).toBe(200);
     expect(replay.data.purchase).toEqual(first.data.purchase);
     expect(replay.data.replayed).toBe(true);
-    expect(balance()).toBe(800);
+    expect(balance()).toBe(950);
   });
   it("does not create a purchase during receipt-only recovery of an unknown key", async () => {
     expect(
@@ -261,7 +261,7 @@ describe("authoritative four-card packs", () => {
       balance: 99999,
     });
     expect(r.status).toBe(200);
-    expect(r.data.purchase.price).toBe(200);
+    expect(r.data.purchase.price).toBe(50);
     expect(
       r.data.purchase.granted.opening!.cards.every(
         (c) =>
@@ -285,7 +285,7 @@ describe("authoritative four-card packs", () => {
     expect(new Set(rs.map((r) => JSON.stringify(r.data.purchase))).size).toBe(
       1,
     );
-    expect(balance()).toBe(800);
+    expect(balance()).toBe(950);
   });
   it("distinct purchases cannot overdraw the same wallet", async () => {
     const q = await quote();
@@ -458,11 +458,11 @@ describe("general expansion batches", () => {
     async (qty) => {
       db.sql
         .prepare("UPDATE tactics_wallets SET balance=? WHERE user_id=?")
-        .run(qty * 200, account.id);
+        .run(qty * 50, account.id);
       const before = inventory();
       const r = await quantity(qty, "batch-exact-" + qty);
       expect(r.status).toBe(200);
-      expect(r.data.purchase.price).toBe(qty * 200);
+      expect(r.data.purchase.price).toBe(qty * 50);
       expect(r.data.purchase.granted.openings).toHaveLength(qty);
       expect(
         r.data.purchase.granted.openings!.every((o) => o.cards.length === 4),
@@ -477,10 +477,11 @@ describe("general expansion batches", () => {
   );
   it("rejects x10 with insufficient funds without acquiring any cards", async () => {
     const before = inventory();
+    db.sql.prepare("UPDATE tactics_wallets SET balance=499 WHERE user_id=?").run(account.id);
     const r = await quantity(10, "batch-poor");
     expect(r.status).toBe(409);
     expect(r.data.error?.code).toBe("INSUFFICIENT_FUNDS");
-    expect(balance()).toBe(1000);
+    expect(balance()).toBe(499);
     expect(inventory()).toBe(before);
   });
   it.each([5, 10] as const)(
@@ -498,7 +499,7 @@ describe("general expansion batches", () => {
         new Set(responses.map((r) => r.data.purchase.purchaseId)).size,
       ).toBe(1);
       expect(inventory() - before).toBe(qty * 4);
-      expect(balance()).toBe(2000 - qty * 200);
+      expect(balance()).toBe(2000 - qty * 50);
       const receipt = responses[0]!.data.purchase;
       const replay = await call(
         "POST",
@@ -527,9 +528,9 @@ describe("general expansion batches", () => {
       price: 1,
     });
     expect(r.status).toBe(200);
-    expect(r.data.purchase.price).toBe(200);
+    expect(r.data.purchase.price).toBe(50);
     expect(r.data.purchase.granted.openings).toHaveLength(1);
-    expect(balance()).toBe(800);
+    expect(balance()).toBe(950);
   });
   it("uses the complete published pool and independently draws cards for different champions", () => {
     const common = pack.contents.filter(
@@ -579,7 +580,7 @@ describe("five free packs per player and expansion", () => {
       ...extra,
     });
   }
-  it("grants five individually, never touches the wallet, then the next paid pack costs200", async () => {
+  it("grants five individually, never touches the wallet, then the next paid pack costs50", async () => {
     const before = inventory();
     for (let i = 0; i < 5; i++) {
       expect((await freeQuote()).freeRemaining).toBe(5 - i);
@@ -594,8 +595,8 @@ describe("five free packs per player and expansion", () => {
     expect((await claim("free-sixth")).status).toBe(409);
     const paid = await buy("paid-after-five");
     expect(paid.status).toBe(200);
-    expect(paid.data.purchase.price).toBe(200);
-    expect(balance()).toBe(800);
+    expect(paid.data.purchase.price).toBe(50);
+    expect(balance()).toBe(950);
   });
   it("same-key simultaneous requests consume one free pack and replay its persisted cards", async () => {
     const before = inventory();
@@ -793,18 +794,18 @@ describe("receipt, persisted collection and useful deck progress", () => {
           content,
         )("grapple"),
       ).toBe(count + 1);
-      expect(balance()).toBe(800);
+      expect(balance()).toBe(950);
       const replay = await purchase("booster_warrior_promise_x1", "grapple-copy-" + count);
       expect(replay.data.purchase).toEqual(r.data.purchase);
       expect(raw("warrior", "grapple")).toBe(count + 1);
-      expect(balance()).toBe(800);
+      expect(balance()).toBe(950);
     },
   );
   it.each([
     ["free", 1, 0],
-    ["paid", 1, 200],
-    ["paid", 5, 1000],
-    ["paid", 10, 2000],
+    ["paid", 1, 50],
+    ["paid", 5, 250],
+    ["paid", 10, 500],
   ] as const)(
     "%s x%s: repeated Blink, reload, receipt-only recovery and concurrent same-key retry",
     async (kind, qty, price) => {
