@@ -235,7 +235,7 @@ describe("authoritative store compatibility", () => {
       c.offers.filter(
         (x: { booster?: { freeGrant?: boolean } }) => x.booster?.freeGrant,
       ),
-    ).toHaveLength(1);
+    ).toHaveLength(6);
   });
   it("preserves prior launch claim while new packs are purchased", async () => {
     expect(

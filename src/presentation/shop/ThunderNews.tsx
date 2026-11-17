@@ -41,7 +41,7 @@ export function ThunderNews({ profile, account, onExpansion }: {
           <div className="thunder-card-art"><SpellArt cardId={id} spell={card.presentation.visualKey} /></div>
           <div className="thunder-card-info"><span className="shop-label">NUEVO · {rarityLabel[card.rarity ?? 'COMMON']} · Energía {card.cost}</span>
           <h3>{card.name}</h3><p>{card.rulesText}</p><small>En tu colección: {owned(id)}</small>
-          <CardAcquisition cardId={id} onExpansion={target=>{close();(onExpansion??openMarketExpansion)(target);}}/></div>
+          <CardAcquisition context="market" cardId={id} onExpansion={target=>{close();(onExpansion??openMarketExpansion)(target);}}/></div>
         </article>;
       })}</div>}
     </dialog>

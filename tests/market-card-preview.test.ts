@@ -14,6 +14,8 @@ it("shows one real card and one close button without duplicated descriptions or 
   expect(html).not.toContain("Volver");
   expect(html).not.toContain("<h3");
   expect(html).not.toContain("market-card-stats");
+  expect(html).not.toContain("Cómo conseguir");
+  expect(html).not.toContain("Ir a la expansión");
 });
 it("reserves an accessible close area and sizes the whole card to both viewport dimensions", () => {
   const css = readFileSync("src/styles/arcane-market.css", "utf8");

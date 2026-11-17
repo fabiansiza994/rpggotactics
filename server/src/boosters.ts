@@ -1,6 +1,7 @@
 import {primaryMarketExpansionId} from '../../src/game/store/market-primary';
 import {
   MARKET_EXPANSIONS,
+  freePackAllowance,
   type MarketExpansionView,
 } from "../../src/game/store/market-expansions";
 import { rarityOf } from "../../src/game/collection/deck-rules";
@@ -109,7 +110,7 @@ export function boosterOffers(
           );
       return heroes.flatMap((hero) =>
         [
-          ...((expansion.freePacksPerPlayer ?? 0) > 0 ? [0] : []),
+          ...(freePackAllowance(expansion) > 0 ? [0] : []),
           1,
           5,
           10,
@@ -128,7 +129,7 @@ export function boosterOffers(
             tags: ["booster", expansion.id],
             startAt: null,
             endAt: null,
-            purchaseLimit: amount === 0 ? expansion.freePacksPerPlayer! : null,
+            purchaseLimit: amount === 0 ? freePackAllowance(expansion) : null,
             sortOrder: amount,
             giftable: false,
             contents: [],
@@ -141,7 +142,7 @@ export function boosterOffers(
                 : (expansion.poolType ?? "CHAMPION"),
               packs: (amount === 0 ? 1 : amount) as 1 | 5 | 10,
               ...(amount === 0
-                ? { freeGrant: true, freeLimit: expansion.freePacksPerPlayer }
+                ? { freeGrant: true, freeLimit: freePackAllowance(expansion) }
                 : {}),
             },
           };
@@ -280,7 +281,7 @@ export function expansionViews(
       status: e.status,
       poolType: e.poolType,
       championId: e.championId,
-      freePacksPerPlayer: e.freePacksPerPlayer,
+      freePacksPerPlayer: available.length ? freePackAllowance(e) : 0,
       cardIds: e.cardIds,
       highlights: e.highlights,
       synergies: e.synergies,

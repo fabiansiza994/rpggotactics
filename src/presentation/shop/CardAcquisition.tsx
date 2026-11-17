@@ -18,7 +18,16 @@ export function openMarketExpansion(id: string) {
   window.dispatchEvent(new Event("rpggo-market-route"));
 }
 const requests = new Map<string, ReturnType<typeof storeApi.acquisition>>();
-export function CardAcquisition({
+type CardAcquisitionProps = {
+  context: "editor" | "collection" | "market";
+  cardId: string;
+  onExpansion?: (id: string) => void;
+};
+/** Acquisition belongs to collection/editor details, never to a market surface. */
+export function CardAcquisition({ context, ...props }: CardAcquisitionProps) {
+  return context === "market" ? null : <AcquisitionDetails {...props} />;
+}
+function AcquisitionDetails({
   cardId,
   onExpansion,
 }: {

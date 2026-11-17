@@ -27,6 +27,12 @@ export interface MarketExpansion {
   cardIds: readonly string[];
   pack?: { policy: BoosterPolicy; price: number };
 }
+/** Permanent benefit defaults apply only after an expansion has published boosters. */
+export const DEFAULT_EXPANSION_FREE_PACKS = 3;
+export const freePackAllowance = (e: MarketExpansion): number =>
+  e.status === "AVAILABLE" && e.pack ? (e.freePacksPerPlayer ?? DEFAULT_EXPANSION_FREE_PACKS) : 0;
+/** Stable entitlement identity, independent of pool revision or paid purchase history. */
+export const freePackOfferId = (expansionId: string) => `booster_${expansionId}_free`;
 export interface MarketExpansionView extends Omit<MarketExpansion, "pack"> {
   /** Only legal, published, saleable cards for this account/Worker release. */
   packs: {

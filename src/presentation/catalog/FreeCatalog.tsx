@@ -24,7 +24,7 @@ export function FreeCatalogCard({card,row,onExpansion}:{card:CardDefinition;row:
     <p className="catalog-rarity">{RARITY_LABEL[row.rarity]} · {row.cost} EN{row.unique?' · Única':''}</p>
     <p className="catalog-rules">{row.rulesText}</p>
     <strong className="catalog-ownership">{row.owned?`En colección · ${row.copies} copia${row.copies===1?'':'s'}`:'Bloqueada'}</strong>
-    <CardAcquisition cardId={card.id} onExpansion={onExpansion}/>
+    <CardAcquisition context="collection" cardId={card.id} onExpansion={onExpansion}/>
     <p className="catalog-unlock">{row.unlock.label}</p>
     {row.unlock.progress && <div className="catalog-progress"><progress value={row.unlock.progress.current} max={row.unlock.progress.target} aria-label={`Progreso: ${row.unlock.label}`}/><span>{row.unlock.progress.current}/{row.unlock.progress.target}</span></div>}
   </article>;

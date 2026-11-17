@@ -337,6 +337,8 @@ export interface StoreOwnership {
   hasCosmetic(cosmeticId: string): boolean;
   /** Completed purchases of this offer by this account. */
   purchases(offerId: string): number;
+  /** Completed FREE claims across this expansion; paid packs never consume the benefit. */
+  freeClaims?(expansionId: string): number;
 }
 
 export interface CardGrant {
@@ -402,6 +404,12 @@ export function proratedPrice(basePrice: number, fullValue: number, remainingVal
  * cosmetics already owned are excluded and prorated using the existing price formula.
  * Catalog prices, purchase limits and quantities remain unchanged.
  */
+export function completedOfferClaims(offer: StoreOffer, owned: StoreOwnership): number {
+  return offer.booster?.freeGrant && offer.booster.expansionId && owned.freeClaims
+    ? owned.freeClaims(offer.booster.expansionId)
+    : owned.purchases(offer.id);
+}
+
 export function planPurchase(
   offer: StoreOffer,
   owned: StoreOwnership,
@@ -409,7 +417,7 @@ export function planPurchase(
   now: number,
 ): { ok: true; plan: PurchasePlan; quote: PurchaseQuote } | { ok: false; reason: Unavailable } {
   if (!isOfferActive(offer, now)) return { ok: false, reason: { code: 'OFFER_INACTIVE' } };
-  if (offer.purchaseLimit !== null && owned.purchases(offer.id) >= offer.purchaseLimit)
+  if (offer.purchaseLimit !== null && completedOfferClaims(offer, owned) >= offer.purchaseLimit)
     return { ok: false, reason: { code: 'PURCHASE_LIMIT', limit: offer.purchaseLimit } };
   const plan: PurchasePlan = { cards: [], cosmetics: [] };
   const contents: StoreContent[] = [];

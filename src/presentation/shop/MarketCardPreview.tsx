@@ -48,7 +48,7 @@ export function MarketCardPreview({
         ×
       </button>
       {cardId && !card && <UnknownReceiptCard cardId={cardId}/>}
-      {card && <><MarketCard card={card} accessible /><CardAcquisition cardId={card.id} onExpansion={id=>{onClose();(onExpansion??openMarketExpansion)(id);}}/></>}
+      {card && <><MarketCard card={card} accessible /><CardAcquisition context="market" cardId={card.id} onExpansion={id=>{onClose();(onExpansion??openMarketExpansion)(id);}}/></>}
     </dialog>
   );
 }

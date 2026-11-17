@@ -566,7 +566,7 @@ describe("five free packs per player and expansion", () => {
     );
   async function freeQuote() {
     return (await call("GET", "/store/catalog")).data.offers.find(
-      (o) => o.booster?.freeGrant,
+      (o) => o.booster?.freeGrant && o.booster.expansionId === "origins_arcanos",
     )!;
   }
   async function claim(key: string, extra: Record<string, unknown> = {}) {
@@ -664,7 +664,7 @@ describe("five free packs per player and expansion", () => {
   });
   it("counters are independent for another player and another configured expansion", async () => {
     for (let i = 0; i < 5; i++) await claim("free-origin-" + i);
-    const source = boosterOffers(ctx).find((o) => o.booster?.freeGrant)!;
+    const source = boosterOffers(ctx).find((o) => o.booster?.freeGrant && o.booster.expansionId === "origins_arcanos")!;
     const another = {
       ...source,
       id: "booster_qa_second_free",
@@ -691,7 +691,7 @@ describe("five free packs per player and expansion", () => {
     expect((await freeQuote()).freeRemaining).toBe(5);
   });
   it("free and paid pools and weights are identical, and excluded cards stay owned", async () => {
-    const free = boosterOffers(ctx).find((o) => o.booster?.freeGrant)!;
+    const free = boosterOffers(ctx).find((o) => o.booster?.freeGrant && o.booster.expansionId === "origins_arcanos")!;
     expect(free.contents).toEqual(pack.contents);
     expect(free.booster!.weights).toEqual(pack.booster!.weights);
     db.sql
@@ -879,7 +879,7 @@ describe("receipt, persisted collection and useful deck progress", () => {
       expect(raw("mage", "blink")).toBe(3 + qty * 4);
       expect(balance()).toBe(6000 - price);
       const after = (await call("GET", "/store/catalog")).data.offers.find(
-        (o) => o.booster?.freeGrant,
+        (o) => o.booster?.freeGrant && o.booster.expansionId === "origins_arcanos",
       )!;
       expect(after.freeRemaining).toBe(kind === "free" ? 4 : 5);
       const history = await call("GET", "/store/purchases");
@@ -920,7 +920,7 @@ it("concurrent distinct free receipts retain all copies and get transaction-loca
     )
     .run(account.id);
   const q = (await call("GET", "/store/catalog")).data.offers.find(
-    (o) => o.booster?.freeGrant,
+    (o) => o.booster?.freeGrant && o.booster.expansionId === "origins_arcanos",
   )!;
   const common = pack.contents.filter(
     (c) => c.kind === "CARD" && rarityOf(content.cards[c.cardId]!) === "COMMON",
@@ -976,7 +976,7 @@ it("concurrent distinct free receipts retain all copies and get transaction-loca
   expect(balance()).toBe(1000);
   expect(
     (await call("GET", "/store/catalog")).data.offers.find(
-      (o) => o.booster?.freeGrant,
+      (o) => o.booster?.freeGrant && o.booster.expansionId === "origins_arcanos",
     )!.freeRemaining,
   ).toBe(3);
 });

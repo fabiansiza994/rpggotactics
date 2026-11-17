@@ -18,8 +18,8 @@ export const MARKET_FLAGS = {
   STORE_SHOWCASE_ENABLED: "1",
   STORE_QUOTE_SECRET: STORE_QUOTE_TEST_SECRET,
 };
-export async function marketFixture() {
-  const db = memoryD1({ legacyProfiles: true });
+export async function marketFixture(options: { legacyProfiles?: boolean } = {}) {
+  const db = memoryD1({ legacyProfiles: options.legacyProfiles ?? true });
   let ids = 0;
   const account = addAccount(db, "market_local_qa");
   const env = { ...MARKET_FLAGS, DB: db };

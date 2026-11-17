@@ -394,7 +394,7 @@ function CardDetail({
           </>
         )}
       </p>
-      <CardAcquisition cardId={card.id} onExpansion={onExpansion}/>
+      <CardAcquisition context="editor" cardId={card.id} onExpansion={onExpansion}/>
       <div className="db-detail-actions">
         {addIssue && owned > 0 && (
           <p className="db-detail-why">{deckIssueText(addIssue, heroName)}</p>

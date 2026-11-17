@@ -1,5 +1,6 @@
 import {describeCardAcquisition} from '../../src/game/store/card-acquisition';
-import {newStoreSaleAllowed} from '../../src/game/store/store';
+import {freePackOfferId} from '../../src/game/store/market-expansions';
+import {newStoreSaleAllowed,completedOfferClaims} from '../../src/game/store/store';
 import { boosterOffers, rollBooster, expansionViews, validBooster } from './boosters';
 import type { BoosterPolicy } from '../../src/game/store/boosters';
 import {issueQuote,readQuote,quotedTerms,quoteSecretReady,quoteFailure,quoteResponse} from './storeQuote';
@@ -156,7 +157,7 @@ export async function ownership(
   record: PlayerRecord,
   content: GameContent,
 ): Promise<StoreOwnership> {
-  const [cosmetics, purchases] = await Promise.all([
+  const [cosmetics, purchases, freeClaims] = await Promise.all([
     db.prepare('SELECT cosmetic_id FROM tactics_player_cosmetics WHERE user_id = ?').bind(userId).all<{ cosmetic_id: string }>(),
     db
       .prepare(
@@ -164,13 +165,19 @@ export async function ownership(
       )
       .bind(userId)
       .all<{ offer_id: string; n: number }>(),
+    db.prepare(`SELECT CASE WHEN json_extract(offer_json, '$.booster.freeGrant') = 1 AND json_extract(offer_json, '$.booster.expansionId') IS NOT NULL THEN json_extract(offer_json, '$.booster.expansionId') ELSE substr(offer_id, 9, length(offer_id) - 13) END AS expansion_id, COUNT(*) AS n
+      FROM tactics_store_purchases WHERE user_id = ? AND status = 'COMPLETED'
+      AND (offer_id GLOB 'booster_*_free' OR json_extract(offer_json, '$.booster.freeGrant') = 1)
+      GROUP BY expansion_id`).bind(userId).all<{expansion_id:string;n:number}>(),
   ]);
   const ownedCosmetics = new Set(cosmetics.results.map((c) => c.cosmetic_id));
   const counts = new Map(purchases.results.map((p) => [p.offer_id, p.n]));
+  const freeCounts = new Map(freeClaims.results.map(p=>[p.expansion_id,p.n]));
   return {
     copies: (heroId, cardId) => ownedFor(record.profile, heroId, content)(cardId),
     hasCosmetic: (id) => ownedCosmetics.has(id),
     purchases: (offerId) => counts.get(offerId) ?? 0,
+    freeClaims: expansionId => freeCounts.get(expansionId) ?? 0,
   };
 }
 
@@ -282,10 +289,14 @@ function purchaseStatements(
   // which aborts the whole batch: no charge, no grant.
   const { guards, binds } = cardInventoryGuards(userId, content, plan.cards);
   if (offer.purchaseLimit !== null) {
-    guards.push(
-      "(SELECT COUNT(*) FROM tactics_store_purchases WHERE user_id = ? AND offer_id = ? AND status = 'COMPLETED') <= ?",
-    );
-    binds.push(userId, offer.id, offer.purchaseLimit);
+    if (offer.booster?.freeGrant && offer.booster.expansionId) {
+      // Same stable account+expansion limit for all variants/revisions, including legacy Origins receipts.
+      guards.push("(SELECT COUNT(*) FROM tactics_store_purchases WHERE user_id = ? AND status = 'COMPLETED' AND (offer_id = ? OR (json_extract(offer_json, '$.booster.freeGrant') = 1 AND json_extract(offer_json, '$.booster.expansionId') = ?))) <= ?");
+      binds.push(userId, freePackOfferId(offer.booster.expansionId), offer.booster.expansionId, offer.purchaseLimit);
+    } else {
+      guards.push("(SELECT COUNT(*) FROM tactics_store_purchases WHERE user_id = ? AND offer_id = ? AND status = 'COMPLETED') <= ?");
+      binds.push(userId, offer.id, offer.purchaseLimit);
+    }
   }
   if (guards.length)
     out.push(
@@ -417,7 +428,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
         .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
         .map(async (o) => {
           const view = offerView(o, owned, ctx, now);
-          return {...view,freeRemaining:o.booster?.freeGrant?Math.max(0,(o.purchaseLimit??0)-owned.purchases(o.id)):undefined, purchaseQuote: view.availability.purchasable ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
+          return {...view,freeRemaining:o.booster?.freeGrant?Math.max(0,(o.purchaseLimit??0)-completedOfferClaims(o,owned)):undefined, purchaseQuote: view.availability.purchasable ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
         })),
       wallet: await walletView(db, userId),
       cosmetics: await cosmeticsView(db, userId, r.store),

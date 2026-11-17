@@ -175,19 +175,22 @@ export function ExpansionCatalog({
         </p>
         {selected.status === "AVAILABLE" && selected.packs.length>0 && (
           <div className="market-hero-purchase">
-            {freeOffer && freeRemaining > 0 ? (
+            {freeOffer && (
               <div className="market-free-packs">
                 <strong>
-                  {freeRemaining === 1
-                    ? "Último sobre gratis"
-                    : `${freeRemaining} sobres gratis disponibles`}
+                  🎁 Tus primeros {freeOffer.purchaseLimit ?? selected.freePacksPerPlayer} sobres gratis
                 </strong>
+                <p role="status">Sobres gratuitos restantes: {freeRemaining}/{freeOffer.purchaseLimit ?? selected.freePacksPerPlayer}</p>
+              </div>
+            )}
+            {freeOffer && freeRemaining > 0 ? (
+              <div className="market-free-packs">
                 <button
                   className="shop-primary"
                   disabled={busy || !freeOffer.availability.purchasable}
                   onClick={() => onBuy(freeOffer)}
                 >
-                  Abrir sobre GRATIS
+                  ABRIR SOBRE GRATIS
                 </button>
                 <small>
                   Después: {chosen?.price ?? 200} Cristales por sobre. Mismo
