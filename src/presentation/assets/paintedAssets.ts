@@ -198,3 +198,6 @@ CHARACTER_PAINTINGS.snow_soldier='/art/antarctic-market/snow-soldier-unit.png';
 
 // Horizontal master corrected by lateral expansion; original retained in QA archive.
 for(const id of ['winter_domain', 'frost_comet', 'avalanche', 'frozen_step', 'arcane_skating', 'absolute_zero', 'glacial_storm', 'shatter_ice', 'snow_soldier', 'sudden_frost', 'glacier_claw', 'glacial_reflection', 'snow_war', 'ice_prison', 'permafrost', 'frost_mantle', 'slippery_ground']) FINAL_CARD_ART[id]=`/art/antarctic-cards-horizontal/${id}.jpg`;
+
+// Final original landscape illustration; per-card override preserves Storm Avatar artwork.
+FINAL_CARD_ART.thunder_incarnation = "/art/mage-thunder/thunder_incarnation.jpg";

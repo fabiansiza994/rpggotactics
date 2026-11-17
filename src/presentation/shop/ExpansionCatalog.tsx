@@ -1,4 +1,4 @@
-import {expansionVisual} from "./expansionVisuals";
+import {ExpansionProduct} from "./ExpansionProduct";
 import {CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../catalog/cardPresentation';
 import { useRef } from "react";
 import {
@@ -58,62 +58,11 @@ export function ExpansionCatalog({
           sorteos independientes.
         </p>
         <div
-          className="market-expansion-shelf"
+          className="market-expansion-shelf expansion-product-shelf"
           aria-label="Colecciones de cartas"
         >
-          {expansions.map((e) => (
-            <button
-              key={e.id}
-              onClick={() => {
-                onSelect(e.id);
-              }}
-              className="market-expansion-box"
-              data-status={e.status}
-            >
-              <img src={expansionVisual(e.id,e.art).cover} alt="" />
-              <span>
-                <small>
-                  {e.status === "AVAILABLE"
-                    ? "COLECCIÓN DISPONIBLE"
-                    : e.status === "CATALOG_ONLY" ? "CATÁLOGO · SIN SOBRES" : "PRÓXIMAMENTE"}
-                </small>
-                <strong>{e.name}</strong>
-                <span>{e.description}</span>
-                {e.status !== "COMING_SOON" && (
-                  <>
-                    <span>{e.cardIds.length} cartas diferentes</span>
-                    <span>
-                      {e.cardIds.filter((id) => have(id) > 0).length} poseídas ·{" "}
-                      {e.cardIds.filter((id) => have(id) === 0).length}{" "}
-                      faltantes
-                    </span>
-                    <progress
-                      aria-label={`Progreso de ${e.name}`}
-                      max={e.cardIds.length}
-                      value={e.cardIds.filter((id) => have(id) > 0).length}
-                    />
-                    {offers
-                      .filter(
-                        (o) =>
-                          o.booster?.expansionId === e.id &&
-                          o.booster?.freeGrant &&
-                          (o.freeRemaining ?? 0) > 0,
-                      )
-                      .map((o) => (
-                        <span key={o.id}>
-                          {o.freeRemaining} sobres gratis disponibles
-                        </span>
-                      ))}
-                  </>
-                )}
-                <small>
-                  {e.status === "AVAILABLE"
-                    ? `${e.cardIds.length} cartas · Ver detalles`
-                    : "Contenido por anunciar · Ver detalles"}
-                </small>
-              </span>
-            </button>
-          ))}
+          {expansions.map(e=><ExpansionProduct key={e.id} expansion={e} offers={offers}
+            owned={e.cardIds.filter(id=>have(id)>0).length} onSelect={onSelect}/>)}
         </div>
       </section>
     );

@@ -51,8 +51,8 @@ describe("expansion detail and deterministic receipt presentation", () => {
     );
     expect(index).toContain("Colecciones de la arena");
     expect(index).not.toContain("Comprar x1");
-    expect(index).toContain("poseídas");
-    expect(index).toContain("<progress");
+    expect(index).toContain("coleccionadas");
+    expect(index).not.toContain("<progress");
     const html = renderToStaticMarkup(
       createElement(ExpansionCatalog, {
         ...base,
