@@ -1,3 +1,4 @@
+import {LaunchReward} from './LaunchReward';
 import { MarketHome } from "./MarketHome";
 import { ExpansionCatalog } from './ExpansionCatalog';
 import { MARKET_SECTIONS, marketOffers, marketOfferPrimary, RARITY_LABELS } from './market';
@@ -365,6 +366,10 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
       {activeCategory!=='featured'&&!(activeCategory==='packs'&&expansionId)&&<nav className="market-nav" aria-label="Categorías del mercado">{MARKET_SECTIONS.map(cat=><button key={cat.id} aria-pressed={activeCategory===cat.id} onClick={()=>{setCategory(cat.id);setHeroFilter('');setRarityFilter('');setAvailableOnly(false);}}>{cat.label}</button>)}</nav>}
 
       <div className="shop-scroll">
+        {session&&synced&&<LaunchReward key={session.username} token={session.token}
+          onWallet={wallet=>setCatalog(old=>old?{...old,wallet}:old)}
+          onAuthExpired={()=>useBattleStore.getState().sessionExpired()}/>}
+
         {!session && (
           <div className="shop-message">
             <h2>Tu colección te espera</h2>

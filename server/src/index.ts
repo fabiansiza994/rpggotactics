@@ -51,6 +51,7 @@ import { masteryAllowed, masteryRoute, pveVictoryMastery } from './mastery';
 import { freeCatalogBody, reconcileFreeCatalog } from './freeCatalog';
 import { defaultStoreDeps, storeRoute, type StoreDeps, type StoreRequest } from './store';
 import { promoRoute } from './promo';
+import { launchRewardRoute } from './launchReward';
 import { giftRoute } from './gifts';
 import { archerCampaignAllowed, championRuns, world2Allowed, worldsBody, worldsFor } from './worlds';
 export { PvPMatchRoom } from './pvp';
@@ -400,6 +401,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     state: async () => stateBody(caller, await loadReconciled(), env, deps),
   };
   const storeResponse =
+    (await launchRewardRoute(route, storeRequest, env.LAUNCH_REWARD_ENABLED !== '0')) ??
     (await storeRoute(route, storeRequest)) ??
     (await promoRoute(route, storeRequest)) ??
     (await giftRoute(route, storeRequest, { env, username: caller.username }));

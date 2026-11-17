@@ -20,6 +20,8 @@ export interface D1Database {
 }
 
 export interface Env {
+  /** Set to "0" to stop new launch claims; existing ledger receipts remain readable. */
+  LAUNCH_REWARD_ENABLED?: string;
   RANKED_BOTS_ENABLED?: string;
   RANKED_BOTS_HIGHER_LEVEL_BPS?: string;
   RANKED_BOTS_XP_MATCHES_PER_DAY?: string;

@@ -11,12 +11,13 @@ export function useMobileBalance(enabled:boolean,route:string){
  const [balance,setBalance]=useState<{username:string;value:number}|null>(null);
  useEffect(()=>{
   let alive=true;const session=loadSession();
-  if(enabled&&account.status==='READY'&&session)void fetchMobileWallet(session.token).then(r=>{
+  const refresh=()=>{if(enabled&&account.status==='READY'&&session)void fetchMobileWallet(session.token).then(r=>{
    if(!alive||loadSession()?.token!==session.token)return;
    if(!r.ok){if(r.error.kind==='AUTH')useBattleStore.getState().sessionExpired();return;}
    if(Number.isFinite(r.data.wallet?.balance))setBalance({username,value:r.data.wallet.balance});
-  }).catch(()=>{});
-  return()=>{alive=false;};
+  }).catch(()=>{});};
+  refresh();window.addEventListener('rpggo-wallet-changed',refresh);
+  return()=>{alive=false;window.removeEventListener('rpggo-wallet-changed',refresh);};
  },[enabled,route,account.status,username]);
  return account.status==='READY'&&balance?.username===username?balance.value:null;
 }

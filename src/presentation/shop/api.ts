@@ -47,7 +47,14 @@ export interface PromoRedeemResponse extends CloudState {
 }
 /** Failure details: `error.code` is one of PROMO_RESULTS (ALREADY_REDEEMED also carries `reward`). */
 export type PromoFailure = Exclude<PromoResult, 'SUCCESS'>;
+export interface LaunchRewardResponse {
+  id: string; amount: number; enabled: boolean; claimed: boolean; credited: number; wallet: Wallet;
+}
 export const storeApi = {
+  launchReward: (token: string, claim = false) => request<LaunchRewardResponse>(CLOUD_CONFIG.apiUrl,
+    '/api/tactics/store/launch-reward' + (claim ? '/claim' : ''), {
+      token, method: claim ? 'POST' : 'GET', ...(claim ? {body: {}} : {}), timeoutMs: CLOUD_CONFIG.timeoutMs,
+    }),
   catalog: (token: string) =>
     request<Catalog>(CLOUD_CONFIG.apiUrl, '/api/tactics/store/catalog', {
       token,
