@@ -122,3 +122,15 @@ dialog.shop-dialog.pack-experience-dialog::backdrop {background:#060915;backdrop
  .pack-experience .pack-dust{display:none;}
  .pack-experience .pack-preview-wrap,.pack-experience .sealed-pack-button{transform:none;}
 }
+
+/* Reveal uses the available middle track, not an estimate of the whole viewport. */
+.pack-experience .pack-scene:has(.pack-reveal-viewport) {overflow:hidden;gap:16px;}
+.pack-reveal-count,.pack-reveal-instruction {display:block;}
+.pack-experience .pack-reveal-instruction {margin-top:4px;}
+.pack-experience .pack-reveal-viewport {min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain;container-type:size;scroll-padding:12px;}
+.pack-experience .pack-reveal-viewport .market-reveal-grid {box-sizing:border-box;width:min(100%,max(240px,calc((100cqh - 80px)*63/88)));max-width:490px;margin:auto;padding:8px 8px 26px;gap:32px 14px;align-items:start;}
+.pack-experience .pack-reveal-viewport .pack-acquired {top:100%;bottom:auto;margin-top:4px!important;transform:none;line-height:1.2;white-space:nowrap;}
+.pack-experience .pack-scene:has(.pack-reveal-viewport)>.pack-actions {padding:0 4px;box-sizing:border-box;align-self:end;}
+@media(min-width:900px),(max-height:520px) and (orientation:landscape){
+ .pack-experience .pack-reveal-viewport .market-reveal-grid {grid-template-columns:repeat(4,minmax(0,1fr));width:min(100%,max(480px,calc((100cqh - 44px)*63/88*4)));max-width:1080px;gap:32px 18px;}
+}

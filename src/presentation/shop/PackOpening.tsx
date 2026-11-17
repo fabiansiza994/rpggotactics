@@ -140,7 +140,7 @@ export function PackOpening({
           {onOpenAll&&<button onClick={onOpenAll}>Abrir todos</button>}
         </div>
         {scene.phase!=="sealed"&&scene.phase!=="opening"&&<p role="status">
-          {scene.phase==="summary"?"Las cuatro cartas están en tu colección.":`${count} de 4 cartas reveladas · Toca una carta para descubrirla`}
+          {scene.phase==="summary"?"Las cuatro cartas están en tu colección.":<><span className="pack-reveal-count">{count} de 4 cartas reveladas</span><span className="pack-reveal-instruction">{count===4?"¡Todas las cartas descubiertas!":"Toca una carta para descubrirla"}</span></>}
         </p>}
       </header>
       {scene.phase === "sealed" || scene.phase === "opening" ? (
@@ -171,6 +171,7 @@ export function PackOpening({
         </div>
       ) : (
         <>
+          <div className="pack-reveal-viewport" role="region" aria-label="Cartas del sobre" tabIndex={0}>
           <div className="market-reveal-grid">
             {opening.cards.map((slot, i) => {
               const card = resolvePresentationCard(slot.cardId),
@@ -225,6 +226,7 @@ export function PackOpening({
                 </button>
               );
             })}
+          </div>
           </div>
           <div className="pack-actions">
             {scene.phase === "reveal" ? (

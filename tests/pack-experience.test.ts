@@ -33,3 +33,17 @@ for(const count of [1,5,10])it('paid x'+count+' is deliberate: preview gives tot
 it('busy confirmation disables both actions, preventing repeated confirmation or cancellation in flight',async()=>{
  const f=await marketFixture();try{const offer=(await f.catalog()).offers.find((o:CatalogOffer)=>o.id==='booster_pack_pact_free') as CatalogOffer;const html=renderToStaticMarkup(createElement(PackConfirmation,{offer,balance:30000,busy:true,onConfirm:noop,onCancel:noop}));expect(html.match(/disabled=""/g)).toHaveLength(2);expect(html).toContain('Confirmando');}finally{f.db.sql.close();}
 });
+
+it('restored fully revealed receipt gives completion instructions, not a request to reveal more cards',async()=>{
+ const {vi}=await import('vitest');
+ const {PackOpening}=await import('../src/presentation/shop/PackOpening');
+ vi.stubGlobal('matchMedia',()=>({matches:true}));
+ vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({phase:'reveal',mask:15})});
+ try {
+  const html=renderToStaticMarkup(createElement(PackOpening,{receiptId:'qa_existing_receipt',opening:{packId:'booster_thunder_god_x1',revision:'qa',cards:['thunder_bolt','arcane_burst','blink','barrier'].map(cardId=>({heroId:'mage',cardId,copies:1,total:2,cap:3}))},onInspect:noop,completeLabel:'Ver resumen'}));
+  expect(html).toContain('¡Todas las cartas descubiertas!');
+  expect(html).not.toContain('Toca una carta para descubrirla');
+  expect(html).toContain('Ver resumen');
+  expect(html).toContain('aria-label="Cartas del sobre"');
+ } finally {vi.unstubAllGlobals();}
+});
