@@ -26,10 +26,12 @@ export function marketNavigationUrl(
 }
 export function useMarketNavigation(
   defaultCategory: MarketSection = "featured",
+  initialExpansionId?:string,
 ) {
   if(defaultCategory==="cards")defaultCategory="packs";
   const [nav, setNav] = useState(() => {
     const x = readMarketNavigation(location.search);
+    if(initialExpansionId)return {category:'packs' as MarketSection,expansionId:initialExpansionId};
     return new URLSearchParams(location.search).has("market")
       ? x
       : { category: defaultCategory, expansionId: null };
@@ -46,7 +48,8 @@ export function useMarketNavigation(
       );
     const back = () => setNav(readMarketNavigation(location.search));
     window.addEventListener("popstate", back);
-    return () => window.removeEventListener("popstate", back);
+    window.addEventListener("rpggo-market-route",back);
+    return () => {window.removeEventListener("popstate", back);window.removeEventListener("rpggo-market-route",back);};
   }, [defaultCategory]);
   const navigate = (
     category: MarketSection,

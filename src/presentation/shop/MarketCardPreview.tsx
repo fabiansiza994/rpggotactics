@@ -1,13 +1,16 @@
 import { useEffect, useRef } from "react";
-import { DEFAULT_CONTENT } from "../../game";
+import {PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../qa/shapeshifter/runtime';
+import {CardAcquisition,openMarketExpansion} from './CardAcquisition';
 import { MarketCard } from "./MarketCard";
 /** One focused card, no duplicated labels or secondary navigation. */
 export function MarketCardPreview({
   cardId,
   onClose,
+  onExpansion,
 }: {
   cardId: string | null;
   onClose: () => void;
+  onExpansion?: (id:string)=>void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
     closeButton = useRef<HTMLButtonElement>(null);
@@ -32,12 +35,7 @@ export function MarketCardPreview({
         e.preventDefault();
         onClose();
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Tab") {
-          e.preventDefault();
-          closeButton.current?.focus();
-        }
-      }}
+
     >
       <button
         ref={closeButton}
@@ -47,7 +45,7 @@ export function MarketCardPreview({
       >
         ×
       </button>
-      {card && <MarketCard card={card} accessible />}
+      {card && <><MarketCard card={card} accessible /><CardAcquisition cardId={card.id} onExpansion={id=>{onClose();(onExpansion??openMarketExpansion)(id);}}/></>}
     </dialog>
   );
 }

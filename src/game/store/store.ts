@@ -1,3 +1,4 @@
+import {commercialOverlap,commercialSetReleased} from './commercial-acquisition';
 import {primaryMarketExpansionId} from './market-primary';
 import type { BoosterPolicy } from './boosters';
 import { hasGuaranteedFreeCatalogRoute } from '../data/free-catalog';
@@ -307,8 +308,8 @@ export function validateCatalog(offers: readonly StoreOffer[], ctx: StoreContext
           issues.push({ code: 'WRONG_HERO', offerId, cardId: c.cardId });
         else if (!Number.isSafeInteger(c.copies) || c.copies < 1)
           issues.push({ code: 'OVER_COPY_LIMIT', offerId, cardId: c.cardId });
-        else if (isExclusiveCard(card) && !hasGuaranteedFreeCatalogRoute(card)) issues.push({ code: 'EXCLUSIVE_CARD', offerId, cardId: c.cardId });
-        else if (card.expansion && !(ctx.content.releasedExpansions ?? []).includes(card.expansion))
+        else if (isExclusiveCard(card) && !hasGuaranteedFreeCatalogRoute(card) && !commercialOverlap(card)) issues.push({ code: 'EXCLUSIVE_CARD', offerId, cardId: c.cardId });
+        else if (!commercialSetReleased(card,ctx.content))
           issues.push({ code: 'UNRELEASED_CARD', offerId, cardId: c.cardId });
       } else {
         const cosmetic = ctx.cosmetics[c.cosmeticId];
@@ -462,3 +463,6 @@ export function offerView(offer: StoreOffer, owned: StoreOwnership, ctx: StoreCo
   const { quote } = planned;
   return { ...offer, price: quote.price, contents: quote.contents, basePrice: quote.basePrice, excluded: quote.excluded, availability: { purchasable: true } };
 }
+
+/** New sales only; CARD contents and historical products remain valid receipt formats. */
+export const newStoreSaleAllowed=(offer:StoreOffer):boolean=>offer.type!=='CARD'&&(!!offer.booster||!offer.contents.some(c=>c.kind==='CARD'));

@@ -265,7 +265,7 @@ export function expansionViews(
   ctx: StoreContext,
   packs: readonly StoreOffer[],
 ): MarketExpansionView[] {
-  return MARKET_EXPANSIONS.map((e) => {
+  return MARKET_EXPANSIONS.filter(e=>e.public!==false).map((e) => {
     const available = packs.filter((p) => p.booster?.expansionId === e.id);
     const ids = new Set(
       available.flatMap((p) =>

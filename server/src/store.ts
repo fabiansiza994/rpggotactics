@@ -1,3 +1,5 @@
+import {describeCardAcquisition} from '../../src/game/store/card-acquisition';
+import {newStoreSaleAllowed} from '../../src/game/store/store';
 import { boosterOffers, rollBooster, expansionViews, validBooster } from './boosters';
 import type { BoosterPolicy } from '../../src/game/store/boosters';
 import {issueQuote,readQuote,quotedTerms,quoteSecretReady,quoteFailure,quoteResponse} from './storeQuote';
@@ -372,8 +374,13 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
   const { db, userId, now } = r;
   const ctx: StoreContext = { content: r.content, rules: DECK_RULES, cosmetics: r.store.cosmetics };
   const offers = () =>
-    validOffers([...r.store.catalog, ...(r.packsEnabled ? boosterOffers(ctx,r.store.packPolicy,r.store.packPrice) : [])], ctx).filter(o=>!o.booster||(r.packsEnabled&&validBooster(o,ctx))).filter((o) => o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true));
+    validOffers([...r.store.catalog, ...(r.packsEnabled ? boosterOffers(ctx,r.store.packPolicy,r.store.packPrice) : [])], ctx).filter(newStoreSaleAllowed).filter(o=>!o.booster||(r.packsEnabled&&validBooster(o,ctx))).filter((o) => o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true));
 
+  if(route==='GET /api/tactics/store/acquisition'){
+    const pool=new Set(offers().filter(o=>!!o.booster).flatMap(o=>o.contents.flatMap(c=>c.kind==='CARD'?[c.cardId]:[])));
+    const response=json({cards:Object.fromEntries(Object.keys(r.content.cards).map(id=>[id,describeCardAcquisition(id,r.content,pool)]))});
+    response.headers.set('Cache-Control','private, no-store');return response;
+  }
   if (route === 'GET /api/tactics/wallet') {
     const ledger = await db
       .prepare(

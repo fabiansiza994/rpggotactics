@@ -117,7 +117,7 @@ const frame = (cosmeticId: string, title: string, sortOrder: number): StoreOffer
   giftable: true,
 });
 
-export const STORE_CATALOG: readonly StoreOffer[] = [
+export const LEGACY_STORE_CATALOG: readonly StoreOffer[] = [
 
   // ── Summoner bundles ──
   {
@@ -349,3 +349,6 @@ export const CURRENCY_PACKAGES: readonly CurrencyPackage[] = [
   { internalSku: 'crystals_l', currencyId: PREMIUM_CURRENCY_ID, currencyAmount: 2500, bonusAmount: 300, platformSkus: NOT_LISTED },
   { internalSku: 'crystals_xl', currencyId: PREMIUM_CURRENCY_ID, currencyAmount: 4300, bonusAmount: 700, platformSkus: NOT_LISTED },
 ];
+
+/** Historical definitions retained; no new deterministic card sales, including future rotations. */
+export const STORE_CATALOG: readonly StoreOffer[]=LEGACY_STORE_CATALOG.filter(o=>!o.contents.some(c=>c.kind==='CARD'));

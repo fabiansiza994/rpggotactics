@@ -1,3 +1,4 @@
+import {CardAcquisition,openMarketExpansion} from './CardAcquisition';
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_CONTENT, ownedFor, type PlayerProfile } from '../../game';
 import { MAGE_THUNDER_CORE } from '../../game/data/mage-thunder-core';
@@ -9,8 +10,8 @@ import './thunder-news.css';
 export const THUNDER_NEWS_IDS = [...MAGE_THUNDER_CORE, ...MAGE_THUNDER_EXPANSION].map(c => c.id);
 const rarityLabel = { COMMON:'Común', UNCOMMON:'Infrecuente', RARE:'Rara', LEGENDARY:'Legendaria', ULTRA:'Ultra' };
 export function thunderSeenKey(account: string): string { return `rpggo:news:thunder-release-2:${account}`; }
-export function ThunderNews({ profile, account, offers, onOffer }: {
-  profile: PlayerProfile; account: string; offers: readonly CatalogOffer[]; onOffer: (offer: CatalogOffer) => void;
+export function ThunderNews({ profile, account, onExpansion }: {
+  profile: PlayerProfile; account: string; offers: readonly CatalogOffer[]; onOffer: (offer: CatalogOffer) => void; onExpansion?:(id:string)=>void;
 }) {
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(() => { try { return localStorage.getItem(thunderSeenKey(account)) === '1'; } catch { return false; } });
@@ -34,12 +35,12 @@ export function ThunderNews({ profile, account, offers, onOffer }: {
       onKeyDown={e=>{if(e.key!=='Tab')return;const nodes=Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));const first=nodes[0],last=nodes.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}}>
       <header><div><span className="shop-label">15 CARTAS · MAGO</span><h2 id="thunder-gallery-title">El Despertar del Trueno</h2></div><button aria-label="Cerrar cartas de Trueno" onClick={close}>×</button></header>
       {open && <div className="thunder-gallery-grid">{THUNDER_NEWS_IDS.map(id=>{
-        const card=DEFAULT_CONTENT.cards[id]!; const offer=offers.find(o=>o.id===`card_${id}`);
+        const card=DEFAULT_CONTENT.cards[id]!;
         return <article key={id} data-thunder-card={id}>
           <div className="thunder-card-art"><SpellArt cardId={id} spell={card.presentation.visualKey} /></div>
           <div className="thunder-card-info"><span className="shop-label">NUEVO · {rarityLabel[card.rarity ?? 'COMMON']} · Energía {card.cost}</span>
-          <h3>{card.name}</h3><p>{card.rulesText}</p><small>En tu colección: {owned(id)} · {id==='storm_avatar'?'Recompensa del Acto III · XXX':'Recompensas de campaña del Mago'}</small>
-          <button disabled={!offer} onClick={()=>{if(offer){close();onOffer(offer);}}}>{offer?'Ver adquisición y propiedad':id==='storm_avatar'?'Se obtiene en Acto III · XXX':'Inicia sesión para consultar la adquisición'}</button></div>
+          <h3>{card.name}</h3><p>{card.rulesText}</p><small>En tu colección: {owned(id)}</small>
+          <CardAcquisition cardId={id} onExpansion={target=>{close();(onExpansion??openMarketExpansion)(target);}}/></div>
         </article>;
       })}</div>}
     </dialog>

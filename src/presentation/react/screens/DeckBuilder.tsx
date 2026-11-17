@@ -1,3 +1,4 @@
+import {CardAcquisition} from '../../shop/CardAcquisition';
 import {AutoDeckBuilder} from './AutoDeckBuilder';
 import {visibleCollectionCopy,type CollectionScope} from '../../mobile/mobileUx';
 import {registerPlayNavigationGuard} from '../../play/navigation';
@@ -317,6 +318,7 @@ function CardDetail({
   onRemove,
   onClose,
   context,
+  onExpansion,
 }: {
   card: CardDefinition;
   owned: number;
@@ -327,6 +329,7 @@ function CardDetail({
   onRemove(): void;
   onClose(): void;
   context: 'deck' | 'collection';
+  onExpansion(id:string):void;
 }) {
   const rarity = rarityOf(card);
   const limit = copyLimit(card, DECK_RULES);
@@ -391,6 +394,7 @@ function CardDetail({
           </>
         )}
       </p>
+      <CardAcquisition cardId={card.id} onExpansion={onExpansion}/>
       <div className="db-detail-actions">
         {addIssue && owned > 0 && (
           <p className="db-detail-why">{deckIssueText(addIssue, heroName)}</p>
@@ -580,6 +584,8 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     return (lookup(cardId)?.acquired ?? 0) > (card && isNeutral(card) ? sharedSeenUpTo : seenUpTo);
   };
 
+  const [marketExpansion,setMarketExpansion]=useState<string|null>(null);
+  const visitExpansion=(id:string)=>{setDetailOpen(false);setMarketExpansion(id);};
   const [autoOpen,setAutoOpen]=useState(false),[autoApplied,setAutoApplied]=useState(false);
   const [draft, setDraft] = useState<DeckEntry[]>(() => saved.cards.map((e) => ({ ...e })));
   const [query, setQuery] = useState<CollectionQuery>(EMPTY_QUERY);
@@ -1012,6 +1018,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
                 )}
                 heroName={heroDef.name}
                 context={detailContext}
+                onExpansion={visitExpansion}
                 onAdd={() => tryAdd(inspectedCard.id)}
                 onRemove={() => tryRemove(inspectedCard.id)}
                 onClose={() => {
@@ -1236,7 +1243,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
-          <DiscoverRarities heroId={heroId}/>
+          <DiscoverRarities heroId={heroId} onExpansion={visitExpansion}/>
           <h2 id="db-collection-title" className="menu-section-title">
             {mobile?(collectionScope==='owned'?'Todas mis cartas':'Disponibles para añadir'):'Colección disponible'}{' '}
             <span className="db-section-count">
@@ -1315,6 +1322,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
               )}
               heroName={heroDef.name}
               context={detailContext}
+                onExpansion={visitExpansion}
               onAdd={() => tryAdd(inspectedCard.id)}
               onRemove={() => tryRemove(inspectedCard.id)}
               onClose={() => {
@@ -1329,6 +1337,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
           )}
         </DetailDialog>
       )}
+      {marketExpansion&&<DeckMarket expansionId={marketExpansion} mobile={mobile} onClose={()=>setMarketExpansion(null)}/>}
       {autoOpen&&<AutoDeckBuilder heroId={heroId} onClose={()=>setAutoOpen(false)} onApply={cards=>{setDraft(cards.map(e=>({...e})));setAutoApplied(true);setTab('DECK');setInspected(cards[0]?.cardId??null);setDetailOpen(false);say('','added','Propuesta aplicada al borrador. Pulsa Guardar mazo para conservarla.');}}/>}
       {starterConfirm && (
         <StarterDialog onConfirm={loadStarter} onClose={() => setStarterConfirm(false)} />
@@ -1349,4 +1358,16 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
       )}
     </div>
   );
+}
+
+const EmbeddedStore=lazy(()=>import('../../shop/StoreScreen').then(m=>({default:m.StoreScreen})));
+/** Modal excursion keeps the editor instance and unsaved draft alive, without saving or storage. */
+function DeckMarket({expansionId,mobile,onClose}:{expansionId:string;mobile:boolean;onClose():void}){
+ const dialog=useRef<HTMLDialogElement>(null);
+ useEffect(()=>{const previous=document.activeElement as HTMLElement|null;const url=location.href;const node=dialog.current;node?.showModal();
+ return()=>{history.replaceState(history.state,'',url);node?.close();if(previous?.isConnected)previous.focus();};},[]);
+ return <dialog ref={dialog} className="deck-market-dialog" aria-label="Mercado desde el editor" onCancel={e=>{e.preventDefault();onClose();}}>
+  <button className="deck-market-return" onClick={onClose}>← Volver al mazo · conservar borrador</button>
+  <Suspense fallback={<p>Cargando Mercado…</p>}><EmbeddedStore mobile={mobile} initialExpansionId={expansionId} onExit={onClose}/></Suspense>
+ </dialog>;
 }

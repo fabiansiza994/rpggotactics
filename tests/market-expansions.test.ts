@@ -11,6 +11,8 @@ import type { Env } from "../server/src/db";
 const ctx = {
   content: releasedContent(DEFAULT_CONTENT, {
     FREE_CATALOG_ENABLED: "1",
+    ARCHER_ENABLED: "1",
+    SHAPESHIFTER_ENABLED: "1",
     ARSENAL_CARDS_ENABLED: "1",
     TACTICAL_CARDS_ENABLED: "1",
     STORE_SHOWCASE_ENABLED: "1",
@@ -20,13 +22,13 @@ const ctx = {
   cosmetics: COSMETICS,
   rules: DECK_RULES,
 };
-it('registers two packs and inspectable thematic catalogs without selling empty or exclusive pools',()=>{
+it('registers six approved pack families and clean future metadata without empty pools',()=>{
  for(const e of MARKET_EXPANSIONS)expect(existsSync('public'+e.art)).toBe(true);
- const packs=boosterOffers(ctx);expect(packs.filter(p=>p.booster?.expansionId!=='antarctic_magic')).toHaveLength(7);
- expect(ORIGINS_CARD_IDS).toHaveLength(22);
+ const packs=boosterOffers(ctx);expect(packs).toHaveLength(19);
+ expect(ORIGINS_CARD_IDS).toHaveLength(34);
  expect(expansionViews(ctx,packs)[0]!.packs).toHaveLength(4);
  expect(expansionViews(ctx,packs)[1]!.packs).toHaveLength(3);
- expect(packs.every(p=>['origins_arcanos','thunder_god','antarctic_magic'].includes(p.booster!.expansionId!))).toBe(true);
+ expect(packs.every(p=>['origins_arcanos','thunder_god','antarctic_magic','pack_pact','warrior_promise','reserva_cazador'].includes(p.booster!.expansionId!))).toBe(true);
 });
 it("newly published cards do not silently enter the first edition", () => {
   const sample = Object.values(ctx.content.cards).find(

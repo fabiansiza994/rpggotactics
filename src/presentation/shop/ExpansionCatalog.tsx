@@ -1,5 +1,4 @@
 import {PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../qa/shapeshifter/runtime';
-import {primaryMarketExpansionId} from '../../game/store/market-primary';
 import { useRef } from "react";
 import {
   ownedFor,
@@ -247,9 +246,6 @@ export function ExpansionCatalog({
           <p>No hay sobres disponibles.</p>
         )}
       </dialog>
-      <section aria-label="Compras directas de la expansión" className="market-direct-offers">
-        {offers.filter(o=>!o.booster && o.type==='CARD' && o.contents.filter(c=>c.kind==='CARD').length>0 && o.contents.every(c=>c.kind!=='CARD'||primaryMarketExpansionId(c.cardId)===selected.id)).map(o=><button key={o.id} disabled={busy||!o.availability.purchasable} onClick={()=>onBuy(o)}>{o.title} · {o.price} Cristales</button>)}
-      </section>
       {selected.status === "COMING_SOON" ? (
         <p className="shop-message">
           Próximamente. Catálogo pendiente de publicación; compras

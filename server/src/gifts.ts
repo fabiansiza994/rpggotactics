@@ -1,3 +1,4 @@
+import {newStoreSaleAllowed} from '../../src/game/store/store';
 import {issueQuote,readQuote,quotedTerms,quoteSecretReady,quoteFailure,quoteResponse} from './storeQuote';
 import {
   collectionOwner,
@@ -286,7 +287,7 @@ async function checkGift(r: StoreRequest, x: GiftExtras, productId: string, reci
   const no = (result: GiftResult, extra?: Record<string, unknown>) => ({ ok: false as const, fail: fail(result, extra) });
   // The product as the SENDER may see it (validated catalog + the sender's champion gate).
   const ctx = { content: r.content, rules: DECK_RULES, cosmetics: r.store.cosmetics };
-  const offer = validOffers(r.store.catalog, ctx).find((o) => o.id === productId && (o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true)));
+  const offer = validOffers(r.store.catalog, ctx).filter(newStoreSaleAllowed).find((o) => o.id === productId && (o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true)));
   if (!offer) return no('PRODUCT_NOT_FOUND');
   if (offer.giftable !== true) return no('NOT_GIFTABLE');
   if (recipientName === x.username) return no('CANNOT_GIFT_SELF');

@@ -105,7 +105,7 @@ describe('Reward Track catalog', () => {
   });
 
   it('release policy is data (manual switch), no premium packs, no real money', () => {
-    expect(RANKED_CARD_RELEASE_POLICY).toMatchObject({ phase: 'PRESEASON_EARLY_ACCESS', storeWeeksAfterPools: 4, storePrice: { UNCOMMON: 150, RARE: 250 }, premiumPacks: false, realMoney: false });
+    expect(RANKED_CARD_RELEASE_POLICY).toMatchObject({ phase: 'PRESEASON_EARLY_ACCESS', futureCommercialRoute: 'BOOSTERS', singleCardSales: false, releaseRequiresApproval: true, premiumPacks: false, realMoney: false });
   });
 });
 

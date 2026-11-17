@@ -191,6 +191,8 @@ export const RANKED_PREMIUM_RELEASE_POLICY = {
   cards: RANKED_PREMIUM_CARDS.map((c) => c.id),
   seasonExclusiveUntil: RANKED_PREMIUM_EXCLUSIVE_UNTIL,
   freeRouteFromSeason: 'season_2',
+  futureCommercialRoute: 'BOOSTERS',
+  singleCardSales: false,
   freeRoutes: ['COLLECTION', 'CAMPAIGN', 'MASTERY', 'CRAFTING'] as const,
   permanentExclusives: ['AVATAR', 'PROFILE_FRAME', 'TITLE', 'CARD_BACK', 'SHOWCASE'] as const,
   realMoney: false,

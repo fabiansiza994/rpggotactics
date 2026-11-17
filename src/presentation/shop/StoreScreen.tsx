@@ -97,7 +97,7 @@ function Wallet({ balance }: { balance: number }) {
     </div>
   );
 }
-export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile?:boolean }) {
+export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit: () => void;mobile?:boolean;initialExpansionId?:string }) {
   const profile = useBattleStore((s) => s.profile);
   const serverHasShapeshifter = useBattleStore(s => availableChampionsIn(s).includes('shapeshifter'));
   const claimChampion = useBattleStore(s => s.claimChampionUnlock);
@@ -110,7 +110,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
   const claimLock = useRef(false);
   const [session] = useState(loadSession);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const {category,expansionId,navigate:navigateMarket,up:marketUp}=useMarketNavigation();
+  const {category,expansionId,navigate:navigateMarket,up:marketUp}=useMarketNavigation('featured',initialExpansionId);
   const setCategory=(id:typeof category)=>navigateMarket(id);
   const setExpansionId=(id:string|null)=>id?navigateMarket('packs',id):marketUp();
   const [heroFilter,setHeroFilter]=useState('');
@@ -404,7 +404,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
         <button onClick={() => void reload()} disabled={busy || loading}>
           Actualizar
         </button>
-</div><ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={exploreOffer} />
+</div><ThunderNews key={session?.username ?? 'guest'} profile={profile} account={session?.username ?? 'guest'} offers={catalog?.offers ?? []} onOffer={exploreOffer} onExpansion={id=>navigateMarket('packs',id)} />
         <StoreNewsCarousel items={[
           ...(shapeshifterBuildEnabled() && (!session || serverHasShapeshifter) ? [{id:'shapeshifter',label:'Cambiaformas gratis',content:
             <ShapeshifterNews owned={isChampionUnlocked(profile,'shapeshifter')} busy={claimBusy||busy}
@@ -745,7 +745,7 @@ export function StoreScreen({ onExit,mobile=false }: { onExit: () => void;mobile
           )
         )}
       </dialog>
-      <MarketCardPreview cardId={catalogCard??inspect} onClose={()=>{setCatalogCard(null);setInspect(null);}}/>
+      <MarketCardPreview onExpansion={id=>navigateMarket('packs',id)} cardId={catalogCard??inspect} onClose={()=>{setCatalogCard(null);setInspect(null);}}/>
     </main>
   );
 }

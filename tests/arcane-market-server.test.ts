@@ -144,7 +144,7 @@ describe("authoritative four-card packs", () => {
     expect(pack.booster).toEqual({
       ...ARCANE_PACK_POLICY,
       expansionId: "origins_arcanos",
-      revision: "origins-arcane-v4",
+      revision: "origins-arcane-v5",
       poolType: "GENERAL",
       packs: 1,
     });
@@ -548,7 +548,7 @@ describe("general expansion batches", () => {
     expect(new Set(rolled.opening!.cards.map((c) => c.heroId))).toEqual(
       new Set(["mage", "summoner"]),
     );
-    expect(pack.contents).toHaveLength(21);
+    expect(pack.contents).toHaveLength(33);
     expect(pack.heroId).toBeUndefined();
   });
 });
@@ -710,6 +710,14 @@ describe("five free packs per player and expansion", () => {
   });
 });
 
+/** Real booster path after deterministic SKUs are retired: exactly one target plus three other commons. */
+function oneTargetInPack(cardId:string,expansionId:string){
+ const offer=packs.find(p=>p.booster?.expansionId===expansionId&&!p.booster.freeGrant&&p.booster.packs===1)!;
+ const common=offer.contents.filter(c=>c.kind==='CARD'&&rarityOf(content.cards[c.cardId]!)==='COMMON');
+ const target=common.findIndex(c=>c.kind==='CARD'&&c.cardId===cardId),other=common.findIndex(c=>c.kind==='CARD'&&c.cardId!==cardId);
+ let n=0;const slots=[target,other,other,other];
+ return vi.spyOn(crypto,'getRandomValues').mockImplementation(array=>{const i=n++;(array as Uint32Array)[0]=i%2===0?0:slots[(i-1)/2]!;return array;});
+}
 describe("legacy starter ownership must be preserved by real acquisitions", () => {
   it("regresses Blink: persisted 2 is visible as starter 3, so one delivered copy must become 4", async () => {
     db.sql
@@ -719,28 +727,10 @@ describe("legacy starter ownership must be preserved by real acquisitions", () =
       .run(account.id);
     const before = await call("GET", "/state");
     expect(ownedFor(before.data.profile!, "mage", content)("blink")).toBe(3);
-    // A real published single-card SKU, same authoritative grant path as packs.
-    store.catalog = [
-      {
-        ...pack,
-        id: "qa_blink_regression",
-        booster: undefined,
-        type: "CARD",
-        heroId: "mage",
-        contents: [{ kind: "CARD", cardId: "blink", copies: 1 }],
-        purchaseLimit: null,
-      },
-    ];
-    const q = (await call("GET", "/store/catalog")).data.offers.find(
-      (o) => o.id === "qa_blink_regression",
-    )!;
-    const r = await call("POST", "/store/purchase", {
-      offerId: q.id,
-      idempotencyKey: "blink-floor-regression",
-      quoteToken: q.purchaseQuote!.token,
-    });
+    const rng=oneTargetInPack('blink','origins_arcanos');
+    const r=await buy('blink-floor-regression');rng.mockRestore();
     expect(r.status).toBe(200);
-    expect(r.data.purchase.granted.cards[0]!.total).toBe(4);
+    expect(r.data.purchase.granted.cards.find(c=>c.cardId==='blink')!.total).toBe(4);
     expect(ownedFor(r.data.profile!, "mage", content)("blink")).toBe(4);
     const fresh = await call("GET", "/state");
     expect(ownedFor(fresh.data.profile!, "mage", content)("blink")).toBe(4);
@@ -791,24 +781,9 @@ describe("receipt, persisted collection and useful deck progress", () => {
             "INSERT INTO tactics_player_cards(user_id,hero_id,card_id,copies,acquired,source,unlocked_at) VALUES (?,'warrior','grapple',?,0,'QA_BALANCE',?) ON CONFLICT(user_id,hero_id,card_id) DO UPDATE SET copies=excluded.copies",
           )
           .run(account.id, count, now);
-      store.catalog = [
-        {
-          ...pack,
-          id: "qa_grapple_copy",
-          booster: undefined,
-          type: "CARD",
-          heroId: "warrior",
-          contents: [{ kind: "CARD", cardId: "grapple", copies: 1 }],
-          purchaseLimit: null,
-        },
-      ];
-      const before = (await call("GET", "/state")).data;
-      expect(ownedFor(before.profile!, "warrior", content)("grapple")).toBe(
-        count,
-      );
-      const r = await purchase("qa_grapple_copy", "grapple-copy-" + count);
-      expect(r.status).toBe(200);
-      expect(r.data.purchase.granted.cards[0]!.copies).toBe(1);
+      const rng=oneTargetInPack('grapple','warrior_promise');
+      const r=await purchase('booster_warrior_promise_x1','grapple-copy-'+count);rng.mockRestore();
+      expect(r.data.purchase.granted.cards.find(c=>c.cardId==='grapple')!.copies).toBe(1);
       expect(r.data.purchase.granted.cards[0]!.total).toBe(count + 1);
       expect(raw("warrior", "grapple")).toBe(count + 1);
       expect(
@@ -819,7 +794,7 @@ describe("receipt, persisted collection and useful deck progress", () => {
         )("grapple"),
       ).toBe(count + 1);
       expect(balance()).toBe(800);
-      const replay = await purchase("qa_grapple_copy", "grapple-copy-" + count);
+      const replay = await purchase("booster_warrior_promise_x1", "grapple-copy-" + count);
       expect(replay.data.purchase).toEqual(r.data.purchase);
       expect(raw("warrior", "grapple")).toBe(count + 1);
       expect(balance()).toBe(800);

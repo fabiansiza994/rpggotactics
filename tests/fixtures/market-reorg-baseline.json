@@ -1,0 +1,4934 @@
+{
+  "cards": [
+    {
+      "id": "arcane_inversion",
+      "rarity": "LEGENDARY",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ARCANE_INVERSION",
+          "duration": 3,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage",
+      "maxCopies": 1
+    },
+    {
+      "id": "thunder_incarnation",
+      "rarity": "LEGENDARY",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "THUNDER_INCARNATION",
+          "duration": 3,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage",
+      "maxCopies": 1
+    },
+    {
+      "id": "frozen_step",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "ICE_WALK",
+          "duration": 1
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "sudden_frost",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "ICE",
+          "duration": 2,
+          "on": "AREA",
+          "standableOnly": true
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "slippery_ground",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "ICE_LINE",
+          "duration": 2
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "shatter_ice",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "SHATTER_ICE"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "frost_mantle",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "FROST_MANTLE",
+          "duration": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "ice_prison",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ICE_PRISON",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "arcane_skating",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ARCANE_SKATING",
+          "duration": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "permafrost",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "EXTEND_ICE",
+          "amount": 2,
+          "cap": 6
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "glacial_reflection",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "GLACIAL_REFLECTION",
+          "duration": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "avalanche",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "AVALANCHE",
+          "distance": 2
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "winter_domain",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "ICE",
+          "duration": 3,
+          "on": "AREA",
+          "standableOnly": true
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "absolute_zero",
+      "rarity": "LEGENDARY",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ABSOLUTE_ZERO",
+          "duration": 10,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage",
+      "maxCopies": 2
+    },
+    {
+      "id": "glacial_storm",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ICE",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "ICE",
+          "duration": 3,
+          "on": "AREA",
+          "standableOnly": true
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "glacier_claw",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "GLACIER_CLAW",
+          "duration": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "snow_soldier",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "snow_soldier"
+        }
+      ]
+    },
+    {
+      "id": "snow_war",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "SNOW_WAR",
+          "duration": 5,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "magic_missile",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "fireball",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "FIRE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "BURNING",
+          "duration": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "blink",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "TELEPORT_CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "ice_wall",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "CREATE_OBSTACLE",
+          "obstacleId": "ice_wall",
+          "duration": 2,
+          "on": "AREA"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "arcane_burst",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ARCANE",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "barrier",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 4,
+          "to": "ALLIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "force_push",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "FORCE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "frost_nova",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ICE",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "phase_step",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 2
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "flame_tile",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "FIRE",
+          "duration": 3,
+          "on": "IMPACT"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "dispel",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "ALLIES"
+        },
+        {
+          "type": "REMOVE_HAZARDS",
+          "on": "IMPACT"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "arcane_surge",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 2
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "arcane_burst_ii",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ARCANE",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "glacial_field",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "ICE",
+          "duration": 2,
+          "on": "AREA"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "repulse",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "blink_ii",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "TELEPORT_CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "glacial_shell",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 6,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "summoner_ward",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 4,
+          "to": "ALLIES"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summoner_push",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "FORCE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summoner_step",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 2
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summoner_blink",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "TELEPORT_CASTER"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summoner_dispel",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "ALLIES"
+        },
+        {
+          "type": "REMOVE_HAZARDS",
+          "on": "IMPACT"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_chicken",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "chicken"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "nurture",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 2,
+          "to": "ALLIES"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_fox",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "fox"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_turtle",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "turtle"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_raven",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "raven"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_wolf",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "wolf"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "familiar_aegis",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "recall_familiar",
+      "rarity": "UNCOMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "RECALL_SUMMON"
+        },
+        {
+          "type": "GAIN_ENERGY",
+          "amount": 1
+        },
+        {
+          "type": "DRAW",
+          "count": 1
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "pack_hymn",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 1,
+          "to": "SUMMONS"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 1,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "spur_familiar",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 0,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "vital_offering",
+      "rarity": "UNCOMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "RECALL_SUMMON"
+        },
+        {
+          "type": "HEAL",
+          "amount": 3,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "entangle",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "unleashed_hunt",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "UNLEASHED_HUNT",
+          "duration": 3,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "ignition_rune",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PLACE_GLYPH",
+          "glyphId": "ignition_rune",
+          "damage": 3,
+          "damageType": "FIRE"
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.SILVER_II.card"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "arcane_exchange",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "SLOWED",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "SWAP_WITH_TARGET"
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.PLATINUM_II.card"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "pact_relay",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "SUMMONS"
+        },
+        {
+          "type": "SWAP_WITH_TARGET"
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.BRONZE_II.card"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "altar_echo",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.SILVER_I.card"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "wall_patience",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "WALL_PATIENCE",
+          "duration": 1,
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": -99
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.IRON_I.card"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "siege_leap",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "TELEPORT_CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_MOMENTUM",
+          "amount": 1
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.GOLD_II.card"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "ash_eclipse",
+      "rarity": "LEGENDARY",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "GRANT_COST_DISCOUNT",
+          "scope": "SPELL",
+          "amount": 1,
+          "minEnemiesInArea": 2
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "bonus": {
+            "when": {
+              "type": "ANY_OF",
+              "conditions": [
+                {
+                  "type": "TARGET_HAS_STATUS",
+                  "statuses": [
+                    "BURNING",
+                    "SLOWED"
+                  ]
+                },
+                {
+                  "type": "TARGET_ON_TERRAIN",
+                  "terrains": [
+                    "FIRE",
+                    "ICE"
+                  ]
+                }
+              ]
+            },
+            "amount": 2
+          }
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_PREMIUM",
+        "seasonId": "preseason_0",
+        "rewardId": "rp.preseason_0.GOLD_I.card",
+        "exclusiveUntilSeason": "season_1"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "double_moon_pact",
+      "rarity": "LEGENDARY",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "SWAP_PAIR"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "ALLIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "PACK_CALL",
+          "duration": 1,
+          "to": "SUMMONS"
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_PREMIUM",
+        "seasonId": "preseason_0",
+        "rewardId": "rp.preseason_0.IRON_I.card",
+        "exclusiveUntilSeason": "season_1"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "fallen_king_wall",
+      "rarity": "LEGENDARY",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 0,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "fromCasterShield": {
+            "max": 7,
+            "consumeAll": true,
+            "highGuard": {
+              "atLeast": 5,
+              "pushDistance": 1,
+              "movePoints": 1
+            }
+          }
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_PREMIUM",
+        "seasonId": "preseason_0",
+        "rewardId": "rp.preseason_0.BRONZE_I.card",
+        "exclusiveUntilSeason": "season_1"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "forbidden_bond",
+      "rarity": "LEGENDARY",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SACRIFICE_HP",
+          "percentOfCurrent": 50
+        },
+        {
+          "type": "GAIN_SUMMON_CAPACITY",
+          "amount": 1
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "heavy_strike",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "shield_bash",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_MOMENTUM",
+          "amount": 1
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "warrior_charge",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "CHARGE_CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "guard",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 4,
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": -99
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "riposte",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "RIPOSTE",
+          "duration": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "second_wind",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "brutal_shove",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "steady_advance",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        },
+        {
+          "type": "GAIN_MOMENTUM",
+          "amount": 1
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "sweep",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "grapple",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "steel_wall",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "ALLIES"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": -99
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "bastion",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 5,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "RIPOSTE",
+          "duration": 1,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 2,
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_MOMENTUM",
+          "amount": 1
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "ram",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "CHARGE_CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_MOMENTUM",
+          "amount": 1
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "unstoppable",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 2
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "vanguard_fury",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "execution",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "finisher": {
+            "hpAtMost": 5,
+            "amount": 5
+          }
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "rune_stone",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "rune_shell",
+      "rarity": "UNCOMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 0,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "mark_moon",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 1,
+          "to": "ALLIES"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "mark_fang",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "mark_blood",
+      "rarity": "UNCOMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "ancestral_pack",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 2,
+          "to": "SUMMONS"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "PACK_FURY",
+          "duration": 1,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_war_drake",
+      "rarity": "RARE",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "war_drake"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "seal_claw",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        }
+      ],
+      "heroId": "summoner",
+      "maxCopies": 2
+    },
+    {
+      "id": "seal_fang",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "MARKED_PREY",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "summoner",
+      "maxCopies": 2
+    },
+    {
+      "id": "seal_wing",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        }
+      ],
+      "heroId": "summoner",
+      "maxCopies": 2
+    },
+    {
+      "id": "seal_heart",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "summoner",
+      "maxCopies": 2
+    },
+    {
+      "id": "magma_fissure",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "FIRE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "FIRE",
+          "duration": 2,
+          "on": "AREA",
+          "emptyOnly": true
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_2"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "summon_ash_hound",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "ash_hound"
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_2"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "forge_strike",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_2"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "threshold_step",
+      "rarity": "UNCOMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "world_3"
+      }
+    },
+    {
+      "id": "broken_seal",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "CASTER"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "world_3"
+      }
+    },
+    {
+      "id": "counterweight_rope",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PULL",
+          "distance": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "world_3"
+      }
+    },
+    {
+      "id": "threshold_wave",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ARCANE",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_3"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "threshold_call",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "SUMMONS"
+        },
+        {
+          "type": "PULL",
+          "distance": 3,
+          "to": "SUMMONS"
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_3"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "colossus_shove",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 3,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_3"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "emergency_strike",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ]
+    },
+    {
+      "id": "take_cover",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "CASTER"
+        }
+      ]
+    },
+    {
+      "id": "step_back",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        }
+      ]
+    },
+    {
+      "id": "first_aid",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 3,
+          "to": "CASTER"
+        }
+      ]
+    },
+    {
+      "id": "shove",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ]
+    },
+    {
+      "id": "binder_strike",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "bonus": {
+            "when": {
+              "type": "OWN_SUMMON_ADJACENT_TO_TARGET"
+            },
+            "amount": 1
+          }
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "binding_ward",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "CASTER",
+          "bonus": {
+            "when": {
+              "type": "OWN_SUMMON_ALIVE"
+            },
+            "amount": 2
+          }
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "mark_prey",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "MARKED_PREY",
+          "duration": 3,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "arcane_chain",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "mirror_step",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "silence_seal",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "SEALED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "pack_call",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "PACK_CALL",
+          "duration": 1,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "bond_sacrifice",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "RECALL_SUMMON"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 5,
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_ENERGY",
+          "amount": 1
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "alpha_instinct",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ALPHA_INSTINCT",
+          "duration": 1,
+          "to": "SUMMONS"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "challenge",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "CHALLENGED",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "guard_breaker",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "PIERCING",
+          "shieldBreak": 2
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "titan_step",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 0,
+          "to": "CASTER",
+          "bonus": {
+            "when": {
+              "type": "CASTER_ADJACENT_TO_ENEMY"
+            },
+            "amount": 2
+          }
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "smoke_bomb",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "SMOKE_SCREEN",
+          "duration": 1,
+          "to": "ALLIES"
+        }
+      ]
+    },
+    {
+      "id": "grappling_hook",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PULL",
+          "distance": 1,
+          "to": "ENEMIES"
+        }
+      ]
+    },
+    {
+      "id": "field_ration",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 1,
+          "to": "CASTER",
+          "bonus": {
+            "when": {
+              "type": "CASTER_HP_AT_MOST_HALF"
+            },
+            "amount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "frost_comet",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ICE",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "pack_oath",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 2,
+          "to": "SUMMONS"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "SUMMONS"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "summoner"
+    },
+    {
+      "id": "judgement_hammer",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 4,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "warrior"
+    },
+    {
+      "id": "arcane_pull",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "SLOWED",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PULL",
+          "distance": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "RARE"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "elemental_detonation",
+      "rarity": "LEGENDARY",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "bonus": {
+            "when": {
+              "type": "TARGET_ON_TERRAIN",
+              "terrains": [
+                "FIRE",
+                "ICE"
+              ]
+            },
+            "amount": 2
+          }
+        },
+        {
+          "type": "REMOVE_HAZARDS",
+          "on": "AREA"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "LEGENDARY"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "archmage_eruption",
+      "rarity": "ULTRA",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "FIRE",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "FIRE",
+          "duration": 2,
+          "on": "AREA",
+          "emptyOnly": true
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "ULTRA"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "binder_command",
+      "rarity": "LEGENDARY",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "ACTIVATE_SUMMON"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "LEGENDARY"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "summon_pact_golem",
+      "rarity": "ULTRA",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "SUMMON",
+          "summonId": "pact_golem"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "ULTRA"
+      },
+      "heroId": "summoner"
+    },
+    {
+      "id": "bastion_blow",
+      "rarity": "LEGENDARY",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "fromCasterShield": {
+            "max": 6,
+            "highGuard": {
+              "atLeast": 4,
+              "pushDistance": 1,
+              "movePoints": 1
+            }
+          }
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "LEGENDARY"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "last_bastion",
+      "rarity": "ULTRA",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "LAST_STAND",
+          "duration": 1,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "CHALLENGED",
+          "duration": 1,
+          "to": "ENEMIES",
+          "everyTarget": true
+        },
+        {
+          "type": "GAIN_MOMENTUM",
+          "amount": 2
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "ULTRA"
+      },
+      "heroId": "warrior"
+    },
+    {
+      "id": "thunder_discharge",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "electrical": true
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "chain_lightning",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "electrical": true,
+          "rebound": {
+            "bounces": 5,
+            "amount": 1
+          }
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "arcane_overload",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "OVERCHARGED",
+          "duration": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "paralyzing_pulse",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "electrical": true
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "SLOWED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "tempest_judgment",
+      "rarity": "RARE",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 4,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "electrical": true
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "fulminating_spear",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "electrical": true,
+          "impactOnly": false
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "voltaic_armor",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "VOLTAIC_ARMOR",
+          "duration": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "lightning_step",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "TELEPORT_CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "storm_orb",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "PLACE_GLYPH",
+          "glyphId": "thunder_orb",
+          "damage": 1,
+          "damageType": "ARCANE",
+          "activations": 2,
+          "maxTargets": 2
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "conductive_mark",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "CONDUCTIVE_MARK",
+          "duration": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "thunder_hammer",
+      "rarity": "RARE",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "electrical": true,
+          "impactOnly": true
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "ARCANE",
+          "to": "ENEMIES",
+          "electrical": true,
+          "impactOnly": false
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "static_field",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PLACE_GLYPH",
+          "glyphId": "thunder_static",
+          "damage": 1,
+          "damageType": "ARCANE",
+          "activations": 2
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "electric_frenzy",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ELECTRIC_FRENZY",
+          "duration": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "lightning_wall",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PLACE_TRAP",
+          "trapId": "lightning_wall",
+          "damage": 2,
+          "damageType": "ARCANE",
+          "rootOnTrigger": false,
+          "rounds": 2,
+          "on": "AREA"
+        }
+      ],
+      "heroId": "mage"
+    },
+    {
+      "id": "storm_avatar",
+      "rarity": "LEGENDARY",
+      "cost": 4,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "STORM_AVATAR",
+          "duration": 2,
+          "to": "CASTER"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "world_3"
+      },
+      "heroId": "mage"
+    },
+    {
+      "id": "pack_tracking",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [],
+      "heroId": "summoner"
+    },
+    {
+      "id": "archer_shot",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "hunters_eye",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "PREY",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "true_shot",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "bonus": {
+            "when": {
+              "type": "TARGET_IS_PREY"
+            },
+            "amount": 1
+          },
+          "focusGain": {
+            "amount": 1,
+            "when": [
+              {
+                "type": "TARGET_IS_PREY"
+              },
+              {
+                "type": "TARGET_IN_OPTIMAL_RANGE"
+              }
+            ]
+          }
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "stalker_step",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        },
+        {
+          "type": "GAIN_FOCUS",
+          "amount": 1,
+          "when": [
+            {
+              "type": "CASTER_NOT_ADJACENT_TO_ENEMY"
+            },
+            {
+              "type": "PREY_IN_LINE_OF_SIGHT"
+            }
+          ]
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "piercing_arrow",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "heart_shot",
+      "rarity": "UNCOMMON",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 4,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "bonus": {
+            "when": [
+              {
+                "type": "TARGET_IS_PREY"
+              },
+              {
+                "type": "TARGET_IN_OPTIMAL_RANGE"
+              }
+            ],
+            "amount": 2
+          }
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "tactical_retreat",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        },
+        {
+          "type": "GAIN_FOCUS",
+          "amount": 1,
+          "when": [
+            {
+              "type": "PREY_IN_OPTIMAL_RANGE"
+            }
+          ]
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "bramble_trap",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PLACE_TRAP",
+          "trapId": "bramble",
+          "damage": 1,
+          "rounds": 3
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "executioner_arrow",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "bonus": {
+            "when": [
+              {
+                "type": "TARGET_IS_PREY"
+              },
+              {
+                "type": "TARGET_HP_AT_MOST_PCT",
+                "pct": 40
+              }
+            ],
+            "amount": 2
+          }
+        }
+      ],
+      "heroId": "archer"
+    },
+    {
+      "id": "fresh_trail",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "PREY",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_FOCUS",
+          "amount": 1,
+          "when": [
+            {
+              "type": "PREY_IN_OPTIMAL_RANGE"
+            }
+          ]
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "branch_leap",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "ice_arrow",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "SLOWED",
+          "duration": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "hunters_snare",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PLACE_TRAP",
+          "trapId": "bramble",
+          "damage": 2,
+          "rounds": 2
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "pinning_arrow",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "fire_arrow",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "BURNING",
+          "duration": 2,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "smoke_arrow",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "impactOnly": true
+        },
+        {
+          "type": "CREATE_TERRAIN",
+          "terrain": "SMOKE",
+          "duration": 2,
+          "on": "AREA",
+          "replaceOnly": [
+            "NORMAL",
+            "SMOKE"
+          ]
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "poison_arrow",
+      "rarity": "UNCOMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "POISONED",
+          "duration": 3,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "rebound_arrow",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "rebound": {
+            "bounces": 2,
+            "amount": 1
+          }
+        }
+      ],
+      "acquisition": {
+        "source": "ENCOUNTER_REWARD",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "predator_eye",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "PREY",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_FOCUS",
+          "amount": 1
+        },
+        {
+          "type": "GAIN_FOCUS",
+          "amount": 1,
+          "when": [
+            {
+              "type": "PREY_IN_OPTIMAL_RANGE"
+            }
+          ]
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "archer_act_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "palisade",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CREATE_OBSTACLE",
+          "obstacleId": "rubble",
+          "duration": 2,
+          "on": "IMPACT"
+        },
+        {
+          "type": "GAIN_FOCUS",
+          "amount": 1,
+          "when": [
+            {
+              "type": "PREY_IN_OPTIMAL_RANGE"
+            }
+          ]
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.IRON_II.card"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "tracking_arrow",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.GOLD_I.card"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "stalker_heart",
+      "rarity": "LEGENDARY",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "bonus": {
+            "when": {
+              "type": "ANY_OF",
+              "conditions": [
+                {
+                  "type": "TARGET_IS_PREY"
+                },
+                {
+                  "type": "TARGET_HAS_STATUS",
+                  "statuses": [
+                    "MARKED_PREY"
+                  ]
+                }
+              ]
+            },
+            "amount": 3
+          }
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "STALKER_HOBBLE",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_PREMIUM",
+        "seasonId": "preseason_0",
+        "rewardId": "rp.preseason_0.SILVER_I.card",
+        "exclusiveUntilSeason": "season_1"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "deflecting_arrow",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED",
+          "focusGain": {
+            "amount": 1,
+            "when": [
+              {
+                "type": "TARGET_IS_PREY"
+              }
+            ]
+          }
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_3"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "hunters_net",
+      "rarity": "LEGENDARY",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PLACE_TRAP",
+          "trapId": "hunters_net",
+          "damage": 1,
+          "rounds": 2,
+          "on": "AREA",
+          "net": {
+            "preyFocus": 2
+          }
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "LEGENDARY"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "arrow_rain",
+      "rarity": "ULTRA",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "bonus": {
+            "when": {
+              "type": "TARGET_IS_PREY"
+            },
+            "amount": 1
+          },
+          "focusGain": {
+            "amount": 2,
+            "when": [
+              {
+                "type": "TARGET_IS_PREY"
+              }
+            ]
+          }
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "ULTRA"
+      },
+      "heroId": "archer"
+    },
+    {
+      "id": "qa_bear_form",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "TRANSFORM",
+          "formId": "bear"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_minotaur_form",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "TRANSFORM",
+          "formId": "minotaur"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_primal_instinct",
+      "rarity": "COMMON",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_wild_strike",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_hunter_step",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bark_skin",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_claw",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 4,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_protective_roar",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 4,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_brutal_charge",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "CHARGE_CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_axe_sweep",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_mend_spirit",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 3,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_ancestral_trace",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_wild_vigor",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 1,
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 2
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_shed_curse",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_maul",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_roots",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_recovery",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 3,
+          "to": "CASTER"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_counter",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 1,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "RIPOSTE",
+          "duration": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_guard",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 6,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_lure",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "CHALLENGED",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_bear_shove",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_horn_strike",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_iron_cleave",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "PIERCING"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_broken_guard",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "shieldBreak": 3
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_blood_stride",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_horn_pull",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "PULL",
+          "distance": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_iron_wake",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_war_breath",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        },
+        {
+          "type": "DRAW",
+          "count": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_form_memory",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 1
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_ancestral_link",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_thorn_wall",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 3,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "ROOTED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_refuge",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER",
+          "bonus": {
+            "when": {
+              "type": "CASTER_HP_AT_MOST_HALF"
+            },
+            "amount": 3
+          }
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_purifying_claws",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_guardian_circle",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "CHALLENGED",
+          "duration": 1,
+          "to": "ENEMIES",
+          "everyTarget": true
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_sap_blood",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 2,
+          "to": "CASTER"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "SMOKE_SCREEN",
+          "duration": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_territorial_rejection",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "REMOVE_HAZARDS",
+          "on": "AREA"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_verdict_axe",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "finisher": {
+            "hpAtMost": 3,
+            "amount": 5
+          }
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_break_encirclement",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 1,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "PIERCING"
+        },
+        {
+          "type": "PUSH",
+          "distance": 1,
+          "collisionDamage": 0,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_maze_mark",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "CHALLENGED",
+          "duration": 1,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PULL",
+          "distance": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_conqueror_march",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "STEP_CASTER"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_threshold_edge",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES",
+          "attackKind": "RANGED"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_silent_horns",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "SEALED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_lineage_pulse",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 1
+        },
+        {
+          "type": "HEAL",
+          "amount": 1,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_shedding_rite",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CLEANSE",
+          "to": "CASTER"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_hunt_echo",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "APPLY_STATUS",
+          "status": "SEALED",
+          "duration": 1,
+          "to": "ENEMIES"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_skin_memory",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "HEAL",
+          "amount": 2,
+          "to": "CASTER"
+        },
+        {
+          "type": "DRAW",
+          "count": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_ancestor_round",
+      "rarity": "COMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "REMOVE_HAZARDS",
+          "on": "AREA"
+        },
+        {
+          "type": "DRAW",
+          "count": 1
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "qa_legacy_untamed_bond",
+      "rarity": "COMMON",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 0,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 2,
+          "to": "CASTER"
+        }
+      ],
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "wild_burst",
+      "rarity": "UNCOMMON",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 1
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_TRACK",
+        "seasonId": "preseason_0",
+        "rewardId": "rt.preseason_0.BRONZE_I.card"
+      },
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "primal_ascent",
+      "rarity": "LEGENDARY",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 1
+        },
+        {
+          "type": "GRANT_COST_DISCOUNT",
+          "scope": "TRANSFORM",
+          "amount": 1
+        }
+      ],
+      "acquisition": {
+        "source": "RANKED_PREMIUM",
+        "seasonId": "preseason_0",
+        "rewardId": "rp.preseason_0.PLATINUM_I.card",
+        "exclusiveUntilSeason": "season_1"
+      },
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "threshold_pounce",
+      "rarity": "RARE",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "CHARGE_CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "GAIN_MOVE_POINTS",
+          "amount": 1
+        }
+      ],
+      "acquisition": {
+        "source": "WORLD_COMPLETION",
+        "worldId": "world_3"
+      },
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "minotaur_awakening",
+      "rarity": "RARE",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "TRANSFORM",
+          "formId": "minotaur"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 2,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "RARE"
+      },
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "form_dance",
+      "rarity": "LEGENDARY",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DRAW",
+          "count": 1
+        },
+        {
+          "type": "APPLY_STATUS",
+          "status": "FORM_DANCE",
+          "duration": 1,
+          "to": "CASTER"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "LEGENDARY"
+      },
+      "heroId": "shapeshifter"
+    },
+    {
+      "id": "ancestral_stampede",
+      "rarity": "ULTRA",
+      "cost": 3,
+      "effects": [
+        {
+          "type": "TRANSFORM",
+          "formId": "minotaur"
+        },
+        {
+          "type": "CHARGE_CASTER"
+        },
+        {
+          "type": "DAMAGE",
+          "amount": 3,
+          "damageType": "PHYSICAL",
+          "to": "ENEMIES"
+        },
+        {
+          "type": "PUSH",
+          "distance": 2,
+          "collisionDamage": 2,
+          "to": "ENEMIES"
+        },
+        {
+          "type": "TRANSFORM",
+          "formId": "bear"
+        },
+        {
+          "type": "SHIELD",
+          "amount": 4,
+          "to": "CASTER"
+        }
+      ],
+      "acquisition": {
+        "source": "FREE_CATALOG",
+        "tier": "ULTRA"
+      },
+      "heroId": "shapeshifter"
+    }
+  ],
+  "starters": {
+    "summoner": {
+      "heroId": "summoner",
+      "collection": {
+        "summon_chicken": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "nurture": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "summoner_ward": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "summoner_push": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "summoner_step": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "summon_fox": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "summoner_dispel": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "summoner_blink": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "entangle": {
+          "copies": 2,
+          "acquired": 0
+        },
+        "summon_turtle": {
+          "copies": 1,
+          "acquired": 0
+        },
+        "summon_raven": {
+          "copies": 1,
+          "acquired": 0
+        },
+        "familiar_aegis": {
+          "copies": 1,
+          "acquired": 0
+        },
+        "pack_hymn": {
+          "copies": 1,
+          "acquired": 0
+        },
+        "pack_tracking": {
+          "copies": 3,
+          "acquired": 0
+        }
+      },
+      "acquisitions": 0,
+      "decks": [
+        {
+          "id": "main",
+          "name": "Mazo inicial",
+          "cards": [
+            {
+              "cardId": "summon_chicken",
+              "count": 3
+            },
+            {
+              "cardId": "nurture",
+              "count": 3
+            },
+            {
+              "cardId": "summoner_ward",
+              "count": 3
+            },
+            {
+              "cardId": "summoner_push",
+              "count": 3
+            },
+            {
+              "cardId": "summoner_step",
+              "count": 3
+            },
+            {
+              "cardId": "summon_fox",
+              "count": 3
+            },
+            {
+              "cardId": "summoner_dispel",
+              "count": 3
+            },
+            {
+              "cardId": "summoner_blink",
+              "count": 3
+            },
+            {
+              "cardId": "entangle",
+              "count": 2
+            },
+            {
+              "cardId": "summon_turtle",
+              "count": 1
+            },
+            {
+              "cardId": "summon_raven",
+              "count": 1
+            },
+            {
+              "cardId": "familiar_aegis",
+              "count": 1
+            },
+            {
+              "cardId": "pack_hymn",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "activeDeckId": "main",
+      "rewardPity": 0
+    },
+    "mage": {
+      "heroId": "mage",
+      "collection": {
+        "magic_missile": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "fireball": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "arcane_burst": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "blink": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "barrier": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "force_push": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "ice_wall": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "phase_step": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "repulse": {
+          "copies": 2,
+          "acquired": 0
+        },
+        "glacial_field": {
+          "copies": 2,
+          "acquired": 0
+        },
+        "flame_tile": {
+          "copies": 2,
+          "acquired": 0
+        }
+      },
+      "acquisitions": 0,
+      "decks": [
+        {
+          "id": "main",
+          "name": "Mazo inicial",
+          "cards": [
+            {
+              "cardId": "magic_missile",
+              "count": 3
+            },
+            {
+              "cardId": "fireball",
+              "count": 3
+            },
+            {
+              "cardId": "arcane_burst",
+              "count": 3
+            },
+            {
+              "cardId": "blink",
+              "count": 3
+            },
+            {
+              "cardId": "barrier",
+              "count": 3
+            },
+            {
+              "cardId": "force_push",
+              "count": 3
+            },
+            {
+              "cardId": "ice_wall",
+              "count": 3
+            },
+            {
+              "cardId": "phase_step",
+              "count": 3
+            },
+            {
+              "cardId": "repulse",
+              "count": 2
+            },
+            {
+              "cardId": "glacial_field",
+              "count": 2
+            },
+            {
+              "cardId": "flame_tile",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "activeDeckId": "main",
+      "rewardPity": 0
+    },
+    "warrior": {
+      "heroId": "warrior",
+      "collection": {
+        "heavy_strike": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "shield_bash": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "warrior_charge": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "guard": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "riposte": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "second_wind": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "brutal_shove": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "steady_advance": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "sweep": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "steel_wall": {
+          "copies": 1,
+          "acquired": 0
+        },
+        "unstoppable": {
+          "copies": 2,
+          "acquired": 0
+        }
+      },
+      "acquisitions": 0,
+      "decks": [
+        {
+          "id": "main",
+          "name": "Mazo inicial",
+          "cards": [
+            {
+              "cardId": "heavy_strike",
+              "count": 3
+            },
+            {
+              "cardId": "shield_bash",
+              "count": 3
+            },
+            {
+              "cardId": "warrior_charge",
+              "count": 3
+            },
+            {
+              "cardId": "guard",
+              "count": 3
+            },
+            {
+              "cardId": "riposte",
+              "count": 3
+            },
+            {
+              "cardId": "second_wind",
+              "count": 3
+            },
+            {
+              "cardId": "brutal_shove",
+              "count": 3
+            },
+            {
+              "cardId": "steady_advance",
+              "count": 3
+            },
+            {
+              "cardId": "sweep",
+              "count": 3
+            },
+            {
+              "cardId": "steel_wall",
+              "count": 1
+            },
+            {
+              "cardId": "unstoppable",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "activeDeckId": "main",
+      "rewardPity": 0
+    },
+    "archer": {
+      "heroId": "archer",
+      "collection": {
+        "archer_shot": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "hunters_eye": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "true_shot": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "stalker_step": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "piercing_arrow": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "tactical_retreat": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "bramble_trap": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "executioner_arrow": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "heart_shot": {
+          "copies": 2,
+          "acquired": 0
+        }
+      },
+      "acquisitions": 0,
+      "decks": [
+        {
+          "id": "main",
+          "name": "Mazo inicial",
+          "cards": [
+            {
+              "cardId": "archer_shot",
+              "count": 3
+            },
+            {
+              "cardId": "hunters_eye",
+              "count": 3
+            },
+            {
+              "cardId": "true_shot",
+              "count": 3
+            },
+            {
+              "cardId": "stalker_step",
+              "count": 3
+            },
+            {
+              "cardId": "piercing_arrow",
+              "count": 3
+            },
+            {
+              "cardId": "tactical_retreat",
+              "count": 3
+            },
+            {
+              "cardId": "bramble_trap",
+              "count": 3
+            },
+            {
+              "cardId": "executioner_arrow",
+              "count": 3
+            },
+            {
+              "cardId": "heart_shot",
+              "count": 2
+            },
+            {
+              "cardId": "shove",
+              "count": 2
+            },
+            {
+              "cardId": "first_aid",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "activeDeckId": "main",
+      "rewardPity": 0
+    },
+    "shapeshifter": {
+      "heroId": "shapeshifter",
+      "collection": {
+        "qa_bear_form": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_minotaur_form": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_primal_instinct": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_wild_strike": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_hunter_step": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bark_skin": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_claw": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_protective_roar": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_brutal_charge": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_axe_sweep": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_form_memory": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_ancestral_link": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_mend_spirit": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_ancestral_trace": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_wild_vigor": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_shed_curse": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_maul": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_roots": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_recovery": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_counter": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_guard": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_lure": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_bear_shove": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_horn_strike": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_iron_cleave": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_broken_guard": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_blood_stride": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_horn_pull": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_iron_wake": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_war_breath": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_thorn_wall": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_refuge": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_purifying_claws": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_guardian_circle": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_sap_blood": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_territorial_rejection": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_verdict_axe": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_break_encirclement": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_maze_mark": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_conqueror_march": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_threshold_edge": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_silent_horns": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_lineage_pulse": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_shedding_rite": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_hunt_echo": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_skin_memory": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_ancestor_round": {
+          "copies": 3,
+          "acquired": 0
+        },
+        "qa_legacy_untamed_bond": {
+          "copies": 3,
+          "acquired": 0
+        }
+      },
+      "acquisitions": 0,
+      "decks": [
+        {
+          "id": "main",
+          "name": "Mazo inicial",
+          "cards": [
+            {
+              "cardId": "qa_bear_form",
+              "count": 3
+            },
+            {
+              "cardId": "qa_minotaur_form",
+              "count": 3
+            },
+            {
+              "cardId": "qa_primal_instinct",
+              "count": 3
+            },
+            {
+              "cardId": "qa_wild_strike",
+              "count": 3
+            },
+            {
+              "cardId": "qa_hunter_step",
+              "count": 2
+            },
+            {
+              "cardId": "qa_bark_skin",
+              "count": 2
+            },
+            {
+              "cardId": "qa_bear_claw",
+              "count": 2
+            },
+            {
+              "cardId": "qa_protective_roar",
+              "count": 2
+            },
+            {
+              "cardId": "qa_brutal_charge",
+              "count": 2
+            },
+            {
+              "cardId": "qa_axe_sweep",
+              "count": 2
+            },
+            {
+              "cardId": "qa_form_memory",
+              "count": 2
+            },
+            {
+              "cardId": "qa_ancestral_link",
+              "count": 2
+            },
+            {
+              "cardId": "qa_mend_spirit",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "activeDeckId": "main",
+      "rewardPity": 0
+    }
+  },
+  "sharedStarter": {
+    "collection": {
+      "shove": {
+        "copies": 2,
+        "acquired": 0
+      },
+      "first_aid": {
+        "copies": 2,
+        "acquired": 0
+      }
+    },
+    "acquisitions": 0
+  },
+  "primary": {
+    "arcane_inversion": "origins_arcanos",
+    "arcane_pull": "origins_arcanos",
+    "smoke_bomb": "origins_arcanos",
+    "arcane_exchange": "origins_arcanos",
+    "threshold_wave": "origins_arcanos",
+    "silence_seal": "origins_arcanos",
+    "arcane_burst_ii": "origins_arcanos",
+    "arcane_surge": "origins_arcanos",
+    "blink_ii": "origins_arcanos",
+    "counterweight_rope": "origins_arcanos",
+    "dispel": "origins_arcanos",
+    "threshold_step": "origins_arcanos",
+    "broken_seal": "origins_arcanos",
+    "summoner_push": "origins_arcanos",
+    "summoner_ward": "origins_arcanos",
+    "arcane_burst": "origins_arcanos",
+    "barrier": "origins_arcanos",
+    "blink": "origins_arcanos",
+    "arcane_chain": "origins_arcanos",
+    "shove": "origins_arcanos",
+    "force_push": "origins_arcanos",
+    "grappling_hook": "origins_arcanos",
+    "emergency_strike": "origins_arcanos",
+    "magic_missile": "origins_arcanos",
+    "step_back": "origins_arcanos",
+    "mirror_step": "origins_arcanos",
+    "summoner_step": "origins_arcanos",
+    "phase_step": "origins_arcanos",
+    "take_cover": "origins_arcanos",
+    "first_aid": "origins_arcanos",
+    "summoner_dispel": "origins_arcanos",
+    "field_ration": "origins_arcanos",
+    "repulse": "origins_arcanos",
+    "summoner_blink": "origins_arcanos",
+    "storm_avatar": "thunder_god",
+    "thunder_incarnation": "thunder_god",
+    "tempest_judgment": "thunder_god",
+    "fulminating_spear": "thunder_god",
+    "thunder_hammer": "thunder_god",
+    "lightning_wall": "thunder_god",
+    "storm_orb": "thunder_god",
+    "chain_lightning": "thunder_god",
+    "voltaic_armor": "thunder_god",
+    "static_field": "thunder_god",
+    "electric_frenzy": "thunder_god",
+    "lightning_step": "thunder_god",
+    "paralyzing_pulse": "thunder_god",
+    "arcane_overload": "thunder_god",
+    "thunder_discharge": "thunder_god",
+    "conductive_mark": "thunder_god",
+    "absolute_zero": "antarctic_magic",
+    "avalanche": "antarctic_magic",
+    "frost_comet": "antarctic_magic",
+    "winter_domain": "antarctic_magic",
+    "glacier_claw": "antarctic_magic",
+    "glacial_shell": "antarctic_magic",
+    "snow_war": "antarctic_magic",
+    "snow_soldier": "antarctic_magic",
+    "glacial_storm": "antarctic_magic",
+    "ice_arrow": "antarctic_magic",
+    "frost_nova": "antarctic_magic",
+    "arcane_skating": "antarctic_magic",
+    "permafrost": "antarctic_magic",
+    "ice_prison": "antarctic_magic",
+    "glacial_reflection": "antarctic_magic",
+    "sudden_frost": "antarctic_magic",
+    "shatter_ice": "antarctic_magic",
+    "glacial_field": "antarctic_magic",
+    "ice_wall": "antarctic_magic",
+    "frost_mantle": "antarctic_magic",
+    "frozen_step": "antarctic_magic",
+    "slippery_ground": "antarctic_magic",
+    "archmage_eruption": "furia_elemental",
+    "elemental_detonation": "furia_elemental",
+    "ash_eclipse": "furia_elemental",
+    "magma_fissure": "furia_elemental",
+    "fire_arrow": "furia_elemental",
+    "ignition_rune": "furia_elemental",
+    "fireball": "furia_elemental",
+    "flame_tile": "furia_elemental",
+    "summon_pact_golem": "pack_pact",
+    "binder_command": "pack_pact",
+    "double_moon_pact": "pack_pact",
+    "forbidden_bond": "pack_pact",
+    "unleashed_hunt": "pack_pact",
+    "alpha_instinct": "pack_pact",
+    "summon_war_drake": "pack_pact",
+    "summon_wolf": "pack_pact",
+    "summon_ash_hound": "pack_pact",
+    "pack_oath": "pack_pact",
+    "threshold_call": "pack_pact",
+    "ancestral_pack": "pack_pact",
+    "mark_prey": "pack_pact",
+    "bond_sacrifice": "pack_pact",
+    "seal_claw": "pack_pact",
+    "seal_wing": "pack_pact",
+    "seal_fang": "pack_pact",
+    "seal_heart": "pack_pact",
+    "pack_hymn": "pack_pact",
+    "altar_echo": "pack_pact",
+    "summon_raven": "pack_pact",
+    "summon_turtle": "pack_pact",
+    "mark_moon": "pack_pact",
+    "mark_blood": "pack_pact",
+    "mark_fang": "pack_pact",
+    "vital_offering": "pack_pact",
+    "familiar_aegis": "pack_pact",
+    "pact_relay": "pack_pact",
+    "recall_familiar": "pack_pact",
+    "rune_stone": "pack_pact",
+    "rune_shell": "pack_pact",
+    "binding_ward": "pack_pact",
+    "spur_familiar": "pack_pact",
+    "nurture": "pack_pact",
+    "entangle": "pack_pact",
+    "binder_strike": "pack_pact",
+    "summon_chicken": "pack_pact",
+    "summon_fox": "pack_pact",
+    "pack_call": "pack_pact",
+    "pack_tracking": "pack_pact",
+    "last_bastion": "warrior_promise",
+    "bastion_blow": "warrior_promise",
+    "fallen_king_wall": "warrior_promise",
+    "bastion": "warrior_promise",
+    "challenge": "warrior_promise",
+    "execution": "warrior_promise",
+    "colossus_shove": "warrior_promise",
+    "vanguard_fury": "warrior_promise",
+    "forge_strike": "warrior_promise",
+    "judgement_hammer": "warrior_promise",
+    "guard_breaker": "warrior_promise",
+    "siege_leap": "warrior_promise",
+    "ram": "warrior_promise",
+    "unstoppable": "warrior_promise",
+    "steel_wall": "warrior_promise",
+    "wall_patience": "warrior_promise",
+    "grapple": "warrior_promise",
+    "steady_advance": "warrior_promise",
+    "sweep": "warrior_promise",
+    "warrior_charge": "warrior_promise",
+    "riposte": "warrior_promise",
+    "brutal_shove": "warrior_promise",
+    "shield_bash": "warrior_promise",
+    "heavy_strike": "warrior_promise",
+    "guard": "warrior_promise",
+    "titan_step": "warrior_promise",
+    "second_wind": "warrior_promise",
+    "arrow_rain": "reserva_cazador",
+    "stalker_heart": "reserva_cazador",
+    "hunters_net": "reserva_cazador",
+    "pinning_arrow": "reserva_cazador",
+    "rebound_arrow": "reserva_cazador",
+    "deflecting_arrow": "reserva_cazador",
+    "tracking_arrow": "reserva_cazador",
+    "predator_eye": "reserva_cazador",
+    "palisade": "reserva_cazador",
+    "smoke_arrow": "reserva_cazador",
+    "poison_arrow": "reserva_cazador",
+    "heart_shot": "reserva_cazador",
+    "archer_shot": "reserva_cazador",
+    "true_shot": "reserva_cazador",
+    "executioner_arrow": "reserva_cazador",
+    "piercing_arrow": "reserva_cazador",
+    "hunters_snare": "reserva_cazador",
+    "hunters_eye": "reserva_cazador",
+    "stalker_step": "reserva_cazador",
+    "fresh_trail": "reserva_cazador",
+    "tactical_retreat": "reserva_cazador",
+    "branch_leap": "reserva_cazador",
+    "bramble_trap": "reserva_cazador",
+    "ancestral_stampede": "reserva_cambiaformas_formas",
+    "primal_ascent": "reserva_cambiaformas_formas",
+    "form_dance": "reserva_cambiaformas_formas",
+    "minotaur_awakening": "reserva_cambiaformas_formas",
+    "threshold_pounce": "reserva_cambiaformas_formas",
+    "wild_burst": "reserva_cambiaformas_formas",
+    "qa_bear_maul": "reserva_cambiaformas_formas",
+    "qa_war_breath": "reserva_cambiaformas_formas",
+    "qa_axe_sweep": "reserva_cambiaformas_formas",
+    "qa_bear_guard": "reserva_cambiaformas_formas",
+    "qa_ancestral_link": "reserva_cambiaformas_formas",
+    "qa_bear_lure": "reserva_cambiaformas_formas",
+    "qa_brutal_charge": "reserva_cambiaformas_formas",
+    "qa_horn_pull": "reserva_cambiaformas_formas",
+    "qa_iron_wake": "reserva_cambiaformas_formas",
+    "qa_minotaur_form": "reserva_cambiaformas_formas",
+    "qa_bear_form": "reserva_cambiaformas_formas",
+    "qa_bear_counter": "reserva_cambiaformas_formas",
+    "qa_horn_strike": "reserva_cambiaformas_formas",
+    "qa_wild_strike": "reserva_cambiaformas_formas",
+    "qa_iron_cleave": "reserva_cambiaformas_formas",
+    "qa_primal_instinct": "reserva_cambiaformas_formas",
+    "qa_form_memory": "reserva_cambiaformas_formas",
+    "qa_shed_curse": "reserva_cambiaformas_formas",
+    "qa_blood_stride": "reserva_cambiaformas_formas",
+    "qa_hunter_step": "reserva_cambiaformas_formas",
+    "qa_bark_skin": "reserva_cambiaformas_formas",
+    "qa_broken_guard": "reserva_cambiaformas_formas",
+    "qa_ancestral_trace": "reserva_cambiaformas_formas",
+    "qa_bear_roots": "reserva_cambiaformas_formas",
+    "qa_mend_spirit": "reserva_cambiaformas_formas",
+    "qa_bear_recovery": "reserva_cambiaformas_formas",
+    "qa_protective_roar": "reserva_cambiaformas_formas",
+    "qa_wild_vigor": "reserva_cambiaformas_formas",
+    "qa_bear_shove": "reserva_cambiaformas_formas",
+    "qa_bear_claw": "reserva_cambiaformas_formas",
+    "qa_legacy_silent_horns": "reserva_cambiaformas_legado",
+    "qa_legacy_guardian_circle": "reserva_cambiaformas_legado",
+    "qa_legacy_hunt_echo": "reserva_cambiaformas_legado",
+    "qa_legacy_threshold_edge": "reserva_cambiaformas_legado",
+    "qa_legacy_purifying_claws": "reserva_cambiaformas_legado",
+    "qa_legacy_verdict_axe": "reserva_cambiaformas_legado",
+    "qa_legacy_refuge": "reserva_cambiaformas_legado",
+    "qa_legacy_maze_mark": "reserva_cambiaformas_legado",
+    "qa_legacy_conqueror_march": "reserva_cambiaformas_legado",
+    "qa_legacy_skin_memory": "reserva_cambiaformas_legado",
+    "qa_legacy_thorn_wall": "reserva_cambiaformas_legado",
+    "qa_legacy_lineage_pulse": "reserva_cambiaformas_legado",
+    "qa_legacy_territorial_rejection": "reserva_cambiaformas_legado",
+    "qa_legacy_shedding_rite": "reserva_cambiaformas_legado",
+    "qa_legacy_ancestor_round": "reserva_cambiaformas_legado",
+    "qa_legacy_break_encirclement": "reserva_cambiaformas_legado",
+    "qa_legacy_sap_blood": "reserva_cambiaformas_legado",
+    "qa_legacy_untamed_bond": "reserva_cambiaformas_legado"
+  }
+}

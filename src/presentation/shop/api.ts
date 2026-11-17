@@ -51,6 +51,7 @@ export interface LaunchRewardResponse {
   id: string; amount: number; enabled: boolean; claimed: boolean; credited: number; wallet: Wallet;
 }
 export const storeApi = {
+  acquisition:(token:string)=>request<{cards:Record<string,import('../../game/store/card-acquisition').CardAcquisitionView>}>(CLOUD_CONFIG.apiUrl,'/api/tactics/store/acquisition',{token,timeoutMs:CLOUD_CONFIG.timeoutMs}),
   launchReward: (token: string, claim = false) => request<LaunchRewardResponse>(CLOUD_CONFIG.apiUrl,
     '/api/tactics/store/launch-reward' + (claim ? '/claim' : ''), {
       token, method: claim ? 'POST' : 'GET', ...(claim ? {body: {}} : {}), timeoutMs: CLOUD_CONFIG.timeoutMs,

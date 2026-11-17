@@ -251,17 +251,15 @@ export const rankedTrackGrantTable = () =>
 
 /**
  * Approved policy for the nine cards. Changing phase is a deliberate code change + deploy:
- * 1. Season 1 starts (or the window below ends): delete `acquisition` from the cards in
- *    src/game/data/ranked-cards.ts → they enter the normal reward pools of their champion.
- * 2. ~4 weeks later: add single-card offers to src/game/data/store-catalog.ts at PRICE_LADDER
- *    (UNCOMMON 150, RARE 250 Cristales), never in premium packs, never real money, not giftable.
- * Copies already granted by the track never change.
+ * Existing early access is retained. Future commercial release requires an explicit policy
+ * change and uses expansion boosters, never individual card sales. Historical grants remain.
  */
 export const RANKED_CARD_RELEASE_POLICY = {
-  phase: 'PRESEASON_EARLY_ACCESS' as 'PRESEASON_EARLY_ACCESS' | 'NORMAL_POOLS' | 'POOLS_AND_STORE',
+  phase: 'PRESEASON_EARLY_ACCESS' as 'PRESEASON_EARLY_ACCESS' | 'NORMAL_POOLS' | 'POOLS_AND_BOOSTERS',
   normalPoolsAt: 'SEASON_1_START_OR_8_WEEKS',
-  storeWeeksAfterPools: 4,
-  storePrice: { UNCOMMON: 150, RARE: 250 },
+  futureCommercialRoute: 'BOOSTERS',
+  singleCardSales: false,
+  releaseRequiresApproval: true,
   premiumPacks: false,
   realMoney: false,
   giftableInFirstRotation: false,
