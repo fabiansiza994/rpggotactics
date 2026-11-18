@@ -42,6 +42,10 @@ export const summonUsage = (state: Readonly<GameState>, ownerId: string): number
 export const summonCapacityOf = (content: Pick<GameContent, 'heroes'>, owner: Pick<Unit, 'defId' | 'summonCapacityBonus'>): number =>
   (content.heroes[owner.defId]?.summonCapacity ?? 0) + (owner.summonCapacityBonus ?? 0);
 
+/** Per-owner field limit; climate only upgrades its own Snow Soldiers, never capacity. */
+export const summonLimitFor = (def: Pick<SummonDef, 'id' | 'maxPerOwner'>, owner: Pick<Unit, 'statuses'>): number | undefined =>
+  def.id === 'snow_soldier' && worldFrozen(owner) ? 2 : def.maxPerOwner;
+
 export function spawnSummon(
   ctx: RuleContext,
   owner: Unit,
@@ -49,7 +53,8 @@ export function spawnSummon(
   pos: Pos,
 ): Unit | null {
   const def = requireDef(ctx.content.summons ?? {}, summonId, 'summon');
-  if(def.maxPerOwner && ctx.state.units.filter(u=>u.defId===def.id&&u.summon?.ownerId===owner.id).length>=def.maxPerOwner)return null;
+  const limit = summonLimitFor(def, owner);
+  if(limit !== undefined && ctx.state.units.filter(u=>u.defId===def.id&&u.summon?.ownerId===owner.id).length>=limit)return null;
   const capacity = summonCapacityOf(ctx.content, owner);
   if (!isEmptyTile(ctx, pos) || summonUsage(ctx.state, owner.id) + def.capacityCost > capacity)
     return null;

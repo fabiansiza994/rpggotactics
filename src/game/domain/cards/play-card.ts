@@ -4,7 +4,7 @@ import {worldFrozenCard,worldFrozen} from './world-frozen';
 import {isThunderCard} from './card-family';
 import { effectsForCard, allCardEffects, effectiveCost } from './form-effects';
 import { checkFormRequirement, checkTransformation } from '../transformations/transformations';
-import { summonCapacityOf, summonUsage } from '../summons/summons';
+import { summonCapacityOf, summonUsage, summonLimitFor } from '../summons/summons';
 import { getHero, isActionPrevented, isEmptyTile } from '../board/occupancy';
 import type { RuleContext } from '../context';
 import type { Pos } from '../core/position';
@@ -49,7 +49,8 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
   }
   for(const fx of effectsForCard(ctx.content,caster,def))if(fx.type==='SUMMON'){
     const summon=ctx.content.summons?.[fx.summonId];
-    if(summon?.maxPerOwner && ctx.state.units.filter(u=>u.defId===summon.id&&u.summon?.ownerId===caster.id).length>=summon.maxPerOwner)
+    const limit = summon && summonLimitFor(summon, caster);
+    if(summon && limit !== undefined && ctx.state.units.filter(u=>u.defId===summon.id&&u.summon?.ownerId===caster.id).length>=limit)
       return fail('SUMMON_CAPACITY','Ya tienes el máximo de esta invocación.') as Playability;
   }
   const needed = (def.formEffects ? effectsForCard(ctx.content, caster, def) : def.effects).reduce((n, fx) => n + (fx.type === 'SUMMON' ? (ctx.content.summons?.[fx.summonId]?.capacityCost ?? Infinity) : 0), 0);
