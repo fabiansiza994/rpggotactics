@@ -1,3 +1,6 @@
+import {ScreenEdgeMaterial} from "./ScreenEdgeMaterial";
+import {ScreenStatusLayer} from "./ScreenStatusLayer";
+import {screenViewportSnapshot,subscribeScreenViewport,SERVER_VIEWPORT} from "../../immersion/screenViewport";
 import {
   useEffect,
   useRef,
@@ -18,12 +21,14 @@ export function CombatAtmosphere({ view }: { view: AtmosphereView }) {
     readImmersion,
   );
   const c = composeAtmosphere(view, settings);
+  const {hidden}=useSyncExternalStore(subscribeScreenViewport,screenViewportSnapshot,()=>SERVER_VIEWPORT);
   const blood = useRef<HTMLDivElement>(null);
   const previousHp = useRef(view.hp);
   useEffect(() => {
     const damaged = view.hp < previousHp.current;
     previousHp.current = view.hp;
     if (
+      hidden ||
       !damaged ||
       view.finished ||
       c.mood === "normal" ||
@@ -37,28 +42,30 @@ export function CombatAtmosphere({ view }: { view: AtmosphereView }) {
       { duration: 320, easing: "ease-out" },
     );
     return () => pulse?.cancel();
-  }, [view.hp, view.finished, c.mood]);
+  }, [view.hp, view.finished, c.mood, hidden]);
   const style = {
     "--health-opacity": c.healthOpacity,
     "--root-opacity": c.rootOpacity,
     "--terrain-opacity": c.terrainOpacity,
   } as CSSProperties;
   return (
-    <div
+    <ScreenStatusLayer
       className="combat-atmosphere"
       aria-hidden="true"
       data-mood={c.mood}
       data-rooted={c.rooted}
       data-subtle={settings.subtle}
       data-terrain={c.terrain}
+      data-cold={c.cold}
+      data-heat={c.heat}
       style={style}
     >
       <div className="combat-health-edge">
-        <div ref={blood} className="combat-blood-texture" />
+        <div ref={blood} className="combat-blood-texture"><ScreenEdgeMaterial/></div>
       </div>
       <div className="combat-terrain-edge">
-        <div className="combat-ice-texture" />
-        <div className="combat-fire-texture" />
+        <div className="combat-ice-texture"><ScreenEdgeMaterial/></div>
+        <div className="combat-fire-texture"><ScreenEdgeMaterial/></div>
         <div className="combat-edge-motes">
           {Array.from({ length: 6 }, (_, i) => (
             <i key={i} />
@@ -66,8 +73,8 @@ export function CombatAtmosphere({ view }: { view: AtmosphereView }) {
         </div>
       </div>
       <div className="combat-root-edge">
-        <div className="combat-root-texture" />
+        <div className="combat-root-texture"><ScreenEdgeMaterial/></div>
       </div>
-    </div>
+    </ScreenStatusLayer>
   );
 }

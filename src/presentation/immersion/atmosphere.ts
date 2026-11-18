@@ -6,6 +6,8 @@ export type AtmosphereView = {
   max: number;
   finished: boolean;
   rooted: boolean;
+  frozen?: boolean;
+  burning?: boolean;
   terrain: "none" | "ice" | "fire";
 };
 export const EMPTY_ATMOSPHERE: AtmosphereView = {
@@ -13,9 +15,11 @@ export const EMPTY_ATMOSPHERE: AtmosphereView = {
   max: 0,
   finished: true,
   rooted: false,
+  frozen: false,
+  burning: false,
   terrain: "none",
 };
-/** Exact local hero and row-major authoritative tile; no proximity, artwork or BURNING inference. */
+/** Local statuses and the authoritative tile are separate facts: burning never invents FIRE terrain. */
 export function atmosphereView(
   state: Readonly<GameState>,
   heroId: string,
@@ -33,6 +37,8 @@ export function atmosphereView(
     max: hero.maxHp,
     finished: false,
     rooted: hero.statuses.some((s) => s.id === "ROOTED" && s.turnsLeft > 0),
+    frozen: hero.statuses.some(s=>s.id==="FROZEN"&&s.turnsLeft>0),
+    burning: hero.statuses.some(s=>s.id==="BURNING"&&s.turnsLeft>0),
     terrain:
       tile?.terrain === "FIRE"
         ? "fire"
@@ -55,8 +61,9 @@ export function composeAtmosphere(
       : mood === "alert"
         ? 0.12
         : 0.44 + healthSeverity(view.hp, view.max) * 0.28;
+  const cold=active&&(view.frozen===true||view.terrain==="ice"),heat=active&&(view.burning===true||view.terrain==="fire");
   const roots = active && view.rooted ? 0.72 : 0,
-    terrain = active && view.terrain !== "none" ? 0.58 : 0;
+    terrain = cold || heat ? 0.58 : 0;
   // Bound the actual over-composited alpha, not the sum: sparse corner materials
   // should remain recognizable together without making their overlap too opaque.
   const over = (scale: number) =>
@@ -75,6 +82,8 @@ export function composeAtmosphere(
     mood,
     rooted: active && view.rooted,
     terrain: active ? view.terrain : "none",
+    cold,
+    heat,
     healthOpacity: health * scale,
     rootOpacity: roots * scale,
     terrainOpacity: terrain * scale,

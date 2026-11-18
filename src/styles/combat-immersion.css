@@ -34,17 +34,6 @@
   line-height: 1.5;
 }
 
-.board-host:has(> .combat-atmosphere) {
-  position: relative;
-}
-.combat-atmosphere {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none !important;
-  border-radius: inherit;
-  overflow: hidden;
-}
 .combat-atmosphere > * {
   position: absolute;
   inset: 0;
@@ -72,13 +61,10 @@
   inset: 0;
   pointer-events: none;
   box-sizing: border-box;
-  border: solid transparent;
-  border-width: clamp(48px, 8vmin, 110px);
-  border-image-slice: 240;
-  border-image-repeat: stretch;
+
 }
 .combat-blood-texture {
-  border-image-source: url("../presentation/immersion/assets/blood.png");
+  --material-art: url("../presentation/immersion/assets/blood.png");
   opacity: 0.86;
   transition:
     transform 700ms ease,
@@ -107,7 +93,7 @@
   animation: combat-heart 2.8s ease-in-out infinite;
 }
 .combat-root-texture {
-  border-image-source: url("../presentation/immersion/assets/roots.png");
+  --material-art: url("../presentation/immersion/assets/roots.png");
   transform: scale(1.15);
   transition: transform 850ms cubic-bezier(0.2, 0.7, 0.25, 1);
 }
@@ -116,7 +102,7 @@
   animation: combat-root-breathe 9s 850ms ease-in-out infinite;
 }
 .combat-ice-texture {
-  border-image-source: url("../presentation/immersion/assets/ice.png");
+  --material-art: url("../presentation/immersion/assets/ice.png");
   opacity: 0;
   transform: scale(1.13);
   transition:
@@ -124,15 +110,15 @@
     transform 950ms ease;
 }
 .combat-fire-texture {
-  border-image-source: url("../presentation/immersion/assets/fire.png");
+  --material-art: url("../presentation/immersion/assets/fire.png");
   opacity: 0;
   transition: opacity 650ms ease;
 }
-.combat-atmosphere[data-terrain="ice"] .combat-ice-texture {
+.combat-atmosphere[data-cold="true"] .combat-ice-texture {
   opacity: 1;
   transform: scale(1);
 }
-.combat-atmosphere[data-terrain="fire"] .combat-fire-texture {
+.combat-atmosphere[data-heat="true"] .combat-fire-texture {
   opacity: 1;
   animation: combat-fire-breathe 5.7s ease-in-out infinite;
 }
@@ -140,8 +126,8 @@
   opacity: 0;
   transition: opacity 400ms ease;
 }
-.combat-atmosphere[data-terrain="ice"] .combat-edge-motes,
-.combat-atmosphere[data-terrain="fire"] .combat-edge-motes {
+.combat-atmosphere[data-cold="true"] .combat-edge-motes,
+.combat-atmosphere[data-heat="true"] .combat-edge-motes {
   opacity: 1;
 }
 .combat-edge-motes i {
@@ -156,7 +142,7 @@
   animation: combat-ember 4.7s ease-out infinite;
   animation-play-state: paused;
 }
-.combat-atmosphere[data-terrain="fire"] .combat-edge-motes i {
+.combat-atmosphere[data-heat="true"] .combat-edge-motes i {
   animation-play-state: running;
 }
 .combat-edge-motes i:nth-child(2) {
@@ -184,7 +170,7 @@
   bottom: 3%;
   animation-delay: -4s;
 }
-.combat-atmosphere[data-terrain="ice"] .combat-edge-motes i {
+.combat-atmosphere[data-cold="true"]:not([data-heat="true"]) .combat-edge-motes i {
   background: #ddf7ff;
   box-shadow: none;
   width: 2px;
@@ -268,18 +254,11 @@
     display: none;
   }
 }
-@media (max-width: 600px) and (orientation: portrait) {
-  .battle .combat-atmosphere {
-    bottom: clamp(180px, 24dvh, 250px);
-  }
-}
 .interface-settings {
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
 }
 
-/* Reuse the canvas visibility/pause lifecycle, including pseudo-element heartbeats. */
-.board-host[data-scene-paused] .combat-atmosphere *,
-.board-host[data-scene-paused] .combat-atmosphere *::after {
-  animation-play-state: paused !important;
-}
+/* Edge lighting fades into the open centre; it never tints the entire UI. */
+.combat-atmosphere[data-heat=true] .combat-terrain-edge{background:radial-gradient(ellipse at center,transparent 65%,#b9591414 91%,#f28c1926);}
+.combat-atmosphere[data-cold=true] .combat-terrain-edge{background:radial-gradient(ellipse at center,transparent 65%,#7ccee810 91%,#c5f3ff26);}

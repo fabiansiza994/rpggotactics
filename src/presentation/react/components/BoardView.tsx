@@ -36,7 +36,7 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
     if (!host) return;
     const { setHoverTile, clickTile, tapTile, cancelAim } = useBattleStore.getState();
     const canvas = new BattleCanvas({
-      onImmersion:next=>setImmersion(previous=>previous.hp===next.hp&&previous.max===next.max&&previous.finished===next.finished&&previous.rooted===next.rooted&&previous.terrain===next.terrain?previous:next),
+      onImmersion:next=>setImmersion(previous=>previous.hp===next.hp&&previous.max===next.max&&previous.finished===next.finished&&previous.rooted===next.rooted&&previous.frozen===next.frozen&&previous.burning===next.burning&&previous.terrain===next.terrain?previous:next),
       onOpponentNotices: rows => setNotices(previous => JSON.stringify(previous)===JSON.stringify(rows)?previous:rows),
       onNoticeLane: lane => setNoticeLane(previous => previous && JSON.stringify(previous)===JSON.stringify(lane)?previous:lane),
       onInspectUnit: positions => {

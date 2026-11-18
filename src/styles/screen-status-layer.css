@@ -1,0 +1,19 @@
+/* Outside app/camera transforms, clipped only at the actual visible device viewport. */
+.screen-status-vfx{position:fixed;inset:0;z-index:70;overflow:hidden;isolation:isolate;contain:layout paint;pointer-events:none!important;user-select:none;}
+.screen-status-vfx *{pointer-events:none!important;}
+.screen-status-vfx[data-page-hidden=true] *,
+.screen-status-vfx[data-page-hidden=true] *::before,
+.screen-status-vfx[data-page-hidden=true] *::after,
+body:has(.board-host[data-scene-paused]) .screen-status-vfx *,
+body:has(.board-host[data-scene-paused]) .screen-status-vfx *::before,
+body:has(.board-host[data-scene-paused]) .screen-status-vfx *::after{animation-play-state:paused!important;}
+@media(prefers-reduced-motion:reduce){.screen-status-vfx,.screen-status-vfx *,.screen-status-vfx *::before,.screen-status-vfx *::after{animation:none!important;transition:none!important;}}
+
+/* Original transparent materials, cropped into independent square corners. The source
+   is never stretched to the screen's aspect ratio or tiled into a rectangular inner frame. */
+.screen-status-vfx{--corner-size:clamp(125px,30vmin,330px);}
+.screen-material-corner{position:absolute;width:var(--corner-size);height:var(--corner-size);background-image:var(--material-art);background-repeat:no-repeat;background-size:calc(var(--corner-size)*2) calc(var(--corner-size)*2);mask-image:radial-gradient(ellipse at var(--corner-x) var(--corner-y),#000 42%,#000c 65%,transparent 100%);}
+.screen-material-corner[data-corner=tl]{left:0;top:0;background-position:left top;--corner-x:left;--corner-y:top;}
+.screen-material-corner[data-corner=tr]{right:0;top:0;background-position:right top;--corner-x:right;--corner-y:top;}
+.screen-material-corner[data-corner=br]{right:0;bottom:0;background-position:right bottom;--corner-x:right;--corner-y:bottom;}
+.screen-material-corner[data-corner=bl]{left:0;bottom:0;background-position:left bottom;--corner-x:left;--corner-y:bottom;}

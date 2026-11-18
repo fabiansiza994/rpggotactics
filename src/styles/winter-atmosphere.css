@@ -1,14 +1,14 @@
-.winter-atmosphere{position:fixed;inset:0;z-index:24;pointer-events:none!important;overflow:hidden;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse at center,transparent 50%,rgb(120 205 240 / 8%) 100%)}
+.winter-atmosphere{opacity:0;transition:opacity .5s;background:radial-gradient(ellipse at center,transparent 50%,rgb(120 205 240 / 8%) 100%)}
 .winter-atmosphere[data-active=true]{opacity:1}
 .winter-atmosphere *{pointer-events:none!important}
 .winter-atmosphere__frost{position:absolute;inset:0;box-shadow:inset 0 0 38px rgb(180 235 255 / 14%);opacity:calc(.4 + var(--winter-strength)*.6)}
-.winter-atmosphere i{position:absolute;left:var(--x);top:-12px;width:3px;height:6px;border-radius:50%;background:#def5ff;opacity:calc(.15 + var(--winter-strength)*.25);animation:winter-snow var(--duration) var(--delay) linear infinite}
+.winter-atmosphere > i{position:absolute;left:var(--x);top:-12px;width:3px;height:6px;border-radius:50%;background:#def5ff;opacity:calc(.15 + var(--winter-strength)*.25);animation:winter-snow var(--duration) var(--delay) linear infinite}
 .winter-atmosphere__wave{position:absolute;inset:20%;border:2px solid rgb(190 240 255 / 35%);border-radius:50%;transform:scale(.1);opacity:0}
 .winter-atmosphere[data-entering=true] .winter-atmosphere__wave{animation:winter-wave .8s ease-out both}
-.winter-atmosphere[data-active=false] *, .winter-atmosphere[data-paused=true] *{animation-play-state:paused!important}
-@keyframes winter-snow{to{transform:translate(var(--drift),110vh)}}
+.winter-atmosphere[data-active=false] *{animation-play-state:paused!important}
+@keyframes winter-snow{to{transform:translate(var(--drift),calc(var(--screen-fall-distance, 100dvh) + 24px))}}
 @keyframes winter-wave{0%{transform:scale(.1);opacity:.5}100%{transform:scale(3);opacity:0}}
-@media(prefers-reduced-motion:reduce){.winter-atmosphere *{animation:none!important}.winter-atmosphere i{top:var(--x);opacity:.15}.winter-atmosphere{transition:none}}
+@media(prefers-reduced-motion:reduce){.winter-atmosphere *{animation:none!important}.winter-atmosphere > i{top:var(--x);opacity:.15}.winter-atmosphere{transition:none}}
 
 /* Screen climate is independent of battlefield geometry. Facets leave the playable centre clear. */
 .winter-atmosphere__frost{background:linear-gradient(148deg,rgb(185 233 255 / 20%) 0 1%,transparent 6%) left top/37% 43% no-repeat,linear-gradient(211deg,rgb(192 237 255 / 20%),transparent 22%) right top/31% 54% no-repeat,linear-gradient(32deg,rgb(150 222 255 / 17%),transparent 24%) left bottom/42% 34% no-repeat,linear-gradient(326deg,rgb(194 239 255 / 18%),transparent 24%) right bottom/31% 43% no-repeat;}
@@ -18,3 +18,8 @@
 .winter-atmosphere__frost{box-shadow:inset 0 0 64px rgb(171 230 255 / 30%),inset 0 -16px 35px rgb(195 242 255 / 16%)}
 .winter-atmosphere__frost::before,.winter-atmosphere__frost::after{content:"";position:absolute;inset:0;background:repeating-conic-gradient(from 25deg at 0 0,transparent 0 14deg,rgb(215 248 255 / 32%) 14.2deg 15deg,transparent 16deg 32deg);mask-image:radial-gradient(ellipse at 0 0,#000,transparent 27%);pointer-events:none}
 .winter-atmosphere__frost::after{transform:rotate(180deg)}
+
+/* Keep the climate legible when the existing local-status compositor is also active. */
+body:has(.combat-atmosphere[data-rooted="true"]) .winter-atmosphere[data-active=true],body:has(.combat-atmosphere[data-heat="true"]) .winter-atmosphere[data-active=true],body:has(.combat-atmosphere[data-mood="critical"]) .winter-atmosphere[data-active=true],body:has(.combat-atmosphere[data-mood="extreme"]) .winter-atmosphere[data-active=true]{opacity:.55;}
+
+.winter-atmosphere__frost{--material-art:url("../presentation/immersion/assets/ice.png");}

@@ -75,8 +75,8 @@ it("finite peripheral particles, no input capture and reduced motion override", 
   expect(component).toContain("length: 6");
   expect(css).toContain("pointer-events: none !important");
   expect(css).toContain("prefers-reduced-motion: reduce");
-  expect(css).toContain("border-image-slice: 240");
-  expect(css).not.toContain("mask-image");
+  expect(css).not.toContain("border-image-repeat: stretch");
+  expect(css).toContain("--material-art:");
   expect(css).toContain("animation: none !important");
   expect(component).not.toContain("setInterval");
 });
@@ -90,9 +90,9 @@ it("result cleanup waits for Pixi readiness and the existing playback", () => {
 
 it('all environmental animations share the canvas visibility lifecycle, including the heartbeat pseudo-element', () => {
   const canvas=readFileSync('src/presentation/pixi/BattleCanvas.ts','utf8');
-  const css=readFileSync('src/styles/combat-immersion.css','utf8');
+  const css=readFileSync('src/styles/screen-status-layer.css','utf8');
   expect(canvas).toContain("this.host?.toggleAttribute('data-scene-paused', paused)");
-  expect(css).toContain('.board-host[data-scene-paused] .combat-atmosphere *::after');
-  expect(css).toContain('animation-play-state: paused !important');
+  expect(css).toContain('body:has(.board-host[data-scene-paused]) .screen-status-vfx *::after');
+  expect(css).toContain('animation-play-state:paused!important');
   expect(canvas).toContain("document.removeEventListener('visibilitychange', this.syncVisibility)");
 });
