@@ -1,3 +1,4 @@
+import {boxTotal,type BoxSnapshot} from '../../game/store/boxes';
 import {ExpansionProduct} from "./ExpansionProduct";
 import {CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../catalog/cardPresentation';
 import { useRef } from "react";
@@ -22,6 +23,7 @@ export function ExpansionCatalog({
   profile,
   onInspect,
   onBuy,
+  onReset,
   balance,
   busy,
 }: {
@@ -32,10 +34,12 @@ export function ExpansionCatalog({
   profile: PlayerProfile;
   onInspect: (id: string) => void;
   onBuy: (o: CatalogOffer) => void;
+  onReset?: (id:string,box:BoxSnapshot)=>Promise<void>;
   balance: number;
   busy: boolean;
 }) {
   const oddsDialog = useRef<HTMLDialogElement>(null);
+  const resetDialog=useRef<HTMLDialogElement>(null);
   const have = (id: string) => {
     const c = DEFAULT_CONTENT.cards[id];
     return c
@@ -55,7 +59,7 @@ export function ExpansionCatalog({
         <h2>Colecciones de la arena</h2>
         <p>
           Explora las cartas de cada colección. Cada sobre contiene cuatro
-          sorteos independientes.
+          cartas de tu caja, sin reemplazo.
         </p>
         <div
           className="market-expansion-shelf expansion-product-shelf"
@@ -81,6 +85,8 @@ export function ExpansionCatalog({
     .sort((a, b) => (a.booster?.packs ?? 1) - (b.booster?.packs ?? 1));
   const chosen =
     purchaseOffers.find((o) => !o.booster?.freeGrant) ?? purchaseOffers[0];
+  const box=chosen?.booster?.box;
+  const remaining=box?boxTotal(box.remaining):0;
   const freeOffer = purchaseOffers.find((o) => o.booster?.freeGrant);
   const freeRemaining = freeOffer?.freeRemaining ?? 0;
   const detailCard = (id: string, caption?: string) => {
@@ -109,6 +115,7 @@ export function ExpansionCatalog({
             )}
           </span>
         </button>
+        {box&&<small className="market-box-card-count">En caja: {box.remaining[id]??0} / {box.initial[id]??0}</small>}
       </article>
     ) : null;
   };
@@ -123,6 +130,12 @@ export function ExpansionCatalog({
         <p>
           Saldo: <strong>{balance.toLocaleString("es-CO")} Cristales</strong>
         </p>
+        {box&&<section className="market-box-status" aria-label="Inventario de caja">
+          <strong>Caja {box.generation} · {remaining} cartas restantes</strong>
+          <p>{remaining/4} sobres restantes · {Object.entries(box.remaining).filter(([id])=>DEFAULT_CONTENT.cards[id]?.rarity==='ULTRA').reduce((n,[,v])=>n+v,0)} Ultras restantes</p>
+          <progress aria-label="Progreso de la caja" max={boxTotal(box.initial)} value={boxTotal(box.initial)-remaining}/>
+          <button disabled={busy||!onReset} onClick={()=>resetDialog.current?.showModal()}>Reiniciar caja</button>
+        </section>}
         {selected.status === "AVAILABLE" && selected.packs.length>0 && (
           <div className="market-hero-purchase">
             {freeOffer && (
@@ -181,6 +194,13 @@ export function ExpansionCatalog({
           </div>
         )}
       </header>
+      <dialog ref={resetDialog} className="shop-dialog" aria-labelledby="reset-box-title">
+        <h3 id="reset-box-title">¿Reiniciar esta caja?</h3>
+        <p>Todas las cartas volverán a estar disponibles. Conservarás las cartas que ya conseguiste. Esta acción no devuelve Cristales.</p>
+        <p>No reinicia tus sobres gratuitos ni modifica tus mazos. No entrega cartas automáticamente.</p>
+        <button disabled={busy} onClick={()=>resetDialog.current?.close()}>Cancelar</button>
+        <button disabled={busy||!box||!onReset} onClick={()=>{if(box&&onReset){resetDialog.current?.close();void onReset(selected.id,box);}}}>Confirmar reinicio gratuito</button>
+      </dialog>
       <dialog
         ref={oddsDialog}
         className="shop-dialog market-odds-dialog"

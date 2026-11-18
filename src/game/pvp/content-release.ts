@@ -1,8 +1,8 @@
 /** Existing protocol: each client can resume rooms from its own or earlier certified release. */
-export const CONTENT_RELEASE = 'scout-siege-release-1';
-export const PREVIOUS_CONTENT_RELEASE = 'beasts-release-1';
+export const CONTENT_RELEASE = 'market-boxes-release-1';
+export const PREVIOUS_CONTENT_RELEASE = 'scout-siege-release-1';
 export const LEGACY_CONTENT_RELEASE = 'thunder-release-2';
-const RELEASES = [LEGACY_CONTENT_RELEASE, PREVIOUS_CONTENT_RELEASE, CONTENT_RELEASE] as const;
+const RELEASES = [LEGACY_CONTENT_RELEASE, 'beasts-release-1', PREVIOUS_CONTENT_RELEASE, CONTENT_RELEASE] as const;
 export const isSupportedContentRelease = (value: unknown): value is string =>
   typeof value === 'string' && RELEASES.some(release => release === value);
 export const supportsRoomRelease = (client: string | undefined, room: string): boolean =>

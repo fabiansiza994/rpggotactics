@@ -18,6 +18,8 @@ export type BattlePhase = 'PLAYER' | 'ENEMY' | 'ENDED';
 
 export interface PlayerState {
   heroId: string;
+  searchUsesThisTurn?: Record<string,number>;
+  searchBlockedCardIds?: string[];
   energy: number;
   maxEnergy: number;
   movePoints: number;

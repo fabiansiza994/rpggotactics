@@ -68,6 +68,7 @@ export async function marketFixture(options: { legacyProfiles?: boolean } = {}) 
       quoteToken: offer.purchaseQuote?.token,
       packRevision: offer.booster.revision,
       packFormat: "GENERAL_BATCH_V1",
+      boxFormat: "FINITE_BOX_V1",
     });
   };
   return { db, env, deps, account, call, catalog, buy };

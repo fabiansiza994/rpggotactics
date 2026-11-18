@@ -1,3 +1,4 @@
+import {drawBox} from '../../src/game/store/boxes';
 import {primaryMarketExpansionId} from '../../src/game/store/market-primary';
 import {
   MARKET_EXPANSIONS,
@@ -33,18 +34,18 @@ export function validBooster(offer: StoreOffer, ctx: StoreContext): boolean {
         !Number.isSafeInteger(p.freeLimit) ||
         !(p.freeLimit! > 0) ||
         offer.purchaseLimit !== p.freeLimit)) ||
-    offer.contents.length > 40 ||
+    (p.inventory!=="FINITE" && offer.contents.length > 40) ||
     offer.giftable ||
     offer.ritualPreview
   )
     return false;
-  if (
+  if (p.inventory!=="FINITE" && (
     BOOSTER_RARITIES.some(
       (r) => !Number.isSafeInteger(p.weights[r]) || p.weights[r] < 0,
     ) ||
     BOOSTER_RARITIES.reduce((n, r) => n + p.weights[r], 0) !== 100 ||
     p.weights.ULTRA !== 0
-  )
+  ))
     return false;
   if (
     offer.contents.some(
@@ -52,7 +53,7 @@ export function validBooster(offer: StoreOffer, ctx: StoreContext): boolean {
         c.kind !== "CARD" ||
         c.copies !== 1 ||
         !ctx.content.cards[c.cardId] ||
-        p.weights[rarityOf(ctx.content.cards[c.cardId]!)] === 0 ||
+        (p.inventory!=="FINITE" && p.weights[rarityOf(ctx.content.cards[c.cardId]!)] === 0) ||
         ctx.content.cards[c.cardId]!.tags.some((t) =>
           ["qa", "experimental", "prototype"].includes(t.toLowerCase()),
         ),
@@ -83,6 +84,7 @@ export function validBooster(offer: StoreOffer, ctx: StoreContext): boolean {
     )
   )
     return false;
+  if(p.inventory==="FINITE")return offer.contents.filter(c=>c.kind==="CARD"&&rarityOf(ctx.content.cards[c.cardId]!)==="ULTRA").length>=2;
   return BOOSTER_RARITIES.every(
     (r) =>
       p.weights[r] === 0 ||
@@ -122,7 +124,7 @@ export function boosterOffers(
             heroId: hero?.id,
             title: expansion.name,
             description:
-              "Sobres individuales de cuatro cartas. Sin rareza garantizada; duplicados acumulables.",
+              chosenPolicy.inventory==='FINITE' ? "Cuatro cartas de tu caja finita, sin reemplazo. Las copias obtenidas se conservan." : "Sobres individuales de cuatro cartas. Sin rareza garantizada; duplicados acumulables.",
             price: amount === 0 ? 0 : (price ?? expansion.pack!.price) * amount,
             currencyId: "arcane_crystals",
             categories: ["CARDS"],
@@ -153,7 +155,7 @@ export function boosterOffers(
               !card.tags.some((t) =>
                 ["qa", "experimental", "prototype"].includes(t.toLowerCase()),
               ) &&
-              chosenPolicy.weights[rarityOf(card)] > 0 &&
+              (chosenPolicy.inventory==='FINITE'||chosenPolicy.weights[rarityOf(card)] > 0) &&
               validateCatalog(
                 [
                   {
@@ -203,8 +205,11 @@ export function rollBooster(
   below: (n: number) => number = secureBelow,
 ): PurchasePlan {
   if (!validBooster(offer, ctx)) throw Error("Invalid pack policy or pool");
-  const slots: string[] = [];
-  for (let i = 0; i < offer.booster!.size * (offer.booster!.packs ?? 1); i++) {
+  const box=offer.booster!.inventory==='FINITE'?offer.booster!.box:undefined;
+  if(offer.booster!.inventory==='FINITE'&&!box)throw Error('Box state required');
+  const draw=box?drawBox(box.remaining,offer.booster!.size*(offer.booster!.packs??1),below):undefined;
+  const slots: string[] = draw?.slots??[];
+  for (let i = 0; !box && i < offer.booster!.size * (offer.booster!.packs ?? 1); i++) {
     let roll = below(100);
     if (!Number.isInteger(roll) || roll < 0 || roll >= 100)
       throw Error("Invalid random result");
@@ -258,6 +263,7 @@ export function rollBooster(
     (_, i) => ({ ...allSlots, cards: allSlots.cards.slice(i * 4, i * 4 + 4) }),
   );
   result.plan.opening = result.plan.openings[0];
+  if(box&&draw)result.plan.boxDebit={expansionId:offer.booster!.expansionId!,before:box,remaining:draw.remaining};
   return result.plan;
 }
 

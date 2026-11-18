@@ -1,3 +1,5 @@
+import {areHostile} from '../board/occupancy';
+import {manhattan} from '../core/position';
 import {worldFrozenCard,worldFrozen} from './world-frozen';
 import {isThunderCard} from './card-family';
 import { effectsForCard, allCardEffects, effectiveCost } from './form-effects';
@@ -25,6 +27,7 @@ export type Playability =
 export function checkPlayability(ctx: RuleContext, cardUid: string): Playability {
   const card = ctx.state.player.hand.find((c) => c.uid === cardUid);
   if (!card) return fail('CARD_NOT_IN_HAND', 'Card is not in hand.') as Playability;
+  if(ctx.state.player.searchBlockedCardIds?.includes(card.cardId))return fail('CARD_UNAVAILABLE_THIS_TURN','La búsqueda impide activar esta carta durante este turno.') as Playability;
   if (card.unavailableThisTurn) return fail('CARD_UNAVAILABLE_THIS_TURN', 'No disponible durante este turno.') as Playability;
   let def = ctx.content.cards[card.cardId];
   if (!def) return fail('CARD_NOT_IN_HAND', `Unknown card "${card.cardId}".`) as Playability;
@@ -72,8 +75,17 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
     // Explicit product rule: six cards before playing blocks the search, even though it consumes itself.
     if (ctx.state.player.hand.length >= ctx.state.player.maxHandSize)
       return fail('SEARCH_HAND_FULL', 'La mano ya tiene seis cartas.') as Playability;
-    if (!summonSearchChoices(ctx.state, ctx.content).length)
-      return fail('NO_ELIGIBLE_SUMMON', 'No hay invocaciones en el mazo.') as Playability;
+    if(typeof def.deckSearch==='object')for(const condition of def.deckSearch.conditions??[]){
+      const allowed=condition==='CASTER_DAMAGED'?caster.hp<caster.maxHp:
+        condition==='THUNDER_IN_HAND'?ctx.state.player.hand.some(c=>c.cardId!==def.id&&ctx.content.cards[c.cardId]&&isThunderCard(ctx.content.cards[c.cardId]!)):
+        condition==='OWN_SUMMON'?ctx.state.units.some(u=>u.hp>0&&u.summon?.ownerId===caster.id):
+        condition==='GUARD'?caster.shield>=1:
+        !ctx.state.units.some(u=>u.hp>0&&areHostile(caster,u)&&manhattan(caster.pos,u.pos)===1);
+      if(!allowed)return fail('INVALID_TARGET','No se cumplen las condiciones de este buscador.') as Playability;
+    }
+    if(typeof def.deckSearch==='object'&&(ctx.state.player.searchUsesThisTurn?.[def.id]??0)>=def.deckSearch.maxUsesPerTurn)return fail('INVALID_TARGET','Este buscador ya se utilizó durante este turno.') as Playability;
+    if (!summonSearchChoices(ctx.state, ctx.content,def).length)
+      return fail('NO_ELIGIBLE_SUMMON', typeof def.deckSearch==='object'?'No hay una carta objetivo válida en el mazo.':'No hay invocaciones en el mazo.') as Playability;
   }
   return { ok: true, card, def, caster };
 }
@@ -89,7 +101,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   const found = searchUid && def.deckSearch ? ctx.state.player.deck.find(c => c.uid === searchUid) : undefined;
   // Eco del Altar: the chosen uid must be a ritual piece in THIS player's real discard pile now.
   const fromDiscard = searchUid && def.discardSearch ? discardSearchChoices(ctx.state, ctx.content).find(c => c.uid === searchUid) : undefined;
-  if (def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSummon(found, ctx.content, caster.defId) : searchUid !== undefined)
+  if (def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSearch(found, ctx.content, caster.defId,def) : searchUid !== undefined)
     return fail('INVALID_TARGET', def.discardSearch ? 'Elige una pieza de ritual de tu descarte.' : 'Elige una invocación válida del mazo.');
 
   if (wallOrientation !== undefined && (def.id !== 'ice_wall' || !['HORIZONTAL','VERTICAL'].includes(wallOrientation))) return fail('INVALID_TARGET', 'Orientación no permitida.');
@@ -146,6 +158,10 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   if (found) {
     player.deck = player.deck.filter(c => c.uid !== found.uid);
     found.unavailableThisTurn = true;
+    if(typeof def.deckSearch==='object'){
+      (player.searchUsesThisTurn??={})[def.id]=(player.searchUsesThisTurn?.[def.id]??0)+1;
+      player.searchBlockedCardIds=[...new Set([...(player.searchBlockedCardIds??[]),def.deckSearch.targetCardId])];
+    }
     player.hand.push(found);
     ctx.emit({type:'CARD_DRAWN',cardUid:found.uid,cardId:found.cardId});
   }
@@ -180,15 +196,16 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   return OK;
 }
 
-function eligibleSummon(card: CardInstance, content: import('../content').GameContent, heroId: string): boolean {
+function eligibleSearch(card: CardInstance, content: import('../content').GameContent, heroId: string,search?:CardDefinition): boolean {
   const def = content.cards[card.cardId];
-  return !!def && (!def.heroId || def.heroId === heroId) && def.effects.some(fx => fx.type === 'SUMMON');
+  return !!def && (!def.heroId || def.heroId === heroId) && (typeof search?.deckSearch==='object'?card.cardId===search.deckSearch.targetCardId:def.effects.some(fx => fx.type === 'SUMMON'));
 }
 /** Sorted private candidates, never shuffled and never drawn from discard. */
-export function summonSearchChoices(state: Readonly<import('../state').GameState>, content: import('../content').GameContent): CardInstance[] {
+export function summonSearchChoices(state: Readonly<import('../state').GameState>, content: import('../content').GameContent,search?:CardDefinition): CardInstance[] {
   const hero = state.units.find(u => u.id === state.player.heroId);
   const deck = state.pileCounts ? state.searchChoices ?? [] : state.player.deck;
-  return deck.filter(c => eligibleSummon(c,content,hero?.defId ?? '')).slice()
+  const definitions=search?[search]:state.player.hand.flatMap(c=>content.cards[c.cardId]?.deckSearch?[content.cards[c.cardId]!]:[]);
+  return deck.filter(c => definitions.length?definitions.some(d=>eligibleSearch(c,content,hero?.defId??'',d)):eligibleSearch(c,content,hero?.defId??'')).slice()
     .sort((a,b) => (a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));
 }
 

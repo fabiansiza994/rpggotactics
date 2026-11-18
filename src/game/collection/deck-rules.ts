@@ -65,9 +65,9 @@ export const copyLimit = (card: CardDefinition, rules: DeckRules): number =>
 export const neutralCount = (deck: readonly DeckEntry[], content: GameContent): number =>
   deck.reduce((n, e) => (content.cards[e.cardId] && content.cards[e.cardId]!.heroId === undefined ? n + e.count : n), 0);
 
-/** Ultra copies in a deck (every Ultra counts, whatever its champion). */
+/** Unique reward Ultra budget; explicitly approved commercial Ultras use their own copy limit. */
 export const ultraCount = (deck: readonly DeckEntry[], content: GameContent): number =>
-  deck.reduce((n, e) => (content.cards[e.cardId]?.rarity === 'ULTRA' ? n + e.count : n), 0);
+  deck.reduce((n, e) => (content.cards[e.cardId]?.rarity === 'ULTRA' && !content.cards[e.cardId]?.commercialUltra ? n + e.count : n), 0);
 
 const ultraIssue = (count: number, rules: DeckRules): DeckIssue | null =>
   rules.maxUltraCards !== undefined && count > rules.maxUltraCards ? { code: 'ULTRA_LIMIT', count, limit: rules.maxUltraCards } : null;
@@ -162,7 +162,7 @@ export function addCardIssue(
   if (issue) return issue;
   const neutral = content.cards[cardId]!.heroId === undefined && neutralIssue(neutralCount(deck, content) + 1, rules);
   if (neutral) return neutral;
-  const ultra = content.cards[cardId]!.rarity === 'ULTRA' && ultraIssue(ultraCount(deck, content) + 1, rules);
+  const ultra = content.cards[cardId]!.rarity === 'ULTRA' && !content.cards[cardId]!.commercialUltra && ultraIssue(ultraCount(deck, content) + 1, rules);
   if (ultra) return ultra;
   const current = deckSize(deck) + 1;
   return current > rules.requiredSize ? { code: 'DECK_TOO_LARGE', current, required: rules.requiredSize } : null;

@@ -51,6 +51,7 @@ export interface LaunchRewardResponse {
   id: string; amount: number; enabled: boolean; claimed: boolean; credited: number; wallet: Wallet;
 }
 export const storeApi = {
+  resetBox:(token:string,expansionId:string,generation:number,version:number)=>request<{box:import('../../game/store/boxes').BoxSnapshot;replayed:boolean}>(CLOUD_CONFIG.apiUrl,'/api/tactics/store/box/reset',{method:'POST',token,body:{expansionId,generation,version,idempotencyKey:`reset_${expansionId}_${generation}_${version}`},timeoutMs:CLOUD_CONFIG.timeoutMs}),
   acquisition:(token:string)=>request<{cards:Record<string,import('../../game/store/card-acquisition').CardAcquisitionView>}>(CLOUD_CONFIG.apiUrl,'/api/tactics/store/acquisition',{token,timeoutMs:CLOUD_CONFIG.timeoutMs}),
   launchReward: (token: string, claim = false) => request<LaunchRewardResponse>(CLOUD_CONFIG.apiUrl,
     '/api/tactics/store/launch-reward' + (claim ? '/claim' : ''), {
@@ -65,7 +66,7 @@ export const storeApi = {
     request<PurchaseResponse>(CLOUD_CONFIG.apiUrl, '/api/tactics/store/purchase', {
       method: 'POST',
       token,
-      body: { offerId, idempotencyKey, ...(quoteToken ? { quoteToken } : {}), ...(receiptOnly ? { receiptOnly:true } : {}), ...(packRevision ? {packRevision,packFormat:"GENERAL_BATCH_V1"} : {}) },
+      body: { offerId, idempotencyKey, ...(quoteToken ? { quoteToken } : {}), ...(receiptOnly ? { receiptOnly:true } : {}), ...(packRevision ? {packRevision,packFormat:"GENERAL_BATCH_V1",boxFormat:"FINITE_BOX_V1"} : {}) },
       timeoutMs: CLOUD_CONFIG.timeoutMs,
     }),
   /** The client sends ONLY the code text; the reward is decided by the server. */

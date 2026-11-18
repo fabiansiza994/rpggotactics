@@ -11,7 +11,7 @@ describe('standard booster price cut with historical compatibility', () => {
       const offer = (await f.catalog()).offers.find((o: { id: string }) => o.id === 'booster_thunder_god_x1');
       expect(ARCANE_PACK_PRICE).toBe(50);
       const old = await issueQuote(STORE_QUOTE_TEST_SECRET, f.account.id, offer, { price: 200, contents: offer.contents }, Date.now());
-      const r = await f.call('POST', '/store/purchase', { offerId: offer.id, idempotencyKey: 'old-price-quote', quoteToken: old.token, packRevision: offer.booster.revision, packFormat: 'GENERAL_BATCH_V1' });
+      const r = await f.call('POST', '/store/purchase', { offerId: offer.id, idempotencyKey: 'old-price-quote', quoteToken: old.token, packRevision: offer.booster.revision, packFormat: 'GENERAL_BATCH_V1', boxFormat:'FINITE_BOX_V1' });
       expect(r.data.error.code).toBe('QUOTE_CHANGED');
       expect((await f.call('GET', '/wallet')).data.wallet.balance).toBe(30000);
       expect(f.db.sql.prepare('SELECT COUNT(*) AS n FROM tactics_store_purchases').get()?.n).toBe(0);

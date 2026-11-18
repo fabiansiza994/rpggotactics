@@ -35,6 +35,7 @@ export function memoryD1(
     "0026_tactics_profile_avatar.sql",
     "0028_tactics_multi_deck.sql",
     "0029_tactics_collection_claim_revision.sql",
+    "0031_tactics_expansion_boxes.sql",
   ])
     sql.exec(
       readFileSync(

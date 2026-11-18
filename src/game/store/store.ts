@@ -354,6 +354,7 @@ export interface CosmeticGrant {
   kind: CosmeticKind;
 }
 export interface PurchasePlan {
+  boxDebit?: {expansionId:string; before:import("./boxes").BoxSnapshot; remaining:import("./boxes").BoxStock};
   /** Ordered, persisted slots; duplicated cards remain separate during reveal. */
   openings?: { packId: string; revision: string; cards: CardGrant[] }[];
   opening?: { packId: string; revision: string; cards: CardGrant[] };

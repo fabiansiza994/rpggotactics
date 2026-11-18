@@ -106,6 +106,7 @@ export function restoreTurnEnergy(ctx: RuleContext): void {
 /** Per-turn limits of the active player (altar seals priced per turn). Turn initialization only. */
 export function resetTurnLimits(ctx: RuleContext): void {
   const p = ctx.state.player;
+  delete p.searchUsesThisTurn;delete p.searchBlockedCardIds;
   for (const card of [...p.hand,...p.deck,...p.discard,...(p.altar ?? [])]) delete card.unavailableThisTurn;
   if (ctx.state.player.altarSeals) ctx.state.player.altarSeals = 0;
 }

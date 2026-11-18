@@ -1,3 +1,4 @@
+import {MARKET_BOX_ULTRAS,MARKET_SEARCHERS} from './market-box-cards';
 import {withWorldUpgrade} from './antarctic-upgrades';
 import {ANTARCTIC_CARDS} from './antarctic-magic';
 import { MARKET_LEGENDARIES } from './market-legendaries';
@@ -504,6 +505,7 @@ list.push({
   targeting: {type:'SELF'}, effects: [], presentation: {visualKey:'pack_call',element:'ARCANE'},
 });
 
+list.push(...MARKET_BOX_ULTRAS,...MARKET_SEARCHERS);
 export const CARDS: Readonly<Record<string, CardDefinition>> = Object.fromEntries(
-  list.map((c) => [c.id, withWorldUpgrade(c)]),
+  list.map((c) => [c.id, withWorldUpgrade(c.id==='absolute_zero'?{...c,rarity:'ULTRA',maxCopies:2,commercialUltra:true}:c)]),
 );

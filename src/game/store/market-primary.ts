@@ -1,5 +1,7 @@
+import {MARKET_BOX_MEMBERSHIP} from '../data/market-box-cards';
 /** Commercial identity only: never changes release gates, ownership or acquisition. */
 export const PRIMARY_MARKET_EXPANSION: Readonly<Record<string,string>> = {
+ ...Object.fromEntries(Object.entries(MARKET_BOX_MEMBERSHIP).flatMap(([e,ids])=>ids.map(id=>[id,e]))),
   "voltaic_armor": "thunder_god",
   "storm_avatar": "thunder_god",
   "static_field": "thunder_god",

@@ -1,3 +1,6 @@
+import { rarityOf } from '../../src/game/collection/deck-rules';
+import {loadExpansionBox,boxDebitStatements,resetExpansionBox} from './expansionBoxes';
+import {boxTotal,type BoxSnapshot} from '../../src/game/store/boxes';
 import {describeCardAcquisition} from '../../src/game/store/card-acquisition';
 import {freePackOfferId} from '../../src/game/store/market-expansions';
 import {newStoreSaleAllowed,completedOfferClaims} from '../../src/game/store/store';
@@ -265,6 +268,7 @@ function purchaseStatements(
       .bind(ids.purchaseId, userId, ids.key, offer.id, offer.currencyId, quote.price, JSON.stringify(sold), JSON.stringify(plan), now, now),
 
   ];
+  out.push(...boxDebitStatements(db,userId,plan,ids.purchaseId,now));
   if(quote.price>0)out.push(ledgerStatement(db, {
       transactionId: ids.transactionId,
       userId,
@@ -384,8 +388,37 @@ export interface StoreRequest {
 export async function storeRoute(route: string, r: StoreRequest): Promise<Response | null> {
   const { db, userId, now } = r;
   const ctx: StoreContext = { content: r.content, rules: DECK_RULES, cosmetics: r.store.cosmetics };
-  const offers = () =>
+  const boxStates=new Map<string,BoxSnapshot>();
+  const baseOffers = () =>
     validOffers([...r.store.catalog, ...(r.packsEnabled ? boosterOffers(ctx,r.store.packPolicy,r.store.packPrice) : [])], ctx).filter(newStoreSaleAllowed).filter(o=>!o.booster||(r.packsEnabled&&validBooster(o,ctx))).filter((o) => o.heroId === undefined || (r.heroAllowed?.(o.heroId) ?? true));
+
+
+  const offers=()=>baseOffers().map(o=>{
+    const box=o.booster?.inventory==='FINITE'?boxStates.get(o.booster.expansionId!):undefined;
+    if(!box)return o;
+    const total=boxTotal(box.remaining);
+    const weights={COMMON:0,UNCOMMON:0,RARE:0,LEGENDARY:0,ULTRA:0};
+    for(const [id,count] of Object.entries(box.remaining))if(total&&r.content.cards[id])weights[rarityOf(r.content.cards[id]!)]+=count*100/total;
+    return {...o,booster:{...o.booster!,box,weights}};
+  });
+  if(route==='GET /api/tactics/store/catalog'||route==='POST /api/tactics/store/purchase'){
+    // Receipts recover before touching the new tables, including pre-box historical purchases.
+    const replayKey=r.body.idempotencyKey;
+    const recovering=route.endsWith('/purchase')&&typeof replayKey==='string'&&await purchaseByKey(db,userId,replayKey);
+    if(!recovering && r.body.receiptOnly!==true){
+      for(const offer of baseOffers().filter(o=>o.booster?.inventory==='FINITE')){
+        const id=offer.booster!.expansionId!;if(!boxStates.has(id))boxStates.set(id,await loadExpansionBox(db,userId,offer,r.content,now));
+      }
+    }
+  }
+  if(route==='POST /api/tactics/store/box/reset'){
+    const {expansionId,idempotencyKey,generation,version}=r.body;
+    if(typeof expansionId!=='string'||typeof idempotencyKey!=='string'||!IDEMPOTENCY_KEY.test(idempotencyKey)||!Number.isSafeInteger(generation)||!Number.isSafeInteger(version))return error(400,'BAD_REQUEST','Reinicio inválido.');
+    const offer=baseOffers().find(o=>o.booster?.inventory==='FINITE'&&o.booster.expansionId===expansionId);
+    if(!offer)return error(404,'UNKNOWN_BOX','Esta expansión no tiene una caja comercial.');
+    try{return json(await resetExpansionBox(db,userId,offer,r.content,idempotencyKey,generation as number,version as number,now));}
+    catch{return error(409,'BOX_CHANGED','La caja cambió. Actualiza antes de reiniciar; no se entregaron cartas ni se cobraron Cristales.');}
+  }
 
   if(route==='GET /api/tactics/store/acquisition'){
     const pool=new Set(offers().filter(o=>!!o.booster).flatMap(o=>o.contents.flatMap(c=>c.kind==='CARD'?[c.cardId]:[])));
@@ -428,7 +461,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
         .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
         .map(async (o) => {
           const view = offerView(o, owned, ctx, now);
-          return {...view,freeRemaining:o.booster?.freeGrant?Math.max(0,(o.purchaseLimit??0)-completedOfferClaims(o,owned)):undefined, purchaseQuote: view.availability.purchasable ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
+          return {...view,...(o.booster?.box&&boxTotal(o.booster.box.remaining)<4*(o.booster.packs??1)?{availability:{...view.availability,purchasable:false}}:{}),freeRemaining:o.booster?.freeGrant?Math.max(0,(o.purchaseLimit??0)-completedOfferClaims(o,owned)):undefined, purchaseQuote: view.availability.purchasable && (!o.booster?.box || boxTotal(o.booster.box.remaining)>=4*(o.booster.packs??1)) ? await issueQuote(secret,userId,o,view,r.quoteNow?.() ?? now) : undefined};
         })),
       wallet: await walletView(db, userId),
       cosmetics: await cosmeticsView(db, userId, r.store),
@@ -520,6 +553,8 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
         return { ok: false as const, fail: error(409, 'INSUFFICIENT_FUNDS', 'Saldo insuficiente.', { balance, price: plan.quote.price }) };
       return { ok: true as const, plan: plan.plan, quote: plan.quote, expiresAt:signed.quote.expiresAt };
     };
+    if(offer.booster?.inventory==='FINITE'&&r.body.boxFormat!=='FINITE_BOX_V1')return reject(error(409,'PACK_CLIENT_UPDATE_REQUIRED','Actualiza para abrir tu caja. No se ha cobrado.'));
+    if(offer.booster?.box&&boxTotal(offer.booster.box.remaining)<4*(offer.booster.packs??1))return reject(error(409,'BOX_EXHAUSTED','No quedan suficientes cartas; reinicia la caja o elige menos sobres.'));
     if(offer.booster?.poolType==='GENERAL'&&r.body.packFormat!=='GENERAL_BATCH_V1')return reject(error(409,'PACK_CLIENT_UPDATE_REQUIRED','Actualiza la página para revisar este sobre general. No se ha cobrado.'));
     if (offer.booster && r.body.packRevision !== offer.booster.revision) return reject(error(409,'PACK_CLIENT_UPDATE_REQUIRED','Actualiza la página para revisar y abrir este sobre. No se ha cobrado.'));
     const checked = await check(r.record);

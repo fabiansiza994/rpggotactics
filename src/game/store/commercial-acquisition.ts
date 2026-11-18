@@ -40,7 +40,7 @@ export function boosterCardEligible(
     !!e?.pack &&
     e.status === "AVAILABLE" &&
     e.cardIds.includes(card.id) &&
-    (e.pack.policy.weights[card.rarity ?? "COMMON"] ?? 0) > 0 &&
+    (e.pack.policy.inventory === "FINITE" || (e.pack.policy.weights[card.rarity ?? "COMMON"] ?? 0) > 0) &&
     commercialSetReleased(card, content) &&
     !card.tags.some((t) =>
       ["qa", "experimental", "prototype"].includes(t.toLowerCase()),

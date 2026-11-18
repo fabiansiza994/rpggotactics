@@ -44,8 +44,8 @@ for(const id of ids)it(`${id}: full entitlement, reject extra free, no charge, f
 });
 for(const id of ids.slice(1))it(`${id}: 12 concurrent tabs cannot exceed three, same-key retries remain one grant`,async()=>{
  const f=await marketFixture();try{
-  const offer=(await f.catalog()).offers.find((o:CatalogOffer)=>o.id===freeId(id));const body={offerId:offer.id,quoteToken:offer.purchaseQuote.token,packRevision:offer.booster.revision,packFormat:'GENERAL_BATCH_V1'};
-  const results=await Promise.all(Array.from({length:12},(_,i)=>f.call('POST','/store/purchase',{...body,idempotencyKey:'qa-tab-'+i})));expect(results.filter(r=>r.status===200)).toHaveLength(3);
+  const offer=(await f.catalog()).offers.find((o:CatalogOffer)=>o.id===freeId(id));const body={offerId:offer.id,quoteToken:offer.purchaseQuote.token,packRevision:offer.booster.revision,packFormat:'GENERAL_BATCH_V1',boxFormat:'FINITE_BOX_V1'};
+  const results=await Promise.all(Array.from({length:12},(_,i)=>f.call('POST','/store/purchase',{...body,idempotencyKey:'qa-tab-'+i})));expect(results.filter(r=>r.status===200)).toHaveLength(1);for(let n=0;n<2;n++)expect((await f.buy(offer.id,'refreshed-tab-'+n)).status).toBe(200);
   expect(f.db.sql.prepare('SELECT COUNT(*) AS n FROM tactics_store_purchases').get()?.n).toBe(3);expect((await f.call('GET','/wallet')).data.wallet.balance).toBe(30000);expect((await f.catalog()).offers.find((o:CatalogOffer)=>o.id===offer.id).freeRemaining).toBe(0);
   const winner=results.find(r=>r.status===200)!.data.purchase;const row=f.db.sql.prepare('SELECT idempotency_key FROM tactics_store_purchases WHERE purchase_id=?').get(winner.purchaseId)!;const replays=await Promise.all(Array.from({length:6},()=>f.call('POST','/store/purchase',{...body,idempotencyKey:row.idempotency_key})));expect(replays.every(r=>r.status===200&&r.data.replayed&&r.data.purchase.purchaseId===winner.purchaseId)).toBe(true);expect(f.db.sql.prepare('SELECT COUNT(*) AS n FROM tactics_store_purchases').get()?.n).toBe(3);
  }finally{f.db.sql.close();}
@@ -68,7 +68,7 @@ it('different offer variants of one expansion share the same atomic free entitle
  const f=await marketFixture();try{
   const original=boosterOffers(ctx).find(o=>o.id===freeId('pack_pact'))!;const alias={...original,id:'booster_pack_pact_variant_free'};f.deps.store.catalog=[...f.deps.store.catalog,alias];
   const c=await f.catalog();const offers=[c.offers.find((o:CatalogOffer)=>o.id===original.id),c.offers.find((o:CatalogOffer)=>o.id===alias.id)];
-  const r=await Promise.all(Array.from({length:10},(_,i)=>{const o=offers[i%2];return f.call('POST','/store/purchase',{offerId:o.id,idempotencyKey:'variant-tab-'+i,quoteToken:o.purchaseQuote.token,packRevision:o.booster.revision,packFormat:'GENERAL_BATCH_V1'});}));
-  expect(r.filter(r=>r.status===200)).toHaveLength(3);const after=await f.catalog();for(const o of offers)expect(after.offers.find((x:CatalogOffer)=>x.id===o.id).freeRemaining).toBe(0);expect((await f.call('GET','/wallet')).data.wallet.balance).toBe(30000);
+  const r=await Promise.all(Array.from({length:10},(_,i)=>{const o=offers[i%2];return f.call('POST','/store/purchase',{offerId:o.id,idempotencyKey:'variant-tab-'+i,quoteToken:o.purchaseQuote.token,packRevision:o.booster.revision,packFormat:'GENERAL_BATCH_V1',boxFormat:'FINITE_BOX_V1'});}));
+  expect(r.filter(r=>r.status===200)).toHaveLength(1);for(let n=0;n<2;n++)expect((await f.buy(offers[n%2].id,'fresh-variant-'+n)).status).toBe(200);const after=await f.catalog();for(const o of offers)expect(after.offers.find((x:CatalogOffer)=>x.id===o.id).freeRemaining).toBe(0);expect((await f.call('GET','/wallet')).data.wallet.balance).toBe(30000);
  }finally{f.db.sql.close();}
 });

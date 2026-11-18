@@ -201,3 +201,6 @@ for(const id of ['winter_domain', 'frost_comet', 'avalanche', 'frozen_step', 'ar
 
 // Final original landscape illustration; per-card override preserves Storm Avatar artwork.
 FINAL_CARD_ART.thunder_incarnation = "/art/mage-thunder/thunder_incarnation.jpg";
+
+// Original commercial box artwork; existing paintings are untouched.
+for(const id of ['arcane_balance', 'arcane_confluence', 'arcane_resonance', 'eternal_winter_heart', 'hunter_trail', 'hunters_patience', 'oath_of_steel', 'pack_concord', 'pact_link', 'storm_conduit', 'storm_crown', 'tempest_call', 'warriors_oath', 'winter_call'])FINAL_CARD_ART[id]=`/art/market-boxes/${id}.jpg`;

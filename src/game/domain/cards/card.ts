@@ -345,11 +345,14 @@ export interface CardPresentation {
   premiumTreatment?: 'showcase';
 }
 
+export type DeckSearchCondition='CASTER_DAMAGED'|'THUNDER_IN_HAND'|'OWN_SUMMON'|'GUARD'|'NO_ADJACENT_ENEMY';
 export interface CardDefinition {
+  /** Commercial Ultras use per-card copy limits; historic unique reward Ultra budget is preserved. */
+  commercialUltra?: true;
   /** Any listed form permits play; null means humanoid. Absent = unrestricted. */
   requiredForms?: readonly (string | null)[];
   /** Atomic owner-only draw-pile search; chosen instance is locked until next own turn. */
-  deckSearch?: 'SUMMON';
+  deckSearch?: 'SUMMON' | {targetCardId:string;maxUsesPerTurn:1;lockTargetThisTurn:true;conditions?:readonly DeckSearchCondition[]};
   /**
    * Eco del Altar: the player picks one ritual piece of their OWN discard pile (sent as the search
    * uid, validated against the real pile); it returns to the hand locked until the next own turn.

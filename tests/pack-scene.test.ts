@@ -85,7 +85,8 @@ describe("deliberate pack discovery, no acquisition in animation", () => {
       ).purchases[0]!.opening.cards[0]!.heroId
     ]!.collection[id] = { copies: 1, acquired: 0 };
     const receipt = simulatePurchase(before, o.id, () => 0).purchases[0]!;
-    expect(receipt.opening.cards.map((c) => c.total)).toEqual([2, 3, 4, 5]);
+    const seen = new Map<string,number>();
+    for(const c of receipt.opening.cards){const initial=before.profile.heroes[c.heroId]?.collection[c.cardId]?.copies??0;const expected=initial+(seen.get(c.cardId)??0)+1;expect(c.total).toBe(expected);seen.set(c.cardId,(seen.get(c.cardId)??0)+1);}
     expect(receipt.opening.cards.every((c) => c.copies === 1)).toBe(true);
     const json = JSON.stringify(receipt);
     let s = advancePack(initialPackScene(), { type: "SKIP" });

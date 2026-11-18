@@ -14,13 +14,13 @@ export function SummonSearchDialog({state,engine}:{state:Readonly<GameState>;eng
  const [choice,setChoice]=useState<string|null>(null);
  const instance=state.player.hand.find(c=>c.uid===uid);
  const active=!!instance&&!!engine.content.cards[instance.cardId]?.deckSearch;
- const choices=summonSearchChoices(state,engine.content);
+ const choices=summonSearchChoices(state,engine.content,instance?engine.content.cards[instance.cardId]:undefined);
  const allowed=!!uid&&engine.getCardPlayability(uid).playable&&!busy;
  useEffect(()=>{const d=ref.current;if(active){if(!d?.open)d?.showModal();}else d?.close();},[active,uid]);
  return <dialog ref={ref} className="summon-search" aria-labelledby="summon-search-title" onCancel={e=>{e.preventDefault();cancel();}}>
-  <h2 id="summon-search-title">Rastreo de la Manada</h2>
-  <p>Elige una invocación de tu mazo. No estará disponible durante este turno.</p>
-  <div className="summon-search-grid" role="radiogroup" aria-label="Invocaciones del mazo">
+  <h2 id="summon-search-title">{instance?engine.content.cards[instance.cardId]?.name:"Buscar carta"}</h2>
+  <p>Elige una carta válida de tu mazo. No estará disponible durante este turno.</p>
+  <div className="summon-search-grid" role="radiogroup" aria-label="Cartas elegibles del mazo">
    {choices.map(c=>{const def=engine.content.cards[c.cardId]!;const summon=def.effects.find(fx=>fx.type==='SUMMON');const stats=summon?.type==='SUMMON'?engine.content.summons?.[summon.summonId]:undefined;
     return <button key={c.uid} type="button" role="radio" aria-checked={choice===c.uid} data-choice-uid={c.uid} onClick={()=>setChoice(c.uid)}>
      <span className="search-art"><SpellArt cardId={def.id} spell={def.presentation.visualKey}/></span>
@@ -30,6 +30,6 @@ export function SummonSearchDialog({state,engine}:{state:Readonly<GameState>;eng
    })}
   </div>
   {!allowed&&<p role="status">La búsqueda ya no está disponible. Cancela y revisa la carta.</p>}
-  <footer><button type="button" onClick={cancel}>Cancelar</button><button type="button" disabled={!allowed||!choice||!choices.some(c=>c.uid===choice)} onClick={()=>uid&&choice&&confirm(uid,choice)}>Confirmar invocación</button></footer>
+  <footer><button type="button" onClick={cancel}>Cancelar</button><button type="button" disabled={!allowed||!choice||!choices.some(c=>c.uid===choice)} onClick={()=>uid&&choice&&confirm(uid,choice)}>Confirmar búsqueda</button></footer>
  </dialog>;
 }

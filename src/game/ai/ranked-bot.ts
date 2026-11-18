@@ -102,7 +102,7 @@ export function botCandidates(s: GameState, content: GameContent): Command[] {
       continue;
     }
     if (def.deckSearch) {
-      for (const choice of summonSearchChoices(s, content))
+      for (const choice of summonSearchChoices(s, content,def))
         out.push({
           type: "SEARCH_SUMMON",
           cardUid: card.uid,

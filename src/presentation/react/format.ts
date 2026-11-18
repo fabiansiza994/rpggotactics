@@ -113,7 +113,7 @@ export function deckIssueText(issue: DeckIssue, heroName: string): string {
     case 'NEUTRAL_LIMIT':
       return `Máximo ${issue.limit} cartas neutrales por mazo.`;
     case 'ULTRA_LIMIT':
-      return `Máximo ${issue.limit === 1 ? '1 carta Ultra' : `${issue.limit} cartas Ultra`} por mazo.`;
+      return `Máximo ${issue.limit} Ultra Única de recompensa por mazo. Las comerciales usan su límite individual.`;
     case 'MALFORMED_ENTRY':
       return 'El mazo guardado contiene una entrada inválida.';
   }

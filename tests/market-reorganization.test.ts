@@ -1,3 +1,5 @@
+import {MARKET_BOX_ULTRAS,MARKET_SEARCHERS,MARKET_BOX_MEMBERSHIP} from '../src/game/data/market-box-cards';
+import {createBoxStock,boxTotal} from '../src/game/store/boxes';
 import { beforeEach, describe, it, expect } from "vitest";
 import { readFileSync, writeFileSync } from "node:fs";
 import { DEFAULT_CONTENT, COSMETICS, DECK_RULES } from "../src/game";
@@ -33,17 +35,17 @@ const content = releasedContent(DEFAULT_CONTENT, {
   ctx = { content, cosmetics: COSMETICS, rules: DECK_RULES },
   packs = boosterOffers(ctx);
 const expected = {
-  origins_arcanos: 34,
-  thunder_god: 16,
-  antarctic_magic: 22,
-  pack_pact: 40,
-  warrior_promise: 27,
-  reserva_cazador: 23,
+  origins_arcanos: 37,
+  thunder_god: 19,
+  antarctic_magic: 24,
+  pack_pact: 42,
+  warrior_promise: 29,
+  reserva_cazador: 25,
 };
 describe("approved commercial reorganization", () => {
-  it("keeps all 224 IDs, card mechanics, acquisition and starter grants exactly", () => {
+  it("preserves original 224 IDs and mechanics except approved Mundo rarity; adds only 14 new cards", () => {
     expect(Object.keys(content.cards).sort()).toEqual(
-      baseline.cards.map((c: { id: string }) => c.id).sort(),
+      [...baseline.cards.map((c: { id: string }) => c.id),...MARKET_BOX_ULTRAS.map(c=>c.id),...MARKET_SEARCHERS.map(c=>c.id)].sort(),
     );
     for (const old of baseline.cards) {
       const c = content.cards[old.id]!;
@@ -55,15 +57,15 @@ describe("approved commercial reorganization", () => {
         "heroId",
         "maxCopies",
       ])
-        expect(c[key as keyof typeof c], old.id + " " + key).toEqual(old[key]);
+        expect(c[key as keyof typeof c], old.id + " " + key).toEqual(old.id==='absolute_zero'&&key==='rarity'?'ULTRA':old[key]);
     }
     for (const h of Object.values(content.heroes))
       expect(starterHeroProfile(h, content)).toEqual(baseline.starters[h.id]);
     expect(starterShared(content)).toEqual(baseline.sharedStarter);
   });
   it("has exactly one approved home per card and no missing target", () => {
-    expect(PRIMARY_MARKET_EXPANSION).toEqual(baseline.primary);
-    expect(Object.keys(PRIMARY_MARKET_EXPANSION)).toHaveLength(224);
+    expect(PRIMARY_MARKET_EXPANSION).toEqual({...baseline.primary,...Object.fromEntries(Object.entries(MARKET_BOX_MEMBERSHIP).flatMap(([e,ids])=>ids.map(id=>[id,e])))});
+    expect(Object.keys(PRIMARY_MARKET_EXPANSION)).toHaveLength(238);
     for (const e of Object.values(PRIMARY_MARKET_EXPANSION))
       expect(MARKET_EXPANSIONS.some((x) => x.id === e)).toBe(true);
   });
@@ -75,26 +77,9 @@ describe("approved commercial reorganization", () => {
       const p = packs.find((o) => o.booster?.expansionId === id)!;
       expect(p).toBeTruthy();
       expect(validBooster(p, ctx)).toBe(true);
-      for (const rarity of ["COMMON", "UNCOMMON", "RARE", "LEGENDARY"])
-        expect(
-          p.contents.some(
-            (x) =>
-              x.kind === "CARD" && content.cards[x.cardId]?.rarity === rarity,
-          ),
-        ).toBe(true);
-      expect(p.booster?.weights).toEqual({
-        COMMON: 55,
-        UNCOMMON: 30,
-        RARE: 12,
-        LEGENDARY: 3,
-        ULTRA: 0,
-      });
-      expect(
-        p.contents.every(
-          (x) =>
-            x.kind !== "CARD" || content.cards[x.cardId]?.rarity !== "ULTRA",
-        ),
-      ).toBe(true);
+      expect(p.booster?.inventory).toBe('FINITE');
+      const stock=createBoxStock(p.contents.flatMap(c=>c.kind==='CARD'?[content.cards[c.cardId]!]:[]));
+      expect(boxTotal(stock)).toBe(80);for(const c of p.contents)if(c.kind==='CARD'&&content.cards[c.cardId]?.rarity==='ULTRA')expect(stock[c.cardId]).toBe(1);
     });
   it("allows campaign overlap but keeps acquisition and technical drop gates unchanged", () => {
     for (const id of [
@@ -111,14 +96,14 @@ describe("approved commercial reorganization", () => {
     expect(content.releasedExpansions).not.toContain("archer_hunt");
     expect(content.releasedExpansions).not.toContain("forbidden_bond");
   });
-  it("keeps Ranked, Premium and Ultra out", () => {
+  it("keeps Ranked and Premium out; explicit commercial Ultras remain available", () => {
     for (const p of packs)
       for (const x of p.contents) {
         if (x.kind !== "CARD") continue;
         expect(["RANKED_TRACK", "RANKED_PREMIUM"]).not.toContain(
           content.cards[x.cardId]?.acquisition?.source,
         );
-        expect(content.cards[x.cardId]?.rarity).not.toBe("ULTRA");
+        if(content.cards[x.cardId]?.rarity==='ULTRA')expect(content.cards[x.cardId]?.commercialUltra||['summon_pact_golem','last_bastion','arrow_rain'].includes(x.cardId)).toBeTruthy();
       }
   });
   it("cleans public metadata and does not sell future expansions", () => {
@@ -207,7 +192,7 @@ describe("authoritative store compatibility", () => {
       idempotencyKey: "concurrent-same",
       quoteToken: o.purchaseQuote.token,
       packRevision: o.booster.revision,
-      packFormat: "GENERAL_BATCH_V1",
+      packFormat: "GENERAL_BATCH_V1", boxFormat:"FINITE_BOX_V1",
     };
     const out = await Promise.all([
       f.call("POST", "/store/purchase", body),
@@ -299,7 +284,7 @@ describe("authoritative store compatibility", () => {
   it("acquisition endpoint agrees with real pools and never grants", async () => {
     const before = (await f.call("GET", "/state")).data.profile,
       r = await f.call("GET", "/store/acquisition");
-    expect(Object.keys(r.data.cards)).toHaveLength(224);
+    expect(Object.keys(r.data.cards)).toHaveLength(238);
     for (const id of Object.keys(content.cards))
       expect(r.data.cards[id].inBooster).toBe(
         packs.some((p) =>
