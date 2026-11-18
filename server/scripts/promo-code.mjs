@@ -4,7 +4,7 @@
  * runs it through `wrangler d1 execute` (operator's Cloudflare login), local unless --remote.
  *
  *   node scripts/promo-code.mjs --code SPRING2027 --reward '{"type":"ARCANE_CRYSTALS","amount":150}' \
- *     [--expires 2027-06-01T00:00:00Z] [--starts …] [--max 1000] [--inactive] [--note "…"] [--apply [--remote]]
+ *     [--expires 2027-06-01T00:00:00Z] [--starts …] [--max 1000] [--user-id ACCOUNT_ID] [--inactive] [--note "…"] [--apply [--remote]]
  *
  * Deactivate without deleting history: re-run with the same reward and --inactive.
  */
@@ -25,13 +25,14 @@ const time = (name) => {
   return ms;
 };
 const sql = promoCodeSql({
-  code: (opt('code') ?? '').toUpperCase(),
+  code: (opt('code') ?? '').trim().replace(/[\s_-]+/g, '').toUpperCase(),
   reward: JSON.parse(opt('reward') ?? 'null'),
   active: !args.includes('--inactive'),
   startsAt: time('starts'),
   expiresAt: time('expires'),
   maxGlobalUses: opt('max') === undefined ? null : Number(opt('max')),
   note: opt('note') ?? null,
+  allowedUserId: opt('user-id') === undefined ? null : Number(opt('user-id')),
   now: Date.now(),
 });
 console.log(sql);

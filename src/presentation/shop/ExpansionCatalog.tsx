@@ -1,11 +1,10 @@
 import {boxTotal,type BoxSnapshot} from '../../game/store/boxes';
+import {freePacksMessage,marketCardIndicators} from './marketCardIndicators';
 import {ExpansionProduct} from "./ExpansionProduct";
 import {CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT} from '../catalog/cardPresentation';
 import { useRef } from "react";
 import {
   ownedFor,
-  copyLimit,
-  DECK_RULES,
   rarityOf,
   type PlayerProfile,
 } from "../../game";
@@ -91,31 +90,25 @@ export function ExpansionCatalog({
   const freeRemaining = freeOffer?.freeRemaining ?? 0;
   const detailCard = (id: string, caption?: string) => {
     const c = DEFAULT_CONTENT.cards[id];
-    return c ? (
+    const counts = c ? marketCardIndicators(c, have(id), box) : null;
+    return c && counts ? (
       <article className="market-card-item" key={id} data-owned={have(id) > 0}>
         {caption && <em>{caption}</em>}
         <button
           className="market-card-button"
           onClick={() => onInspect(id)}
-          aria-label={`Consultar ${c.name}; ${have(id) > 0 ? `${have(id)} copias poseídas` : "Faltante"}`}
+          aria-label={`Consultar ${c.name}; ${counts.owned} copias poseídas; ${counts.remaining === null ? "fuera del inventario de esta caja" : `${counts.remaining} disponibles en esta caja`}; límite por mazo ${counts.deckLimit}`}
         >
           <MarketCard card={c} />
           {!offers.some(o=>o.booster?.expansionId===selected.id && o.contents.some(x=>x.kind==='CARD'&&x.cardId===id)) && <small className="market-card-source">{c.acquisition?.source ? 'Fuente exclusiva · fuera del sobre' : 'Fuera del sobre disponible'}</small>}
-          <span
-            className="market-copy-indicator"
-            title={`${have(id)} copias poseídas · máximo ${copyLimit(c, DECK_RULES)} por mazo`}
-            aria-label={`${have(id)} copias poseídas; límite por mazo ${copyLimit(c, DECK_RULES)}`}
-          >
-            <span>
-              {Math.min(have(id), copyLimit(c, DECK_RULES))}/
-              {copyLimit(c, DECK_RULES)}
-            </span>
-            {have(id) > copyLimit(c, DECK_RULES) && (
-              <small aria-hidden="true">×{have(id)}</small>
-            )}
-          </span>
+          <span className="market-deck-limit" title={`Máximo ${counts.deckLimit} por mazo`}
+            aria-label={`Límite por mazo: ${counts.deckLimit}`}>{counts.deckLimit}</span>
+          {counts.remaining !== null && <span className="market-copy-indicator"
+            title={`${counts.owned} copias poseídas · ${counts.remaining} disponibles en esta caja`}
+            aria-label={`${counts.owned} copias poseídas; ${counts.remaining} disponibles en esta caja`}>
+            {counts.owned}/{counts.remaining}
+          </span>}
         </button>
-        {box&&<small className="market-box-card-count">En caja: {box.remaining[id]??0} / {box.initial[id]??0}</small>}
       </article>
     ) : null;
   };
@@ -138,10 +131,10 @@ export function ExpansionCatalog({
         </section>}
         {selected.status === "AVAILABLE" && selected.packs.length>0 && (
           <div className="market-hero-purchase">
-            {freeOffer && (
+            {freeOffer && freeRemaining > 0 && (
               <div className="market-free-packs">
                 <strong>
-                  🎁 Tus primeros {freeOffer.purchaseLimit ?? selected.freePacksPerPlayer} sobres gratis
+                  🎁 {freePacksMessage(freeRemaining)}
                 </strong>
                 <p role="status">Sobres gratuitos restantes: {freeRemaining}/{freeOffer.purchaseLimit ?? selected.freePacksPerPlayer}</p>
               </div>
@@ -173,12 +166,13 @@ export function ExpansionCatalog({
                           !o.availability.purchasable ||
                           balance < o.price
                         }
+                        aria-label={`Comprar x${o.booster?.packs ?? 1} · ${o.price.toLocaleString("es-CO")} Cristales${balance < o.price ? "; saldo insuficiente" : ""}`}
+                        title={balance < o.price ? "Saldo insuficiente" : undefined}
                         onClick={() => onBuy(o)}
                       >
                         Comprar x{o.booster?.packs ?? 1} ·{" "}
                         {o.price.toLocaleString("es-CO")} Cristales
                       </button>
-                      {balance < o.price && <small>Saldo insuficiente</small>}
                     </div>
                   ))}
               </div>
@@ -188,9 +182,6 @@ export function ExpansionCatalog({
                 Probabilidades
               </button>
             </div>
-            {freeRemaining === 0 && chosen && balance < chosen.price && (
-              <p role="status">Saldo insuficiente para este sobre.</p>
-            )}
           </div>
         )}
       </header>

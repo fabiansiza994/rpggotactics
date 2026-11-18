@@ -36,6 +36,7 @@ interface CodeRow {
   max_global_uses: number | null;
   uses: number;
   reward_json: string;
+  allowed_user_id: number | null;
 }
 
 interface RedemptionRow {
@@ -61,7 +62,7 @@ const fail = (result: Exclude<PromoResult, 'SUCCESS'>, extra: Record<string, unk
 
 const codeByText = (db: D1Database, code: string) =>
   db
-    .prepare('SELECT id, code, is_active, starts_at, expires_at, max_global_uses, uses, reward_json FROM tactics_promo_codes WHERE code = ?')
+    .prepare('SELECT id, code, is_active, starts_at, expires_at, max_global_uses, uses, reward_json, allowed_user_id FROM tactics_promo_codes WHERE code = ?')
     .bind(code)
     .first<CodeRow>();
 
@@ -162,7 +163,7 @@ export async function promoRoute(route: string, r: StoreRequest): Promise<Respon
 
   if (!code) return reject('INVALID_CODE');
   const row = await codeByText(db, code);
-  if (!row) return reject('INVALID_CODE');
+  if (!row || (row.allowed_user_id !== null && row.allowed_user_id !== userId)) return reject('INVALID_CODE');
 
   // Already redeemed by this account: a retry, a double click or a repeat. Answer consistently,
   // with what that redemption granted (the caller's own data), and never grant again.

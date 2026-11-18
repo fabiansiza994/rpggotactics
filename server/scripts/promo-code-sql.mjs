@@ -48,17 +48,20 @@ const intOrNull = (v, name) => {
  * INSERT a new code, or UPDATE an existing one's reward/active flag/window/global limit
  * (`uses` is kept). `note` is admin-only text (never sent to players).
  */
-export function promoCodeSql({ code, reward, active = true, startsAt = null, expiresAt = null, maxGlobalUses = null, note = null, now }) {
+export function promoCodeSql({ code, reward, active = true, startsAt = null, expiresAt = null, maxGlobalUses = null, note = null, allowedUserId = null, now }) {
   if (!PROMO_CODE.test(code ?? '')) throw new Error('Code must be normalised: A-Z and 0-9, 4..32 characters.');
+  if (allowedUserId !== null && (!Number.isSafeInteger(allowedUserId) || allowedUserId < 1)) throw new Error('allowedUserId must be a positive account id or null.');
+  if (code === 'ARCANOTEST2000' && allowedUserId === null) throw new Error('ARCANO-TEST-2000 requires an explicitly authorized account.');
   if (!Number.isInteger(now)) throw new Error('Bad timestamp.');
   if (maxGlobalUses !== null && (!Number.isInteger(maxGlobalUses) || maxGlobalUses < 1)) throw new Error('maxGlobalUses must be >= 1 or null.');
   if (startsAt !== null && expiresAt !== null && expiresAt <= startsAt) throw new Error('expiresAt must be after startsAt.');
   if (note !== null && (typeof note !== 'string' || note.length > 200)) throw new Error('Note must be text up to 200 characters.');
   const json = promoRewardJson(reward).replaceAll("'", "''");
   const text = note === null ? 'NULL' : `'${note.replaceAll("'", "''")}'`;
-  const values = `'${code}', ${active ? 1 : 0}, ${intOrNull(startsAt, 'startsAt')}, ${intOrNull(expiresAt, 'expiresAt')}, ${maxGlobalUses ?? 'NULL'}, '${json}', ${text}, ${now}, ${now}`;
-  return `INSERT INTO tactics_promo_codes (code, is_active, starts_at, expires_at, max_global_uses, reward_json, note, created_at, updated_at)
+  const values = `'${code}', ${active ? 1 : 0}, ${intOrNull(startsAt, 'startsAt')}, ${intOrNull(expiresAt, 'expiresAt')}, ${maxGlobalUses ?? 'NULL'}, '${json}', ${text}, ${now}, ${now}, ${allowedUserId ?? 'NULL'}`;
+  return `INSERT INTO tactics_promo_codes (code, is_active, starts_at, expires_at, max_global_uses, reward_json, note, created_at, updated_at, allowed_user_id)
 VALUES (${values})
 ON CONFLICT (code) DO UPDATE SET is_active = excluded.is_active, starts_at = excluded.starts_at, expires_at = excluded.expires_at,
-  max_global_uses = excluded.max_global_uses, reward_json = excluded.reward_json, note = excluded.note, updated_at = excluded.updated_at;`;
+  max_global_uses = excluded.max_global_uses, reward_json = excluded.reward_json, note = excluded.note, updated_at = excluded.updated_at,
+  allowed_user_id = COALESCE(excluded.allowed_user_id, tactics_promo_codes.allowed_user_id);`;
 }

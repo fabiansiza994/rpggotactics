@@ -36,6 +36,7 @@ export function memoryD1(
     "0028_tactics_multi_deck.sql",
     "0029_tactics_collection_claim_revision.sql",
     "0031_tactics_expansion_boxes.sql",
+    "0032_tactics_promo_recipient.sql",
   ])
     sql.exec(
       readFileSync(

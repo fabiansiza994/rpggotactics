@@ -8,5 +8,6 @@ export function promoCodeSql(input: {
   expiresAt?: number | null;
   maxGlobalUses?: number | null;
   note?: string | null;
+  allowedUserId?: number | null;
   now: number;
 }): string;
