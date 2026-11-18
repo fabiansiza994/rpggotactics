@@ -14,6 +14,7 @@ import {
   unitById,
 } from '../board/occupancy';
 import { hasLineOfSight } from '../board/line-of-sight';
+import {scoutSiegeEnabled,drakeScorch} from '../combat/scout-siege';
 import { applyStatus, cleanseUnit, removeStatus } from '../statuses/status-rules';
 import { computeReachable, stepCost, truncatePath, type PathNode } from '../board/pathfinding';
 import { comparePos } from '../core/position';
@@ -263,7 +264,6 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     const pursuit=unit.statuses.some(s=>s.id==='HUNT_PURSUIT');
     let moved=false,pursuitQualified=false;
     const nearHostile=()=>ctx.state.units.some(enemy=>enemy.faction!==unit.faction && manhattan(unit.pos,enemy.pos)<=2);
-    const walk=(path:Pos[],cost:number)=>{if(cost>0)moved=true;walkUnit(ctx,unit,path,cost);if(cost>0)pursuitQualified=nearHostile();};
     // Consume last activation's prepared bonus once; it is included in this activation's budget.
     if(pursuit)removeStatus(ctx,unit,'HUNT_PURSUIT','CONSUMED');
     try {
@@ -274,9 +274,24 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     const statusSum = (key: 'summonDamageBonus' | 'summonMoveBonus' | 'summonPreyDamageBonus') =>
       unit.statuses.reduce((n, s) => n + (ctx.content.statuses[s.id]?.[key] ?? 0), 0);
     // Llamado de la Manada: planning sees the longer reach; the walk itself is the real unit's.
-    const moveBonus = statusSum('summonMoveBonus') + (pursuit ? 1 : 0);
+    const siege=scoutSiegeEnabled(ctx.state)&&unit.defId==='war_drake';
+    const wings=siege&&(unit.summon.wingsReadyRound??0)<=ctx.state.round;
+    const ordinaryMoveBonus=statusSum('summonMoveBonus')+(pursuit?1:0);
+    const wingBonus=wings?Math.max(0,3-unit.moveRange-ordinaryMoveBonus):0;
+    const moveBonus = wingBonus + ordinaryMoveBonus;
     const mover: Unit = moveBonus ? { ...unit, moveRange: unit.moveRange + moveBonus } : unit;
     const planner = beastsEnabled(ctx.state) && unit.defId==='raven' && mover.moveRange>4 ? {...mover,moveRange:4} : mover;
+    const walk=(path:Pos[],cost:number)=>{
+      const ordinaryBudget=effectiveMoveRange(ctx,{...planner,moveRange:planner.moveRange-wingBonus});
+      // Quote before moving: ice costs and interrupted paths must not spend a free wing charge.
+      const costs=wingBonus>0?path.map((_,i)=>truncatePath(ctx,unit.pos,path.slice(0,i+1),Infinity).cost):[];
+      const walked=walkUnit(ctx,unit,path,cost);if(cost>0)moved=true;
+      if(cost>0)pursuitQualified=nearHostile();
+      if(wingBonus>0&&(costs[walked.length-1]??0)>ordinaryBudget&&ctx.state.units.includes(unit)){
+        unit.summon!.wingsReadyRound=ctx.state.round+3;
+        ctx.emit({type:'DRAKE_WINGS',unitId:unit.id,pos:unit.pos,readyRound:unit.summon!.wingsReadyRound});
+      }
+    };
     const taunter = challenger(ctx, unit);
     const closest = (a: { pos: Pos; id: string }, b: { pos: Pos; id: string }) =>
       manhattan(unit.pos, a.pos) - manhattan(unit.pos, b.pos) || a.id.localeCompare(b.id);
@@ -314,7 +329,14 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     const preyChase = prey && !taunter && !plateHold && !preyRoute ? preyPursuit(ctx, planner, def, prey, !!holding) : null;
     const bloodRoute = !taunter && !holding && !pickup && !objectiveGoal ? wolfPursuit(ctx, mover, prey) : null;
     const carrionRoute = !taunter && !holding && !pickup && !objectiveGoal ? ravenPursuit(ctx, planner, prey) : null;
-    if(carrionRoute){
+    const siegeTargets=siege&&!plateHold&&!pickup&&!objectiveGoal?(taunter?[taunter]:ctx.state.units.filter(u=>u.faction!==unit.faction).sort(closest)):[];
+    const siegeRoutes=siegeTargets.map(t=>({strike:preyStrike(ctx,planner,def,t,!!holding),chase:preyPursuit(ctx,planner,def,t,!!holding)}));
+    const siegeRoute=preyRoute||preyChase||siegeRoutes.find(r=>r.strike)?.strike||siegeRoutes.find(r=>r.chase)?.chase;
+    if(siege && siegeTargets.length){
+      if(siegeRoute&&siegeRoute.cost>0){
+        walk(siegeRoute.path,siegeRoute.cost);
+      }
+    } else if(carrionRoute){
       const walked=walkUnit(ctx,unit,carrionRoute.node.path,carrionRoute.node.cost);moved=walked.length>0;pursuitQualified=moved&&nearHostile();
       if(walked.length===carrionRoute.node.path.length)ctx.emit({type:'RAVEN_SCAVENGER',unitId:unit.id,preyId:carrionRoute.prey.id,pos:unit.pos,kind:'MOVE'});
     } else if (bloodRoute) {
@@ -419,6 +441,10 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
         def.damageType ?? (range > 1 ? 'ARCANE' : 'PHYSICAL'),
         snowball?'DIRECT_RANGED':range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
       );
+      if(siege){
+        drakeScorch(ctx,unit,adjacent.pos);
+        if(bite.hpLost>0&&adjacent.kind!=='STRUCTURE'&&ctx.state.units.includes(adjacent))applyStatus(ctx,adjacent,'DRAKE_BURN',1,unit.id);
+      }
       if(beastsEnabled(ctx.state)&&unit.defId==='turtle' && range===1 && bite.hpLost>0)applyTurtleBite(ctx,adjacent,unit.id);
       if (beastsEnabled(ctx.state) && unit.defId === 'wolf' && range === 1 && bite.hpLost > 0 && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
         applyStatus(ctx, adjacent, 'BLEEDING', 2, unit.id);

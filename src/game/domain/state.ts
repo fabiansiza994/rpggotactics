@@ -89,6 +89,9 @@ export interface GameState {
   /** Placed traps (Archer). Absent in older snapshots = none. Public in PvP like obstacles. */
   traps?: Trap[];
   /** Public, battle-only blood marks. IDs survive seat projection and reconnect. */
+  /** Public rules marker for seat views, which intentionally omit private DuelMeta. */
+  scoutSiegeRelease?:boolean;
+  scoutResources?: {id:string;ownerId:string;foxId:string;kind:'HEAL'|'ARMOR'|'ENERGY';pos:import('./core/position').Pos;expiresRound:number}[];
   lifeFeathers?: { id: string; ownerId: string; ravenId: string; pos: import('./core/position').Pos; expiresRound: number }[];
   bloodTrails?: { pos: import('./core/position').Pos; preyId: string; wolfId: string; expiresRound: number }[];
   /** Delayed areas (Runa de Ignición). Absent in older snapshots = none. Public in PvP like traps. */

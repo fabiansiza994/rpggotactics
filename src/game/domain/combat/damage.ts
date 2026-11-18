@@ -1,3 +1,4 @@
+import {pruneScoutResources} from './scout-siege';
 import {pruneLifeFeathers} from './raven';
 import {pruneBloodTrails} from './blood-trail';
 import {clearFrozenWorldTerrain} from '../terrain/terrain-rules';
@@ -65,8 +66,9 @@ export function dealDamage(
   const backstab = depthEnabled(ctx) && ctx.content.qaCombatDepth!.backstab &&
     !!direct &&
     attacker && areHostile(attacker, unit) && behind(attacker, unit) ? 1 : 0;
+  const armorBonus=unit.statuses.reduce((n,s)=>n+(ctx.content.statuses[s.id]?.armorBonus??0),0);
   const result = computeDamage(
-    attackKind === 'GROUND_HAZARD' || attackKind === 'PIERCING' ? { ...unit, armor: 0 } : unit,
+    attackKind === 'GROUND_HAZARD' || attackKind === 'PIERCING' ? { ...unit, armor: 0 } : {...unit,armor:unit.armor+armorBonus},
     Math.max(0, amount - cover),
   );
   if (backstab) {
@@ -77,7 +79,7 @@ export function dealDamage(
     ctx.emit({ type: 'BACKSTAB', unitId: unit.id, sourceId, pos: unit.pos, bonus: 1 });
   }
   const inversion=unit.statuses.find(s=>ctx.content.statuses[s.id]?.damageToHealingCap);
-  const incoming=Math.max(0,amount-cover-((attackKind==='GROUND_HAZARD'||attackKind==='PIERCING')?0:unit.armor))+(backstab?1:0);
+  const incoming=Math.max(0,amount-cover-((attackKind==='GROUND_HAZARD'||attackKind==='PIERCING')?0:unit.armor+armorBonus))+(backstab?1:0);
   if(inversion && incoming>0 && inversion.lastTriggerTurn!==turnKey(ctx.state)) {
     inversion.lastTriggerTurn=turnKey(ctx.state);
     inversion.absorptionUsed=true;
@@ -127,7 +129,7 @@ export function defeatUnit(ctx: RuleContext, unit: Unit, reason?:'DAMAGE'|'MELT'
   if (!state.units.includes(unit)) return;
   state.units = state.units.filter((u) => u !== unit);
   pruneBloodTrails(state);
-  pruneLifeFeathers(state);
+  pruneLifeFeathers(state);pruneScoutResources(state);
   if(unit.statuses.some(s=>s.id==='ABSOLUTE_ZERO'))clearFrozenWorldTerrain(ctx,unit.id);
   state.intents = state.intents.filter((i) => i.enemyId !== unit.id);
   if (unit.faction === 'ENEMY') state.stats.enemiesDefeated += 1;

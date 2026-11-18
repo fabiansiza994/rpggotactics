@@ -10,6 +10,15 @@ export function projectEvent(
   const next: GameState = structuredClone(state);
   const unit = 'unitId' in event ? next.units.find((u) => u.id === event.unitId) : undefined;
   switch (event.type) {
+    case 'SCOUT_RESOURCE_CREATED':
+      next.scoutResources=[...(next.scoutResources??[]).filter(r=>r.id!==event.id),{id:event.id,ownerId:event.ownerId,foxId:event.foxId,kind:event.kind,pos:event.pos,expiresRound:event.expiresRound}];
+      break;
+    case 'SCOUT_RESOURCE_COLLECTED':
+      next.scoutResources=(next.scoutResources??[]).filter(r=>r.id!==event.resourceId);
+      break;
+    case 'DRAKE_WINGS':
+      if(unit?.summon)unit.summon.wingsReadyRound=event.readyRound;
+      break;
     case 'MECHANISM_CHANGED': {
       const object = next.mechanisms?.objects.find(o => o.def.id === event.mechanismId);
       if (object) {

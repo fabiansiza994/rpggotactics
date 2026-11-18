@@ -23,6 +23,8 @@ export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
   ELECTRIC_FRENZY: { id: 'ELECTRIC_FRENZY', name: 'Frenesí Eléctrico', negative: false, tick: 'NEVER', stacking: 'IGNORE', outgoingDamageBonus: 1, incomingDamageBonus: 1 },
   STORM_AVATAR: { id: 'STORM_AVATAR', name: 'Avatar de la Tormenta', negative: false, tick: 'NEVER', stacking: 'IGNORE', electricalDamageBonus: 1 },
   OVERCHARGED: { id: 'OVERCHARGED', name: 'Sobrecarga', negative: false, tick: 'NEVER', stacking: 'IGNORE', nextElectricalDamage: 1 },
+  SCOUT_PROTECTION:{id:'SCOUT_PROTECTION',name:'Fragmento Protector',negative:false,tick:'NEVER',stacking:'REFRESH',expiresAtOwnerTurnStart:true,armorBonus:1},
+  DRAKE_BURN:{id:'DRAKE_BURN',name:'Quemadura abrasadora',negative:true,tick:'TURN_START',tickDamage:1,tickDamageType:'FIRE',stacking:'REFRESH'},
   BURNING: {
     id: 'BURNING',
     name: 'Ardiendo',

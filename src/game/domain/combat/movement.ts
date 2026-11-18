@@ -1,3 +1,5 @@
+import type {GameEvent} from '../events';
+import {collectScoutResources,discoverScoutResource,enterDrakeFire} from './scout-siege';
 import {collectLifeFeathers,shedLifeFeather} from './raven';
 import {leaveBloodTrail} from './blood-trail';
 import {iceWalkQuote} from './ice-movement';
@@ -28,8 +30,8 @@ export function walkUnit(
   cost: number,
   mode: 'WALK' | 'CHARGE' | 'SLIDE' = 'WALK',
 ): Pos[] {
-  const path = cutPathAtTrap(ctx, unit, fullPath);
-  const to = path[path.length - 1];
+  let path = cutPathAtTrap(ctx, unit, fullPath);
+  let to = path[path.length - 1];
   if (!to) return [];
   const from = unit.pos;
   const quote=iceWalkQuote(ctx,unit,path);
@@ -43,14 +45,21 @@ export function walkUnit(
   }
   const skate=unit.statuses.find(s=>s.id==='ARCANE_SKATING');
   if(skate){skate.skatingUsed=(skate.skatingUsed??0)+quote.free;skate.skatingEnded=quote.ended;}
+  const fireEvents:GameEvent[]=[];
+  path=enterDrakeFire({...ctx,emit:event=>fireEvents.push(event)},unit,path);
+  to=path.at(-1);if(!to)return [];
   faceTravel(ctx, unit, path.length > 1 ? path[path.length - 2]! : from, to);
   leaveBloodTrail(ctx, unit, [from, ...path]);
   unit.pos = to;
   ctx.emit({ type: 'UNIT_MOVED', unitId: unit.id, from, to, path, cost, mode:skate&&!quote.ended?'SLIDE':mode });
+  for(const event of fireEvents)ctx.emit(event);
+  if(!ctx.state.units.includes(unit))return path;
   collectAlong(ctx, unit, path);
   collectLifeFeathers(ctx, unit, path);
   onUnitMoved(ctx, unit, from);
   springTrap(ctx, unit);
+  collectScoutResources(ctx,unit,path);
+  discoverScoutResource(ctx,unit,[from,...path]);
   shedLifeFeather(ctx, unit, [from,...path]);
   return path;
 }
@@ -62,6 +71,7 @@ export function teleportUnit(ctx: RuleContext, unit: Unit, to: Pos, sourceId: st
   ctx.emit({ type: 'UNIT_TELEPORTED', unitId: unit.id, from, to, sourceId });
   collectAlong(ctx, unit, [to]);
   collectLifeFeathers(ctx, unit, [to]);
+  enterDrakeFire(ctx,unit,[to]);collectScoutResources(ctx,unit,[to]);
   springTrap(ctx, unit);
   return true;
 }
@@ -82,6 +92,8 @@ export function swapUnits(ctx: RuleContext, a: Unit, b: Unit, sourceId: string):
   collectAlong(ctx, b, [from]);
   collectLifeFeathers(ctx, a, [to]);
   collectLifeFeathers(ctx, b, [from]);
+  enterDrakeFire(ctx,a,[to]);enterDrakeFire(ctx,b,[from]);
+  collectScoutResources(ctx,a,[to]);collectScoutResources(ctx,b,[from]);
   springTrap(ctx, a);
   springTrap(ctx, b);
 }
@@ -128,10 +140,16 @@ export function pushUnit(
     for(let i=0;i<extraSteps;i++){const extra=step(current,dir);if(!canEnter(ctx,extra,unit.id))break;current=extra;traversed.push(current);if(hostileTrapAt(ctx,unit,current))break;}
   }
   if(traversed.length)leaveBloodTrail(ctx, unit, [from, ...traversed]);
+  const fireEvents:GameEvent[]=[];
+  const entered=enterDrakeFire({...ctx,emit:event=>fireEvents.push(event)},unit,traversed);
+  if(!ctx.state.units.includes(unit))current=entered.at(-1)??current;
   unit.pos = current;
   ctx.emit({ type: 'UNIT_PUSHED', unitId: unit.id, from, to: current, direction: dir, sourceId, collision });
+  for(const event of fireEvents)ctx.emit(event);
+  if(!ctx.state.units.includes(unit))return;
   collectAlong(ctx, unit, [current]);
   collectLifeFeathers(ctx, unit, traversed);
+  collectScoutResources(ctx,unit,traversed);
 
   if (collision && collisionDamage > 0) {
     dealDamage(ctx, unit, collisionDamage, sourceId, 'FORCE');

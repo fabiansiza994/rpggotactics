@@ -58,5 +58,5 @@ export interface Unit {
    */
   summonCapacityBonus?: number;
   /** `breathReadyRound`: first round its `SummonDef.breath` can be used again (absent = ready). */
-  summon?: { ownerId: string; capacityCost: number; lastActedRound: number; readyRound: number; featherRollRound?: number; meltTurnsLeft?:number; breathReadyRound?: number };
+  summon?: { ownerId: string; capacityCost: number; lastActedRound: number; readyRound: number; featherRollRound?: number; scoutRollRound?:number; scoutReadyRound?:number; wingsReadyRound?:number; meltTurnsLeft?:number; breathReadyRound?: number };
 }

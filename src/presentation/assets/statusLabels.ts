@@ -15,6 +15,8 @@ export const STATUS_LABEL: Record<StatusId, string> = {
   ELECTRIC_FRENZY: 'Frenesí: +1 ataque / +1 daño recibido',
   STORM_AVATAR: 'Avatar: +1 eléctrico',
   OVERCHARGED: 'Sobrecarga',
+  SCOUT_PROTECTION:'Protección exploradora +1 armadura',
+  DRAKE_BURN:'Quemadura abrasadora',
   BURNING: 'Ardiendo',
   LAST_STAND: 'Último Bastión',
   FORM_DANCE: 'Danza de las Formas',

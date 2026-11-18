@@ -1,3 +1,5 @@
+import {activeScoutResources} from '../../game/domain/combat/scout-siege';
+import {ScoutResourceView} from './ScoutResourceView';
 import {activeLifeFeathers} from '../../game/domain/combat/raven';
 import {LifeFeatherView} from './LifeFeatherView';
 import {EMPTY_ATMOSPHERE,atmosphereView,type AtmosphereView} from '../immersion/atmosphere';
@@ -219,6 +221,7 @@ export class BattleCanvas {
   );
   private readonly obstacles = new Map<string, ObstacleView>();
   /** Keyed `scenario:id` so a new encounter never reuses another's pickup art. */
+  private readonly scoutResources = new Map<string,ScoutResourceView>();
   private readonly lifeFeathers = new Map<string,LifeFeatherView>();
   private readonly pickups = new Map<string, CollectibleView>();
   private readonly geometry: FxGeometry = {
@@ -305,6 +308,7 @@ export class BattleCanvas {
     }
     for (const pickup of this.pickups.values()) pickup.tick(elapsed, this.effects.reduced);
     for (const feather of this.lifeFeathers.values()) feather.tick(elapsed,this.effects.reduced);
+    for(const [id,resource] of this.scoutResources)if(resource.tick(elapsed,this.effects.reduced)){resource.destroy();this.scoutResources.delete(id);}
     this.updateWizardFacing();
     this.syncActors(elapsed);
   };
@@ -605,6 +609,7 @@ export class BattleCanvas {
   destroy(): void {
     if(this.destroyed)return;
     for(const view of this.lifeFeathers.values())view.destroy();this.lifeFeathers.clear();
+    for(const view of this.scoutResources.values())view.destroy();this.scoutResources.clear();
     this.offImmersion();this.haptics.destroy();this.atmosphere.destroy();
     document.removeEventListener('visibilitychange',this.stopHaptics);
     window.removeEventListener('blur',this.stopHaptics);
@@ -1180,6 +1185,12 @@ export class BattleCanvas {
 
   /** Objective pickups: Y-sorted with actors, just behind a unit sharing the tile. */
   private drawPickups(vm: BoardViewModel): void {
+    const resources=activeScoutResources(vm.state),resourceIds=new Set(resources.map(r=>r.id));
+    for(const [id,view] of this.scoutResources)if(!resourceIds.has(id))view.retire();
+    for(const resource of resources){
+      let view=this.scoutResources.get(resource.id);if(!view){view=new ScoutResourceView(resource.kind);this.scoutResources.set(resource.id,view);this.actorLayer.addChild(view.root);}
+      const anchor=this.proj.getUnitAnchor(resource.pos);view.root.position.set(anchor.x,anchor.y);view.root.scale.set(this.proj.scaleAtY(anchor.y));view.root.zIndex=this.proj.depthAtPoint(anchor)-.6;
+    }
     const feathers=activeLifeFeathers(vm.state),ids=new Set(feathers.map(f=>f.id));
     for(const [id,view] of this.lifeFeathers)if(!ids.has(id)){view.destroy();this.lifeFeathers.delete(id);}
     for(const feather of feathers){

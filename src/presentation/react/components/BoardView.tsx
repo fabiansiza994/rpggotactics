@@ -122,7 +122,7 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
     </aside>}
     {Act3AnimationTools && location.pathname==='/act3-qa' && publicState && <Suspense fallback={null}><Act3AnimationTools units={publicState.units} canvas={()=>canvasRef.current}/></Suspense> }
     {engine && vm && <LinkedMechanismAction engine={engine} project={p=>canvasRef.current?.tileToClient(p)??null} polygon={p=>canvasRef.current?.tilePolygonToClient(p)??null}/> }
-    {inspected && engine && <UnitInspection key={inspected.id} unit={inspected} content={engine.content} units={publicState?.units} onClose={()=>setInspectedId(null)}/> }
+    {inspected && engine && <UnitInspection key={inspected.id} unit={inspected} content={engine.content} units={publicState?.units} round={publicState?.round} onClose={()=>setInspectedId(null)}/> }
     {ArcherBoardControls && archerPreview && <Suspense fallback={null}><ArcherBoardControls
       onShot={target=>{const hero=useBattleStore.getState().state?.player.heroId;if(hero)canvasRef.current?.qaArcherShot(hero,target);}}
       onPose={motion=>{const hero=useBattleStore.getState().state?.player.heroId;if(hero)canvasRef.current?.qaPlayCharacterAnimation(hero,motion);}}

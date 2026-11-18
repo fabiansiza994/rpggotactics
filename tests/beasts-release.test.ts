@@ -2,7 +2,7 @@ import type {GameEvent} from '../src/game/domain/events';
 import {makeEngine,mutable,ctxFor,p} from './helpers';
 import {actSummons,spawnSummon} from '../src/game/domain/summons/summons';
 import {describe,it,expect} from 'vitest';
-import {CONTENT_RELEASE,LEGACY_CONTENT_RELEASE,supportsRoomRelease,roomConnectionRelease} from '../src/game/pvp/content-release';
+import {CONTENT_RELEASE,PREVIOUS_CONTENT_RELEASE,LEGACY_CONTENT_RELEASE,supportsRoomRelease,roomConnectionRelease} from '../src/game/pvp/content-release';
 import {contentTransition} from '../server/src/contentTransition';
 import {createDuel,validateLoadout,applyDuel} from '../src/game/pvp/duel';
 import {createProfile,DEFAULT_CONTENT} from '../src/game';
@@ -54,3 +54,17 @@ it('negotiates the persisted room marker, including the previous Worker response
  expect(roomConnectionRelease(CONTENT_RELEASE)).toBe(CONTENT_RELEASE);
  expect(()=>roomConnectionRelease('future-release')).toThrow('CLIENT_UPDATE_REQUIRED');
 });
+
+ it('Scout/Siege only admits current clients to new games while preserving Bestiary reconnects',()=>{
+  expect(supportsRoomRelease(CONTENT_RELEASE,PREVIOUS_CONTENT_RELEASE)).toBe(true);
+  expect(supportsRoomRelease(PREVIOUS_CONTENT_RELEASE,CONTENT_RELEASE)).toBe(false);
+  expect(supportsRoomRelease(PREVIOUS_CONTENT_RELEASE,LEGACY_CONTENT_RELEASE)).toBe(true);
+  expect(supportsRoomRelease('unknown','unknown')).toBe(false);
+  expect(roomConnectionRelease(PREVIOUS_CONTENT_RELEASE)).toBe(PREVIOUS_CONTENT_RELEASE);
+  const db=memoryD1();try{const env={DB:db,RELEASE2_CLIENT_REQUIRED:'1',CONTENT_RELEASE_DRAIN:'1'};
+   for(const release of [CONTENT_RELEASE,PREVIOUS_CONTENT_RELEASE,LEGACY_CONTENT_RELEASE]){
+    expect(contentTransition(new Request(`https://qa/api/tactics/pvp/connect?clientRelease=${release}`),env)).toBeNull();
+   }
+   expect(contentTransition(new Request(`https://qa/api/tactics/pvp/ready?clientRelease=${PREVIOUS_CONTENT_RELEASE}`),{...env,CONTENT_RELEASE_DRAIN:'0'})?.status).toBe(426);
+  }finally{db.sql.close();}
+ });

@@ -17,6 +17,8 @@ export type StatusId =
   | 'ELECTRIC_FRENZY'
   | 'STORM_AVATAR'
   | 'OVERCHARGED'
+  | 'SCOUT_PROTECTION'
+  | 'DRAKE_BURN'
   | 'BURNING'
   | 'ROOTED'
   | 'STUNNED'
@@ -103,6 +105,7 @@ export interface StatusDef {
   outgoingDamageReduction?: number;
   suppressesHitRiders?: boolean;
   incomingDamageReduction?: number;
+  armorBonus?:number;
   /**
    * Challenge (Desafío): the instance remembers who applied it (`sourceId`, one per source like
    * `preyMark`). The unit targets that champion whenever it is alive, and its attacks against

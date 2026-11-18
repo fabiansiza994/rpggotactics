@@ -2,7 +2,7 @@ import type { StatusId } from '../../game';
 import type { StatusDef } from '../../game/domain/statuses/status';
 import type { IconName } from '../assets/iconPaths';
 export function statusIcon(id: StatusId): IconName {
-  return ({GLACIER_CLAW:'frost',SNOW_WAR:'frost',ABSOLUTE_ZERO:'frost',FROZEN:'frost',FROST_MANTLE:'shield',GLACIAL_REFLECTION:'shield',ARCANE_SKATING:'move',ICE_PRISON:'frost',AVALANCHE_SLOW:'frost',THUNDER_INCARNATION:'energy',ARCANE_INVERSION:'arcane',BURNING:'flame',BLEEDING:'melee',POISONED:'poison',TURTLE_HOBBLE_1:'move',TURTLE_HOBBLE_2:'move',SLOWED:'frost',ROOTED:'tile',STUNNED:'wait',FORTIFIED:'shield',SMOKE_SCREEN:'smoke',RELIC_BURDEN:'move',CHALLENGED:'target',PREY:'prey',MARKED_PREY:'prey',RIPOSTE:'melee'} as Partial<Record<StatusId,IconName>>)[id] ?? 'arcane';
+  return ({SCOUT_PROTECTION:'shield',DRAKE_BURN:'flame',GLACIER_CLAW:'frost',SNOW_WAR:'frost',ABSOLUTE_ZERO:'frost',FROZEN:'frost',FROST_MANTLE:'shield',GLACIAL_REFLECTION:'shield',ARCANE_SKATING:'move',ICE_PRISON:'frost',AVALANCHE_SLOW:'frost',THUNDER_INCARNATION:'energy',ARCANE_INVERSION:'arcane',BURNING:'flame',BLEEDING:'melee',POISONED:'poison',TURTLE_HOBBLE_1:'move',TURTLE_HOBBLE_2:'move',SLOWED:'frost',ROOTED:'tile',STUNNED:'wait',FORTIFIED:'shield',SMOKE_SCREEN:'smoke',RELIC_BURDEN:'move',CHALLENGED:'target',PREY:'prey',MARKED_PREY:'prey',RIPOSTE:'melee'} as Partial<Record<StatusId,IconName>>)[id] ?? 'arcane';
 }
 export function statusEffect(def: StatusDef): string {
   const effects:string[]=[];
@@ -18,6 +18,7 @@ export function statusEffect(def: StatusDef): string {
   if(def.incomingDamageReduction) effects.push(`Reduce ${def.incomingDamageReduction} el daño de ataques recibidos`);
   if(def.outgoingDamageReduction) effects.push(`Reduce ${def.outgoingDamageReduction} el daño de sus ataques`);
   if(def.moveReduction) effects.push(`Movimiento −${def.moveReduction}`);
+  if(def.armorBonus)effects.push(`Armadura +${def.armorBonus} hasta el inicio de su próximo turno`);
   if(def.counterDamage) effects.push(`Contraataque de ${def.counterDamage} contra un golpe adyacente`);
   if(def.summonDamageBonus) effects.push(`Ataques de invocación +${def.summonDamageBonus}`);
   if(def.summonMoveBonus) effects.push(`Movimiento de invocación +${def.summonMoveBonus}`);

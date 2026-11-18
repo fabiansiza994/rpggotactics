@@ -13,7 +13,7 @@ export function inspectedUnitAt(units:readonly Unit[], positions:readonly Pos[],
   return null;
 }
 const ROLES:Record<string,string>={SCOUT:'Explorador',SKIRMISHER:'Ataque y retirada',GUARD:'Guardián',RANGED:'Ataque a distancia',PRESSURE:'Presión cuerpo a cuerpo'};
-export function UnitInspection({unit,content,units,onClose}:{unit:Unit;content:GameContent;units?:readonly Unit[];onClose():void}) {
+export function UnitInspection({unit,content,units,round,onClose}:{unit:Unit;content:GameContent;units?:readonly Unit[];round?:number;onClose():void}) {
   const dialog=useRef<HTMLDialogElement>(null);
   useEffect(()=>{const el=dialog.current;if(el&&!el.open)el.showModal();return()=>el?.close();},[]);
   const moveBonus=unit.statuses.reduce((n,s)=>n+(content.statuses[s.id]?.summonMoveBonus??0),0);
@@ -24,7 +24,8 @@ export function UnitInspection({unit,content,units,onClose}:{unit:Unit;content:G
   const capacity=unit.kind==='HERO'?summonCapacityOf(content,unit):0, capacityUsed=(units??[]).reduce((n,u)=>n+(u.summon?.ownerId===unit.id?u.summon.capacityCost:0),0);
   return <dialog ref={dialog} className="unit-inspection" aria-label={`Información de ${unit.name}`} onCancel={e=>{e.preventDefault();onClose();}}>
     <header><div><small>{unit.faction==='PLAYER'?'Aliado':'Enemigo'}{summon?' · Invocación':''}</small><h2>{unit.name}</h2></div><button autoFocus type="button" aria-label="Cerrar información de unidad" onClick={onClose}>×</button></header>
-    <dl><div><dt>Vida</dt><dd>{unit.hp} / {unit.maxHp} HP</dd></div>{summon&&<div><dt>Daño base</dt><dd>{summon.damage}</dd></div>}<div><dt>Movimiento</dt><dd>{hobble?`${effectiveMovement} (base ${unit.moveRange})`:<>{unit.moveRange}{moveBonus>0?` + ${moveBonus}`:''}</>}</dd></div><div><dt>Armadura</dt><dd>{unit.armor}</dd></div>{unit.shield>0&&<div><dt>Escudo</dt><dd>{unit.shield}</dd></div>}{capacity>0&&<div><dt>Capacidad de invocación</dt><dd>{units?`${capacityUsed} / `:''}{capacity}{unit.summonCapacityBonus?` (+${unit.summonCapacityBonus} Vínculo Prohibido)`:''}</dd></div>}</dl>
+    <dl><div><dt>Vida</dt><dd>{unit.hp} / {unit.maxHp} HP</dd></div>{summon&&<div><dt>Daño base</dt><dd>{summon.damage}</dd></div>}<div><dt>Movimiento</dt><dd>{hobble?`${effectiveMovement} (base ${unit.moveRange})`:<>{unit.moveRange}{moveBonus>0?` + ${moveBonus}`:''}</>}</dd></div><div><dt>Armadura</dt><dd>{unit.armor+unit.statuses.reduce((n,s)=>n+(content.statuses[s.id]?.armorBonus??0),0)}</dd></div>{unit.shield>0&&<div><dt>Escudo</dt><dd>{unit.shield}</dd></div>}{capacity>0&&<div><dt>Capacidad de invocación</dt><dd>{units?`${capacityUsed} / `:''}{capacity}{unit.summonCapacityBonus?` (+${unit.summonCapacityBonus} Vínculo Prohibido)`:''}</dd></div>}</dl>
+    {unit.defId==='war_drake'&&unit.summon&&<p>Batir de Alas: {unit.summon.wingsReadyRound===undefined||(unit.summon.wingsReadyRound<=(round??unit.summon.lastActedRound))?'disponible':`disponible en ronda ${unit.summon.wingsReadyRound??unit.summon.readyRound}`}</p>}
     {summon&&<><p>{ROLES[summon.behavior??'']??'Invocación'}{summon.attackRange?` · Alcance ${summon.attackRange}`:''}</p><p className="unit-inspection-note">Permanece hasta morir, ser retirado por un efecto o terminar el combate.</p></>}
     <h3>Estados activos</h3>{unit.statuses.length?<ul>{unit.statuses.map((status,i)=><li key={`${status.id}-${i}`}><strong>{STATUS_LABEL[status.id]}</strong> · {content.statuses[status.id]?.permanent ? 'Hasta que se retire' : `${status.turnsLeft} turno(s)`}<p>{statusEffect(content.statuses[status.id])}</p></li>)}</ul>:<p>Sin estados activos.</p>}
   </dialog>;

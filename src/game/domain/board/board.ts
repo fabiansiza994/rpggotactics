@@ -4,6 +4,7 @@ import type { TerrainType } from '../terrain/terrain';
 export interface Tile {
   terrain: TerrainType;
   terrainOwnerId?: string;
+  drakeFireHitIds?:string[];
   /** ICE sustained only while this caster retains Mundo Gélido; never permanent base terrain. */
   frozenWorldOwnerId?: string;
   slippery?: boolean;

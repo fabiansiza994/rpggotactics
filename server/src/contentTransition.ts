@@ -1,4 +1,4 @@
-import {CONTENT_RELEASE,LEGACY_CONTENT_RELEASE} from '../../src/game/pvp/content-release';
+import {CONTENT_RELEASE,isSupportedContentRelease} from '../../src/game/pvp/content-release';
 import { error } from './http';
 import type { Env } from './db';
 
@@ -15,7 +15,7 @@ export function contentTransition(request: Request, env: Env, username?: string)
   const qa = !!username && (env.RELEASE2_QA_USERS ?? '').split(',').map(s => s.trim()).filter(Boolean).includes(username);
   if (env.RELEASE2_MAINTENANCE === '1' && !reconnect && !qa)
     return error(503, 'CONTENT_MAINTENANCE', 'Actualización breve en curso. Conserva tu sesión y reintenta en unos momentos.');
-  if (env.RELEASE2_CLIENT_REQUIRED === '1' && url.searchParams.get('clientRelease') !== CONTENT_RELEASE && !(activeRoom && url.searchParams.get('clientRelease') === LEGACY_CONTENT_RELEASE))
+  if (env.RELEASE2_CLIENT_REQUIRED === '1' && url.searchParams.get('clientRelease') !== CONTENT_RELEASE && !(activeRoom && isSupportedContentRelease(url.searchParams.get('clientRelease'))))
     return error(426, 'CLIENT_UPDATE_REQUIRED', 'Actualiza o recarga el juego antes de continuar. Tu cuenta y tus cartas se conservan.');
   return null;
 }

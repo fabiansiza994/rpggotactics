@@ -39,6 +39,7 @@ export const DUEL_SCENARIO: ScenarioDef = {
 export interface DuelMeta {
   /** Absent in pre-release persisted games: preserve their original summon rules. */
   beastsRelease?: true;
+  scoutSiegeRelease?: true;
   /** Server-selected rules for new Ranked 1v1 matches; absent preserves legacy replays. */
   rankedPactGolem?: true;
   champions: [string, string];
@@ -102,7 +103,7 @@ export function createDuel(
   a.units.push(heroB);
   a.rngState = b.rngState;
   a.nextId = Math.max(a.nextId, b.nextId) + 100;
-  a.duel = { beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
+  a.duel = { scoutSiegeRelease:true, beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
   if (randomInt(a, 2) === 1) swapDuelTurn(a);
   a.mapId = map.id;
   if (mode === 'DOMINION') a.dominion = createDominion(map.objectiveNodes);
@@ -187,6 +188,7 @@ export function duelView(
   view.searchChoices = own.hand.some(c => content.cards[c.cardId]?.deckSearch)
     ? summonSearchChoices({...state, player: own, pileCounts: undefined}, content) : [];
   view.player.deck = [];
+  view.scoutSiegeRelease=meta.scoutSiegeRelease===true;
   view.duel = undefined;
   view.rngState = 0;
   view.nextId = 0;

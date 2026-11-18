@@ -7,7 +7,7 @@ export class VeilStatusView extends Graphics {
   private signature = '';
   update(unit: Unit, phase?: string): void {
     const slow=unit.hp>0&&unit.statuses.some(s=>s.id==='SLOWED');
-    const burn=unit.hp>0&&unit.statuses.some(s=>s.id==='BURNING');
+    const burn=unit.hp>0&&unit.statuses.some(s=>(s.id==='BURNING'||s.id==='DRAKE_BURN'));
     const poison=unit.hp>0&&unit.statuses.some(s=>s.id==='POISONED');
     const key=JSON.stringify([slow,burn,poison,phase,unit.hp>0]);
     if(key===this.signature)return;

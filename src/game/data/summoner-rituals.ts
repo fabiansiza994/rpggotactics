@@ -135,7 +135,7 @@ export const RITUAL_CARDS: CardDefinition[] = [
     tags: ['summon', 'pressure', 'elite-summon'],
     expansion: RITUAL_EXPANSION,
     rulesText:
-      '18 HP · armadura 1 · mueve 2 · aliento de fuego 3 a distancia 1–2 con visión · capacidad 2. Cuesta toda tu energía y toda tu capacidad. Actúa desde la siguiente ronda. Permanece hasta morir o ser retirada.',
+      '18 HP · armadura 1 · mueve 2 · aliento de fuego 3 · alcance 1–2 con visión · capacidad 2. Aliento Abrasador aplica Quemadura y deja fuego en el terreno. Batir de Alas permite mover 3 cada 3 rondas. Presencia Imponente reduce 1 daño de ataques enemigos adyacentes. Actúa desde la siguiente ronda. Permanece hasta morir o ser retirada.',
     targeting: SUMMON_TILE,
     effects: [{ type: 'SUMMON', summonId: 'war_drake' }],
     presentation: { visualKey: 'summon_war_drake', element: 'FIRE' },

@@ -1,3 +1,4 @@
+import {pruneScoutResources} from '../combat/scout-siege';
 import {pruneLifeFeathers} from '../combat/raven';
 import {pruneBloodTrails} from '../combat/blood-trail';
 import {clearFrozenWorldTerrain} from '../terrain/terrain-rules';
@@ -69,16 +70,20 @@ export function tickStatuses(ctx: RuleContext, unit: Unit, timing: StatusTiming)
     const def = ctx.content.statuses[instance.id];
     if (def.tick !== timing || !def.tickDamage) continue;
     if (!ctx.state.units.includes(unit)) return;
+    // Both burns share one fire tick; the dragon never amplifies an existing burn.
+    if(instance.id==='DRAKE_BURN' && unit.statuses.some(s=>s.id==='BURNING')){removeStatus(ctx,unit,'DRAKE_BURN','CONSUMED');continue;}
     dealDamage(ctx, unit, def.tickDamage, `status:${def.id}`, def.tickDamageType ?? 'PHYSICAL', def.tickIgnoresArmor ? 'PIERCING' : undefined);
+    if(instance.id==='DRAKE_BURN')removeStatus(ctx,unit,'DRAKE_BURN','CONSUMED');
   }
 }
 
 /** Called at the end of the owner's turn: durations go down, expired statuses are removed. */
 export function decrementStatuses(ctx: RuleContext, unit: Unit): void {
   pruneBloodTrails(ctx.state);
-  pruneLifeFeathers(ctx.state);
+  pruneLifeFeathers(ctx.state);pruneScoutResources(ctx.state);
   for (const instance of [...unit.statuses]) {
     const def = ctx.content.statuses[instance.id];
+    if (instance.id==='DRAKE_BURN')continue;
     if (def.ownerStartLifetime || def.expiresAtOwnerTurnStart || def.permanent || def.summonActivationClock) continue;
     instance.turnsLeft -= 1;
     if (instance.turnsLeft <= 0) removeStatus(ctx, unit, instance.id, 'EXPIRED');

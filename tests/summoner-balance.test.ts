@@ -43,7 +43,7 @@ describe('Dragón de Guerra: mobility only', () => {
     expect(DEFAULT_CONTENT.cards.summon_war_drake).toMatchObject({ cost: 4, rarity: 'RARE' });
   });
 
-  it('Cacería Desatada: 4 while buffed, back to 2 when it expires (no nerf to the card)', () => {
+  it('Cacería Desatada keeps 4; wings do not stack and offer 3 after expiry', () => {
     const engine = battle([{ id: 'far', pos: p(10, 2) }]);
     unit(engine, 'far').moveRange = 0;
     unit(engine, 'far').maxHp = unit(engine, 'far').hp = 99; // (arrange) survives the breaths
@@ -62,12 +62,12 @@ describe('Dragón de Guerra: mobility only', () => {
     expect(drake.statuses.some((s) => s.id === 'UNLEASHED_HUNT')).toBe(false);
     drake.pos = p(0, 2); // after expiry the same drake is back to its base 2
     activation(engine);
-    expect(drake.pos.x).toBe(2);
+    expect(drake.pos.x).toBe(3);
     const plain = battle([{ id: 'far', pos: p(10, 2) }]);
     unit(plain, 'far').moveRange = 0;
     const slow = summon(plain, 'war_drake', p(0, 2));
     activation(plain);
-    expect(slow.pos.x).toBe(2);
+    expect(slow.pos.x).toBe(3);
     expect(DEFAULT_CONTENT.cards.unleashed_hunt!.effects).toEqual([{ type: 'APPLY_STATUS', status: 'UNLEASHED_HUNT', duration: 3, to: 'SUMMONS' }]);
   });
 });

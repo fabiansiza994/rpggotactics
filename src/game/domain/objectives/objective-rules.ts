@@ -1,3 +1,4 @@
+import {pruneScoutResources} from '../combat/scout-siege';
 import {clearTurtleHobble} from '../statuses/turtle-bite';
 import {pruneLifeFeathers} from '../combat/raven';
 import {pruneBloodTrails} from '../combat/blood-trail';
@@ -92,7 +93,7 @@ export function updateObjectives(ctx: RuleContext): boolean {
     state.outcome = { result: own ? 'WON' : 'LOST', reason: 'HERO_DEFEATED' };
     state.phase = 'ENDED';
     pruneBloodTrails(state);
-  pruneLifeFeathers(state);
+  pruneLifeFeathers(state);pruneScoutResources(state);
     clearBattleForms(state, ctx.content);
     clearTurtleHobble(state);
     ctx.emit({ type: own ? 'BATTLE_WON' : 'BATTLE_LOST', outcome: state.outcome });
@@ -121,7 +122,7 @@ export function updateObjectives(ctx: RuleContext): boolean {
   state.outcome = outcome;
   state.phase = 'ENDED';
   pruneBloodTrails(state);
-  pruneLifeFeathers(state);
+  pruneLifeFeathers(state);pruneScoutResources(state);
   clearBattleForms(state, ctx.content);
     clearTurtleHobble(state);
   ctx.emit({ type: outcome.result === 'WON' ? 'BATTLE_WON' : 'BATTLE_LOST', outcome } as const);

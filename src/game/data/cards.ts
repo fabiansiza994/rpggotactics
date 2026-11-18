@@ -343,7 +343,7 @@ for (const [id, name, cost, rarity, text] of [
     'Zorro',
     2,
     'COMMON',
-    '11 HP · mueve 4 · daño 2 · capacidad 1. Busca flancos con menos enemigos adyacentes.',
+    '11 HP · mueve 4 · daño 2 · capacidad 1. Busca flancos. Instinto Explorador: al moverse tiene 30 % de probabilidad de encontrar un recurso temporal. Puede descubrir curación, protección o energía. Máximo un hallazgo cada 2 rondas.',
   ],
   [
     'turtle',

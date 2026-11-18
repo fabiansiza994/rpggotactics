@@ -1,3 +1,4 @@
+import {scoutSiegeEnabled} from './scout-siege';
 import { areHostile, unitById } from '../board/occupancy';
 import type { RuleContext } from '../context';
 import type { Unit } from '../entities/unit';
@@ -34,6 +35,13 @@ export function attackDamage(ctx: RuleContext, attacker: Unit | undefined, targe
     // An aura (Gólem del Pacto) never adds to a Cobertura: the bigger reduction applies.
     const less = Math.max(fromStatuses, auraReduction(ctx, target));
     out = Math.max(0, out - less);
+  }
+  if(scoutSiegeEnabled(ctx.state)&&target.defId==='war_drake'&&target.kind==='SUMMON'&&attacker&&areHostile(attacker,target)&&manhattan(attacker.pos,target.pos)===1){
+    const armor=target.armor+target.statuses.reduce((n,s)=>n+(ctx.content.statuses[s.id]?.armorBonus??0),0);
+    // Never turn a previously damaging attack into zero after armor, nor resurrect an absorbed hit.
+    const reduction=Math.min(1,Math.max(0,out-armor-1));
+    out-=reduction;
+    if(reduction>0)ctx.emit({type:'DRAKE_PRESENCE',unitId:target.id,sourceId:attacker.id,pos:target.pos,reduction});
   }
   return out;
 }

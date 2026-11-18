@@ -21,6 +21,7 @@ export function createTerrain(
   if (!ctx.content.terrain[tile.terrain].canBeOverwritten) return false;
 
   const previous = tile.terrain;
+  delete tile.drakeFireHitIds;
   delete tile.frozenWorldOwnerId;
   tile.terrainOwnerId=sourceId;
   delete tile.slippery;
@@ -37,6 +38,7 @@ function revertTerrain(ctx: RuleContext, p: Pos, reason: 'EXPIRED' | 'CLEANSED')
   const tile = tileAt(ctx.state.board, p);
   if (!tile) return;
   const removed = tile.terrain;
+  delete tile.drakeFireHitIds;
   delete tile.frozenWorldOwnerId;
   delete tile.terrainOwnerId;
   delete tile.slippery;
@@ -68,7 +70,7 @@ export function removeHazard(ctx: RuleContext, p: Pos): boolean {
 /** End-of-turn terrain effects for one unit (FIRE/LAVA damage, optional status). Once per turn end. */
 export function applyEndTurnTerrain(ctx: RuleContext, unit: Unit): void {
   const tile = tileAt(ctx.state.board, unit.pos);
-  if (!tile) return;
+  if (!tile || tile.drakeFireHitIds) return;
   const def = ctx.content.terrain[tile.terrain];
   if (unit.kind === 'ENEMY' && ctx.content.enemies[unit.defId]?.hazardImmune) return;
   if (def.endTurnDamage > 0) {

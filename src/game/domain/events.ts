@@ -20,6 +20,10 @@ import type { TerrainType } from './terrain/terrain';
  */
 export type GameEvent =
   | {type:'RAVEN_SCAVENGER';unitId:string;preyId:string;pos:Pos;kind:'MOVE'|'ATTACK'}
+  | {type:'SCOUT_RESOURCE_CREATED';id:string;ownerId:string;foxId:string;kind:'HEAL'|'ARMOR'|'ENERGY';pos:Pos;expiresRound:number}
+  | {type:'SCOUT_RESOURCE_COLLECTED';resourceId:string;unitId:string;pos:Pos;kind:'HEAL'|'ARMOR'|'ENERGY'}
+  | {type:'DRAKE_PRESENCE';unitId:string;sourceId:string;pos:Pos;reduction:number}
+  | {type:'DRAKE_WINGS';unitId:string;pos:Pos;readyRound:number}
   | {type:'LIFE_FEATHER_CREATED';id:string;ownerId:string;ravenId:string;pos:Pos;expiresRound:number}
   | {type:'LIFE_FEATHER_COLLECTED';featherId:string;unitId:string;pos:Pos}
   | { type: 'WOLF_PURSUIT'; unitId: string; preyId: string; pos: Pos; bonus: 1 }

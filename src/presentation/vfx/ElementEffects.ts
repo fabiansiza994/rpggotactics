@@ -1081,11 +1081,11 @@ export class ElementEffects {
     }
   }
 
-  number(id: string, pos: Pos, amount: number, kind: 'damage' | 'heal' | 'shield' | 'armor' | 'move'): void {
+  number(id: string, pos: Pos, amount: number, kind: 'damage' | 'heal' | 'shield' | 'armor' | 'move' | 'armorGain' | 'energy'): void {
     const key = `${id}:${kind}:${this.clock}`;
     const existing = this.numbers.get(key);
     const format = (n: number) =>
-      kind === 'move' ? `+${n} PM` : kind === 'damage'
+      kind === 'energy' ? `+${n} energía` : kind === 'armorGain' ? `+${n} armadura` : kind === 'move' ? `+${n} PM` : kind === 'damage'
         ? `−${n}`
         : kind === 'heal'
           ? `+${n}`

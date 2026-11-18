@@ -823,6 +823,19 @@ export class VfxDirector {
         }
         break;
       }
+      case 'SCOUT_RESOURCE_CREATED':
+        fx.glyph(e.pos,e.kind==='HEAL'?'BARRIER':'ARCANE',reduced?80:260,16);
+        break;
+      case 'SCOUT_RESOURCE_COLLECTED':
+        if(e.kind!=='HEAL')fx.number(e.unitId,this.position(e.unitId)??e.pos,1,e.kind==='ARMOR'?'armorGain':'energy');
+        fx.burst(e.pos,e.kind==='HEAL'?'BARRIER':'ARCANE',false,reduced?80:200);
+        break;
+      case 'DRAKE_PRESENCE':
+        this.host.unit(e.unitId)?.pulseLight(0xffd78a,reduced?80:180);fx.glyph(e.pos,'BARRIER',reduced?80:180,24);
+        break;
+      case 'DRAKE_WINGS':
+        this.host.unit(e.unitId)?.pulseLight(0xffb16b,reduced?80:240);fx.burst(e.pos,'FIRE',false,reduced?80:220);
+        break;
       case 'RAVEN_SCAVENGER':
         this.host.unit(e.unitId)?.pulseLight(0x9f65e2,reduced?80:200);
         { const preyPos=this.position(e.preyId); if(preyPos)fx.preyCue(preyPos); }
