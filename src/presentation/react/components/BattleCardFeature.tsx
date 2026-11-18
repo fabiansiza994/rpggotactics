@@ -221,6 +221,7 @@ export function FeatureCard({
   extras,
   ariaHidden,
   scrollableDescription,
+  interactive,
 }: {
   def: CardDefinition;
   engine?: GameEngine;
@@ -228,9 +229,10 @@ export function FeatureCard({
   extras: Extras;
   ariaHidden?: boolean;
   scrollableDescription?: boolean;
+  interactive?: boolean;
 }) {
   const def=engine?worldFrozenCard(baseDef,engine.state.units.find(u=>u.id===engine.heroId)):baseDef;
-  const premiumRef = useCardPremiumEffect<HTMLElement>(def, 'large', true, !ariaHidden);
+  const premiumRef = useCardPremiumEffect<HTMLElement>(def, 'large', true, interactive ?? !ariaHidden);
   const premium = def.id === 'summon_war_drake';
   const rarity = def.rarity ?? 'COMMON';
   const cost = engine?.getCardCost(engine.state.player.hand.find(c => c.cardId === def.id)?.uid ?? '')?.cost ?? def.cost;

@@ -4,13 +4,16 @@ import { FeatureCard } from "../react/components/BattleCardFeature";
 export function MarketCard({
   card,
   accessible = false,
+  interactive = accessible,
 }: {
   card: CardDefinition;
   accessible?: boolean;
+  interactive?: boolean;
 }) {
   return (
     <FeatureCard
       def={card}
+      interactive={interactive}
       className="market-game-card"
       extras={{ playable: true }}
       ariaHidden={!accessible}

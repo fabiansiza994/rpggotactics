@@ -201,7 +201,7 @@ export function PackOpening({
                   </span>
                   {revealed && (
                     <span className="market-reveal-face">
-                      {card ? <MarketCard card={card} /> : <UnknownReceiptCard cardId={slot.cardId}/>}
+                      {card ? <MarketCard card={card} interactive /> : <UnknownReceiptCard cardId={slot.cardId}/>}
                       <small
                         className="pack-acquired"
                         data-new={slot.total === 1}

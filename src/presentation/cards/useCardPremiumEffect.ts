@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { CardDefinition } from '../../game';
 import { premiumIdentity, premiumPointer, cardRarityFinish } from './premiumTreatment';
 import '../../styles/card-premium.css';
+import { bindCardGestures } from './cardGestures';
 
 export type PremiumSurface = 'large' | 'compact' | 'grid';
 /** Event-driven DOM effect. No React state during movement, sensor permissions or RAF loop. */
@@ -28,6 +29,8 @@ export function useCardPremiumEffect<T extends HTMLElement>(
     el.dataset.premiumFamily = identity.family;
     el.dataset.premiumMotif = identity.motif;
     const media = matchMedia('(prefers-reduced-motion: reduce)');
+    const releaseGestures = bindCardGestures(el);
+    let activePointer: number | null = null;
     let frame = 0,
       sweepFrame = 0,
       bounds: DOMRect | null = null,
@@ -37,6 +40,7 @@ export function useCardPremiumEffect<T extends HTMLElement>(
       frame = 0;
       bounds = null;
       touching = false;
+      activePointer = null;
       el.dataset.premiumActive = 'false';
       for (const [key, value] of Object.entries({
         '--cp-x': '0',
@@ -53,12 +57,12 @@ export function useCardPremiumEffect<T extends HTMLElement>(
       el.dataset.premiumSweep = 'false';
       sweepFrame = requestAnimationFrame(() => {
         sweepFrame = 0;
-        if (el.isConnected) el.dataset.premiumSweep = 'true';
+        if (el.isConnected && !document.hidden && !media.matches) el.dataset.premiumSweep = 'true';
       });
     };
     const enter = (event: PointerEvent) => {
       if (
-        media.matches ||
+        media.matches || document.hidden ||
         !interactive ||
         (identity.treatment === 'none' && surface !== 'large') ||
         event.pointerType === 'touch'
@@ -69,23 +73,25 @@ export function useCardPremiumEffect<T extends HTMLElement>(
     };
     const down = (event: PointerEvent) => {
       if (
-        media.matches ||
+        media.matches || document.hidden ||
         !interactive ||
         surface !== 'large' ||
         (identity.treatment === 'none' && surface !== 'large') ||
         event.pointerType !== 'touch'
       )
         return;
+      if (!event.isPrimary) return;
+      activePointer = event.pointerId;
       touching = true;
       bounds = el.getBoundingClientRect();
       el.dataset.premiumActive = 'true';
     };
     const move = (event: PointerEvent) => {
       if (
-        media.matches ||
+        media.matches || document.hidden ||
         !interactive ||
         (identity.treatment === 'none' && surface !== 'large') ||
-        (event.pointerType === 'touch' && !touching)
+        (event.pointerType === 'touch' && (!touching || activePointer !== event.pointerId))
       )
         return;
       bounds ??= el.getBoundingClientRect();
@@ -115,6 +121,9 @@ export function useCardPremiumEffect<T extends HTMLElement>(
     reset();
     el.dataset.premiumSweep = 'false';
     if (interactive && (surface === 'large' || selected)) sweep();
+    document.addEventListener('visibilitychange', reset);
+    window.addEventListener('blur', reset);
+    window.addEventListener('resize', reset);
     el.addEventListener('pointerenter', enter, { passive: true });
     el.addEventListener('pointerdown', down, { passive: true });
     el.addEventListener('pointermove', move, { passive: true });
@@ -124,6 +133,10 @@ export function useCardPremiumEffect<T extends HTMLElement>(
     media.addEventListener('change', reset);
     return () => {
       if (sweepFrame) cancelAnimationFrame(sweepFrame);
+      releaseGestures();
+      document.removeEventListener('visibilitychange', reset);
+      window.removeEventListener('blur', reset);
+      window.removeEventListener('resize', reset);
       reset();
       el.removeEventListener('pointerenter', enter);
       el.removeEventListener('pointerdown', down);

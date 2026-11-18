@@ -55,7 +55,7 @@
 [data-premium-surface='large'] {
   perspective: 1000px;
 }
-[data-premium-surface='large']:is(.db-detail-card, .shop-card-preview) {
+[data-premium-surface='large']:is(.db-detail-card, .shop-card-preview, .rrt-card, .rpt-art[data-card-id]:not([data-card-id=''])) {
   transform: perspective(1000px) rotateX(var(--cp-rx)) rotateY(var(--cp-ry));
   transition: transform 160ms ease;
 }
@@ -82,7 +82,7 @@
   background: linear-gradient(155deg, #28201a, #0b1423 65%);
 }
 [data-premium-surface]
-  :is(.fc-art, .card-art, .db-tile-art, .db-detail-art, .shop-card-image, .world-reward-art) {
+  :is(.fc-art, .card-art, .db-tile-art, .db-detail-art, .shop-card-image, .world-reward-art, .rrt-card-art, .rpt-art-image) {
   position: relative;
   isolation: isolate;
 }
@@ -219,7 +219,7 @@
 }
 @media (pointer: coarse) {
   [data-premium-surface='large'][data-premium-treatment='holographic'] .cp-foil {
-    animation: cp-idle 12s ease-in-out infinite alternate;
+    animation: none; /* Reflections move only in response to pointer input. */
   }
 }
 @keyframes cp-idle {
@@ -267,4 +267,38 @@
   min-width: 0;
   width: 100%;
   max-width: 100%;
+}
+
+/* Browser gesture protection stays on card/game surfaces, never the page or chat. */
+[data-premium-surface], .board-host, .market-reveal-card {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+[data-premium-surface] img, .market-reveal-card img, .board-host canvas {
+  -webkit-user-drag: none;
+}
+[data-premium-surface] { touch-action: manipulation; }
+[data-premium-surface] :is(input, textarea, select, [contenteditable='true'], [contenteditable='']) {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+/* A neutral reflection for every enlarged card; premium finishes retain their own layers. */
+[data-premium-surface='large'] :is(.fc-art, .db-detail-art, .shop-card-image, .world-reward-art, .rrt-card-art, .rpt-art-image)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at var(--cp-lx) var(--cp-ly), #fff7dc66, transparent 65%);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  z-index: 3;
+}
+[data-premium-surface='large'][data-premium-active='true'] :is(.fc-art, .db-detail-art, .shop-card-image, .world-reward-art, .rrt-card-art, .rpt-art-image)::after {
+  opacity: .35;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-premium-surface='large'] :is(.fc-art, .db-detail-art, .shop-card-image, .world-reward-art, .rrt-card-art, .rpt-art-image)::after { display: none; }
 }
