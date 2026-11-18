@@ -31,7 +31,10 @@ export type StatusId =
   | 'HUNT_PURSUIT'
   | 'PACK_CALL'
   | 'ALPHA_INSTINCT'
+  | 'TURTLE_HOBBLE_1'
+  | 'TURTLE_HOBBLE_2'
   | 'SLOWED'
+  | 'BLEEDING'
   | 'POISONED'
   | 'WALL_PATIENCE'
   /** Act III: Mechanical Guardian plating / relic carrier burden (domain/mechanisms). */
@@ -169,7 +172,7 @@ export interface StatusInstance {
   lastShotTurn?:number;
   skatingUsed?: number;
   skatingEnded?: boolean;
-  /** Only for sourced statuses (`preyMark`, `taunt`): the unit that applied it. Absent otherwise. */
+  /** For sourced statuses (`preyMark`, `taunt`) and wolf BLEEDING: the unit that applied it. Absent otherwise. */
   sourceId?: string;
   /** Uses left of a counted trigger (`StatusDef.onFormChange`). Absent for other statuses. */
   charges?: number;

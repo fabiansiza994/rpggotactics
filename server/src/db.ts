@@ -30,6 +30,8 @@ export interface Env {
   /** New random packs remain OFF until explicitly enabled for a release. */
   ARCANE_MARKET_PACKS_ENABLED?: string;
   STORE_QUOTE_SECRET?: string;
+  /** Stops admissions only; active rooms remain reconnectable/playable for safe rollback. */
+  CONTENT_RELEASE_DRAIN?: string;
   RELEASE2_MAINTENANCE?: string;
   RELEASE2_QA_USERS?: string;
   RELEASE2_CLIENT_REQUIRED?: string;

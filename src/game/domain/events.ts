@@ -19,6 +19,10 @@ import type { TerrainType } from './terrain/terrain';
  * `sourceId` conventions: a unit id, `terrain:<TYPE>` or `status:<ID>`.
  */
 export type GameEvent =
+  | {type:'RAVEN_SCAVENGER';unitId:string;preyId:string;pos:Pos;kind:'MOVE'|'ATTACK'}
+  | {type:'LIFE_FEATHER_CREATED';id:string;ownerId:string;ravenId:string;pos:Pos;expiresRound:number}
+  | {type:'LIFE_FEATHER_COLLECTED';featherId:string;unitId:string;pos:Pos}
+  | { type: 'WOLF_PURSUIT'; unitId: string; preyId: string; pos: Pos; bonus: 1 }
   | {type:'SNOWBALL_FIRED';unitId:string;targetId:string;from:Pos;to:Pos;global:boolean}
 
   | { type: 'GLYPH_ACTIVATED'; glyphId: string; kind: string; ownerId: string; origin: Pos; targets: {unitId:string;pos:Pos}[]; remaining: number }

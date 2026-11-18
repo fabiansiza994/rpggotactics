@@ -172,6 +172,9 @@ export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
    * Flecha Venenosa: 1 damage at the start of each of the owner's turns, through armour. Longer and
    * slower than BURNING (which it never replaces: a unit can burn and be poisoned at once).
    */
+  BLEEDING: { id: 'BLEEDING', name: 'Sangrado', negative: true, tick: 'TURN_START', tickDamage: 1, tickDamageType: 'PHYSICAL', tickIgnoresArmor: true, stacking: 'REFRESH' },
+  TURTLE_HOBBLE_1: {id:'TURTLE_HOBBLE_1',name:'Entorpecido −1',negative:true,tick:'NEVER',stacking:'REFRESH',moveReduction:1},
+  TURTLE_HOBBLE_2: {id:'TURTLE_HOBBLE_2',name:'Entorpecido −2',negative:true,tick:'NEVER',stacking:'REFRESH',moveReduction:2},
   POISONED: {
     id: 'POISONED',
     name: 'Envenenado',

@@ -1,3 +1,5 @@
+import {activeLifeFeathers} from '../../game/domain/combat/raven';
+import {LifeFeatherView} from './LifeFeatherView';
 import {EMPTY_ATMOSPHERE,atmosphereView,type AtmosphereView} from '../immersion/atmosphere';
 import {CombatHaptics,browserHapticPort} from '../immersion/combatImmersion';
 import {FieldAtmosphere} from '../immersion/FieldAtmosphere';
@@ -217,6 +219,7 @@ export class BattleCanvas {
   );
   private readonly obstacles = new Map<string, ObstacleView>();
   /** Keyed `scenario:id` so a new encounter never reuses another's pickup art. */
+  private readonly lifeFeathers = new Map<string,LifeFeatherView>();
   private readonly pickups = new Map<string, CollectibleView>();
   private readonly geometry: FxGeometry = {
     center: (p) => this.proj.getUnitAnchor(p),
@@ -301,6 +304,7 @@ export class BattleCanvas {
       }
     }
     for (const pickup of this.pickups.values()) pickup.tick(elapsed, this.effects.reduced);
+    for (const feather of this.lifeFeathers.values()) feather.tick(elapsed,this.effects.reduced);
     this.updateWizardFacing();
     this.syncActors(elapsed);
   };
@@ -600,6 +604,7 @@ export class BattleCanvas {
 
   destroy(): void {
     if(this.destroyed)return;
+    for(const view of this.lifeFeathers.values())view.destroy();this.lifeFeathers.clear();
     this.offImmersion();this.haptics.destroy();this.atmosphere.destroy();
     document.removeEventListener('visibilitychange',this.stopHaptics);
     window.removeEventListener('blur',this.stopHaptics);
@@ -1175,6 +1180,12 @@ export class BattleCanvas {
 
   /** Objective pickups: Y-sorted with actors, just behind a unit sharing the tile. */
   private drawPickups(vm: BoardViewModel): void {
+    const feathers=activeLifeFeathers(vm.state),ids=new Set(feathers.map(f=>f.id));
+    for(const [id,view] of this.lifeFeathers)if(!ids.has(id)){view.destroy();this.lifeFeathers.delete(id);}
+    for(const feather of feathers){
+      let view=this.lifeFeathers.get(feather.id);if(!view){view=new LifeFeatherView();this.lifeFeathers.set(feather.id,view);this.actorLayer.addChild(view.root);}
+      const anchor=this.proj.getUnitAnchor(feather.pos);view.root.position.set(anchor.x,anchor.y);view.root.scale.set(this.proj.scaleAtY(anchor.y));view.root.zIndex=this.proj.depthAtPoint(anchor)-.6;
+    }
     const key = (id: string) => `${vm.state.scenarioId}:${id}`;
     const live = new Set(vm.state.collectibles.map((c) => key(c.id)));
     for (const [id, view] of this.pickups) {

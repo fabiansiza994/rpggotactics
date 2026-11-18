@@ -1,3 +1,5 @@
+import {pruneLifeFeathers} from './raven';
+import {pruneBloodTrails} from './blood-trail';
 import {clearFrozenWorldTerrain} from '../terrain/terrain-rules';
 import {createTerrain} from '../terrain/terrain-rules';
 import {isStandable} from '../board/occupancy';
@@ -124,6 +126,8 @@ export function defeatUnit(ctx: RuleContext, unit: Unit, reason?:'DAMAGE'|'MELT'
   const { state } = ctx;
   if (!state.units.includes(unit)) return;
   state.units = state.units.filter((u) => u !== unit);
+  pruneBloodTrails(state);
+  pruneLifeFeathers(state);
   if(unit.statuses.some(s=>s.id==='ABSOLUTE_ZERO'))clearFrozenWorldTerrain(ctx,unit.id);
   state.intents = state.intents.filter((i) => i.enemyId !== unit.id);
   if (unit.faction === 'ENEMY') state.stats.enemiesDefeated += 1;

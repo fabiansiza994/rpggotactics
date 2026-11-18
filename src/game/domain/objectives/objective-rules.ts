@@ -1,3 +1,6 @@
+import {clearTurtleHobble} from '../statuses/turtle-bite';
+import {pruneLifeFeathers} from '../combat/raven';
+import {pruneBloodTrails} from '../combat/blood-trail';
 import { clearBattleForms } from '../transformations/transformations';
 import { getEnemies, getHero, unitById } from '../board/occupancy';
 import type { RuleContext } from '../context';
@@ -88,7 +91,10 @@ export function updateObjectives(ctx: RuleContext): boolean {
     if (own && rival) return false;
     state.outcome = { result: own ? 'WON' : 'LOST', reason: 'HERO_DEFEATED' };
     state.phase = 'ENDED';
+    pruneBloodTrails(state);
+  pruneLifeFeathers(state);
     clearBattleForms(state, ctx.content);
+    clearTurtleHobble(state);
     ctx.emit({ type: own ? 'BATTLE_WON' : 'BATTLE_LOST', outcome: state.outcome });
     return true;
   }
@@ -114,7 +120,10 @@ export function updateObjectives(ctx: RuleContext): boolean {
   if (!outcome) return false;
   state.outcome = outcome;
   state.phase = 'ENDED';
+  pruneBloodTrails(state);
+  pruneLifeFeathers(state);
   clearBattleForms(state, ctx.content);
+    clearTurtleHobble(state);
   ctx.emit({ type: outcome.result === 'WON' ? 'BATTLE_WON' : 'BATTLE_LOST', outcome } as const);
   return true;
 }

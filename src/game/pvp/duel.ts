@@ -1,3 +1,6 @@
+import {clearTurtleHobble} from '../domain/statuses/turtle-bite';
+import {pruneLifeFeathers} from '../domain/combat/raven';
+import {pruneBloodTrails} from '../domain/combat/blood-trail';
 import {summonSearchChoices} from '../domain/cards/play-card';
 import { createDominion, refreshDominion, scoreDominion, type PvpMode } from './dominion';
 import { pvpMap, mapScenario, mapSpawns } from './maps';
@@ -34,6 +37,8 @@ export const DUEL_SCENARIO: ScenarioDef = {
   defaultSeed: 1,
 };
 export interface DuelMeta {
+  /** Absent in pre-release persisted games: preserve their original summon rules. */
+  beastsRelease?: true;
   /** Server-selected rules for new Ranked 1v1 matches; absent preserves legacy replays. */
   rankedPactGolem?: true;
   champions: [string, string];
@@ -97,7 +102,7 @@ export function createDuel(
   a.units.push(heroB);
   a.rngState = b.rngState;
   a.nextId = Math.max(a.nextId, b.nextId) + 100;
-  a.duel = { ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
+  a.duel = { beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
   if (randomInt(a, 2) === 1) swapDuelTurn(a);
   a.mapId = map.id;
   if (mode === 'DOMINION') a.dominion = createDominion(map.objectiveNodes);
@@ -198,6 +203,9 @@ export function duelView(
         : 'LOST',
       reason: state.outcome.reason,
     };
+  if(view.outcome)clearTurtleHobble(view);
+  pruneBloodTrails(view);
+  pruneLifeFeathers(view);
   return { ...view, pileCounts };
 }
 

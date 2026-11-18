@@ -2,7 +2,7 @@ import type { StatusId } from '../../game';
 import type { StatusDef } from '../../game/domain/statuses/status';
 import type { IconName } from '../assets/iconPaths';
 export function statusIcon(id: StatusId): IconName {
-  return ({GLACIER_CLAW:'frost',SNOW_WAR:'frost',ABSOLUTE_ZERO:'frost',FROZEN:'frost',FROST_MANTLE:'shield',GLACIAL_REFLECTION:'shield',ARCANE_SKATING:'move',ICE_PRISON:'frost',AVALANCHE_SLOW:'frost',THUNDER_INCARNATION:'energy',ARCANE_INVERSION:'arcane',BURNING:'flame',POISONED:'poison',SLOWED:'frost',ROOTED:'tile',STUNNED:'wait',FORTIFIED:'shield',SMOKE_SCREEN:'smoke',RELIC_BURDEN:'move',CHALLENGED:'target',PREY:'prey',MARKED_PREY:'prey',RIPOSTE:'melee'} as Partial<Record<StatusId,IconName>>)[id] ?? 'arcane';
+  return ({GLACIER_CLAW:'frost',SNOW_WAR:'frost',ABSOLUTE_ZERO:'frost',FROZEN:'frost',FROST_MANTLE:'shield',GLACIAL_REFLECTION:'shield',ARCANE_SKATING:'move',ICE_PRISON:'frost',AVALANCHE_SLOW:'frost',THUNDER_INCARNATION:'energy',ARCANE_INVERSION:'arcane',BURNING:'flame',BLEEDING:'melee',POISONED:'poison',TURTLE_HOBBLE_1:'move',TURTLE_HOBBLE_2:'move',SLOWED:'frost',ROOTED:'tile',STUNNED:'wait',FORTIFIED:'shield',SMOKE_SCREEN:'smoke',RELIC_BURDEN:'move',CHALLENGED:'target',PREY:'prey',MARKED_PREY:'prey',RIPOSTE:'melee'} as Partial<Record<StatusId,IconName>>)[id] ?? 'arcane';
 }
 export function statusEffect(def: StatusDef): string {
   const effects:string[]=[];

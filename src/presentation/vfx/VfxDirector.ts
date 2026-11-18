@@ -823,7 +823,22 @@ export class VfxDirector {
         }
         break;
       }
+      case 'RAVEN_SCAVENGER':
+        this.host.unit(e.unitId)?.pulseLight(0x9f65e2,reduced?80:200);
+        { const preyPos=this.position(e.preyId); if(preyPos)fx.preyCue(preyPos); }
+        break;
+      case 'LIFE_FEATHER_CREATED':
+        fx.lifeFeatherFall(e.pos);
+        break;
+      case 'LIFE_FEATHER_COLLECTED':
+        fx.burst(e.pos,'ARCANE',false,reduced?80:200);
+        break;
+      case 'WOLF_PURSUIT':
+        if(oldPosition){fx.preyCue(oldPosition);if(!reduced)this.host.unit(e.unitId)?.pulseLight(0xb83145,150);}
+        break;
       case 'STATUS_APPLIED':
+        if(oldPosition && (e.status==='TURTLE_HOBBLE_1'||e.status==='TURTLE_HOBBLE_2')){this.host.unit(e.unitId)?.pulseLight(e.status==='TURTLE_HOBBLE_2'?0xc4995a:0x8cab8a,reduced?70:160);fx.glyph(oldPosition,'FORCE',reduced?80:e.status==='TURTLE_HOBBLE_2'?280:180,18);}
+        if(e.status==='BLEEDING' && oldPosition){ this.host.unit(e.unitId)?.pulseLight(0xb51c35,reduced?70:160); }
         if(e.status==='ABSOLUTE_ZERO')for(const u of this.visual?.units??[])if(u.defId==='snow_soldier'&&u.summon?.ownerId===e.unitId)this.host.unit(u.id)?.beginSnowRefreeze(reduced);
         if(e.status==='GLACIER_CLAW')this.host.unit(e.unitId)?.beginGlacierClaw();
         if(oldPosition && ['FROZEN','FROST_MANTLE','GLACIAL_REFLECTION','ABSOLUTE_ZERO','ARCANE_SKATING'].includes(e.status)){
@@ -853,6 +868,7 @@ export class VfxDirector {
         this.host.impulse('LIGHT', reduced);
         break;
       case 'STATUS_REMOVED':
+        if(oldPosition && (e.status==='TURTLE_HOBBLE_1'||e.status==='TURTLE_HOBBLE_2') && e.reason!=='CONSUMED')fx.glyph(oldPosition,'BARRIER',reduced?80:200,16);
         if(e.status==='GLACIER_CLAW'){this.host.unit(e.unitId)?.releaseGlacierClaw(e.reason==='FIRE');if(e.reason==='FIRE'&&oldPosition)fx.burst(oldPosition,'FIRE');}
         if(oldPosition && ['FROZEN','FROST_MANTLE','GLACIAL_REFLECTION','ABSOLUTE_ZERO'].includes(e.status)){
           fx.glyph(oldPosition,'ICE',180,24);

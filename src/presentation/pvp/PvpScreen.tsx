@@ -1,3 +1,4 @@
+import {roomConnectionRelease} from '../../game/pvp/content-release';
 import { navigatePlay } from "../play/navigation";
 import { PvpVersus } from "./PvpVersus";import {
   BOT_LEVELS,
@@ -9,7 +10,7 @@ import { PvpTurnSummary } from "./PvpTurnSummary";
 import { drawRitual, classifyDraws } from "../cards/drawRitual";
 import { isActionableTile } from "../input/aim";
 import { CardActivationLabel } from "../react/components/CardActivationLabel";
-import { CONTENT_RELEASE, contentReleaseUrl } from "../cloud/contentRelease";
+import { contentReleaseUrl } from "../cloud/contentRelease";
 import { AnimatedReward } from "../results/ResultProgress";
 import { BattleResultPresentation } from "../results/BattleResultPresentation";
 import "../react/components/BattleStyles";
@@ -328,7 +329,7 @@ export function PvpScreen({
       const token = await api("connect", { code: room });
       if (!alive.current || generation !== connectionGeneration.current) return;
       const url = new URL(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/socket");
-      url.searchParams.set("clientRelease", CONTENT_RELEASE);
+      url.searchParams.set("clientRelease", roomConnectionRelease(token.clientRelease));
       url.searchParams.set("botProtocol", BOT_POLICY_VERSION);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       url.searchParams.set("code", room);

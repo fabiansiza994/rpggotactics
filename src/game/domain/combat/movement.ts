@@ -1,3 +1,5 @@
+import {collectLifeFeathers,shedLifeFeather} from './raven';
+import {leaveBloodTrail} from './blood-trail';
 import {iceWalkQuote} from './ice-movement';
 import {setMovePoints} from '../cards/deck';
 import {tileAt} from '../board/board';
@@ -42,11 +44,14 @@ export function walkUnit(
   const skate=unit.statuses.find(s=>s.id==='ARCANE_SKATING');
   if(skate){skate.skatingUsed=(skate.skatingUsed??0)+quote.free;skate.skatingEnded=quote.ended;}
   faceTravel(ctx, unit, path.length > 1 ? path[path.length - 2]! : from, to);
+  leaveBloodTrail(ctx, unit, [from, ...path]);
   unit.pos = to;
   ctx.emit({ type: 'UNIT_MOVED', unitId: unit.id, from, to, path, cost, mode:skate&&!quote.ended?'SLIDE':mode });
   collectAlong(ctx, unit, path);
+  collectLifeFeathers(ctx, unit, path);
   onUnitMoved(ctx, unit, from);
   springTrap(ctx, unit);
+  shedLifeFeather(ctx, unit, [from,...path]);
   return path;
 }
 
@@ -56,6 +61,7 @@ export function teleportUnit(ctx: RuleContext, unit: Unit, to: Pos, sourceId: st
   unit.pos = to;
   ctx.emit({ type: 'UNIT_TELEPORTED', unitId: unit.id, from, to, sourceId });
   collectAlong(ctx, unit, [to]);
+  collectLifeFeathers(ctx, unit, [to]);
   springTrap(ctx, unit);
   return true;
 }
@@ -74,6 +80,8 @@ export function swapUnits(ctx: RuleContext, a: Unit, b: Unit, sourceId: string):
   ctx.emit({ type: 'UNIT_TELEPORTED', unitId: b.id, from: to, to: from, sourceId });
   collectAlong(ctx, a, [to]);
   collectAlong(ctx, b, [from]);
+  collectLifeFeathers(ctx, a, [to]);
+  collectLifeFeathers(ctx, b, [from]);
   springTrap(ctx, a);
   springTrap(ctx, b);
 }
@@ -97,6 +105,7 @@ export function pushUnit(
     distance=unit.statuses.find(s=>s.id==='FROST_MANTLE')?.power===-1?0:Math.max(0,distance-1);removeStatus(ctx,unit,'FROST_MANTLE','CONSUMED');
   }
   let current = from;
+  const traversed: Pos[] = [];
   let collision: PushCollision | null = null;
   let blocker: Unit | undefined;
 
@@ -108,6 +117,7 @@ export function pushUnit(
     else if (!terrainDefAt(ctx, next)?.walkable && !mechanismFloorAt(ctx.state, next)) collision = 'BLOCKED_TERRAIN';
     if (collision) break;
     current = next;
+    traversed.push(current);
     // A hostile trap stops the slide (no collision: nothing was hit).
     if (hostileTrapAt(ctx, unit, current)) break;
   }
@@ -115,11 +125,13 @@ export function pushUnit(
   // At most ONE extra tile per forced displacement; no recursive call.
   if(!collision && !samePos(from,current) && tileAt(ctx.state.board,current)?.slippery && !hostileTrapAt(ctx,unit,current)){
     const extraSteps=Math.min(2,tileAt(ctx.state.board,current)?.slipDistance??1);
-    for(let i=0;i<extraSteps;i++){const extra=step(current,dir);if(!canEnter(ctx,extra,unit.id))break;current=extra;if(hostileTrapAt(ctx,unit,current))break;}
+    for(let i=0;i<extraSteps;i++){const extra=step(current,dir);if(!canEnter(ctx,extra,unit.id))break;current=extra;traversed.push(current);if(hostileTrapAt(ctx,unit,current))break;}
   }
+  if(traversed.length)leaveBloodTrail(ctx, unit, [from, ...traversed]);
   unit.pos = current;
   ctx.emit({ type: 'UNIT_PUSHED', unitId: unit.id, from, to: current, direction: dir, sourceId, collision });
   collectAlong(ctx, unit, [current]);
+  collectLifeFeathers(ctx, unit, traversed);
 
   if (collision && collisionDamage > 0) {
     dealDamage(ctx, unit, collisionDamage, sourceId, 'FORCE');

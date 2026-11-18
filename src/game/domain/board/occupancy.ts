@@ -75,7 +75,7 @@ export function hasStatus(unit: Unit, statusId: string): boolean {
  * when the base is positive. `base` defaults to the unit's move range (a champion passes its
  * max move points).
  */
-export function effectiveMoveRange(ctx: RuleContext, unit: Unit, base = unit.moveRange): number {
+export function effectiveMoveRange(ctx: Pick<RuleContext, 'content'>, unit: Unit, base = unit.moveRange): number {
   const slow = Math.max(0, ...unit.statuses.map((s) => ctx.content.statuses[s.id]?.moveReduction ?? 0));
   return base<=0?base:Math.max(1,base-slow);
 }

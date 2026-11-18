@@ -1,3 +1,5 @@
+import {pruneLifeFeathers} from '../combat/raven';
+import {pruneBloodTrails} from '../combat/blood-trail';
 import {clearFrozenWorldTerrain} from '../terrain/terrain-rules';
 import { dealDamage } from '../combat/damage';
 import type { RuleContext } from '../context';
@@ -34,6 +36,7 @@ export function applyStatus(
   }
   // A unit only has hostile champions as possible markers: the latest one owns the mark.
   if (sourced) unit.statuses.find((s) => s.id === statusId)!.sourceId = sourceId;
+  if (statusId === 'BLEEDING') { unit.statuses.find(s => s.id === statusId)!.sourceId = sourceId; pruneBloodTrails(ctx.state); }
   const turnsLeft = unit.statuses.find((s) => s.id === statusId)?.turnsLeft ?? duration;
   ctx.emit({ type: 'STATUS_APPLIED', unitId: unit.id, status: statusId, turnsLeft, sourceId });
 }
@@ -47,6 +50,7 @@ export function removeStatus(
   const before = unit.statuses.length;
   unit.statuses = unit.statuses.filter((s) => s.id !== statusId);
   if (unit.statuses.length !== before) {
+    if(statusId==='BLEEDING')pruneBloodTrails(ctx.state);
     if(statusId==='ABSOLUTE_ZERO')clearFrozenWorldTerrain(ctx,unit.id);
     ctx.emit({ type: 'STATUS_REMOVED', unitId: unit.id, status: statusId, reason });
   }
@@ -71,6 +75,8 @@ export function tickStatuses(ctx: RuleContext, unit: Unit, timing: StatusTiming)
 
 /** Called at the end of the owner's turn: durations go down, expired statuses are removed. */
 export function decrementStatuses(ctx: RuleContext, unit: Unit): void {
+  pruneBloodTrails(ctx.state);
+  pruneLifeFeathers(ctx.state);
   for (const instance of [...unit.statuses]) {
     const def = ctx.content.statuses[instance.id];
     if (def.ownerStartLifetime || def.expiresAtOwnerTurnStart || def.permanent || def.summonActivationClock) continue;

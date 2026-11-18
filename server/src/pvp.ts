@@ -1,3 +1,4 @@
+import {CONTENT_RELEASE,supportsRoomRelease} from '../../src/game/pvp/content-release';
 import { botPause, botActionTiming, pacingCredit } from "./botPacing";
 import { botChampionAvatar } from "./botChampions";
 import { profileAvatar } from "../../src/shared/profileAvatars";
@@ -142,7 +143,7 @@ export const compatibleReadySeats = (
   members: readonly { clientRelease?: string }[],
 ): boolean =>
   members.length === 2 &&
-  members.every((m) => m.clientRelease === "thunder-release-2");
+  members.every((m) => m.clientRelease === CONTENT_RELEASE);
 
 const response = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -529,7 +530,7 @@ export class PvPMatchRoom {
       }
       if (
         this.room?.contentRelease &&
-        attachment.clientRelease !== this.room.contentRelease
+        !supportsRoomRelease(attachment.clientRelease, this.room.contentRelease)
       ) {
         ws.close(1008, "CLIENT_UPDATE_REQUIRED");
         continue;
@@ -722,6 +723,8 @@ export class PvPMatchRoom {
     return this.serial(async () => {
       const path = new URL(request.url).pathname;
       if (path === "/socket") return this.socket(request);
+      if (this.env.CONTENT_RELEASE_DRAIN === "1" && ["/create","/bot-create","/ranked-create","/join","/ready","/rematch"].includes(path))
+        return response({error:{code:"CONTENT_DRAINING",message:"Las partidas activas continúan; no se inician nuevas."}},503);
       const id = Number(request.headers.get("X-Pvp-User"));
       if (!Number.isSafeInteger(id) || id <= 0)
         return response({ error: { message: "No autorizado." } }, 401);
@@ -845,7 +848,7 @@ export class PvPMatchRoom {
               loadout,
               ready: true,
               offlineAt: null,
-              clientRelease: "thunder-release-2",
+              clientRelease: CONTENT_RELEASE,
             },
           ],
           game: null,
@@ -972,6 +975,8 @@ export class PvPMatchRoom {
           { error: { message: "No perteneces a esta sala." } },
           403,
         );
+      if (r.contentRelease && path !== "/leave" && !supportsRoomRelease(request.headers.get("X-Pvp-Client-Release") ?? undefined,r.contentRelease))
+        return response({error:{code:"CLIENT_UPDATE_REQUIRED",message:"Esta partida requiere recargar el juego."}},426);
       if (
         r.bot &&
         path !== "/leave" &&
@@ -994,7 +999,7 @@ export class PvPMatchRoom {
         );
         r.ticket[ticket] = { seat, expires: now + 30000 };
         await this.save();
-        return response({ ticket, code: r.code });
+        return response({ ticket, code: r.code, clientRelease: r.contentRelease ?? CONTENT_RELEASE });
       }
       if (path === "/loadout" || path === "/ready") {
         if (r.game || r.result)
@@ -1052,7 +1057,7 @@ export class PvPMatchRoom {
             !compatibleReadySeats(r.members)
           ) {
             for (const m of r.members)
-              if (m.clientRelease !== "thunder-release-2") m.ready = false;
+              if (m.clientRelease !== CONTENT_RELEASE) m.ready = false;
             await this.save();
             this.broadcast();
             return response(
@@ -1067,7 +1072,7 @@ export class PvPMatchRoom {
             );
           }
           if (this.env.RELEASE2_CLIENT_REQUIRED === "1")
-            r.contentRelease = "thunder-release-2";
+            r.contentRelease = CONTENT_RELEASE;
           r.game = createDuel(
             r.members.map((m) => m.loadout) as [Loadout, Loadout],
             crypto.getRandomValues(new Uint32Array(1))[0]!,
@@ -1193,6 +1198,8 @@ export class PvPMatchRoom {
         },
         409,
       );
+    if (r.contentRelease && !supportsRoomRelease(new URL(request.url).searchParams.get("clientRelease") ?? undefined, r.contentRelease))
+      return response({error:{code:"CLIENT_UPDATE_REQUIRED",message:"Recarga para recuperar esta partida."}},426);
     delete r.ticket[token];
     const pair = new (
       globalThis as unknown as {
@@ -1294,7 +1301,7 @@ export class PvPMatchRoom {
         seat = attachment.seat;
       if (
         this.room?.contentRelease &&
-        attachment.clientRelease !== this.room.contentRelease
+        !supportsRoomRelease(attachment.clientRelease, this.room.contentRelease)
       ) {
         ws.close(1008, "CLIENT_UPDATE_REQUIRED");
         return;

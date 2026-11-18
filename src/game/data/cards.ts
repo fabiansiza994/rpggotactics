@@ -350,21 +350,21 @@ for (const [id, name, cost, rarity, text] of [
     'Tortuga',
     2,
     'UNCOMMON',
-    '16 HP · armadura 1 · mueve 1 · daño 2 · capacidad 1. Mantiene posición; solo se acerca a enemigos a 3 casillas.',
+    '16 HP · armadura 1 · mueve 1 · daño 2 · capacidad 1. Mantiene posición; solo se acerca a enemigos a 3 casillas. Mordida Entorpecedora: reduce 1 movimiento durante 2 turnos. Una segunda mordida aumenta la reducción a 2. Mínimo 1 movimiento.',
   ],
   [
     'raven',
     'Cuervo',
     2,
     'UNCOMMON',
-    '8 HP · mueve 3 · daño arcano 1 · alcance 3 con visión · capacidad 1. Tras atacar purifica un aliado cercano.',
+    '8 HP · mueve 3 · daño arcano 1 · alcance 3 con visión · capacidad 1. Instinto Carroñero: gana +1 movimiento al perseguir enemigos con 30 % o menos de vida y les inflige 3 de daño. Plumas de Vida: al moverse tiene 35 % de probabilidad de dejar una pluma que cura 1 HP al Invocador. Máximo 3 plumas activas; duran 2 rondas. Tras atacar, purifica un aliado cercano.',
   ],
   [
     'wolf',
     'Lobo',
     3,
     'RARE',
-    '14 HP · mueve 2 · daño 3 · capacidad 2. Persigue enemigos; ocupa toda tu capacidad.',
+    '14 HP · mueve 2 · daño 3 · capacidad 2. Su mordida aplica Sangrado (1 daño durante 2 turnos). Los enemigos heridos dejan un rastro de sangre al moverse. Instinto de Caza: gana +1 movimiento al perseguir a su presa siguiendo el rastro.',
   ],
 ] as const) {
   list.push({

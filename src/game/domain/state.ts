@@ -88,6 +88,9 @@ export interface GameState {
   obstacles: Obstacle[];
   /** Placed traps (Archer). Absent in older snapshots = none. Public in PvP like obstacles. */
   traps?: Trap[];
+  /** Public, battle-only blood marks. IDs survive seat projection and reconnect. */
+  lifeFeathers?: { id: string; ownerId: string; ravenId: string; pos: import('./core/position').Pos; expiresRound: number }[];
+  bloodTrails?: { pos: import('./core/position').Pos; preyId: string; wolfId: string; expiresRound: number }[];
   /** Delayed areas (Runa de Ignición). Absent in older snapshots = none. Public in PvP like traps. */
   glyphs?: Glyph[];
   /** Interactive battlefield (Act III). Present only when the scenario declares a puzzle; never in PvP. */

@@ -1,3 +1,7 @@
+import {beastsEnabled} from '../combat/beasts-release';
+import {applyTurtleBite} from '../statuses/turtle-bite';
+import {ravenPursuit,weakenedPrey} from '../combat/raven';
+import {wolfPursuit} from '../combat/blood-trail';
 import {worldFrozen} from '../cards/world-frozen';
 import { depthEnabled } from '../combat/qa-depth';
 import {
@@ -272,6 +276,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     // Llamado de la Manada: planning sees the longer reach; the walk itself is the real unit's.
     const moveBonus = statusSum('summonMoveBonus') + (pursuit ? 1 : 0);
     const mover: Unit = moveBonus ? { ...unit, moveRange: unit.moveRange + moveBonus } : unit;
+    const planner = beastsEnabled(ctx.state) && unit.defId==='raven' && mover.moveRange>4 ? {...mover,moveRange:4} : mover;
     const taunter = challenger(ctx, unit);
     const closest = (a: { pos: Pos; id: string }, b: { pos: Pos; id: string }) =>
       manhattan(unit.pos, a.pos) - manhattan(unit.pos, b.pos) || a.id.localeCompare(b.id);
@@ -304,10 +309,19 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     const goal = pickup?.pos ?? objectiveGoal ?? target?.pos;
     const range = def.attackRange ?? 1;
     const prey = markedPrey(ctx, unit);
-    const preyRoute = prey && !taunter && !plateHold && preyStrike(ctx, mover, def, prey, !!holding);
+    const preyRoute = prey && !taunter && !plateHold && preyStrike(ctx, planner, def, prey, !!holding);
     // Out of reach this activation: close in along a safe route (Marcar Presa lasts 3 turns).
-    const preyChase = prey && !taunter && !plateHold && !preyRoute ? preyPursuit(ctx, mover, def, prey, !!holding) : null;
-    if (preyRoute) {
+    const preyChase = prey && !taunter && !plateHold && !preyRoute ? preyPursuit(ctx, planner, def, prey, !!holding) : null;
+    const bloodRoute = !taunter && !holding && !pickup && !objectiveGoal ? wolfPursuit(ctx, mover, prey) : null;
+    const carrionRoute = !taunter && !holding && !pickup && !objectiveGoal ? ravenPursuit(ctx, planner, prey) : null;
+    if(carrionRoute){
+      const walked=walkUnit(ctx,unit,carrionRoute.node.path,carrionRoute.node.cost);moved=walked.length>0;pursuitQualified=moved&&nearHostile();
+      if(walked.length===carrionRoute.node.path.length)ctx.emit({type:'RAVEN_SCAVENGER',unitId:unit.id,preyId:carrionRoute.prey.id,pos:unit.pos,kind:'MOVE'});
+    } else if (bloodRoute) {
+      const walked = walkUnit(ctx, unit, bloodRoute.node.path, bloodRoute.node.cost);
+      moved = walked.length > 0; pursuitQualified = moved && nearHostile();
+      if (walked.length === bloodRoute.node.path.length) ctx.emit({type:'WOLF_PURSUIT',unitId:unit.id,preyId:bloodRoute.prey.id,pos:unit.pos,bonus:1});
+    } else if (preyRoute) {
       if (preyRoute.cost > 0) walk(preyRoute.path, preyRoute.cost);
     } else if (preyChase) {
       walk(preyChase.path, preyChase.cost);
@@ -315,8 +329,8 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
       // No greedy fallback: only walk a prefix of a complete legal route to attack range.
       // An unreachable rival never makes this guard oscillate between partial approaches.
       if (target && !holding && (pursuitTarget || manhattan(unit.pos, target.pos) <= 5)) {
-        const route = preyStrike(ctx, mover, def, target, !!holding)
-          ?? preyPursuit(ctx, mover, def, target, !!holding);
+        const route = preyStrike(ctx, planner, def, target, !!holding)
+          ?? preyPursuit(ctx, planner, def, target, !!holding);
         if (route && route.cost > 0) walk(route.path, route.cost);
       }
     } else if (
@@ -334,7 +348,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
       // Flank within this turn's reachable cells, avoiding exposure and hazardous routes.
       const flank =
         def.behavior === 'SKIRMISHER'
-          ? [...computeReachable(ctx, mover, effectiveMoveRange(ctx, mover)).values()]
+          ? [...computeReachable(ctx, planner, effectiveMoveRange(ctx, planner)).values()]
               .filter((n) => inRange(n.pos) && n.path.every((p) => !terrainDefAt(ctx, p)?.isHazard))
               .sort((a, b) => {
                 const threats = (pos: Pos) =>
@@ -346,7 +360,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
                 );
               })[0]
           : undefined;
-      const best = flank ?? approach(ctx, mover, { pos: goal }, inRange);
+      const best = flank ?? approach(ctx, planner, { pos: goal }, inRange);
       if (best.cost > 0) walk(best.path, best.cost);
     }
     if (!ctx.state.units.includes(unit)) continue; // hazards can kill during movement
@@ -395,14 +409,19 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
       if(snowball)ctx.emit({type:'SNOWBALL_FIRED',unitId:unit.id,targetId:adjacent.id,from:unit.pos,to:adjacent.pos,global:false});
       // Temporary empowerment (Manada Ancestral's PACK_FURY, Instinto Alfa) adds to the base attack.
       const bonus = statusSum('summonDamageBonus') + (adjacent === prey ? statusSum('summonPreyDamageBonus') : 0);
-      dealDamage(
+      const scavenging=beastsEnabled(ctx.state)&&unit.defId==='raven'&&weakenedPrey(adjacent);
+      if(scavenging)ctx.emit({type:'RAVEN_SCAVENGER',unitId:unit.id,preyId:adjacent.id,pos:unit.pos,kind:'ATTACK'});
+      const bite = dealDamage(
         ctx,
         adjacent,
-        attackDamage(ctx, unit, adjacent, def.damage + bonus),
+        attackDamage(ctx, unit, adjacent, (scavenging ? 3 : def.damage) + bonus),
         unit.id,
         def.damageType ?? (range > 1 ? 'ARCANE' : 'PHYSICAL'),
         snowball?'DIRECT_RANGED':range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
       );
+      if(beastsEnabled(ctx.state)&&unit.defId==='turtle' && range===1 && bite.hpLost>0)applyTurtleBite(ctx,adjacent,unit.id);
+      if (beastsEnabled(ctx.state) && unit.defId === 'wolf' && range === 1 && bite.hpLost > 0 && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
+        applyStatus(ctx, adjacent, 'BLEEDING', 2, unit.id);
       if (def.onHitStatus && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
         applyStatus(ctx, adjacent, def.onHitStatus.status, def.onHitStatus.duration, unit.id);
       if (def.behavior === 'RANGED') {

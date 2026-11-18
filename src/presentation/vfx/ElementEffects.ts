@@ -1,3 +1,4 @@
+import {drawLifeFeather} from '../pixi/LifeFeatherView';
 import { elementalReactionDuration, elementalReactionEnvelope } from './elementalReactionTiming';
 import { CatalogEffects } from './CatalogEffects';
 import { MageEffects } from './MageEffects';
@@ -763,6 +764,12 @@ export class ElementEffects {
       },
       () => this.release(g),
     );
+  }
+
+  lifeFeatherFall(pos: Pos): void {
+    const g=this.graphic();if(!g)return;const c=this.center(pos);
+    drawLifeFeather(g);
+    g.position.set(c.x,c.y);this.animate(this.reduced?80:320,t=>{g.y=c.y-(this.reduced?0:(1-t)*28);g.rotation=(1-t)*.6;g.alpha=1-t*.65;},()=>this.release(g));
   }
 
   burst(pos: Pos, family: Family, strong = false, duration = 180): void {

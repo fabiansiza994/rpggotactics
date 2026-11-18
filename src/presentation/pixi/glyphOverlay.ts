@@ -1,3 +1,4 @@
+import {activeBloodTrails} from '../../game/domain/combat/blood-trail';
 import type { Graphics } from 'pixi.js';
 import type { GridProjection } from './GridProjection';
 import type { BoardViewModel } from './viewModel';
@@ -10,6 +11,11 @@ import type { BoardViewModel } from './viewModel';
 const FIRE = 0xff8a3d;
 
 export function drawGlyphOverlay(g: Graphics, proj: GridProjection, vm: BoardViewModel): void {
+  for (const mark of activeBloodTrails(vm.state)) {
+    const c = proj.getTileCenter(mark.pos);
+    g.ellipse(c.x-3,c.y+2,5,2.5).fill({color:0x7b1124,alpha:0.72});
+    g.circle(c.x+5,c.y-2,1.7).fill({color:0xb5273b,alpha:0.8});
+  }
   for (const glyph of vm.state.glyphs ?? []) {
     if (glyph.glyphId === 'thunder_orb' && glyph.tiles.length) {
       const mean = glyph.tiles.reduce((a,p)=>({x:a.x+p.x,y:a.y+p.y}),{x:0,y:0});
