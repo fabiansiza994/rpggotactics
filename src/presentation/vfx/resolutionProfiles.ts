@@ -31,6 +31,8 @@ export function resolutionProfile(key: string, summon = false): ResolutionProfil
   const base = RESOLUTION_PROFILES[family];
   // Flat-art/projectile cards share the same phases without adding gameplay metadata.
   if (key === 'forbidden_bond') return { family: 'ritual', cast: 420, travel: 0, aftermath: 900, read: 340 }; // ~1.7 s total
+  if (key==='frost_comet')return {family:'ice',cast:300,travel:520,aftermath:760,read:180};
+  if (key==='frost_nova')return {family:'ice',cast:320,travel:0,aftermath:760,read:180};
   if (isThunderAddition(key)) return {...base, cast:key==='storm_avatar'?360:260, travel:['fulminating_spear','thunder_hammer','lightning_step'].includes(key)?240:80, aftermath:480, read:180};
   if (key === 'paralyzing_pulse') return {...base, ...PULSE_TIMING};
   if (isThunderPremium(key)) return { ...base, ...THUNDER_TIMING[key] };

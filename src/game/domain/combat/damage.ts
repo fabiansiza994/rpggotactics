@@ -96,6 +96,7 @@ export function dealDamage(
   }
   const hadShield = unit.shield > 0;
   unit.shield -= result.shieldAbsorbed;
+  if(unit.shield===0)delete unit.shieldMaterial;
   unit.hp -= result.hpLost;
 
   ctx.emit({
@@ -157,21 +158,25 @@ export function breakShield(ctx: RuleContext, unit: Unit, amount: number, source
   const removed = Math.min(unit.shield, Math.max(0, amount));
   if (removed === 0 || !ctx.state.units.includes(unit)) return 0;
   unit.shield -= removed;
+  if(unit.shield===0)delete unit.shieldMaterial;
   ctx.emit({ type: 'SHIELD_SHATTERED', unitId: unit.id, sourceId, amount: removed, total: unit.shield });
   if (unit.shield === 0) ctx.emit({ type: 'SHIELD_BROKEN', unitId: unit.id });
   return removed;
 }
 
 /** Shields stack additively until they expire at the start of the owner's next turn. */
-export function addShield(ctx: RuleContext, unit: Unit, amount: number, sourceId: string): void {
+export function addShield(ctx: RuleContext, unit: Unit, amount: number, sourceId: string, material?: 'ICE'): void {
   if (amount <= 0) return;
+  if(unit.shield<=0)delete unit.shieldMaterial;
+  if(material==='ICE')unit.shieldMaterial='ICE';
   unit.shield += amount;
-  ctx.emit({ type: 'SHIELD_GAINED', unitId: unit.id, sourceId, amount, total: unit.shield });
+  ctx.emit({ type: 'SHIELD_GAINED', unitId: unit.id, sourceId, amount, total: unit.shield, ...(unit.shieldMaterial?{material:unit.shieldMaterial}:{}) });
 }
 
 export function expireShield(ctx: RuleContext, unit: Unit): void {
   if (unit.shield <= 0) return;
   const amount = unit.shield;
   unit.shield = 0;
+  delete unit.shieldMaterial;
   ctx.emit({ type: 'SHIELD_EXPIRED', unitId: unit.id, amount });
 }

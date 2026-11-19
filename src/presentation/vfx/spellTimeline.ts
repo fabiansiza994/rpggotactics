@@ -93,6 +93,7 @@ export function compileTimeline(
       const lineShot = event.direction !== null && event.affectedTiles.length > 1;
       if (((['magic_missile', 'fireball', 'thunder_discharge', 'chain_lightning', 'tempest_judgment'].includes(key)) && !ownEvents.some(e => e.type === 'PROJECTILE_LAUNCHED')) || (isArrowVisual(key) && !lineShot)) add(cursor + cast, 'projectile', event, travel);
       if (isThunderAddition(key) && !ownEvents.some(e=>e.type==='PROJECTILE_LAUNCHED')) add(cursor+cast,'projectile',event,travel);
+      if (key==='frost_comet') add(cursor+cast,'projectile',event,travel);
       if (key==='paralyzing_pulse') add(cursor+cast,'projectile',event,travel);
       add(spell.impact, 'spellImpact', event, key === 'magic_missile' || isArrowVisual(key) ? 130 : 220);
     } else if (event.type === 'ARROW_REBOUNDED') {

@@ -50,12 +50,13 @@ export function projectEvent(
       if(unit){if(event.to===null)delete unit.activeForm;else unit.activeForm=event.to;}
       break;
     case 'SHIELD_SHATTERED':
-      if(unit)unit.shield=event.total;
+      if(unit){unit.shield=event.total;if(!unit.shield)delete unit.shieldMaterial;}
       break;
     case 'UNIT_DAMAGED':
       if (unit) {
         unit.hp = event.hpAfter;
         unit.shield = Math.max(0, unit.shield - event.shieldAbsorbed);
+        if(!unit.shield)delete unit.shieldMaterial;
       }
       break;
     case 'UNIT_HEALED':
@@ -74,11 +75,11 @@ export function projectEvent(
       break;
     }
     case 'SHIELD_GAINED':
-      if (unit) unit.shield = event.total;
+      if (unit) {unit.shield = event.total;if(event.material)unit.shieldMaterial=event.material;}
       break;
     case 'SHIELD_BROKEN':
     case 'SHIELD_EXPIRED':
-      if (unit) unit.shield = 0;
+      if (unit) {unit.shield = 0;delete unit.shieldMaterial;}
       break;
     case 'STATUS_APPLIED': {
       // Sourced statuses (Presa) keep their owner so markers know whose mark it is mid-playback.

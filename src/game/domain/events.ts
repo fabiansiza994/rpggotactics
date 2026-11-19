@@ -214,7 +214,7 @@ export type GameEvent =
       targetIds: string[];
     }
   | { type: 'UNIT_SPAWNED'; unitId: string; faction: Faction; kind: UnitKind; pos: Pos }
-  | { type: 'SHIELD_GAINED'; unitId: string; sourceId: string; amount: number; total: number }
+  | { type: 'SHIELD_GAINED'; unitId: string; sourceId: string; amount: number; total: number; material?: 'ICE' }
   | { type: 'SHIELD_BROKEN'; unitId: string }
   /** Rompeguardia: shield removed before the hit (never HP). */
   | { type: 'SHIELD_SHATTERED'; unitId: string; sourceId: string; amount: number; total: number }

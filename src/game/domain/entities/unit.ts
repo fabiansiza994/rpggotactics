@@ -25,6 +25,8 @@ export interface Unit {
   maxHp: number;
   /** Absorbs damage before HP. Expires at the start of the owner's next turn. */
   shield: number;
+  /** Cosmetic provenance only; absent legacy snapshots use the energy barrier. */
+  shieldMaterial?: 'ICE';
   /** Flat damage reduction: finalDamage = max(0, base - armor). */
   armor: number;
   /** Movement budget per turn for AI units. The hero uses PlayerState.movePoints. */

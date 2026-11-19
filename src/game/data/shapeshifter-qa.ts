@@ -33,7 +33,7 @@ const make = (
 const self: TargetingDef = { type: 'SELF' };
 const melee: TargetingDef = { type: 'UNIT', range: 1, unitFilter: 'ENEMY' };
 export const SHAPESHIFTER_QA_CARDS: readonly CardDefinition[] = [
-  make('qa_bear_form', 'Forma de Oso', 1, 'UTILITY', 'Adopta Oso (+2 armadura). No cura.', self, [
+  make('qa_bear_form', 'Forma de Oso', 1, 'UTILITY', 'Adopta Oso (+1 armadura). No cura.', self, [
     { type: 'TRANSFORM', formId: 'bear' },
   ]),
   make(
@@ -41,7 +41,7 @@ export const SHAPESHIFTER_QA_CARDS: readonly CardDefinition[] = [
     'Forma de Minotauro',
     1,
     'UTILITY',
-    'Adopta Minotauro (+1 armadura). No cura.',
+    'Adopta Minotauro (sin armadura adicional). No cura.',
     self,
     [{ type: 'TRANSFORM', formId: 'minotaur' }],
   ),

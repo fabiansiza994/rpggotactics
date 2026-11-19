@@ -336,6 +336,8 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'cast' && e.type === 'CARD_PLAYED') {
+      if(fx.icePremium)fx.icePremium.reduced=reduced;
+      if(e.cardId==='frost_nova')fx.icePremium?.charge(e.impact,cue.duration);
       this.host.castCard?.(e);
       this.host.presentEvent?.(e);
       const from = this.position(e.casterId) ?? e.impact;
@@ -362,6 +364,7 @@ export class VfxDirector {
       if(cue.key==='magma_fissure')fx.magmaFissure(e.affectedTiles,'windup');
       if(cue.key==='forbidden_bond')fx.forbiddenBond(from,'gather',cue.duration);
       this.host.unit(e.casterId)?.pulseLight(lightColor(f), reduced ? 140 : 220);
+      if(e.cardId==='frost_nova'||e.cardId==='frost_comet')return;
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
         fx.catalog.charge(catalog,from,cue.duration,caster?.castOrigin()??undefined,e.impact,e.affectedTiles);
@@ -411,6 +414,7 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'projectile') {
+      if(cue.key==='frost_comet'&&e.type==='CARD_PLAYED'){fx.icePremium?.comet(e.impact,cue.duration);return;}
       if(e.type==='SNOWBALL_FIRED'){const caster=this.host.unit(e.unitId);caster?.faceTarget(e.from,e.to,true);fx.snowball(e.from,e.to,cue.duration,caster?.castOrigin()??undefined);return;}
       if (e.type === 'ARROW_REBOUNDED') {
         if (e.element === 'THUNDER' && fx.catalog) fx.catalog.projectile({...familyRecipe('arcane','projectile'),mageElement:'thunder',bank:'mage-elements',tint:0xa5dfff},e.fromPos,e.pos,cue.duration);
@@ -479,6 +483,7 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'spellImpact' && e.type === 'CARD_PLAYED') {
+      if(e.cardId==='frost_nova'||e.cardId==='frost_comet'){fx.icePremium?.impact(e.impact,e.affectedTiles,e.cardId==='frost_comet');this.host.impulse(e.cardId==='frost_comet'?'MEDIUM':'LIGHT',reduced);return;}
       if(e.cardId==='glacial_storm'){fx.glacialStorm(e.affectedTiles,!!e.worldFrozen);return;}
       if(this.host.card(e.cardId)?.tags.includes('antarctic')){
         const origin=this.position(e.casterId)??e.impact;
@@ -707,11 +712,12 @@ export class VfxDirector {
             fx.fireball.reaction?.(e.unitId, () => this.position(e.unitId));
         }
         if (e.shieldAbsorbed) {
+          this.host.unit(e.unitId)?.shieldImpact?.(Math.sign((this.host.unit(e.sourceId)?.root?.x??0)-(this.host.unit(e.unitId)?.root?.x??0)));
           fx.number(e.unitId, e.pos, e.shieldAbsorbed, 'shield');
           const defender = this.host.unit(e.unitId);
           if (defender && hasMartialAnimation(defender.defId))
             fx.martialGuard(e.pos, shieldSide(defender.directionalFacing), true);
-          else fx.shell(e.pos);
+
         }
         if (!e.hpLost && !e.shieldAbsorbed && e.armorMitigated)
           fx.number(e.unitId, e.pos, e.armorMitigated, 'armor');
@@ -781,6 +787,7 @@ export class VfxDirector {
       case 'SHIELD_GAINED':
         if (oldPosition) {
           const unit = this.host.unit(e.unitId);
+          unit?.shieldGain?.();
           if(cue.key==='binding_ward')fx.bindingWard(oldPosition,e.amount>=5);
           else if (
             unit &&
@@ -791,7 +798,7 @@ export class VfxDirector {
           else if(cue.key==='ritual:ancestral_shell')fx.ritual(oldPosition,'MINOR','arrival');
           else {
             fx.glyph(oldPosition, 'BARRIER');
-            fx.shell(oldPosition);
+
           }
           fx.number(e.unitId, oldPosition, e.amount, 'shield');
         }
@@ -802,7 +809,7 @@ export class VfxDirector {
           const unit = this.host.unit(e.unitId);
           if (unit && hasMartialAnimation(unit.defId))
             fx.martialGuard(oldPosition, shieldSide(unit.directionalFacing), true);
-          else fx.shell(oldPosition, true);
+          if(e.type==='SHIELD_BROKEN')unit?.shieldBreak?.();else unit?.shieldExpire?.();
         }
         break;
       case 'MOMENTUM_CHANGED':

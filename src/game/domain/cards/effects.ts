@@ -242,7 +242,7 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     for (const u of selectUnits(e, fx.to)) healUnit(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u), e.caster.id);
   },
   SHIELD: (e, fx) => {
-    for (const u of selectUnits(e, fx.to)) addShield(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u), e.caster.id);
+    for (const u of selectUnits(e, fx.to)) addShield(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u), e.caster.id, e.cardId&&e.ctx.content.cards[e.cardId]?.presentation.element==='ICE'?'ICE':undefined);
   },
   APPLY_STATUS: (e, fx) => {
     const marked: Unit[] = [];

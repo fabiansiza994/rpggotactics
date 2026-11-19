@@ -1,3 +1,4 @@
+import {ShieldBarrierView}from './ShieldBarrierView';
 import {clawScaleForUnit} from './glacierClawMotion';
 import {snowSoldierVariant} from './snowSoldierAtlas';
 import {snowVisualAge} from './snowSoldierAnimations';
@@ -86,6 +87,11 @@ export class UnitView {
   private readonly worldLight = new Graphics();
   private readonly crystalDamage = new Graphics();
   private readonly legendaryFx = new LegendaryStatusView();
+  private readonly shieldBarrier:ShieldBarrierView;
+  shieldImpact(side=1):void {this.shieldBarrier.impact(side);}
+  shieldGain():void {this.shieldBarrier.gained();}
+  shieldBreak():void {this.shieldBarrier.shatter();}
+  shieldExpire():void {this.shieldBarrier.expire();}
   private readonly glacierClaw=new GlacierClawView();
   beginGlacierClaw():void {this.glacierClaw.enter();}
   releaseGlacierClaw(fire:boolean):void {this.glacierClaw.release(fire);}
@@ -194,6 +200,7 @@ export class UnitView {
     this.figure.pivot.set(0, 0);
     this.figure.position.set(0, 0);
     this.figure.scale.set(sizeScale);
+    this.shieldBarrier=new ShieldBarrierView(this.height*.4,this.height);
     const clawScale=clawScaleForUnit(this.height,sizeScale);
     this.clawChromeRise=Math.max(0,132*clawScale-this.height*sizeScale);
     this.glacierClaw.back.scale.set(clawScale);this.glacierClaw.front.scale.set(clawScale);
@@ -222,7 +229,7 @@ export class UnitView {
           .fill({ color: accent, alpha: 0.55 });
     }
     this.figure.addChild(this.worldLight, this.body, this.crystalDamage, this.aura);
-    this.scaler.addChild(this.contact, this.base, this.selection, this.conditionFx, this.glacierClaw.back, this.figure, this.legendaryFx, this.glacierClaw.front);
+    this.scaler.addChild(this.contact, this.base, this.selection, this.conditionFx, this.shieldBarrier.back, this.glacierClaw.back, this.figure, this.legendaryFx, this.glacierClaw.front, this.shieldBarrier.front);
     const roots = paintedCharacter('root_snare');
     this.rootSnare = roots ? new RootSnareView(roots) : null;
     if (this.rootSnare) this.scaler.addChild(this.rootSnare);
@@ -548,6 +555,7 @@ export class UnitView {
     this.conditionFx.advance(this.clock, reduced);
     this.legendaryFx.advance(ms,this.clock,reduced);
     this.glacierClaw.advance(ms,reduced);
+    this.shieldBarrier.advance(ms,reduced);
     this.clock += ms;
     this.rootSnare?.advance(ms, reduced);
     this.selection.alpha = reduced ? 0.8 : 0.78 + Math.sin((this.clock / 2100) * Math.PI * 2) * 0.1;
@@ -641,6 +649,7 @@ export class UnitView {
     this.veilPhase=phaseName;
     this.conditionFx.update(unit, phaseName);
     this.legendaryFx.update(unit);
+    this.shieldBarrier.sync(unit.shield,unit.shieldMaterial);
     const claw=unit.statuses.find(s=>s.id==='GLACIER_CLAW');this.glacierClaw.sync(!!claw,!!claw?.power);
     if(this.defId==='pact_golem')this.aura.visible=unit.hp>0;
     this.rootSnare?.setActive(unit.hp > 0 && unit.statuses.some(s => s.id === 'ROOTED'));
@@ -714,10 +723,6 @@ export class UnitView {
       const x = -r * 1.12 - 5;
       this.base.poly([x - 5, 0, x, -5, x + 5, 0, x, 5]).fill(color);
     }
-    if (unit.shield > 0)
-      this.base
-        .ellipse(0, -this.height * 0.48, r * 1.25 + 6, this.height * 0.56)
-        .stroke({ color: 0xf0d28b, width: 2, alpha: 0.75 });
 
     // Chrome: origin = just above the head.
     for (const child of this.chrome.removeChildren()) if (child !== this.healthInk) child.destroy({ children: true });
@@ -875,6 +880,7 @@ export class UnitView {
 
   destroy(): void {
     this.glacierClaw.destroy();
+    this.shieldBarrier.destroy();
     this.body.filters = null;
     this.clarity.destroy();
     this.chrome.destroy({ children: true });

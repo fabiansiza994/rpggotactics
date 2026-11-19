@@ -96,7 +96,7 @@ describe('Shapeshifter initial private 30-card catalog', () => {
       h.hp = 12;
       h.shield = 0;
       h.activeForm = card.requiredForms?.[0] ?? undefined;
-      h.armor = h.activeForm === 'bear' ? 2 : h.activeForm === 'minotaur' ? 1 : 0;
+      h.armor = h.activeForm ? (content.transformations?.[h.activeForm]?.armorBonus ?? 0) : 0;
       const enemy = s.units.find((u) => u.faction === 'ENEMY')!;
       enemy.pos = card.targeting.type === 'CHARGE' ? { x: 4, y: 2 } : { x: 3, y: 2 };
       s.player.energy = 4;

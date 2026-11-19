@@ -177,6 +177,15 @@ export class MageEffects extends PaintedEffectPool {
     );
     this.motes(ground, scale, frames.iceSpark, 0xb5f3ff);
   }
+  /** Existing painted ice atlas reused by the premium geometry compositor. */
+  iceBloom(at:Pos,diameter:number):void {
+    if(!this.ready)return;const c=this.geometry.center(at);
+    this.sprite(frames.frostWave,c,diameter,620,(t,s)=>{s.anchor.set(.5,.72);s.width=diameter*(.45+.55*(1-(1-t)**2));s.height=s.width*.72;s.alpha=(this.reduced?.28:.82)*Math.sin(Math.PI*Math.min(1,t*1.2));},true,false);
+  }
+  iceComet(at:Pos,duration:number):void {
+    if(!this.ready)return;const c=this.geometry.center(at),scale=this.geometry.footprint(at).w/96;
+    this.sprite(frames.iceShard,c,105*scale,duration,(t,s)=>{const u=this.reduced?t:t*t;s.position.set(c.x-170*scale*(1-u),c.y-230*scale*(1-u));s.rotation=Math.atan2(230,170)+Math.PI/4;s.alpha=.92;s.zIndex=this.geometry.depth(c)+9;},false,false);
+  }
   private motes(
     at: { x: number; y: number },
     scale: number,

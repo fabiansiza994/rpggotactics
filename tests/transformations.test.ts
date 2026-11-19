@@ -78,12 +78,12 @@ describe('transformation foundation (private fixtures only)', () => {
     expect(
       first.ok && first.events.some((ev) => ev.type === 'FORM_CHANGED' && ev.to === 'bear'),
     ).toBe(true);
-    expect(hero(e)).toMatchObject({ activeForm: 'bear', hp: 7, shield: 3, armor: 2, statuses });
+    expect(hero(e)).toMatchObject({ activeForm: 'bear', hp: 7, shield: 3, armor: 1, statuses });
     expect(e.state.player.energy).toBe(energy - 1);
     expect(hero(e).maxHp).toBe(hpMax);
     expect(e.state.player.movePoints).toBe(movement);
     expect(play(e, 'minotaur_shift').ok).toBe(true);
-    expect(hero(e)).toMatchObject({ activeForm: 'minotaur', hp: 7, armor: 1, statuses });
+    expect(hero(e)).toMatchObject({ activeForm: 'minotaur', hp: 7, armor: 0, statuses });
     expect(play(e, 'human_shift').ok).toBe(true);
     expect(activeForm(hero(e))).toBeNull();
     expect(hero(e).armor).toBe(0);
@@ -166,7 +166,7 @@ describe('transformation foundation (private fixtures only)', () => {
     const e = make();
     play(e, 'bear_shift');
     play(e, 'bear_shift');
-    expect(hero(e).armor).toBe(2);
+    expect(hero(e).armor).toBe(1);
     // A real objective-completing command clears battle-only form state.
     mutable(e).units = mutable(e).units.filter((u) => u.kind !== 'ENEMY');
     expect(play(e, 'human_skill')).toMatchObject({ ok: false, error: 'FORM_REQUIRED' });
@@ -216,9 +216,9 @@ describe('transformation foundation (private fixtures only)', () => {
     const e = make();
     hero(e).armor = 5;
     expect(play(e, 'bear_shift').ok).toBe(true);
-    expect(hero(e).armor).toBe(7);
-    expect(play(e, 'minotaur_shift').ok).toBe(true);
     expect(hero(e).armor).toBe(6);
+    expect(play(e, 'minotaur_shift').ok).toBe(true);
+    expect(hero(e).armor).toBe(5);
     expect(play(e, 'human_shift').ok).toBe(true);
     expect(hero(e).armor).toBe(5);
     const c = content();
