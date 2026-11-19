@@ -21,6 +21,15 @@ export interface D1Database {
 
 export interface Env {
   /** Sandbox only, explicitly opt in. Missing/0 disables every PayPal operation. */
+  PAYPAL_LIVE_RECONCILIATION_ENABLED?: string;
+  PAYPAL_LIVE_ENABLED?: string;
+  PAYPAL_LIVE_CHECKOUT_ENABLED?: string;
+  PAYPAL_LIVE_ACTIVATION?: string;
+  PAYPAL_LIVE_CLIENT_ID?: string;
+  PAYPAL_LIVE_CLIENT_SECRET?: string;
+  PAYPAL_LIVE_WEBHOOK_ID?: string;
+  PAYPAL_LIVE_MERCHANT_ID?: string;
+  PAYPAL_LIVE_RETURN_ORIGIN?: string;
   PAYPAL_SANDBOX_ENABLED?: string;
   PAYPAL_CLIENT_ID?: string;
   PAYPAL_CLIENT_SECRET?: string;

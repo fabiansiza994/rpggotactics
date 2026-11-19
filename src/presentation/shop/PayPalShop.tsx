@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { paypalSandboxBuildEnabled, paypalReturnPending } from './paypalAvailability';
+import { paypalBuildEnabled, paypalReturnPending, paypalApiPath, paypalLiveBuildEnabled } from './paypalAvailability';
 import { CLOUD_CONFIG } from '../cloud/config';
 import { request } from '../cloud/http';
 import { loadSession } from '../cloud/session';
@@ -12,7 +12,7 @@ type Status = 'CREATED' | 'APPROVED' | 'PENDING' | 'DECLINED' | 'FULFILLED' | 'R
 type Order = { id: string; packageId: string; crystals: number; usd: string; status: Status; checkoutUrl: string | null; createdAt: number };
 type OrderResult = { order: Order; wallet?: Wallet };
 
-const path = '/api/tactics/store/paypal';
+const path = paypalApiPath();
 const endpoint = CLOUD_CONFIG.apiUrl;
 const timeoutMs = 30000;
 const ordersPath = path + '/orders';
@@ -46,7 +46,7 @@ export function PayPalShop({ token, onWallet }: { token: string | null; onWallet
   const attempts = useRef(new Map<string, string>());
 
   useEffect(() => {
-    if (!paypalSandboxBuildEnabled()) return;
+    if (!paypalBuildEnabled()) return;
     let active = true;
     void request<{ available: boolean; packages: Package[] }>(endpoint, path + '/catalog', { timeoutMs })
       .then(result => { if (active && result.ok && result.data.available) setPackages(result.data.packages); });
@@ -68,7 +68,7 @@ export function PayPalShop({ token, onWallet }: { token: string | null; onWallet
   function buy(packageId: string) {
     if (!token) return;
     void run(async () => {
-      const storageKey = 'rpggo:paypal-attempt:' + packageId;
+      const storageKey = 'rpggo:paypal-attempt:' + path + ':' + packageId;
       let key = attempts.current.get(packageId) ?? crypto.randomUUID();
       try {
         key = sessionStorage.getItem(storageKey) ?? key;
@@ -122,7 +122,7 @@ export function PayPalShop({ token, onWallet }: { token: string | null; onWallet
     <section className="shop-section crystal-shop paypal-shop" aria-label="Paquetes PayPal">
       <div className="shop-section-title">
         <h2>Comprar Cristales Arcanos</h2>
-        <span className="crystal-shop-test">PayPal Sandbox · sin cobros reales</span>
+        <span className="crystal-shop-test">{paypalLiveBuildEnabled() ? 'PayPal · USD' : 'PayPal Sandbox · sin cobros reales'}</span>
       </div>
       <div className="crystal-shop-grid">
         {packages.map(pkg => {
@@ -212,7 +212,7 @@ export function PayPalResult({ onClose }: { onClose?(): void } = {}) {
   const signedIn = !!loadSession()?.token;
   return <div className="payment-result" role="dialog" aria-modal="true" aria-labelledby="paypal-result-title">
     <div className="payment-result-card">
-      <span className="crystal-shop-test">PayPal Sandbox</span>
+      <span className="crystal-shop-test">{paypalLiveBuildEnabled() ? 'PayPal' : 'PayPal Sandbox'}</span>
       <h2 id="paypal-result-title">Resultado del pago</h2>
       <p role="status">{!signedIn ? 'Inicia sesión y consulta el pedido en el historial.' : busy ? 'Procesando pago…' : status}</p>
       {wallet && <p>Saldo confirmado: {crystals(wallet.balance)} Cristales.</p>}

@@ -50,7 +50,7 @@ import { premiumAllowed, reconcilePremium } from './rankedPremium';
 import { masteryAllowed, masteryRoute, pveVictoryMastery } from './mastery';
 import { freeCatalogBody, reconcileFreeCatalog } from './freeCatalog';
 import { defaultStoreDeps, storeRoute, type StoreDeps, type StoreRequest } from './store';
-import { paypalPublicRoute, paypalRoute } from './paypal';
+import { paypalPublicRoute, paypalRoute, reconcileLiveOrders, liveOperationalReport } from './paypal';
 import { promoRoute } from './promo';
 import { launchRewardRoute } from './launchReward';
 import { giftRoute } from './gifts';
@@ -786,5 +786,9 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
 }
 
 export default {
+  scheduled: async (_event: unknown, env: Env): Promise<void> => {
+    const result = await reconcileLiveOrders(env);
+    if (result.enabled) console.log(JSON.stringify({event:'paypal-live-reconciliation',...result,operations:await liveOperationalReport(env)}));
+  },
   fetch: (request: Request, env: Env): Promise<Response> => handle(request, env),
 };

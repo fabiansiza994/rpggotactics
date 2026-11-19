@@ -1,5 +1,5 @@
 import { PayPalShop } from './PayPalShop';
-import { paypalSandboxBuildEnabled } from './paypalAvailability';
+import { paypalBuildEnabled } from './paypalAvailability';
 import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT, resolvePresentationCard } from "../catalog/cardPresentation";
 import {LaunchReward} from './LaunchReward';
 import { MarketHome } from "./MarketHome";
@@ -478,7 +478,7 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
           />
         )}
         {activeCategory==='featured' && (!session || catalog) && <details className="market-home-additional"><summary>Historial de regalos</summary><GiftHistoryPanel token={session?.token ?? null} /></details>}
-        {activeCategory==='crystals' && paypalSandboxBuildEnabled() && <PayPalShop token={session?.token ?? null} onWallet={wallet => setCatalog(old => old ? { ...old, wallet } : old)} />}
+        {activeCategory==='crystals' && paypalBuildEnabled() && <PayPalShop token={session?.token ?? null} onWallet={wallet => setCatalog(old => old ? { ...old, wallet } : old)} />}
         {activeCategory==='crystals'&&<section className="shop-section"><h2>Cristales Arcanos</h2><p>Consulta tu saldo y las formas de conseguir Cristales.</p>{catalog&&<Wallet balance={catalog.wallet.balance}/>}<button className="shop-primary" onClick={()=>{setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled()?'Consultar paquetes disponibles':'Cómo conseguir cristales jugando'}</button></section>}
         {catalog&&activeCategory==='packs'&&<ExpansionCatalog expansions={catalog.expansions??[]} offers={catalog.offers} balance={catalog.wallet.balance} busy={busy||loading||!!intent} onBuy={open} onReset={async(id,box)=>{if(!session||lock.current)return;lock.current=true;setBusy(true);try{const result=await storeApi.resetBox(session.token,id,box.generation,box.version);await reload();if(!result.ok)setError('No se confirmó el reinicio. Actualiza para revisar la caja antes de reintentar.');}finally{lock.current=false;setBusy(false);}}} selectedId={expansionId} onSelect={setExpansionId} profile={profile} onInspect={id=>{opener.current=document.activeElement as HTMLElement;setCatalogCard(id);setSelected(null);setReceipt(null);}}/>}
         {catalog&&activeCategory!=='featured'&&activeCategory!=='crystals'&&activeCategory!=='packs'&&<section className="shop-section" data-category={activeCategory}>
