@@ -12,7 +12,7 @@ export function iceWalkQuote(ctx:RuleContext,unit:Unit,path:readonly Pos[]):{cos
  for(const p of path){
   const icy=tileAt(ctx.state.board,prev)?.terrain==='ICE'&&tileAt(ctx.state.board,p)?.terrain==='ICE';
   if(!icy){left=0;ended=true;}
-  if(left>0){left--;free++;}else cost+=stepCost(ctx,prev,p);
+  if(left>0){left--;free++;}else cost+=stepCost(ctx,prev,p,unit);
   prev=p;
  }
  return {cost,free,ended};

@@ -112,7 +112,7 @@ export function retreatSummon(ctx: RuleContext, unit: Unit, steps: number): void
     for (const node of frontier)
       for (const dir of DIRECTIONS) {
         const pos = step(node.pos, dir),
-          cost = node.cost + stepCost(ctx, node.pos, pos);
+          cost = node.cost + stepCost(ctx, node.pos, pos, unit);
         if (
           cost > 2 ||
           samePos(pos, unit.pos) ||

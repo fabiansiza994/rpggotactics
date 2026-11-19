@@ -1,3 +1,4 @@
+import {clawScaleForUnit} from './glacierClawMotion';
 import {snowSoldierVariant} from './snowSoldierAtlas';
 import {snowVisualAge} from './snowSoldierAnimations';
 import {GlacierClawView} from './GlacierClawView';
@@ -142,6 +143,7 @@ export class UnitView {
   setStatusScale(scale: number): void { this.statusScale = Math.max(1, scale); this.statusRow?.scale.set(this.statusScale); }
   private readonly chromeClearance: number;
   private depthScale = 1;
+  private readonly clawChromeRise:number;
 
   /** `sizeScale` enlarges elite/boss figures; the ground ring and chrome keep tile size. */
   constructor(
@@ -192,6 +194,9 @@ export class UnitView {
     this.figure.pivot.set(0, 0);
     this.figure.position.set(0, 0);
     this.figure.scale.set(sizeScale);
+    const clawScale=clawScaleForUnit(this.height,sizeScale);
+    this.clawChromeRise=Math.max(0,132*clawScale-this.height*sizeScale);
+    this.glacierClaw.back.scale.set(clawScale);this.glacierClaw.front.scale.set(clawScale);
     this.worldLight.eventMode = 'none';
     const accent = characterDefinition(defId).accent;
     if ((defId === 'mage' || defId === 'dark_shaman') && spec.glow) {
@@ -289,7 +294,7 @@ export class UnitView {
   /** Chrome follows the figure's head; it fades with the figure (dash, blink). */
   syncChrome(): void {
     const head = this.headPoint();
-    this.chrome.position.set(head.x, head.y - 6 - this.chromeClearance * this.sizeScale * this.depthScale * this.root.scale.y);
+    this.chrome.position.set(head.x, head.y - 6 - (this.chromeClearance * this.sizeScale + (this.glacierClaw.back.visible?this.clawChromeRise:0)) * this.depthScale * this.root.scale.y);
     this.chrome.alpha = this.root.alpha;
     this.chrome.visible = this.root.visible;
   }

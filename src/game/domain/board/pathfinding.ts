@@ -1,4 +1,5 @@
 import {tileAt} from './board';
+import {ignoresIceMovementPenalty} from '../cards/world-frozen';
 import {iceWalkQuote} from '../combat/ice-movement';
 import type { RuleContext } from '../context';
 import { comparePos, DIRECTIONS, posKey, step, type Pos } from '../core/position';
@@ -15,9 +16,10 @@ export interface PathNode {
 
 /** Cost of one orthogonal step: 1 + exit bonus of the tile being left (ICE). */
 /** Cost of one step out of `from` (into `to`, when known: see `TerrainDef.exitCostOnlyLeavingZone`). */
-export function stepCost(ctx: RuleContext, from: Pos, to?: Pos): number {
+export function stepCost(ctx: RuleContext, from: Pos, to?: Pos, unit?: Unit): number {
   const def = terrainDefAt(ctx, from);
   if (!def?.exitCostBonus) return 1;
+  if (def.type==='ICE' && unit && ignoresIceMovementPenalty(ctx.state,unit)) return 1;
   if (def.exitCostOnlyLeavingZone && to && terrainDefAt(ctx, to)?.type === def.type) return 1;
   return 1 + (tileAt(ctx.state.board,from)?.iceExitBonus??def.exitCostBonus);
 }
@@ -45,7 +47,7 @@ export function computeReachable(
 
     for (const dir of DIRECTIONS) {
       const next = step(current.pos, dir);
-      const nextCost = current.cost + stepCost(ctx, current.pos, next);
+      const nextCost = current.cost + stepCost(ctx, current.pos, next, unit);
       if (nextCost > maxCost) continue;
       if (done.has(posKey(next))) continue;
       if (!canEnter(ctx, next, unit.id)) continue;
@@ -77,7 +79,7 @@ export function truncatePath(ctx: RuleContext, start: Pos, path: Pos[], budget: 
   let prev = start;
   const taken: Pos[] = [];
   for (const p of path) {
-    const cost = stepCost(ctx, prev, p);
+    const cost = stepCost(ctx, prev, p, mover);
     if (spent + cost > budget) break;
     spent += cost;
     taken.push(p);

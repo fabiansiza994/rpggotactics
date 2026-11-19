@@ -71,6 +71,7 @@ import { GridDash } from './GridDash';
 import { GridWalk } from './GridWalk';
 import { EncounterAmbience } from './EncounterAmbience';
 import { loadPaintedCharacters } from './paintedTextures';
+import { loadClawRig } from './glacierClawTextures';
 import { GridProjection, projectionPreset, type Point } from './GridProjection';
 import { OCCLUDING_OBSTACLES, TILE, obstacleSpec, visualHeight } from './renderContract';
 import { drawOverlay, drawRanges } from './BoardOverlays';
@@ -504,6 +505,7 @@ export class BattleCanvas {
     loadingMark('scene-assets-start');
     await Promise.all([
       loadPaintedCharacters(sceneAssetIds(vm.state)),
+      vm.state.units.some(u=>u.defId==='mage'||u.statuses.some(s=>s.id==='GLACIER_CLAW')) ? loadClawRig() : Promise.resolve(),
       this.mechanisms.prepare({...vm,mechanisms:mechanismView(vm.state)}),
       vm.state.mechanisms ? loadTempleEnvironment(vm.state) : Promise.resolve(),
     ]);

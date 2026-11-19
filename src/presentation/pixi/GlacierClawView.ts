@@ -1,8 +1,8 @@
-import {AnimatedSprite,Container,Graphics,Assets,type Spritesheet,type Texture} from 'pixi.js';
-/** Deliberately disabled: the generated draft failed coherent anatomy/registration/alpha QA. */
-export const CLAW_ASSET_STATUS='BLOCKED' as const;
-/** Cinematic raster remains blocked; the legal card uses the procedural front/back renderer. */
-export const CLAW_PRESENTATION_STATUS='PROCEDURAL' as const;
+import {Container,Graphics,Assets,Sprite,type Spritesheet,type Texture} from 'pixi.js';
+/** New raster rig is a local visual candidate; the old rejected atlas remains disabled. */
+export const CLAW_ASSET_STATUS='CANDIDATE' as const;
+/** The production controller now uses textured articulated fingers, not vector hand facets. */
+export const CLAW_PRESENTATION_STATUS='ARTICULATED_SPRITES' as const;
 export interface ClawAtlas {back:Record<'enter'|'release',Texture[]>;front:Record<'enter'|'release',Texture[]>}
 let shared:ClawAtlas|undefined;
 /** Call only after an artist-approved atlas replaces the rejected draft; cached by Pixi Assets. */
@@ -15,61 +15,71 @@ export async function loadApprovedClawAtlas(url:string,approved:boolean):Promise
  for(const layer of [atlas.back,atlas.front])if(layer.enter?.length!==10||layer.release?.length!==6)throw Error('Claw atlas requires paired 10-frame entry and 6-frame release');
  shared=atlas;return atlas;
 }
-/** Shared frame controller: back → real unit → front. No textures, ticker, or allocations per frame. */
+
+import {clawRigTextures,type ClawRigTextures} from './glacierClawTextures';
+import {clawPose,type ClawPhase} from './glacierClawMotion';
+type Finger={root:Container;frontRoot:Container;bones:Container[];sprites:Sprite[];x:number;y:number;spread:number;curl:number;length:number};
+/** Existing UnitView back→unit→front layering, driven by its existing advance/sync lifecycle. */
 export class GlacierClawView {
  readonly back=new Container();readonly front=new Container();
- private fingers:{g:Graphics;x:number;y:number;side:number}[]=[];private snow:Graphics[]=[];private ground:Graphics|undefined;private fractures:Graphics|undefined;
- private sprites:AnimatedSprite[]=[];private elapsed=0;private phase:'none'|'enter'|'hold'|'release'|'fire'='none';private enhanced=false;
- constructor(private readonly atlas:ClawAtlas|undefined=shared){
+ private palm?:Sprite;private fingers:Finger[]=[];private particles:Graphics[]=[];
+ private ground=new Graphics();private elapsed=0;private phase:ClawPhase='none';private enhanced=false;
+ constructor(private readonly textures:ClawRigTextures|undefined=clawRigTextures()){
   this.back.eventMode=this.front.eventMode='none';
-  if(atlas)for(const [layer,root] of [[atlas.back,this.back],[atlas.front,this.front]] as const){const sprite=new AnimatedSprite({textures:layer.enter,autoUpdate:false,loop:false});sprite.anchor.set(.5,1);sprite.width=104;sprite.height=116;root.addChild(sprite);this.sprites.push(sprite);}
+  this.ground.ellipse(0,0,40,12).fill({color:0x082b3a,alpha:.35}).ellipse(0,0,34,9).stroke({color:0x77ddff,width:1,alpha:.35});
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;this.ground.moveTo(Math.cos(a)*9,Math.sin(a)*3).lineTo(Math.cos(a+.1)*26,Math.sin(a+.1)*8).lineTo(Math.cos(a)*39,Math.sin(a)*12).stroke({color:0xa6edff,width:1,alpha:.65});}
+  this.back.addChild(this.ground);
+  if(textures){
+   this.palm=new Sprite(textures.palm);this.palm.anchor.set(.5,1);this.palm.width=86;this.palm.height=78;this.palm.position.set(0,9);this.back.addChild(this.palm);
+   // A single palm with four knuckles across its crown. Thumb opposes the fingers,
+   // instead of following the radial crystal/cuff silhouette of the previous pose.
+   const specs=[{x:36,y:-15,spread:.72,curl:1.05,length:44},{x:-27,y:-57,spread:-.35,curl:1.4,length:48},{x:-9,y:-66,spread:-.1,curl:1.35,length:53},{x:10,y:-64,spread:.12,curl:-1.4,length:49},{x:28,y:-54,spread:.36,curl:-1.45,length:39}];
+   specs.forEach((spec,i)=>{const root=new Container(),frontRoot=new Container(),bones:Container[]=[],sprites:Sprite[]=[];
+    this.back.addChild(root);this.front.addChild(frontRoot);
+    textures.fingers[i]!.forEach((tex,j)=>{const joint=new Container(),sprite=new Sprite(tex);sprite.anchor.set(.5,1);sprite.width=i===0?23:i===4?16:20;sprite.height=spec.length/textures.fingers[i]!.length+3;joint.addChild(sprite);
+     // Proximal phalanges sit behind the real unit; bent middle/distal phalanges
+     // cross in front. Both layers use the same forward kinematics, no duplicate digits.
+     (i===0||j>0?frontRoot:root).addChild(joint);bones.push(joint);sprites.push(sprite);});
+    this.fingers.push({root,frontRoot,bones,sprites,...spec});});
+  }
+  for(let i=0;i<10;i++){const g=new Graphics();g.poly([0,-3,2,0,0,4,-2,0]).fill({color:0xc5f6ff,alpha:.8});this.front.addChild(g);this.particles.push(g);}
   this.back.visible=this.front.visible=false;
  }
- sync(active:boolean,enhanced:boolean):void {this.enhanced=enhanced;if(active&&this.phase==='none')this.show('hold');else if(!active&&['hold','enter'].includes(this.phase))this.show('release');}
- enter():void {if(this.phase!=='enter')this.show('enter');}
- release(fire=false):void {this.show(fire?'fire':'release');}
- private show(phase:typeof this.phase):void {this.phase=phase;this.elapsed=0;if(!this.atlas){this.buildProcedural();return;}this.sprites.forEach((s,i)=>{s.textures=(i?this.atlas!.front:this.atlas!.back)[phase==='release'||phase==='fire'?'release':'enter'];s.gotoAndStop(phase==='hold'?9:0);});}
- advance(ms:number,reduced:boolean):void {
-  this.elapsed+=Math.max(0,ms);
-  if(!this.atlas){this.advanceProcedural(reduced);return;}
-  let frame=this.phase==='hold'?9:Math.floor(this.elapsed/(this.phase==='enter'?90:75));
-  if(this.phase==='enter'&&(reduced||frame>=10)){this.phase='hold';frame=9;}
-  if(['release','fire'].includes(this.phase)&&(reduced||frame>=6))this.phase='none';
-  this.back.visible=this.front.visible=this.phase!=='none';
-  this.sprites.forEach(s=>{s.gotoAndStop(Math.min(s.textures.length-1,frame));s.alpha=this.phase==='fire'?Math.max(0,1-this.elapsed/450):1;s.tint=this.phase==='fire'?0xffd7b0:this.enhanced?0xc1efff:0xffffff;});
- }
- private buildProcedural():void {
-  if(this.ground)return;
-  const ground=this.ground=new Graphics();this.back.addChild(ground);
-  ground.ellipse(0,0,43,13).fill({color:0x70c4eb,alpha:.13});
-  for(let i=0;i<9;i++){const a=i*Math.PI*2/9,r=24+(i%3)*8;ground.moveTo(Math.cos(a)*7,Math.sin(a)*3).lineTo(Math.cos(a+.12)*r*.6,Math.sin(a+.12)*r*.22).lineTo(Math.cos(a)*r,Math.sin(a)*r*.32).stroke({color:0xc6f5ff,width:1.2,alpha:.8});}
-  // Two rear fingers and three front facets surround the real unit; no opaque centre.
-  for(let i=0;i<5;i++){
-   const side=i%2?-1:1,x=side*(20+(i%3)*8),y=i<2?-7:4,g=new Graphics(),h=42+(i%3)*8;
-   g.moveTo(-8,3).lineTo(-10,-h*.4).lineTo(-4,-h*.8).lineTo(side*-7,-h).lineTo(5,-h*.82).lineTo(10,-h*.36).lineTo(9,3).closePath().fill({color:i<2?0x478fb3:0x9bdcf3,alpha:.82}).stroke({color:0xd5f7ff,width:1.3,alpha:.9});
-   g.moveTo(-3,0).lineTo(-4,-h*.5).lineTo(1,-h*.82).stroke({color:0xf1ffff,width:1,alpha:.75});
-   (i<2?this.back:this.front).addChild(g);this.fingers.push({g,x,y,side});
-  }
-  const cracks=this.fractures=new Graphics();this.front.addChild(cracks);
-  for(const f of this.fingers)cracks.moveTo(f.x-5,-10).lineTo(f.x+2,-24).lineTo(f.x-3,-32).stroke({color:0xffffff,width:1,alpha:.9});
-  for(let i=0;i<8;i++){const g=new Graphics();g.poly([0,-4,2,0,0,4,-2,0]).fill(0xd9faff);this.front.addChild(g);this.snow.push(g);}
- }
- private advanceProcedural(reduced:boolean):void {
+ sync(active:boolean,enhanced:boolean):void{this.enhanced=enhanced;if(active&&this.phase==='none')this.show('hold');else if(!active&&(this.phase==='hold'||this.phase==='enter'))this.show('release');}
+ enter():void{if(this.phase!=='enter')this.show('enter');}
+ release(fire=false):void{if(this.phase!=='none'&&this.phase!=='release'&&this.phase!=='fire')this.show(fire?'fire':'release');}
+ private show(phase:ClawPhase):void{this.phase=phase;this.elapsed=0;}
+ advance(ms:number,reduced:boolean):void{
   if(this.phase==='none')return;
-  this.buildProcedural();
-  if(this.phase==='enter'&&(reduced||this.elapsed>=900)){this.phase='hold';this.elapsed=0;}
-  const releasing=this.phase==='release'||this.phase==='fire',end=this.phase==='fire'?400:500;
-  if(releasing&&(reduced||this.elapsed>=end)){this.phase='none';this.back.visible=this.front.visible=false;return;}
-  this.back.visible=this.front.visible=true;
-  const entry=this.phase==='enter'?Math.min(1,this.elapsed/900):1,fade=releasing?Math.max(0,1-this.elapsed/end):1;
-  const grow=Math.max(.02,Math.min(1,(entry-.18)/.68));
-  this.ground!.alpha=Math.min(1,entry*5)*fade;
-  this.fractures!.visible=releasing;
-  this.fractures!.alpha=fade;
-  for(const f of this.fingers){f.g.position.set(f.x+(releasing?f.side*this.elapsed*.025:0),f.y+(1-grow)*13+(releasing?this.elapsed*.035:0));f.g.scale.set(1,grow);f.g.rotation=f.side*(1-grow)*.3+(releasing?f.side*this.elapsed*.0008:0);f.g.alpha=fade*(this.enhanced?.95:.8);f.g.tint=this.phase==='fire'?0xffd8b1:this.enhanced?0xc8f7ff:0xffffff;}
-  this.snow.forEach((g,i)=>{const t=reduced?0:this.elapsed/1000;g.position.set(Math.cos(i*2.4)*(27+i%3*7),-12-(i*13+t*(this.phase==='fire'?65:12))%74);g.alpha=fade*(this.enhanced?.55:.3);g.scale.set(this.phase==='fire'?1+this.elapsed/180:1);});
+  this.elapsed+=Math.max(0,ms);const pose=clawPose(this.phase,this.elapsed,reduced),fire=this.phase==='fire',exit=this.phase==='release'||fire;
+  this.phase=pose.phase;this.back.visible=this.front.visible=this.phase!=='none';if(this.phase==='none')return;
+  const tint=fire?0xffd5ac:this.enhanced?0xd2f7ff:0xffffff;
+  this.ground.alpha=pose.ground*pose.alpha;this.ground.scale.set(.8+pose.ground*.2);
+  if(this.palm){this.palm.y=7+(1-pose.rise)*25+pose.fracture*14;this.palm.alpha=pose.rise*pose.alpha*.92;this.palm.tint=tint;this.palm.rotation=exit?pose.fracture*.16:(1-pose.close)*-.12;this.palm.x=(1-pose.close)*-3;}
+  for(const [digit,f] of this.fingers.entries()){
+   const x=f.x+(exit?Math.sign(f.x)*pose.fracture*32:0),y=f.y+(1-pose.rise)*45+pose.fracture*18;
+   // Palm-facing approach, then opposed thumb and hooked fingers wrap the torso.
+   const rotation=digit===0?f.spread+(-1.18-f.spread)*pose.close:f.spread*(1-pose.close*.65);
+   for(const root of [f.root,f.frontRoot]){root.position.set(x,y);root.rotation=rotation;root.alpha=pose.rise*pose.alpha;root.scale.set(1,Math.max(.1,pose.rise));}
+   let bx=0,by=0,depth=0,angle=0;const length=f.length/f.bones.length;
+   f.bones.forEach((bone,i)=>{
+    if(digit===0){
+     if(i>0){bx+=Math.sin(angle)*length;by-=Math.cos(angle)*length;angle+=f.curl*pose.close;}
+     bone.position.set(bx,by);bone.scale.set(1,1);bone.rotation=angle;
+    }else{
+     // Curl ABOUT the knuckle's horizontal axis, towards the viewer, not sideways
+     // into a crystal crown. Proximal→middle→distal preserve physical connectivity.
+     const flex=[1.25,2.85,3.6][i]!*pose.close,dy=-Math.cos(flex)*length,dz=Math.sin(flex)*length;
+     bone.position.set(0,by-depth*.22);bone.rotation=0;
+     const projected=-(dy-dz*.22)/length;bone.scale.set(1+Math.max(0,depth)/250,Math.abs(projected)<.035?.035:projected);
+     by+=dy;depth+=dz;
+    }
+    if(exit){bone.x+=(i%2?1:-1)*pose.fracture*9;bone.y+=pose.fracture*i*6;bone.rotation+=(i%2?1:-1)*pose.fracture*.7;}
+    const sprite=f.sprites[i]!;sprite.tint=tint;sprite.alpha=fire?1-pose.fracture*.5:1;
+   });
+  }
+  this.particles.forEach((g,i)=>{const time=reduced?0:this.elapsed/1000,r=exit?28+pose.fracture*36:30+(i%3)*7;g.position.set(Math.cos(i*2.399)*r,-6-(i*11+time*(fire?72:16))%72);g.tint=fire?0xffc799:0xc6f4ff;g.alpha=pose.alpha*(exit?.85:this.enhanced?.5:.22);g.visible=!reduced;});
  }
- /** Read-only QA; presentation state never changes the authoritative status. */
- get snapshot(){return {phase:this.phase,procedural:!this.atlas,enhanced:this.enhanced,fingers:this.fingers.length,visible:this.back.visible&&this.front.visible};}
- destroy():void {this.back.destroy({children:true});this.front.destroy({children:true});this.sprites=[];}
+ get snapshot(){return {phase:this.phase,procedural:false,enhanced:this.enhanced,fingers:this.fingers.length,textured:!!this.textures,visible:this.back.visible&&this.front.visible};}
+ destroy():void{this.back.destroy({children:true});this.front.destroy({children:true});this.fingers=[];this.particles=[];}
 }

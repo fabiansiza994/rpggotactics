@@ -217,7 +217,7 @@ function stopAtTrap(ctx: RuleContext, enemy: Unit, node: PathNode): PathNode {
   const path = cutPathAtTrap(ctx, enemy, node.path);
   if (path.length === node.path.length) return node;
   let cost = 0;
-  path.forEach((p, i) => (cost += stepCost(ctx, i === 0 ? enemy.pos : path[i - 1]!, p)));
+  path.forEach((p, i) => (cost += stepCost(ctx, i === 0 ? enemy.pos : path[i - 1]!, p, enemy)));
   return { pos: path[path.length - 1] ?? enemy.pos, cost, path };
 }
 
