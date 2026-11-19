@@ -1,0 +1,122 @@
+.paypal-shop .crystal-shop-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 1.5vw, 18px);
+}
+
+.paypal-shop .crystal-pack {
+  grid-template-rows: auto 1fr auto auto auto;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 12px 12px;
+  border-color: #a794695c;
+  border-radius: 9px;
+  background: linear-gradient(165deg, #17283d, #0b1523 70%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.paypal-shop .paypal-pack-art {
+  align-self: start;
+  width: calc(100% + 24px);
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid #a7946952;
+  background: #0a1422;
+}
+
+.paypal-shop .paypal-pack-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.paypal-shop .paypal-pack-title {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  padding-block: 2px;
+}
+
+.paypal-shop .crystal-pack h3 {
+  margin: 0;
+  color: #f3e2b9;
+  font: 700 clamp(15px, 1.8vw, 20px)/1.15 Georgia, serif;
+}
+
+.paypal-shop .crystal-pack small {
+  border: 1px solid #bc945975;
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: #342639;
+  color: #ffe1a0;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.paypal-shop .paypal-pack-quantity {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.paypal-shop .crystal-pack strong {
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1;
+}
+
+.paypal-shop .crystal-pack em {
+  font-variant-numeric: tabular-nums;
+}
+
+.paypal-shop .crystal-pack[data-best] {
+  border-color: #d7ab60;
+  background: linear-gradient(165deg, #42304a, #1c192c 72%);
+  box-shadow: 0 0 0 1px #d7ab602a, 0 5px 22px #120b25aa;
+}
+
+.paypal-shop .crystal-pack[data-best] .paypal-pack-art {
+  border-bottom-color: #d7ab6073;
+}
+
+.paypal-shop .crystal-pack:focus-within {
+  border-color: #f1cb84;
+  box-shadow: 0 4px 20px #4e3c8080;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .paypal-shop .crystal-pack:hover {
+    transform: translateY(-2px);
+    border-color: #d6b274;
+    box-shadow: 0 7px 24px #55478c70;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paypal-shop .crystal-pack { transition: none; }
+  .paypal-shop .crystal-pack:hover { transform: none; }
+}
+
+.paypal-shop > .crystal-shop-link { margin-top: 14px; }
+
+.paypal-shop .crystal-history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+@media (max-width: 900px) {
+  .paypal-shop .crystal-shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .paypal-shop .crystal-pack { padding-inline: 8px; }
+  .paypal-shop .paypal-pack-art { width: calc(100% + 16px); }
+  .paypal-shop .crystal-pack button {
+    padding-inline: 4px;
+    font-size: 13px;
+  }
+}

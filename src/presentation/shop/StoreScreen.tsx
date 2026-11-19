@@ -1,3 +1,5 @@
+import { PayPalShop } from './PayPalShop';
+import { paypalSandboxBuildEnabled } from './paypalAvailability';
 import { CARD_PRESENTATION_CONTENT as DEFAULT_CONTENT, resolvePresentationCard } from "../catalog/cardPresentation";
 import {LaunchReward} from './LaunchReward';
 import { MarketHome } from "./MarketHome";
@@ -167,6 +169,12 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
     setLoading(false);
     return cat.ok && cat.data?.wallet && state.ok && state.data?.profile ? cat.data : null;
   }, [session]);
+  useEffect(() => {
+    const refresh = () => { void reload(); };
+    window.addEventListener('rpggo-paypal-wallet-confirmed', refresh);
+    return () => window.removeEventListener('rpggo-paypal-wallet-confirmed', refresh);
+  }, [reload]);
+
   useEffect(() => {
     mounted.current = true;
     const initial = setTimeout(() => void reload(), 0);
@@ -470,7 +478,8 @@ export function StoreScreen({ onExit,mobile=false,initialExpansionId }: { onExit
           />
         )}
         {activeCategory==='featured' && (!session || catalog) && <details className="market-home-additional"><summary>Historial de regalos</summary><GiftHistoryPanel token={session?.token ?? null} /></details>}
-        {activeCategory==='crystals'&&<section className="shop-section"><h2>Cristales Arcanos</h2><p>Utiliza tu saldo habitual. No se habilitan nuevos cobros.</p>{catalog&&<Wallet balance={catalog.wallet.balance}/>}<button className="shop-primary" onClick={()=>{setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled()?'Consultar paquetes disponibles':'Cómo conseguir cristales jugando'}</button></section>}
+        {activeCategory==='crystals' && paypalSandboxBuildEnabled() && <PayPalShop token={session?.token ?? null} onWallet={wallet => setCatalog(old => old ? { ...old, wallet } : old)} />}
+        {activeCategory==='crystals'&&<section className="shop-section"><h2>Cristales Arcanos</h2><p>Consulta tu saldo y las formas de conseguir Cristales.</p>{catalog&&<Wallet balance={catalog.wallet.balance}/>}<button className="shop-primary" onClick={()=>{setCrystalsVisited(true);setCrystalsOpen(true);}}>{realMoneyPurchasesEnabled()?'Consultar paquetes disponibles':'Cómo conseguir cristales jugando'}</button></section>}
         {catalog&&activeCategory==='packs'&&<ExpansionCatalog expansions={catalog.expansions??[]} offers={catalog.offers} balance={catalog.wallet.balance} busy={busy||loading||!!intent} onBuy={open} onReset={async(id,box)=>{if(!session||lock.current)return;lock.current=true;setBusy(true);try{const result=await storeApi.resetBox(session.token,id,box.generation,box.version);await reload();if(!result.ok)setError('No se confirmó el reinicio. Actualiza para revisar la caja antes de reintentar.');}finally{lock.current=false;setBusy(false);}}} selectedId={expansionId} onSelect={setExpansionId} profile={profile} onInspect={id=>{opener.current=document.activeElement as HTMLElement;setCatalogCard(id);setSelected(null);setReceipt(null);}}/>}
         {catalog&&activeCategory!=='featured'&&activeCategory!=='crystals'&&activeCategory!=='packs'&&<section className="shop-section" data-category={activeCategory}>
           <div className="shop-section-title"><h2>{MARKET_SECTIONS.find(c=>c.id===activeCategory)?.label}</h2><span>Tu próxima estrategia comienza aquí</span></div>

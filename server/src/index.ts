@@ -50,6 +50,7 @@ import { premiumAllowed, reconcilePremium } from './rankedPremium';
 import { masteryAllowed, masteryRoute, pveVictoryMastery } from './mastery';
 import { freeCatalogBody, reconcileFreeCatalog } from './freeCatalog';
 import { defaultStoreDeps, storeRoute, type StoreDeps, type StoreRequest } from './store';
+import { paypalPublicRoute, paypalRoute } from './paypal';
 import { promoRoute } from './promo';
 import { launchRewardRoute } from './launchReward';
 import { giftRoute } from './gifts';
@@ -99,7 +100,7 @@ export function corsHeaders(
     .filter(Boolean);
   return {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
     ...(origin && list.includes(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
@@ -256,6 +257,7 @@ export async function handle(
     res = error(500, 'SERVER_ERROR', 'Error interno.');
   }
   const headers = new Headers(res.headers);
+  if (socketUrl.pathname.startsWith('/api/tactics/store/paypal/')) headers.set('Cache-Control', 'no-store');
   for (const [k, v] of Object.entries(cors)) headers.set(k, v);
   return new Response(res.body, { status: res.status, headers });
 }
@@ -271,12 +273,16 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   const now = deps.now();
   const newId = (deps.store ?? defaultStoreDeps).newId;
   // Public: ePayco's confirmation webhook (trust = signature + order checks) and the package list.
+  const paypalPublic = await paypalPublicRoute(request, env, now);
+  if (paypalPublic) return paypalPublic;
   const publicPayment = (await epaycoWebhookRoute(request, env, { now, newId })) ?? (await realMoneyPublicRoute(request, env));
   if (publicPayment) return publicPayment;
   const caller = await resolveCaller(request, env.DB, now);
   const transition = contentTransition(request, env, caller?.username);
   if (transition) return transition;
   if (!caller) return error(401, 'UNAUTHENTICATED', 'Sesión inválida o vencida.');
+  const paypal = await paypalRoute(request, env, caller.userId, now);
+  if (paypal) return paypal;
   if (path === '/api/tactics/qa/summoner/setup' && !summonerQaAllowed(env, caller.username)) return error(403, 'FORBIDDEN', 'Acceso QA no autorizado.');
   const avatarResponse = await profileAvatarRoute(request, env.DB, caller.userId, now);
   if (avatarResponse) return avatarResponse;

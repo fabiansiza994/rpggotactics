@@ -85,12 +85,14 @@ export function ledgerStatement(
     note?: string | null;
     now: number;
   },
+  guard?: { sql: string; bindings: unknown[] },
 ): D1PreparedStatement {
   return db
     .prepare(
       `INSERT INTO tactics_wallet_ledger (transaction_id, user_id, currency_id, amount_delta, balance_before, balance_after, reason, reference_id, note, created_at)
        SELECT ?, ?, ?, ?, b, b + ?, ?, ?, ?, ?
-       FROM (SELECT COALESCE((SELECT balance FROM tactics_wallets WHERE user_id = ? AND currency_id = ?), 0) AS b)`,
+       FROM (SELECT COALESCE((SELECT balance FROM tactics_wallets WHERE user_id = ? AND currency_id = ?), 0) AS b)
+       ${guard ? 'WHERE ' + guard.sql : ''}`,
     )
     .bind(
       e.transactionId,
@@ -104,6 +106,7 @@ export function ledgerStatement(
       e.now,
       e.userId,
       e.currencyId,
+      ...(guard?.bindings ?? []),
     );
 }
 

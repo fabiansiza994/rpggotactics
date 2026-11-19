@@ -20,6 +20,13 @@ export interface D1Database {
 }
 
 export interface Env {
+  /** Sandbox only, explicitly opt in. Missing/0 disables every PayPal operation. */
+  PAYPAL_SANDBOX_ENABLED?: string;
+  PAYPAL_CLIENT_ID?: string;
+  PAYPAL_CLIENT_SECRET?: string;
+  PAYPAL_WEBHOOK_ID?: string;
+  PAYPAL_ENVIRONMENT?: string;
+  PAYPAL_RETURN_ORIGIN?: string;
   /** Set to "0" to stop new launch claims; existing ledger receipts remain readable. */
   LAUNCH_REWARD_ENABLED?: string;
   RANKED_BOTS_ENABLED?: string;

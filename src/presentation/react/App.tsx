@@ -38,6 +38,8 @@ import { SocialNotifications, SocialRuntime } from '../social/SocialEntry';
 import { GiftNotifications, GiftRuntime } from '../gifts/GiftInbox';
 import { useSocialStore } from '../social/socialStore';
 import { BugReportButton } from '../support/BugReport';
+import { PayPalResult } from '../shop/PayPalShop';
+import { paypalReturnPending } from '../shop/paypalAvailability';
 import { PaymentResult } from '../shop/PaymentResult';
 import { requestBugReport } from '../support/reportContext';
 
@@ -112,6 +114,7 @@ export function App() {
   );
   const [chatFriend,setChatFriend]=useState<string|undefined>();
   const socialOpen = social && account.status === 'READY';
+  const [paypalResultOpen,setPaypalResultOpen] = useState(() => paypalReturnPending());
   const homeVisible=screen==='MENU'&&!pvp&&!shop&&!socialOpen&&playMode==='hub'&&account.status!=='CONNECTING';
   if (import.meta.env.DEV && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && location.pathname === '/crystal-ux-qa' && CrystalModalQa) return <CrystalModalQa/>;
   if (import.meta.env.DEV && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && location.pathname === '/social-ux-qa' && SocialUxQa) return <SocialUxQa/>;
@@ -125,7 +128,7 @@ export function App() {
       <AccountNotice />
       <ImportDialog />
       <GuestGateDialog />
-      {!pvp && !shop && !socialOpen && <ChampionPrompts key={screen} mobile={mobile}/>}
+      {!pvp && !shop && !socialOpen && !paypalResultOpen && <ChampionPrompts key={screen} mobile={mobile}/>}
       <AccountOverlay />
       {RealQaControls && shapeshifterQaEnabled && screen !== 'BATTLE' && <Suspense fallback={null}><RealQaControls /></Suspense>}
       {ArcherReleaseControls && screen === 'BATTLE' && <Suspense fallback={null}><ArcherReleaseControls /></Suspense>}
@@ -134,6 +137,7 @@ export function App() {
         route={shop ? 'STORE' : pvp ? 'PVP' : socialOpen ? 'SOCIAL' : screen === 'BATTLE' ? 'BATTLE' : screen === 'DECK' ? 'DECK' : screen === 'CHAMPIONS' ? 'CHAMPIONS' : 'MENU'}
       />}
       <PaymentResult />
+      <PayPalResult onClose={() => setPaypalResultOpen(false)} />
       <SocialRuntime />
       {!mobile&&screen!=='BATTLE'&&!inMatch&&(homeVisible||account.status==='READY')&&<SocialDockButton hidden={socialDrawer} count={socialCount} disabled={account.status!=='READY'} onClick={()=>setSocialDrawer(v=>!v)}/>}
       {socialDrawer&&account.status==='READY'&&screen!=='BATTLE'&&!inMatch&&<Suspense fallback={<p role="status">Abriendo amigos…</p>}><SocialSidebar initialFriend={chatFriend} onClose={()=>setSocialDrawer(false)} onProfile={username=>{setSocialDrawer(false);navigatePlay('friends',{friend:username});}}/></Suspense>}

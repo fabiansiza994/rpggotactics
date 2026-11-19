@@ -19,7 +19,7 @@ const fail = (kind: CloudErrorKind, status: number, code: string, message: strin
 export async function request<T>(
   base: string,
   path: string,
-  options: { method?: string; body?: unknown; token?: string | null; timeoutMs: number },
+  options: { method?: string; body?: unknown; token?: string | null; idempotencyKey?: string; timeoutMs: number },
 ): Promise<CloudResult<T>> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs);
@@ -29,6 +29,7 @@ export async function request<T>(
       method: options.method ?? 'GET',
       headers: {
         ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(options.idempotencyKey ? { 'Idempotency-Key': options.idempotencyKey } : {}),
         ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
       },
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,

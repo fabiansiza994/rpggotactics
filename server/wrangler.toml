@@ -30,6 +30,8 @@ database_id = "1655f189-a9ba-41ae-98e4-9a4738c2f79f"
 migrations_dir = "migrations"
 
 [vars]
+# Payment infrastructure stays closed until separately authorized.
+PAYPAL_SANDBOX_ENABLED = "0"
 # Stage safely; clear maintenance only after Pages and private smoke are ready.
 RELEASE2_MAINTENANCE = "1"
 RELEASE2_CLIENT_REQUIRED = "1"
