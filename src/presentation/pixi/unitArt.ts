@@ -361,7 +361,8 @@ export class PaintedFigure extends Container {
 }
 /** Built once per persistent view. Graphics cloning remains compatible with Grid Dash. */
 export function unitArt(defId: string): Graphics | PaintedFigure {
-  const painting = paintedCharacter(defId);
+  // A failed master request must not discard an already loaded authored atlas.
+  const painting = paintedCharacter(defId) ?? paintedAnimationFrame(defId, 'idle', 0);
   if (painting) return new PaintedFigure(painting, defId);
   const art = new Graphics();
   for (const shape of characterDefinition(defId).shapes) {
