@@ -287,7 +287,7 @@ export function PvpScreen({
       });
 
       if (fresh && next.events.length)
-        presentationBus.publish(next.events, state);
+        presentationBus.publish(next.events, state, {key:`pvp:${next.matchId??next.code}:${next.version}`,live:liveDraw,before:previousGame??undefined});
       if (fresh)
         drawRitual.enqueue(
           classifyDraws({

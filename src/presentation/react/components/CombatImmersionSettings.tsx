@@ -1,3 +1,4 @@
+import {ArcaneRevealSettings} from './ArcaneReveal';
 import { useSyncExternalStore } from "react";
 import {
   readImmersion,
@@ -14,6 +15,7 @@ export function CombatImmersionSettings() {
   return (
     <fieldset className="immersion-settings">
       <legend>Juego · Inmersión de combate</legend>
+      <ArcaneRevealSettings/>
       <label>
         <input
           type="checkbox"

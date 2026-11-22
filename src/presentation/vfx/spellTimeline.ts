@@ -5,7 +5,7 @@ import { resolutionTiming } from './resolutionProfiles';
 import { TURN } from '../motion/tokens.ts';
 import { isArrowVisual, specialArrow } from '../assets/archerHuntVisuals';
 
-export type CueKind = 'ritualCircle' | 'cast' | 'projectile' | 'spellImpact' | 'move' | 'event' | 'reactionPrepare' | 'attackImpact' | 'commit';
+export type CueKind = 'arcaneReveal' | 'ritualCircle' | 'cast' | 'projectile' | 'spellImpact' | 'move' | 'event' | 'reactionPrepare' | 'attackImpact' | 'commit';
 export interface VisualCue {
   at: number;
   kind: CueKind;
@@ -19,6 +19,7 @@ export function compileTimeline(
   visualKey: (cardId: string) => string,
   reduced: boolean,
   _readable = false,
+  revealDuration?: (event: GameEvent) => number,
 ): { cues: VisualCue[]; duration: number } {
   // Public card anticipation and inter-action pauses share the existing visual queue.
   const cues: VisualCue[] = [];
@@ -70,6 +71,8 @@ export function compileTimeline(
       recoveryUntil = Math.max(recoveryUntil, at + duration);
     } else if (event.type === 'CARD_PLAYED') {
       cursor = Math.max(cursor, recoveryUntil);
+      const reveal = Math.max(0, revealDuration?.(event) ?? 0);
+      if(reveal){add(cursor,'arcaneReveal',event,reveal);cursor+=reveal;}
       const key = specialArrow(event.cardId) ? event.cardId : visualKey(event.cardId);
       const resolvedIndex = events.indexOf(event);
       const nextResolution = events.slice(resolvedIndex + 1).findIndex(e => e.type === 'CARD_RESOLVED');

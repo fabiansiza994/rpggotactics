@@ -1,3 +1,6 @@
+import {ArcaneRevealView,revealWarmupCards} from './ArcaneRevealView';
+import {readRevealRenderer,selectRevealRenderer} from '../cards/revealRenderer';
+import type {PresentationBatch} from '../events/presentationBus';
 import {prepareShieldMaterials} from './ShieldBarrierView';
 import {breathesInCold} from './FrozenBreathView';
 import {activeScoutResources} from '../../game/domain/combat/scout-siege';
@@ -97,6 +100,7 @@ const PADDING = 20;
 const OCCLUDER_ALPHA = 0.42;
 
 export interface BattleCanvasCallbacks {
+  ultraEnabled?():boolean;
   onOpponentNotices?(rows: OpponentNotice[]): void;
   onImmersion?(view:AtmosphereView):void;
   onNoticeLane?(lane: NoticeLane | null): void;
@@ -145,6 +149,7 @@ type ObstacleView = { root: Container; body: Container; turns: Text; defId: stri
  */
 export class BattleCanvas {
   readonly app = new Application();
+  private arcaneView:ArcaneRevealView|null=null;
   private readonly introRoot = new Container();
   private readonly cameraRoot = new Container();
   private readonly camera = new CameraController(this.cameraRoot);
@@ -271,6 +276,7 @@ export class BattleCanvas {
     this.dash.tick(elapsed);
     this.walk.tick(elapsed);
     this.director.tick(Math.min(elapsed, 100));
+    this.arcaneView?.tick();
     this.groundParticles.tick(elapsed,this.effects.reduced);
     if (this.projectionPending && !this.director.busy) {
       this.projectionPending = false;
@@ -383,6 +389,7 @@ export class BattleCanvas {
     this.opponentNotices = new OpponentNotices(rows => this.callbacks.onOpponentNotices?.(rows));
     this.director = new VfxDirector(this.effects, {
       readableCards: true,
+      ultraEnabled:()=>this.callbacks.ultraEnabled?.()===true&&readRevealRenderer()==='pixi'&&!!this.arcaneView&&this.arcaneView.snapshot.cachedFaces>0,
       enemyAction: event => presentPublicAction(event),
       castCard: event => presentPublicCast(event),
       redraw: (state) => {
@@ -487,7 +494,7 @@ export class BattleCanvas {
   qaPresentationSnapshot() {
     return shapeshifterQaEnabled ? this.director.state : null;
   }
-  qaFeelSnapshot(){if(!this.ready || this.destroyed)return null;return {catalog:this.effects.catalog.snapshot,fps:this.app.ticker.FPS,particles:this.groundParticles.activeCount,reactions:this.effects.reactionSnapshot,actorChildren:this.actorLayer.children.length,groundChildren:this.groundFxLayer.children.length,vfxChildren:this.vfxLayer.children.length,mage:this.effects.mage.snapshot,fireball:this.effects.fireball.snapshot,bastion:this.effects.bastion.snapshot,pactSummon:this.effects.pactSummon.snapshot};}
+  qaFeelSnapshot(){if(!this.ready || this.destroyed)return null;return {catalog:this.effects.catalog.snapshot,fps:this.app.ticker.FPS,particles:this.groundParticles.activeCount,reactions:this.effects.reactionSnapshot,actorChildren:this.actorLayer.children.length,groundChildren:this.groundFxLayer.children.length,vfxChildren:this.vfxLayer.children.length,arcane:this.arcaneView?.snapshot,mage:this.effects.mage.snapshot,fireball:this.effects.fireball.snapshot,bastion:this.effects.bastion.snapshot,pactSummon:this.effects.pactSummon.snapshot};}
   qaAnimationSnapshot(unitId: string) {
     return this.units.get(unitId)?.animationSnapshot() ?? null;
   }
@@ -524,6 +531,8 @@ export class BattleCanvas {
       this.app.destroy(true, { children: true });
       return;
     }
+    if(this.vm&&this.callbacks.ultraEnabled?.()===true){this.arcaneView=new ArcaneRevealView(this.app,this.vm.content);if(readRevealRenderer()==='pixi')await this.arcaneView.prepare(revealWarmupCards(this.vm.content,this.vm.state)).catch((error:unknown)=>{selectRevealRenderer('css');console.warn('Ultra texture preparation unavailable; retaining CSS presentation.',error instanceof Error?error.message:'unknown');});}
+    if(this.destroyed){this.app.destroy(true,{children:true});this.arcaneView?.destroy();return;}
     this.host = host;
     host.appendChild(this.app.canvas);
     this.hostObserver = new ResizeObserver(() => {
@@ -568,6 +577,7 @@ export class BattleCanvas {
     this.cameraRoot.addChild(this.world);
     this.introRoot.addChild(this.cameraRoot);
     this.app.stage.addChild(this.introRoot);
+    if(this.arcaneView)this.app.stage.addChild(this.arcaneView.root);
     this.app.stage.eventMode = 'static';
     this.app.stage.hitArea = this.app.screen;
     this.app.stage.on('pointerleave', () => {
@@ -641,6 +651,7 @@ export class BattleCanvas {
       this.obstacles.clear();
       this.app.destroy(true, { children: true });
     }
+    this.arcaneView?.destroy();this.arcaneView=null;
     this.surfaceTexture?.destroy(true);
     this.surfaceTexture = null;
   }
@@ -903,7 +914,7 @@ export class BattleCanvas {
     this.drawOverlay(vm);
   }
 
-  playEvents(events: readonly GameEvent[], state: Readonly<GameState>): void {
+  playEvents(events: readonly GameEvent[], state: Readonly<GameState>, batch?: PresentationBatch): void {
     this.targetingPreview.reset();
     if (!this.ready || !this.vm) return;
     if(events.some(e=>e.type==='BATTLE_STARTED'))this.resetPlayback();
@@ -920,21 +931,22 @@ export class BattleCanvas {
     ].filter(r => r.effect.requested && events.some(e => e.type === 'CARD_PLAYED' && vm.content.cards[e.cardId]?.presentation.visualKey === r.key && (r.effect !== this.effects.mage || mageRecipeEnabled(r.key)) || (r.key === 'fireball' && universalReactionsEnabled() && e.type === 'UNIT_DAMAGED' && e.damageType === 'FIRE' && e.hpLost > 0)));
     if(this.effects.elementalHits && universalReactionsEnabled() && events.some(e=>e.type==='UNIT_DAMAGED'&&e.hpLost>0&&(e.damageType==='ICE'||e.damageType==='ARCANE')) && this.effects.mage.requested && !recipes.some(r=>r.effect===this.effects.mage))
       recipes.push({key:'magic_missile',effect:this.effects.mage});
+    const ultras=this.callbacks.ultraEnabled?.()===true&&readRevealRenderer()==='pixi'?events.flatMap(e=>e.type==='CARD_PLAYED'&&vm.content.cards[e.cardId]?.rarity==='ULTRA'?[e.cardId]:[]):[];
     const shields=events.flatMap(e=>e.type==='SHIELD_GAINED'?[e.material??'ENERGY' as const]:[]);
     const catalog=this.effects.catalog.requested?catalogEventRecipes(events,id=>vm.content.cards[id]):[];
     const forms=events.filter((e):e is Extract<GameEvent,{type:'FORM_CHANGED'}>=>e.type==='FORM_CHANGED');
-    if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length || shields.length)
+    if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length || shields.length || ultras.length)
       this.assetGate.enqueue(() => Promise.all([this.prepareSceneAssets(vm), ...recipes.map(r => r.effect.prepare()), prepareShieldMaterials(shields),
-        this.effects.catalog.prepare(catalog), forms.length?loadPaintedCharacters(forms.map(e=>`qa_form_${formVisual(e.to).id}`)):Promise.resolve(),
-      ]), () => { if (!this.destroyed) this.playLoadedEvents(events, state); });
-    else this.playLoadedEvents(events,state);
+        this.effects.catalog.prepare(catalog), this.arcaneView?.prepare(ultras).catch(()=>{selectRevealRenderer('css');console.warn('Ultra texture preparation unavailable; retaining CSS presentation.');}), forms.length?loadPaintedCharacters(forms.map(e=>`qa_form_${formVisual(e.to).id}`)):Promise.resolve(),
+      ]), () => { if (!this.destroyed) this.playLoadedEvents(events, state, batch); });
+    else this.playLoadedEvents(events,state,batch);
   }
-  private playLoadedEvents(events: readonly GameEvent[], state: Readonly<GameState>): void {
+  private playLoadedEvents(events: readonly GameEvent[], state: Readonly<GameState>, batch?: PresentationBatch): void {
     const started=events.some(e=>e.type==='BATTLE_STARTED');
     const reduced = visualSettings.reducedEffects || (this.motionQuery?.matches ?? false);
     this.mechanisms.playEvents(events.filter(e => e.type === 'UNIT_MOVED' || (e.type === 'MECHANISM_CHANGED' && e.kind === 'PLATFORM')));
     if(this.mechanisms.busy || this.sections.busy)this.reportPlaybackBusy(true);
-    this.director.enqueue(events.filter(e=>!(e.type==='UNIT_TELEPORTED' && e.sourceId?.startsWith('mechanism:'))), state, reduced);
+    this.director.enqueue(events.filter(e=>!(e.type==='UNIT_TELEPORTED' && e.sourceId?.startsWith('mechanism:'))), state, reduced, batch);
     if (started) this.beginIntro();
   }
 

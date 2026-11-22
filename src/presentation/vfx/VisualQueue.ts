@@ -11,6 +11,8 @@ export class VisualQueue {
   private pending: VisualClip[] = [];
   private active: VisualClip | null = null;
   private elapsed = 0;
+  /** Current clip clock; skipping presentation never changes a command or engine state. */
+  get currentTime(): number { return this.elapsed; }
   get busy(): boolean {
     return this.active !== null || this.pending.length > 0;
   }

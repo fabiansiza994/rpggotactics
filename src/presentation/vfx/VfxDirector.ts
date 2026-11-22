@@ -1,3 +1,5 @@
+import {revealLedger,readRevealMode,presentReveal,worldRevealPending,type RevealPlan} from '../cards/arcaneReveal';
+import type {PresentationBatch} from '../events/presentationBus';
 import {resolutionTiming} from './resolutionProfiles';
 import { catalogBatch, confirmedAttackFamily, familyRecipe, usesPhysicalArrow, type CatalogRecipe, type PremiumFamily } from './catalogRecipes';
 import { mageRecipeEnabled } from './mageRecipes';
@@ -38,6 +40,7 @@ export interface DirectorHost {
   impulse(kind: 'LIGHT' | 'MEDIUM', reduced: boolean): void;
   groundImpact?(id:string, pos:Pos, strong:boolean): void;
   handPulse(count: number): void;
+  ultraEnabled?():boolean;
   card(id: string): CardDefinition | undefined;
   turnBanner(faction: 'PLAYER' | 'ENEMY', round: number): void;
 }
@@ -73,6 +76,7 @@ export class VfxDirector {
   private reportedBusy = false;
   private catalogActions = new WeakMap<GameEvent, CatalogRecipe>();
   private attackFamilies = new WeakMap<GameEvent, PremiumFamily>();
+  private activeReveal: {plan:RevealPlan;event:EventOfType<'CARD_PLAYED'>;start:number} | null = null;
   private readonly moving = new Set<string>();
   private readonly hitCancels = new Map<string, () => void>();
   get busy(): boolean {
@@ -107,7 +111,7 @@ export class VfxDirector {
       ),
     );
   }
-  enqueue(events: readonly GameEvent[], final: Readonly<GameState>, reduced: boolean): void {
+  enqueue(events: readonly GameEvent[], final: Readonly<GameState>, reduced: boolean, batch?: PresentationBatch): void {
     if (!this.visual || events.some((e) => e.type === 'BATTLE_STARTED')) {
       this.clear();
       const spawned = new Set(
@@ -148,28 +152,34 @@ export class VfxDirector {
     this.effects.pactSummon?.beginBatch?.();
     const previous = this.accepted ?? this.visual!;
     this.accepted = final;
+    const reveals=revealLedger.claim(events,id=>this.host.card(id),batch,reduced||this.busy,this.host.ultraEnabled?.()===false||typeof document!=='undefined'&&document.hidden?'off':readRevealMode());
     const plan = compileTimeline(
       events,
       (id) => {const card=this.host.card(id);return card&&usesPhysicalArrow(card)?'archer_arrow': (card?.presentation.visualKey??id);},
       reduced,
       this.host.readableCards ?? false,
+      event=>reveals.get(event)?.duration??0,
     );
+    const revealPrevious = reveals.size && batch?.before ? batch.before : previous;
     let nextCue = 0;
     this.queue.enqueue({
       duration: plan.duration,
       begin: () => {
         this.effects.reduced = reduced;
         if(this.effects.catalog)this.effects.catalog.reduced=reduced;
-        this.visual = structuredClone(previous);
+        this.visual = structuredClone(revealPrevious);
         this.host.busy(true);
         this.reportedBusy = true;
         this.host.redraw(this.visual);
       },
       update: (elapsed) => {
         while (nextCue < plan.cues.length && plan.cues[nextCue]!.at <= elapsed)
-          this.play(plan.cues[nextCue++]!, final, reduced);
+          this.play(plan.cues[nextCue++]!, final, reduced, reveals);
+        const reveal=this.activeReveal;
+        if(reveal)presentReveal({...reveal.plan,cardId:reveal.event.cardId,casterId:reveal.event.casterId,progress:Math.min(1,(elapsed-reveal.start)/reveal.plan.duration),skip:()=>this.skipReveal()});
       },
       finish: () => {
+        this.endReveal();
         this.host.castCard?.(null);
         presentPublicRitual(null);
         this.host.enemyAction?.(null);
@@ -254,7 +264,11 @@ export class VfxDirector {
     } else if (e.cardId === 'hunters_eye' && target) fx.aimLine(from, target.pos, duration + 120);
   }
 
+  private endReveal(keepWorld=false):void {if(this.activeReveal){this.activeReveal=null;presentReveal(null);}if(!keepWorld)worldRevealPending(false);}
+  private skipReveal():void {const reveal=this.activeReveal;if(reveal)this.queue.tick(Math.max(0,reveal.start+reveal.plan.duration-this.queue.currentTime));}
+
   clear(): void {
+    this.endReveal();
     this.host.castCard?.(null);
     presentPublicRitual(null);
     this.host.enemyAction?.(null);
@@ -286,10 +300,11 @@ export class VfxDirector {
     this.updateAmbient();
   }
 
-  private play(cue: VisualCue, final: Readonly<GameState>, reduced: boolean): void {
+  private play(cue: VisualCue, final: Readonly<GameState>, reduced: boolean, reveals:Map<GameEvent,RevealPlan> = new Map()): void {
     const e = cue.event,
       fx = this.effects,
       f = family(cue.key);
+    if(cue.kind==='arcaneReveal'&&e.type==='CARD_PLAYED'){const plan=reveals.get(e);if(plan){this.activeReveal={plan,event:e,start:cue.at};if(e.cardId==='absolute_zero'&&!this.visual?.units.some(u=>u.statuses.some(s=>s.id==='ABSOLUTE_ZERO')))worldRevealPending(true);}return;}
     if (cue.kind === 'commit') {
       this.commit(e, final);
       return;
@@ -338,6 +353,7 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'cast' && e.type === 'CARD_PLAYED') {
+      this.endReveal(true);
       if(fx.icePremium)fx.icePremium.reduced=reduced;
       if(e.cardId==='eternal_winter_heart')fx.icePremium?.heart(e.impact,cue.duration+resolutionTiming(e.cardId,reduced).travel);
       if(e.cardId==='avalanche')fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,cue.duration+resolutionTiming(e.cardId,reduced).travel);
@@ -489,6 +505,7 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'spellImpact' && e.type === 'CARD_PLAYED') {
+      if(e.cardId==='absolute_zero')worldRevealPending(false);
       if(e.cardId==='eternal_winter_heart'){fx.icePremium?.heartRelease(e.impact,e.affectedTiles);this.host.impulse('LIGHT',reduced);return;}
       if(e.cardId==='avalanche'){fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,850,true);this.host.impulse('MEDIUM',reduced);return;}
       if(e.cardId==='frost_nova'||e.cardId==='frost_comet'){fx.icePremium?.impact(e.impact,e.affectedTiles,e.cardId==='frost_comet');this.host.impulse(e.cardId==='frost_comet'?'MEDIUM':'LIGHT',reduced);return;}

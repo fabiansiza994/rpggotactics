@@ -72,7 +72,7 @@ import {
   type Pos,
 } from '../../game';
 import { applyCatalogGrants, catalogFactsFrom } from '../../game/collection/free-catalog';
-import { presentationBus } from '../events/presentationBus';
+import { presentationBus, presentationSourceKey, resetPresentationSource } from '../events/presentationBus';
 import { decideTap, isActionableTile, resolveTapTarget, type Aim } from '../input/aim';
 import { clearVictory, keepVictory, pendingVictory } from './pendingVictory';
 import type { IntroBeat, IntroVariant } from '../motion/introTimeline';
@@ -509,6 +509,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     unsubscribeEngine?.();
     unsubscribeEngine = engine.subscribe((events, state) => {
       const previous = get().state;
+      if(events.some(e=>e.type==='BATTLE_STARTED'))resetPresentationSource(engine);
       if(events.some(e=>e.type==='BATTLE_STARTED')||state.outcome)drawRitual.reset();
 
       if (previous) rememberUnits(previous);
@@ -520,7 +521,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
 
       persistRealQaBattle(engine);
       settleRunVictory(state);
-      presentationBus.publish(events, state);
+      presentationBus.publish(events, state, {key:`${presentationSourceKey(engine)}:${engine.history.length}`,live:true,before:previous??undefined});
       if(!state.outcome)drawRitual.enqueue(classifyDraws({events,state,previous,content:engine.content,revision:`${engine.scenario.id}:${engine.history.length}`}));
     });
   }

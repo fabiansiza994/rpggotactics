@@ -1,0 +1,51 @@
+.arcane-reveal{position:fixed;inset:0;z-index:850;pointer-events:none;isolation:isolate;--ar-opacity:0;--ar-color:170,153,255;--ar-yaw:0;--ar-pitch:0;--ar-roll:0;--ar-scale:1;--ar-y:0;--ar-release:0;--ar-light:50;user-select:none;-webkit-user-select:none}
+.ar-dim{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 44%,rgba(5,10,21,.12),rgba(4,7,17,.56));opacity:var(--ar-opacity)}
+.ar-halo,.ar-rays{position:absolute;left:50%;top:44%;width:min(82vw,760px);aspect-ratio:1;transform:translate(-50%,-50%) scale(calc(.75 + var(--ar-release)*.3));opacity:calc(var(--ar-opacity)*.65);background:radial-gradient(ellipse,rgba(var(--ar-color),.4),rgba(var(--ar-color),.12) 34%,transparent 66%);border-radius:50%}
+.ar-rays{width:min(95vw,1050px);background:repeating-conic-gradient(from 25deg,transparent 0deg 17deg,rgba(var(--ar-color),.12) 19deg 21deg,transparent 24deg 45deg);mask-image:radial-gradient(ellipse,transparent 14%,#000 25%,transparent 68%);transform:translate(-50%,-50%) rotate(calc(var(--ar-release)*18deg));opacity:calc(var(--ar-opacity)*var(--ar-release))}
+.ar-camera{position:absolute;left:50%;top:43%;width:min(40vw,350px,calc((100dvh - 230px)*.716));aspect-ratio:63/88;perspective:1100px;opacity:var(--ar-opacity);transform:translate(-50%,-50%)}
+.ar-card{position:relative;width:100%;height:100%;transform-style:preserve-3d;will-change:transform;transform:translateY(calc(var(--ar-y)*1px)) rotateX(calc(var(--ar-pitch)*1deg)) rotateY(calc(var(--ar-yaw)*1deg)) rotateZ(calc(var(--ar-roll)*1deg)) scale(var(--ar-scale))}
+.ar-front,.ar-back{position:absolute;inset:0;border-radius:4%;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 12px 24px #0008,0 0 38px rgba(var(--ar-color),.23);transform:translateZ(3px);transform-style:preserve-3d}
+.ar-front{background:#111226;transform-style:flat;overflow:hidden}.ar-back{transform-style:flat;transform:rotateY(180deg) translateZ(3px);background:#16142b;border:2px solid #a58b55}.ar-back img{width:100%;height:100%;object-fit:cover;border-radius:inherit;-webkit-user-drag:none}
+.ar-front .feature-card{width:100%;height:100%;margin:0;transform:none!important;opacity:1!important}.ar-front .fc-art{transform:translateZ(6px)}
+.ar-reflection{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;background:linear-gradient(112deg,transparent 25%,rgba(255,255,255,.23) 45%,rgba(var(--ar-color),.1) 50%,transparent 65%);background-size:230% 100%;background-position:calc(var(--ar-light)*1%) 50%;transform:translateZ(5px);mix-blend-mode:screen}
+.ar-caption{position:absolute;top:calc(43% + min(20vw,175px,(100dvh - 230px)*.358)/.716 + 24px);left:5%;width:90%;color:#f2e6c8;text-align:center;opacity:var(--ar-opacity);text-shadow:0 2px 12px #000;display:grid;gap:5px}.ar-caption span{font:600 11px system-ui;letter-spacing:.2em;color:rgb(var(--ar-color))}.ar-caption strong{font:600 clamp(18px,2.4vw,29px) Georgia,serif}.ar-caption small{font:12px system-ui;color:#c2d3df}
+.ar-skip{pointer-events:auto;position:absolute;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);min-height:44px;padding:10px 22px;background:#101c2fee;border:1px solid #9b865a;color:#f3e7c5;border-radius:24px;font:600 14px system-ui;white-space:nowrap;touch-action:manipulation}.ar-skip kbd{margin-left:9px;font:11px system-ui;color:#b8c3d4}.ar-skip:focus-visible{outline:3px solid #b6ecff;outline-offset:4px}
+.arcane-reveal[data-reduced=true] .ar-rays{display:none}.arcane-reveal[data-reduced=true] .ar-reflection{background:none}
+@media(max-width:600px){.ar-camera{width:min(70vw,300px,calc((100dvh - 245px)*.716));top:42%}.ar-caption{top:auto;bottom:max(84px,calc(env(safe-area-inset-bottom) + 76px))}.ar-skip kbd{display:none}}
+@media(prefers-reduced-motion:reduce){.ar-card{transform:none!important}.ar-rays{display:none}.ar-reflection{background:none}}
+
+body[data-arcane-world-pending] .winter-atmosphere{visibility:hidden}
+/* Flatten each printed face so reflected text cannot bleed through the reverse. */
+.ar-front .fc-frame{transform:none!important;transition:none}
+.ar-front .fc-glow{animation:none;filter:none;opacity:.45}
+.ar-front .fc-art{transform:none}
+
+.arcane-reveal .feature-card,.arcane-reveal .feature-card *{pointer-events:none!important}
+
+/* One prepainted light sweep, rather than two screen-blended materials on
+   a moving 3D face. Keep the real illustration, frame and reverse intact. */
+.ar-front .cp-foil{mix-blend-mode:normal;background:linear-gradient(125deg,transparent 26%,#d8eaff18 47%,transparent 64%);opacity:.5}
+.ar-reflection{inset:-10% -35%;background:linear-gradient(112deg,transparent 30%,rgba(255,255,255,.20) 48%,rgba(var(--ar-color),.08) 54%,transparent 68%);background-size:100% 100%;mix-blend-mode:normal;will-change:transform}
+.ar-rays{width:min(82vw,720px);mask-image:none;background:repeating-conic-gradient(from 25deg,transparent 0deg 17deg,rgba(var(--ar-color),.055) 19deg 21deg,transparent 24deg 45deg);border-radius:50%;will-change:transform,opacity}
+.ar-halo{will-change:transform,opacity}
+/* Perspective already supplies depth; avoid rerasterizing a blurred duplicate\n   of the illustration behind the sharp original on each moving face. */
+.arcane-reveal .fc-art-backdrop{filter:none;opacity:.45}
+.arcane-reveal .cp-effects .cp-foil{mix-blend-mode:normal!important;background:linear-gradient(125deg,transparent 26%,#d8eaff18 47%,transparent 64%)!important;background-size:100% 100%!important;opacity:.5}
+.arcane-reveal .cp-effects .cp-foil::after{display:none}
+/* Cache each printed face as a bounded compositing surface. The rotor alone\n   owns perspective; nested card preview perspective is redundant here. */
+.ar-front,.ar-back{contain:layout paint style;will-change:transform}
+.arcane-reveal .feature-card{perspective:none;contain:layout style}
+
+.arcane-reveal[data-renderer=pixi] :is(.ar-dim,.ar-halo,.ar-rays,.ar-camera){display:none}
+.arcane-reveal[data-renderer=pixi] .ar-caption{opacity:1}
+
+
+/* The board canvas bleeds beneath the hand by design. Elevate its ancestor only
+   while the shared queue presents an Ultra; no size, camera or layout changes. */
+.battle .battle-main:has(.board-host[data-ultra-layer="foreground"]){z-index:20}
+.battle .board-host[data-ultra-layer="foreground"] canvas{pointer-events:none}
+/* Keep status instruments and explicit controls readable above the presentation. */
+.battle:has(.board-host[data-ultra-layer="foreground"]) > :is(.mobile-combat-header,.pause-trigger,.end-turn-box,.mobile-aim-controls,.hand-discard-bar){z-index:21}
+/* The actual printed face already contains the title. Keep the live announcement
+   for assistive tech without laying a second title over the Pixi card. */
+.arcane-reveal[data-renderer="pixi"] .ar-caption{width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}

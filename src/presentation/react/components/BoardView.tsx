@@ -1,3 +1,5 @@
+import {refreshRevealControl,setRevealAccount,revealEnabled} from '../../cards/revealControl';
+import {ArcaneReveal} from './ArcaneReveal';
 import {EMPTY_ATMOSPHERE} from '../../immersion/atmosphere';
 import {CombatAtmosphere} from './CombatAtmosphere';
 import '../../../styles/combat-immersion.css';
@@ -36,6 +38,7 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
     if (!host) return;
     const { setHoverTile, clickTile, tapTile, cancelAim } = useBattleStore.getState();
     const canvas = new BattleCanvas({
+      ultraEnabled:revealEnabled,
       onImmersion:next=>setImmersion(previous=>previous.hp===next.hp&&previous.max===next.max&&previous.finished===next.finished&&previous.rooted===next.rooted&&previous.frozen===next.frozen&&previous.burning===next.burning&&previous.terrain===next.terrain?previous:next),
       onOpponentNotices: rows => setNotices(previous => JSON.stringify(previous)===JSON.stringify(rows)?previous:rows),
       onNoticeLane: lane => setNoticeLane(previous => previous && JSON.stringify(previous)===JSON.stringify(lane)?previous:lane),
@@ -57,7 +60,8 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
       onTurnBanner: useBattleStore.getState().showTurnBanner,
     });
     canvasRef.current = canvas;
-    void canvas.mount(host, initialVm.current ?? undefined).then(() => { if (pvpEntry) canvas.presentPvpEntry(); });
+    let disposed=false;setRevealAccount(useBattleStore.getState().account);const offAccount=useBattleStore.subscribe((s,previous)=>{if(s.account!==previous.account)setRevealAccount(s.account);});
+    void refreshRevealControl().then(()=>{if(!disposed)return canvas.mount(host, initialVm.current ?? undefined).then(()=>{if(!disposed&&pvpEntry)canvas.presentPvpEntry();});});
     if (import.meta.env.DEV) {
       // Dev-only debug handle for e2e tests and manual inspection in the console.
       (window as unknown as Record<string, unknown>).__RPGGO__ = {
@@ -76,10 +80,10 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
           canvas.qaFaceCharacter(unitId, facing),
       };
     }
-    const off = presentationBus.subscribe((events, state) => canvas.playEvents(events,
-      archerBattlePreviewEnabled && useBattleStore.getState().onlineCommand===null ? archerPresentationState(state) : state));
+    const off = presentationBus.subscribe((events, state, batch) => canvas.playEvents(events,
+      archerBattlePreviewEnabled && useBattleStore.getState().onlineCommand===null ? archerPresentationState(state) : state, batch));
     return () => {
-      off();
+      disposed=true;offAccount();off();
       canvas.destroy();
       canvasRef.current = null;
     };
@@ -102,7 +106,7 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
   }, [vm,archerPreview,cameraX,cameraY]);
 
   return (
-    <><div
+    <><ArcaneReveal content={engine?.content} /><div
       ref={hostRef}
       className="board-host"
       onContextMenu={(e) => {
