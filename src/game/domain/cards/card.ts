@@ -68,6 +68,8 @@ export type TargetingDef =
       range: number;
       minRange?: number;
       tileFilter: TileFilter;
+      /** Terrain footprint preview and resolution exclude obstacles and unwalkable cells. */
+      areaStandableOnly?: boolean;
       requiresLineOfSight?: boolean;
       area?: AreaDef;
       /**
@@ -167,7 +169,6 @@ export type EffectDef =
   | {type:'ICE_WALK';duration:number}
   | {type:'ICE_LINE';duration:number;slideSteps?:number}
   | {type:'SHATTER_ICE';energy?:number}
-  | {type:'EXTEND_ICE';amount:number;cap:number}
   | {type:'AVALANCHE';distance:number;freezeOnIce?:boolean}
   | { type: 'TRANSFORM'; formId: string | null }
   | {

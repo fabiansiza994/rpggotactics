@@ -1,3 +1,4 @@
+import {FrozenBreathView,breathesInCold} from './FrozenBreathView';
 import {ShieldBarrierView}from './ShieldBarrierView';
 import {clawScaleForUnit} from './glacierClawMotion';
 import {snowSoldierVariant} from './snowSoldierAtlas';
@@ -92,6 +93,9 @@ export class UnitView {
   shieldGain():void {this.shieldBarrier.gained();}
   shieldBreak():void {this.shieldBarrier.shatter();}
   shieldExpire():void {this.shieldBarrier.expire();}
+  private coldBreath:FrozenBreathView;
+  private coldWorld=false;
+  setFrozenWorld(active:boolean):void {this.coldWorld=active;}
   private readonly glacierClaw=new GlacierClawView();
   beginGlacierClaw():void {this.glacierClaw.enter();}
   releaseGlacierClaw(fire:boolean):void {this.glacierClaw.release(fire);}
@@ -161,6 +165,7 @@ export class UnitView {
     this.idleTiming = idleTiming(unitId);
     const spec = characterSpec(defId);
     this.height = visualHeight(spec, TILE);
+    this.coldBreath=new FrozenBreathView(this.height,Array.from(unitId).reduce((n,c)=>n+c.charCodeAt(0),0));
     const gait = CHARACTER_ANIMATIONS[defId]?.locomotionOnly ? gaitGeometry(defId, spec, TILE, 256) : null;
     const vertical = verticalAsset(defId) ? verticalGeometry(defId, 256) : null;
     this.chromeClearance = Math.max(0, (gait?.topClearance ?? this.height) - this.height, (vertical?.topClearance ?? this.height) - this.height);
@@ -246,6 +251,7 @@ export class UnitView {
     this.body.filters = [clarity];
     // Borrowed placeholder art (the provisional Warrior) is tinted; final art is untouched.
     this.body.tint = this.tint;
+    this.scaler.addChild(this.coldBreath);
     this.root.addChild(this.scaler);
     this.root.eventMode = 'none';
     this.chrome.eventMode = 'none';
@@ -550,6 +556,7 @@ export class UnitView {
   /** Small figure-only motion anchored at the feet. Playback retains ownership of root/body transforms. */
   stablePuzzleIdle = false;
   tick(ms: number, reduced: boolean, moving: boolean): void {
+    this.coldBreath.advance(ms,reduced,this.wizardDirection);
     this.healthAnimation.tick(ms, reduced);
     this.drawHealth();
     this.conditionFx.advance(this.clock, reduced);
@@ -647,6 +654,7 @@ export class UnitView {
     this.animateNextHealth = false;
     if(phaseName && phaseName!==this.veilPhase)this.pulseLight(0xb994d5,260);
     this.veilPhase=phaseName;
+    this.coldBreath.sync(this.coldWorld&&breathesInCold(this.defId)&&unit.hp>0,unit.statuses.some(s=>s.id==='PERMAFROST'));
     this.conditionFx.update(unit, phaseName);
     this.legendaryFx.update(unit);
     this.shieldBarrier.sync(unit.shield,unit.shieldMaterial);

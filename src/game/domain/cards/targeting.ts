@@ -414,7 +414,7 @@ export function resolveTarget(
     target,
     impact: target,
     direction: alignedDirection(caster.pos, target),
-    affectedTiles: areaTiles(board, areaFor(targeting), target, caster.pos, wallOrientation),
+    affectedTiles: areaTiles(board, areaFor(targeting), target, caster.pos, wallOrientation).filter(p=>targeting.type!=='TILE'||!targeting.areaStandableOnly||isStandable(ctx,p)),
     hitUnitId: null,
   };
 }

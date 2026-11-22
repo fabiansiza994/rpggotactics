@@ -68,7 +68,7 @@ export interface CardPreview {
 export class GameEngine {
   /** Presentation selection only; authoritative resolution uses the command field. */
   wallOrientation: import('../domain/cards/targeting').WallOrientation = 'HORIZONTAL';
-  private wallChoice(key: string) { return this.current.player.hand.find(c=>c.uid===key)?.cardId === 'ice_wall' ? this.wallOrientation : undefined; }
+  private wallChoice(key: string) { return ['ice_wall','glacial_field'].includes(this.current.player.hand.find(c=>c.uid===key)?.cardId??'') ? this.wallOrientation : undefined; }
   private current: GameState;
   private currentSeed: number;
   private readonly listeners = new Set<EngineListener>();
@@ -214,7 +214,7 @@ export class GameEngine {
     if (!check.ok) return [];
     const targets=getValidTargets(ctx, check.caster, check.def.targeting);
     const orientation=this.wallChoice(cardUid);
-    return orientation && check.def.targeting.type==='TILE' ? targets.filter(p=>iceWallFits(ctx,areaTiles(ctx.state.board,check.def.targeting.type==='TILE'?check.def.targeting.area:undefined,p,check.caster.pos,orientation))) : targets;
+    return check.def.id==='ice_wall' && orientation && check.def.targeting.type==='TILE' ? targets.filter(p=>iceWallFits(ctx,areaTiles(ctx.state.board,check.def.targeting.type==='TILE'?check.def.targeting.area:undefined,p,check.caster.pos,orientation))) : targets;
   }
 
   previewCard(cardUid: string, target: Pos | null, secondary?: Pos | null): CardPreview {
@@ -236,7 +236,7 @@ export class GameEngine {
     }
     if (!resolved) {
       if (this.wallChoice(cardUid) && target) {
-        const def=this.content.cards.ice_wall;
+        const def=this.content.cards[this.current.player.hand.find(c=>c.uid===cardUid)?.cardId??''];
         const caster=this.current.units.find(u=>u.id===this.heroId);
         if(def?.targeting.type==='TILE' && caster) return {...none,resolved:{target,impact:target,direction:null,hitUnitId:null,affectedTiles:areaTiles(this.current.board,def.targeting.area,target,caster.pos,this.wallChoice(cardUid))}};
       }

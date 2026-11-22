@@ -15,7 +15,7 @@ export function cardPattern(target: CardDefinition['targeting']) {
     const filled = shape === 'LINE' ? y === 2 && x > 0 && x <= (target.type === 'LINE' ? target.range : 0)
       : shape === 'CROSS' ? dx + dy <= radius && (dx === 0 || dy === 0)
         : shape === 'SQUARE' ? Math.max(dx, dy) <= radius
-          : shape === 'WALL' ? x === 2 && dy <= radius : dx === 0 && dy === 0;
+          : shape === 'WALL' ? x === 2 && dy <= radius : shape === 'BLOCK' ? x>=2&&y>=2&&x<2+(area&&'size'in area?area.size:1)&&y<2+(area&&'size'in area?area.size:1) : dx === 0 && dy === 0;
     if (filled && (includeCenter || dx + dy > 0)) cells.push({ x, y });
   }
   return { cells, origin, shape };

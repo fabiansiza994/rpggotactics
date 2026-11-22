@@ -1,48 +1,104 @@
-import {Container,Graphics}from'pixi.js';
+import {Container,Graphics} from 'pixi.js';
+import {loadSharedTexture} from './paintedTextures';
+import {PaintedEffectPool} from '../vfx/PaintedEffectPool';
 export type ShieldMaterial='ENERGY'|'ICE';
-type Pane={g:Graphics;x:number;y:number;a:number;front:boolean};
-/** Unit-local volume, reconstructed from shield provenance; HP chrome lives outside these layers. */
+
+/** Warm the shared cache through the existing presentation asset gate before shield cues. */
+export async function prepareShieldMaterials(materials:readonly ShieldMaterial[]):Promise<void>{
+ const mobile=typeof matchMedia!=='undefined'&&matchMedia('(max-height: 500px), (pointer: coarse)').matches;
+ await Promise.all([...new Set(materials)].map(material=>{
+  const id=material==='ICE'?'barrier-ice':'barrier-energy';
+  return loadSharedTexture(`/art/vfx/${id}/${id}-v1-${mobile?512:1024}.png`).catch(()=>{
+   console.warn('Shield illustration unavailable; combat HUD remains authoritative.');
+  });
+ }));
+}
+
+/** Illustrated material recipe; the existing scene clock advances all phases.
+ * Rows: rear surface, clear-front surface, impact/cracks, breakup. */
+class ShieldSurface extends PaintedEffectPool {
+ formation=1;exit=0;broken=false;strength=1;pulse=0;side=1;clock=0;
+ constructor(back:Container,front:Container,private w:number,private h:number,private material:ShieldMaterial){
+  super(front,back,{center:()=>({x:0,y:0}),footprint:()=>({w,h}),quad:()=>[],depth:p=>p.y},
+   material==='ICE'?'barrier-ice':'barrier-energy',10,'png');
+ }
+ get requested(){return true;}
+ assemble():void {
+  this.clear();
+  for(const rear of [true,false])this.sprite([rear?0:4],{x:0,y:-this.h*.53},this.w*3.6,1e9,(_t,s)=>{
+   const phase=this.reduced?0:Math.floor(this.clock/170)%4;
+   s.texture=this.frames[(this.broken?12+Math.min(3,Math.floor(this.exit*4)):rear?0:4)+(this.broken?0:phase)]!;
+   s.width=this.w*3.6;s.height=this.h*1.75;
+   s.position.set(0,-this.h*.53);
+   s.alpha=(rear?.65:.72)*(1-this.exit)*(.55+.45*this.strength);
+   if(this.broken){s.y+=this.exit*this.exit*this.h*.14;s.alpha*=1-this.exit*.3;}
+  },rear,false);
+  this.sprite([8],{x:0,y:0},this.w*1.8,1e9,(_t,s)=>{
+   const crack=1-this.strength;
+   s.texture=this.frames[8+Math.min(3,Math.floor((1-this.pulse)*4))]!;
+   s.width=this.w*(this.material==='ICE'?2.7:1.9);s.height=this.h*.8;
+   s.position.set(this.side*this.w*.4,-this.h*.5);
+   s.alpha=(this.pulse*.85+crack*(this.material==='ICE'?.38:.2))*(1-this.exit);
+  });
+ }
+}
+
+/** Shield lifecycle follows authoritative amounts and the director's actual impact/break events. */
 export class ShieldBarrierView {
- readonly back=new Container();readonly front=new Container();private panes:Pane[]=[];
- private amount=0;private material:ShieldMaterial='ENERGY';private clock=0;private pulse=0;private age=0;private mode:'hold'|'break'|'expire'='hold';private side=1;private initialized=false;private built=false;private peak=0;private readonly flash=new Graphics();private readonly fractures=new Graphics();
- constructor(private width:number,private height:number){this.back.eventMode=this.front.eventMode='none';this.back.visible=this.front.visible=false;}
- private build():void{
-  for(const p of this.panes)p.g.destroy({context:true});this.panes=[];
-  const ice=this.material==='ICE',w=this.width,h=this.height;
-  // Two hemispheres of irregular convex plates: transparent central volume, bright side facets.
-  for(const front of [false,true])for(let i=0;i<7;i++){
-   const a=-Math.PI+i*Math.PI/6,x=Math.cos(a)*w*.82,y=-h*.46+Math.sin(a)*(front?h*.16:-h*.13),g=new Graphics(),edge=ice?0xb5eeff:0xffe2a1;
-   const top=-h*.4*(.65+.35*Math.sin(i*Math.PI/6)),bottom=h*.35*(.7+.3*Math.sin(i*Math.PI/6)),pw=w*.38;
-   g.poly([-pw*.8,top*.6,0,top,pw*.78,top*.55,pw, bottom*.7,0,bottom,-pw,bottom*.6]).fill({color:ice?0x72bedc:0x8b80cd,alpha:front?.085:.045}).stroke({color:edge,width:ice?1.6:1,alpha:front?.47:.18});
-   if(ice){g.poly([0,top,pw*.78,top*.55,0,bottom]).fill({color:0xd4f6ff,alpha:.13});g.moveTo(-pw*.7,top*.6).lineTo(0,bottom).stroke({color:0x8ed1e8,width:.7,alpha:.3});}
-   else{g.moveTo(-pw*.35,-7).lineTo(0,-15).lineTo(pw*.35,-7).lineTo(0,1).closePath().stroke({color:0xffe4b4,width:1,alpha:.4});g.moveTo(0,5).lineTo(0,12).stroke({color:0xffdf94,width:1,alpha:.35});}
-   g.position.set(x,y);(front?this.front:this.back).addChild(g);this.panes.push({g,x,y,a,front});
-  }
-  this.flash.clear().poly([-9,0,0,-18,9,0,0,18]).stroke({color:ice?0xf0ffff:0xfff4c8,width:2,alpha:.9});
-  this.fractures.clear().moveTo(-w*.6,-h*.7).lineTo(-w*.14,-h*.48).lineTo(-w*.3,-h*.27).moveTo(-w*.14,-h*.48).lineTo(w*.3,-h*.57).lineTo(w*.6,-h*.45).stroke({color:0xe0fbff,width:1,alpha:.7});
-  this.front.addChild(this.fractures,this.flash);
+ readonly back=new Container();readonly front=new Container();
+ private surface:ShieldSurface;
+ private backMask=new Graphics();private frontMask=new Graphics();
+ private amount=0;private peak=0;private material:ShieldMaterial='ENERGY';
+ private age=0;private mode:'hold'|'break'|'expire'='hold';private dead=false;private loaded=false;
+ private generation=0;private maskStep=-1;
+ constructor(private width:number,private height:number){
+  this.back.eventMode=this.front.eventMode='none';this.back.visible=this.front.visible=false;
+  this.back.addChild(this.backMask);this.front.addChild(this.frontMask);
+  this.back.mask=this.backMask;this.front.mask=this.frontMask;
+  this.surface=new ShieldSurface(this.back,this.front,width,height,this.material);
  }
- sync(amount:number,material:ShieldMaterial='ENERGY'):void{
-  if(amount>0&&(!this.built||material!==this.material)){this.material=material;this.build();this.built=true;}
-  if(amount>0){if(this.amount<=0)this.peak=amount;else this.peak=Math.max(this.peak,amount);this.mode='hold';this.age=0;this.back.visible=this.front.visible=true;}
-  else if(this.amount>0&&this.mode==='hold'){this.mode='expire';this.age=0;}
-  this.fractures.alpha=this.material==='ICE'&&this.peak?Math.max(0,1-amount/this.peak)*.6:0;
-  this.amount=amount;this.initialized=true;
+ private prepare():void {
+  this.surface.beginBatch();if(typeof window==='undefined')return;
+  const surface=this.surface,generation=++this.generation;
+  void surface.prepare().then(()=>{if(this.dead||generation!==this.generation)return;
+   this.loaded=surface.ready;if(this.loaded&&this.amount>0)surface.assemble();});
  }
- impact(side=1):void{this.side=side;this.pulse=240;}
- gained():void{this.pulse=300;}
- shatter():void{if(!this.initialized)return;this.mode='break';this.age=0;this.pulse=160;}
+ get stats(){return this.surface.snapshot;}
+ sync(amount:number,material:ShieldMaterial=this.material):void {
+  const entering=amount>0&&this.amount<=0,changed=material!==this.material;
+  if(amount>0){
+   this.peak=entering?amount:Math.max(this.peak,amount);
+   this.back.visible=this.front.visible=true;
+   if(changed){this.surface.destroy();this.material=material;this.loaded=false;
+    this.surface=new ShieldSurface(this.back,this.front,this.width,this.height,material);}
+   if(entering||changed){this.age=0;this.mode='hold';this.maskStep=-1;
+    if(this.loaded)this.surface.assemble();else this.prepare();}
+  }else if(this.amount>0&&this.mode==='hold'){this.mode='expire';this.age=0;}
+  this.amount=amount;this.surface.strength=this.peak?amount/this.peak:0;
+ }
+ impact(side=1):void{this.surface.side=Math.sign(side)||1;this.surface.pulse=1;}
+ gained():void{this.age=0;this.maskStep=-1;}
+ shatter():void{if(!this.back.visible)return;this.mode='break';this.age=0;this.surface.pulse=1;}
  expire():void{if(this.back.visible){this.mode='expire';this.age=0;}}
- advance(ms:number,reduced:boolean):void{
-  if(!this.back.visible)return;this.clock+=ms;this.age+=ms;this.pulse=Math.max(0,this.pulse-ms);
-  const exit=this.mode==='hold'?0:Math.min(1,this.age/(reduced?160:this.mode==='break'?470:300));
-  this.flash.position.set(Math.sign(this.side||1)*this.width*.5,-this.height*.5);this.flash.alpha=this.pulse/300;
-  this.front.alpha=this.back.alpha=1-exit;const breathe=reduced?1:1+Math.sin(this.clock/1400)*.008;this.front.scale.set(breathe);this.back.scale.set(breathe);
-  for(const p of this.panes){const local=this.pulse/300*(Math.sign(p.x||1)===Math.sign(this.side)?1:.2),burst=this.mode==='break'&&!reduced?exit:0;
-   p.g.position.set(p.x+Math.cos(p.a)*burst*this.width*.5,p.y+burst*(p.front?14:-10));p.g.rotation=burst*Math.sin(p.a)*.65;
-   p.g.alpha=.82+Math.min(.18,local);p.g.scale.set(1+local*(reduced?0:.06));
-  }
-  if(exit===1){this.front.visible=this.back.visible=false;}
+ advance(ms:number,reduced:boolean):void {
+  if(!this.back.visible)return;
+  this.age+=ms;this.surface.clock+=ms;this.surface.reduced=reduced;
+  this.surface.pulse=Math.max(0,this.surface.pulse-ms/420);
+  this.surface.formation=this.mode==='hold'?(reduced?1:Math.min(1,this.age/620)):1;
+  this.surface.exit=this.mode==='hold'?0:Math.min(1,this.age/(reduced?160:this.mode==='break'?600:420));
+  this.surface.broken=this.mode==='break';
+  // A growing reveal, not a stretched static dome. Update this tiny stencil only during formation.
+  const step=Math.floor(this.surface.formation*24);
+  if(step!==this.maskStep){this.maskStep=step;const top=-this.height*1.5*step/24;
+   for(const mask of [this.backMask,this.frontMask]){
+    mask.clear();
+    if(this.material==='ENERGY')mask.ellipse(0,-this.height*.53,this.width*1.54,this.height*.74).fill(0xffffff);
+    else mask.poly([-this.width*1.6,this.height*.15,-this.width*1.65,-this.height*.7,-this.width*.4,-this.height*1.35,this.width*.35,-this.height*1.35,this.width*1.6,-this.height*.65,this.width*1.5,this.height*.15]).fill(0xffffff);
+    if(step<24)mask.rect(-this.width*3,-this.height*2,this.width*6,this.height*2+top).cut();
+   }}
+  this.surface.tick(ms);
+  if(this.surface.exit===1){this.back.visible=this.front.visible=false;this.surface.clear();}
  }
- destroy():void{if(!this.built){this.flash.destroy({context:true});this.fractures.destroy({context:true});}this.back.destroy({children:true});this.front.destroy({children:true});this.panes=[];}
+ destroy():void{this.dead=true;this.generation++;this.surface.destroy();
+  this.back.mask=this.front.mask=null;this.back.destroy({children:true});this.front.destroy({children:true});}
 }

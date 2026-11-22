@@ -232,12 +232,12 @@ const list: CardDefinition[] = [
     heroId: 'mage',
     cost: 1,
     category: 'TERRAIN',
-    tags: ['ice', 'terrain', 'cross'],
+    tags: ['ice', 'terrain', 'line'],
     rulesText:
-      'Cubre de HIELO una cruz (radio 1) a distancia 3 durante 2 rondas: salir de esas casillas cuesta +1 de movimiento.',
+      'Cubre de HIELO una línea orientable de 3 casillas transitables a distancia 3 durante 2 rondas: salir de esas casillas cuesta +1 de movimiento.',
     // Slows instead of blocking (Ice Wall) and deals no damage (Flame Tile).
-    targeting: { type: 'CROSS', range: 3, radius: 1 },
-    effects: [{ type: 'CREATE_TERRAIN', terrain: 'ICE', duration: 2, on: 'AREA' }],
+    targeting: { type: 'TILE', range: 3, tileFilter: 'STANDABLE', areaStandableOnly: true, area: { shape: 'WALL', radius: 1 } },
+    effects: [{ type: 'CREATE_TERRAIN', terrain: 'ICE', duration: 2, on: 'AREA', standableOnly: true }],
     rarity: 'COMMON',
     presentation: { visualKey: 'ice_wall', element: 'ICE', castAnimation: 'cast' },
   },

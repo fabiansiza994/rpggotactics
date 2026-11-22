@@ -1,0 +1,13 @@
+{
+  "columns": 4,
+  "rows": 4,
+  "alpha": true,
+  "sizes": [
+    512,
+    1024
+  ],
+  "referenceIllustration": "/art/checkpoint05/cards/barrier.webp",
+  "source": "Original generated image; built-in image generation",
+  "generatedSource": "exec-637d4efa-35ae-43a3-a2a0-1eb75aac5071.png",
+  "layout": "row0 back, row1 front, row2 impact/cracks, row3 breakup"
+}

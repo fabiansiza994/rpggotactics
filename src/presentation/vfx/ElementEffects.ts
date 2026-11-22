@@ -1,3 +1,4 @@
+import {AvalancheEffects} from './AvalancheEffects';
 import {IceSpellEffects}from './IceSpellEffects';
 import {drawLifeFeather} from '../pixi/LifeFeatherView';
 import { elementalReactionDuration, elementalReactionEnvelope } from './elementalReactionTiming';
@@ -89,6 +90,7 @@ export class ElementEffects {
   readonly fireball: FireballEffects;
   readonly mage: MageEffects;
   readonly icePremium:IceSpellEffects;
+  readonly avalanche:AvalancheEffects;
   private readonly reactionCancels = new Map<string, () => void>();
   readonly bastion: BastionEffects;
   readonly pactSummon: PactSummonEffects;
@@ -136,7 +138,8 @@ export class ElementEffects {
     this.catalog = new CatalogEffects(projectiles, this.ground, this.geometry);
     this.fireball = new FireballEffects(projectiles, this.ground, this.geometry);
     this.mage = new MageEffects(projectiles, this.ground, this.geometry);
-    this.icePremium=new IceSpellEffects(projectiles,this.ground,this.geometry,this.mage);
+    this.avalanche=new AvalancheEffects(projectiles,this.ground,this.geometry);
+    this.icePremium=new IceSpellEffects(projectiles,this.ground,this.geometry,this.mage,this.avalanche);
     this.bastion = new BastionEffects(projectiles, this.ground, this.geometry);
     this.pactSummon = new PactSummonEffects(projectiles, this.ground, this.geometry);
     this.ground.addChild(this.ambientArt);
@@ -1261,6 +1264,7 @@ export class ElementEffects {
     this.fireTiles = tiles;
   }
   tick(ms: number): void {
+    this.avalanche.reduced=this.reduced;this.avalanche.tick(ms);
     this.icePremium.reduced=this.reduced;this.icePremium.tick(ms);
     this.catalog.reduced = this.reduced; this.catalog.tick(ms);
     this.mage.reduced = this.reduced; this.mage.tick(ms);
@@ -1318,7 +1322,7 @@ export class ElementEffects {
     for (const cancel of [...this.reactionCancels.values()]) cancel();
     this.reactionCancels.clear();
     this.catalog.clear();
-    this.icePremium.clear();
+    this.icePremium.clear();this.avalanche.clear();
     this.mage.clear(); this.fireball.clear(); this.bastion.clear(); this.pactSummon.clear();
     for (const a of this.animations) a.cleanup();
     this.animations = [];
@@ -1332,7 +1336,7 @@ export class ElementEffects {
   destroy(): void {
     this.clear();
     this.catalog.destroy();
-    this.icePremium.destroy();
+    this.icePremium.destroy();this.avalanche.destroy();
     this.mage.destroy(); this.fireball.destroy(); this.bastion.destroy(); this.pactSummon.destroy();
     for (const g of this.freeGraphics) g.destroy({ context: true });
     for (const t of this.freeText) t.destroy();

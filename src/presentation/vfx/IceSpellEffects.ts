@@ -1,5 +1,6 @@
 import {Container,Graphics} from 'pixi.js';
 import type {Pos} from '../../game';
+import type {AvalancheEffects} from './AvalancheEffects';
 import type {MageEffects} from './MageEffects';
 import type {FxGeometry} from './ElementEffects';
 type Motion={g:Graphics;age:number;duration:number;step:(t:number,g:Graphics)=>void};
@@ -7,7 +8,7 @@ type Motion={g:Graphics;age:number;duration:number;step:(t:number,g:Graphics)=>v
 export class IceSpellEffects {
  reduced=false;
  private live:Motion[]=[];private free:Graphics[]=[];private made=0;private light=typeof matchMedia!=='undefined'&&matchMedia('(max-width:600px), (pointer:coarse)').matches;
- constructor(private actors:Container,private ground:Container,private geometry:FxGeometry,private painted?:MageEffects){}
+ constructor(private actors:Container,private ground:Container,private geometry:FxGeometry,private painted?:MageEffects,private snow?:AvalancheEffects){}
  get stats(){return {active:this.live.length,created:this.made,free:this.free.length};}
  private spawn(ground:boolean,duration:number,paint:(g:Graphics)=>void,step:Motion['step']):void{
   const g=this.free.pop()??(this.made<96?(this.made++,new Graphics()):undefined);if(!g)return;
@@ -52,6 +53,24 @@ export class IceSpellEffects {
   }
   // Residual frost is confined to the server-confirmed affected footprint.
   for(const tile of tiles.slice(0,25)){const p=this.geometry.center(tile);this.spawn(true,this.reduced?180:760,g=>{for(let i=0;i<3;i++){const x=(i-1)*10*s;g.moveTo(x-7,3).lineTo(x,-5).lineTo(x+5,1).stroke({color:0xa8e7f0,width:1,alpha:.35});}},(t,g)=>{g.position.set(p.x,p.y);g.alpha=(1-t)*.7;});}
+ }
+ heart(at:Pos,duration:number):void{
+  const c=this.geometry.center(at),scale=this.geometry.footprint(at).w/96;
+  this.charge(at,duration);
+  this.spawn(false,duration,g=>{
+   g.poly([0,-12,-18,-27,-32,-16,-29,4,0,33,29,4,32,-16,18,-27]).fill({color:0x174f80,alpha:.95});
+   g.poly([0,-12,-18,-27,-29,4,0,33]).fill({color:0x57b7e6,alpha:.88});
+   g.poly([0,-12,18,-27,29,4,0,33]).fill({color:0xc0f6ff,alpha:.85});
+   g.moveTo(0,-12).lineTo(-5,1).lineTo(5,8).lineTo(0,29).stroke({color:0xf5ffff,width:2.5,alpha:.95});
+  },(t,g)=>{g.position.set(c.x,c.y-45*scale);g.scale.set(scale*(.2+.8*Math.min(1,t*3))*(1+Math.sin(t*Math.PI*4)*.04));g.rotation=Math.sin(t*Math.PI)*.09;g.alpha=Math.min(1,t*5)*(1-Math.max(0,t-.85)*4);g.zIndex=this.geometry.depth(c)+6;});
+ }
+ heartRelease(at:Pos,tiles:readonly Pos[]):void{
+  const c=this.geometry.center(at),f=this.geometry.footprint(at);
+  for(let i=0;i<(this.reduced?4:12);i++){const a=i*Math.PI/6;this.spawn(false,this.reduced?180:850,g=>this.crystal(g,6,24),(t,g)=>{g.position.set(c.x+Math.cos(a)*f.w*t*.7,c.y-25+Math.sin(a)*f.h*t*.6-t*15);g.scale.set(1-t*.5);g.rotation=a+t;g.alpha=(1-t)**2;g.zIndex=this.geometry.depth(c)+4;});}
+  for(const tile of tiles){const p=this.geometry.center(tile);this.spawn(true,this.reduced?150:900,g=>{g.ellipse(0,0,f.w*.35,f.h*.3).stroke({color:0xc8f7ff,width:2,alpha:.7});},(t,g)=>{g.position.set(p.x,p.y);g.scale.set(.3+t);g.alpha=(1-t)**2;});}
+ }
+ avalanche(origin:Pos,tiles:readonly Pos[],duration:number,impact=false):void{
+  this.snow?.play(origin,tiles,duration,impact);
  }
  tick(ms:number):void{for(let i=this.live.length-1;i>=0;i--){const a=this.live[i]!;a.age+=ms;a.step(Math.min(1,a.age/a.duration),a.g);if(a.age>=a.duration){a.g.removeFromParent();a.g.clear();this.free.push(a.g);this.live.splice(i,1);}}}
  clear():void{for(const a of this.live){a.g.removeFromParent();a.g.clear();this.free.push(a.g);}this.live.length=0;}

@@ -105,11 +105,11 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   if (def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSearch(found, ctx.content, caster.defId,def) : searchUid !== undefined)
     return fail('INVALID_TARGET', def.discardSearch ? 'Elige una pieza de ritual de tu descarte.' : 'Elige una invocación válida del mazo.');
 
-  if (wallOrientation !== undefined && (def.id !== 'ice_wall' || !['HORIZONTAL','VERTICAL'].includes(wallOrientation))) return fail('INVALID_TARGET', 'Orientación no permitida.');
+  if (wallOrientation !== undefined && (!['ice_wall','glacial_field'].includes(def.id) || !['HORIZONTAL','VERTICAL'].includes(wallOrientation))) return fail('INVALID_TARGET', 'Orientación no permitida.');
   const resolved = resolveTarget(ctx, caster, def.targeting, target, secondary, wallOrientation);
   if (!resolved) return fail('INVALID_TARGET', `Invalid target for ${def.name}.`);
 
-  if (wallOrientation && !iceWallFits(ctx,resolved.affectedTiles)) return fail('INVALID_TARGET', 'La barrera necesita tres casillas libres y transitables.');
+  if (def.id==='ice_wall' && wallOrientation && !iceWallFits(ctx,resolved.affectedTiles)) return fail('INVALID_TARGET', 'La barrera necesita tres casillas libres y transitables.');
   const selectedEffects = effectsForCard(ctx.content, caster, def);
   if (selectedEffects.some((fx) => fx.type === 'SUMMON') && !isEmptyTile(ctx, resolved.impact))
     return fail('INVALID_TARGET', 'La invocación necesita una casilla vacía y transitable.');

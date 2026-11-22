@@ -1,3 +1,5 @@
+import {prepareShieldMaterials} from './ShieldBarrierView';
+import {breathesInCold} from './FrozenBreathView';
 import {activeScoutResources} from '../../game/domain/combat/scout-siege';
 import {ScoutResourceView} from './ScoutResourceView';
 import {activeLifeFeathers} from '../../game/domain/combat/raven';
@@ -505,6 +507,7 @@ export class BattleCanvas {
     loadingMark('scene-assets-start');
     await Promise.all([
       loadPaintedCharacters(sceneAssetIds(vm.state)),
+      prepareShieldMaterials(vm.state.units.filter(u=>u.shield>0).map(u=>u.shieldMaterial??'ENERGY')),
       vm.state.units.some(u=>u.defId==='mage'||u.statuses.some(s=>s.id==='GLACIER_CLAW')) ? loadClawRig() : Promise.resolve(),
       this.mechanisms.prepare({...vm,mechanisms:mechanismView(vm.state)}),
       vm.state.mechanisms ? loadTempleEnvironment(vm.state) : Promise.resolve(),
@@ -877,10 +880,11 @@ export class BattleCanvas {
       this.layout();
     }
     const frozen= !vm.state.outcome&&vm.state.units.some(u=>u.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0));
+    this.ambience.setFrozenWorld(frozen);
     const dustKey=JSON.stringify([frozen,this.lastSceneKey,this.proj.frontWidth,this.proj.height]);
     if(dustKey!==this.frozenWorldDustKey){
       this.frozenWorldDustKey=dustKey;this.frozenWorldDust.clear();this.frozenWorldDust.eventMode='none';this.frozenWorldDust.visible=frozen;
-      if(frozen)vm.state.board.tiles.forEach((tile,index)=>{if(!vm.content.terrain[tile.terrain].walkable)return;const p={x:index%vm.state.board.width,y:Math.floor(index/vm.state.board.width)},poly=this.proj.getInsetPolygon(p,.09);this.frozenWorldDust.poly(poly.flatMap(v=>[v.x,v.y])).fill({color:0xb8e9f9,alpha:.045}).stroke({color:0xc8f3ff,width:.7,alpha:.18});const a=poly[index%4]!,b=poly[(index+1)%4]!;this.frozenWorldDust.moveTo(a.x,a.y).lineTo(a.x+(b.x-a.x)*.27,a.y+(b.y-a.y)*.27).stroke({color:0xe2fcff,width:1.2,alpha:.3});});
+      if(frozen)vm.state.board.tiles.forEach((tile,index)=>{if(!vm.content.terrain[tile.terrain].walkable)return;const p={x:index%vm.state.board.width,y:Math.floor(index/vm.state.board.width)},poly=this.proj.getInsetPolygon(p,.09);this.frozenWorldDust.poly(poly.flatMap(v=>[v.x,v.y])).fill({color:0xb8e9f9,alpha:.11}).stroke({color:0xc8f3ff,width:.7,alpha:.18});const a=poly[index%4]!,b=poly[(index+1)%4]!;this.frozenWorldDust.moveTo(a.x,a.y).lineTo(a.x+(b.x-a.x)*.27,a.y+(b.y-a.y)*.27).stroke({color:0xe2fcff,width:1.2,alpha:.3});});
     }
     this.templeEnvironment.react(vm.state);
     this.drawUnits(vm); // Persistent art; update status chrome only when its data changes.
@@ -910,15 +914,17 @@ export class BattleCanvas {
       { key: 'frost_nova', effect: this.effects.mage },
       { key: 'magic_missile', effect: this.effects.mage },
       { key: 'fireball', effect: this.effects.fireball },
+      { key: 'avalanche', effect: this.effects.avalanche },
       { key: 'bastion_blow', effect: this.effects.bastion },
       { key: 'summon_pact_golem', effect: this.effects.pactSummon },
     ].filter(r => r.effect.requested && events.some(e => e.type === 'CARD_PLAYED' && vm.content.cards[e.cardId]?.presentation.visualKey === r.key && (r.effect !== this.effects.mage || mageRecipeEnabled(r.key)) || (r.key === 'fireball' && universalReactionsEnabled() && e.type === 'UNIT_DAMAGED' && e.damageType === 'FIRE' && e.hpLost > 0)));
     if(this.effects.elementalHits && universalReactionsEnabled() && events.some(e=>e.type==='UNIT_DAMAGED'&&e.hpLost>0&&(e.damageType==='ICE'||e.damageType==='ARCANE')) && this.effects.mage.requested && !recipes.some(r=>r.effect===this.effects.mage))
       recipes.push({key:'magic_missile',effect:this.effects.mage});
+    const shields=events.flatMap(e=>e.type==='SHIELD_GAINED'?[e.material??'ENERGY' as const]:[]);
     const catalog=this.effects.catalog.requested?catalogEventRecipes(events,id=>vm.content.cards[id]):[];
     const forms=events.filter((e):e is Extract<GameEvent,{type:'FORM_CHANGED'}>=>e.type==='FORM_CHANGED');
-    if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length)
-      this.assetGate.enqueue(() => Promise.all([this.prepareSceneAssets(vm), ...recipes.map(r => r.effect.prepare()),
+    if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length || shields.length)
+      this.assetGate.enqueue(() => Promise.all([this.prepareSceneAssets(vm), ...recipes.map(r => r.effect.prepare()), prepareShieldMaterials(shields),
         this.effects.catalog.prepare(catalog), forms.length?loadPaintedCharacters(forms.map(e=>`qa_form_${formVisual(e.to).id}`)):Promise.resolve(),
       ]), () => { if (!this.destroyed) this.playLoadedEvents(events, state); });
     else this.playLoadedEvents(events,state);
@@ -1222,6 +1228,8 @@ export class BattleCanvas {
   }
 
   private drawUnits(vm: BoardViewModel): void {
+    const frozenWorld=!vm.state.outcome&&vm.state.units.some(u=>u.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0));
+    const breathing=new Set(vm.state.units.filter(u=>u.hp>0&&breathesInCold(u.defId)).sort((a,b)=>Number(b.kind==='HERO')-Number(a.kind==='HERO')||a.id.localeCompare(b.id)).slice(0,this.app.screen.width<600?6:16).map(u=>u.id));
     const live = new Set(vm.state.units.map((u) => u.id));
     for (const [id, view] of this.units) {
       if (!live.has(id)) {
@@ -1274,6 +1282,7 @@ export class BattleCanvas {
       const def = vm.content.enemies[unit.defId];
       const phaseName = unit.defId.startsWith('veil_') && def ? enemyPhase(def,unit)?.name : undefined;
       if(unit.defId==='snow_soldier')view.setSnowClimate(unit.summon?.meltTurnsLeft??5,!!vm.state.units.find(u=>u.id===unit.summon?.ownerId)?.statuses.some(s=>s.id==='ABSOLUTE_ZERO'));
+      view.setFrozenWorld(frozenWorld&&breathing.has(unit.id));
       view.update(unit, intent, vm.focusedEnemyId === unit.id, phaseName);
       if(unit.defId === 'forge_king' && [3,5,6].includes(vm.state.round) && this.forgePhaseRound !== vm.state.round && unit.hp > 0) {
         this.forgePhaseRound = vm.state.round;

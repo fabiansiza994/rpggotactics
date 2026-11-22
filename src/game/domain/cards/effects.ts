@@ -165,13 +165,6 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     if(tile?.terrain==='ICE' && tile.terrainTurnsLeft!==null && tile.terrainOwnerId===e.caster.id && removeHazard(e.ctx,e.resolved.impact))
       setEnergy(e.ctx,Math.min(e.ctx.state.player.maxEnergy,e.ctx.state.player.energy+(fx.energy??1)));
   },
-  EXTEND_ICE: (e,fx)=>{
-    const tile=tileAt(e.ctx.state.board,e.resolved.impact);
-    if(tile?.terrain==='ICE' && tile.terrainTurnsLeft!==null && tile.terrainOwnerId===e.caster.id){
-      tile.terrainTurnsLeft=Math.min(fx.cap,tile.terrainTurnsLeft+fx.amount);
-      e.ctx.emit({type:'TERRAIN_CREATED',pos:e.resolved.impact,terrain:'ICE',previous:'ICE',turnsLeft:tile.terrainTurnsLeft,sourceId:e.caster.id});
-    }
-  },
   AVALANCHE: (e,fx)=>{
     for(const u of selectUnits(e,'UNITS')){
       if(u.id===e.caster.id || u.kind==='STRUCTURE')continue;

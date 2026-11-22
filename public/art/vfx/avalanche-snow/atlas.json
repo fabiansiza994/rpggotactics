@@ -1,0 +1,13 @@
+{
+  "columns": 4,
+  "rows": 4,
+  "alpha": true,
+  "sizes": [
+    512,
+    1024
+  ],
+  "referenceIllustration": "/art/antarctic-cards-horizontal/avalanche.jpg",
+  "source": "Original generated image; built-in image generation",
+  "generatedSource": "exec-f717e6c9-1a78-48ae-8bbc-f0e01dd041df.png",
+  "layout": "snow: formation/flow/impact/dissipation"
+}

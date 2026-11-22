@@ -8,6 +8,7 @@ export const STATUS_LABEL: Record<StatusId, string> = {
  ICE_PRISON:'Prisión de Hielo',
  ARCANE_SKATING:'Patinaje Arcano',
  GLACIAL_REFLECTION:'Reflejo Glacial',
+ PERMAFROST:'Permafrost: -1 PM · 1 ICE/turno',
  AVALANCHE_SLOW:'Avalancha: -1 PM',
  ARCANE_INVERSION:'Inversión Arcana',THUNDER_INCARNATION:'Encarnación del Dios del Trueno',
   VOLTAIC_ARMOR: 'Armadura de Voltios',

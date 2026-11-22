@@ -1,0 +1,13 @@
+{
+  "columns": 4,
+  "rows": 4,
+  "alpha": true,
+  "sizes": [
+    512,
+    1024
+  ],
+  "referenceIllustration": "/art/store-cards/glacial_shell.webp",
+  "source": "Original generated image; built-in image generation",
+  "generatedSource": "exec-54f2e909-a517-42c7-a40e-f74f43ea2ec9.png",
+  "layout": "row0 back, row1 front, row2 impact/cracks, row3 breakup"
+}

@@ -1,3 +1,4 @@
+import {resolutionTiming} from './resolutionProfiles';
 import { catalogBatch, confirmedAttackFamily, familyRecipe, usesPhysicalArrow, type CatalogRecipe, type PremiumFamily } from './catalogRecipes';
 import { mageRecipeEnabled } from './mageRecipes';
 import { damageReaction, REACTION_COLOR, universalReactionsEnabled, hitReactionPilot, springOffset } from './hitReactions';
@@ -140,6 +141,7 @@ export class VfxDirector {
         if(following)this.attackFamilies.set(event,confirmedAttackFamily(events,following));
       }
     }
+    this.effects.avalanche?.beginBatch?.();
     this.effects.mage?.beginBatch?.();
     this.effects.fireball?.beginBatch?.();
     this.effects.bastion?.beginBatch?.();
@@ -337,6 +339,8 @@ export class VfxDirector {
     }
     if (cue.kind === 'cast' && e.type === 'CARD_PLAYED') {
       if(fx.icePremium)fx.icePremium.reduced=reduced;
+      if(e.cardId==='eternal_winter_heart')fx.icePremium?.heart(e.impact,cue.duration+resolutionTiming(e.cardId,reduced).travel);
+      if(e.cardId==='avalanche')fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,cue.duration+resolutionTiming(e.cardId,reduced).travel);
       if(e.cardId==='frost_nova')fx.icePremium?.charge(e.impact,cue.duration);
       this.host.castCard?.(e);
       this.host.presentEvent?.(e);
@@ -364,6 +368,8 @@ export class VfxDirector {
       if(cue.key==='magma_fissure')fx.magmaFissure(e.affectedTiles,'windup');
       if(cue.key==='forbidden_bond')fx.forbiddenBond(from,'gather',cue.duration);
       this.host.unit(e.casterId)?.pulseLight(lightColor(f), reduced ? 140 : 220);
+      if(e.cardId==='eternal_winter_heart'){fx.icePremium?.heartRelease(e.impact,e.affectedTiles);this.host.impulse('LIGHT',reduced);return;}
+      if(e.cardId==='avalanche'){fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,850,true);this.host.impulse('MEDIUM',reduced);return;}
       if(e.cardId==='frost_nova'||e.cardId==='frost_comet')return;
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
@@ -469,7 +475,7 @@ export class VfxDirector {
         if (from && to) fx.fireball.projectile(from, to, Math.max(1, cue.duration), origin);
         return;
       }
-      if(cue.key==='glacial_storm')return;
+      if(['glacial_storm','avalanche','eternal_winter_heart'].includes(cue.key))return;
       if (e.type === 'PROJECTILE_LAUNCHED')
         fx.projectile(e.from, e.to, f, Math.max(1, cue.duration), origin);
       else if (e.type === 'CARD_PLAYED')
@@ -483,6 +489,8 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'spellImpact' && e.type === 'CARD_PLAYED') {
+      if(e.cardId==='eternal_winter_heart'){fx.icePremium?.heartRelease(e.impact,e.affectedTiles);this.host.impulse('LIGHT',reduced);return;}
+      if(e.cardId==='avalanche'){fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,850,true);this.host.impulse('MEDIUM',reduced);return;}
       if(e.cardId==='frost_nova'||e.cardId==='frost_comet'){fx.icePremium?.impact(e.impact,e.affectedTiles,e.cardId==='frost_comet');this.host.impulse(e.cardId==='frost_comet'?'MEDIUM':'LIGHT',reduced);return;}
       if(e.cardId==='glacial_storm'){fx.glacialStorm(e.affectedTiles,!!e.worldFrozen);return;}
       if(this.host.card(e.cardId)?.tags.includes('antarctic')){
@@ -690,6 +698,7 @@ export class VfxDirector {
         fx.backstab(e.pos);
         break;
       case 'UNIT_DAMAGED': {
+        if(e.sourceId==='status:PERMAFROST'){this.host.unit(e.unitId)?.pulseLight(0x9beaff,reduced?80:240);fx.glyph(e.pos,'ICE',reduced?80:300,18);}
         const catalog=this.catalogActions.get(e);
         if(catalog?.contactOnDamage)fx.catalog?.contact?.(catalog.family,this.position(e.sourceId)??e.pos,e.pos);
         const thunder = (catalog?.bank === 'thunder-premium' || catalog?.variant === 'paralyzing_pulse') && !!fx.catalog?.handles?.(catalog);

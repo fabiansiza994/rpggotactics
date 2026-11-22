@@ -4,6 +4,7 @@ export type StatusId =
   | 'SNOW_WAR'
   | 'GLACIER_CLAW'
   | 'ABSOLUTE_ZERO'
+  | 'PERMAFROST'
   | 'FROZEN'
   | 'FROST_MANTLE'
   | 'ICE_PRISON'

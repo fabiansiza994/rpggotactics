@@ -32,6 +32,7 @@ export abstract class PaintedEffectPool {
     protected readonly geometry: FxGeometry,
     private readonly assetId: string,
     private readonly limit = 32,
+    private readonly extension: 'webp' | 'png' = 'webp',
   ) {}
   abstract get requested(): boolean;
   get ready() {
@@ -62,7 +63,7 @@ export abstract class PaintedEffectPool {
     this.job = (async () => {
       try {
         const atlas = await loadSharedTexture(
-          `/art/vfx/${this.assetId}/${this.assetId}-v1-${size}.webp`,
+          `/art/vfx/${this.assetId}/${this.assetId}-v1-${size}.${this.extension}`,
         );
         if (this.disposed) return;
         const cell = size / 4;
@@ -122,6 +123,15 @@ export abstract class PaintedEffectPool {
     this.clips.push(clip);
     this.peak = Math.max(this.peak, this.clips.length);
     clip.update(0, s);
+  }
+  /** Crossfade registered painted frames without allocating textures or a second clock. */
+  protected blendedSprite(frames: readonly number[], at: Point, width: number,
+    duration: number, update: Clip['update'], ground=false, additive=true): void {
+    for(const layer of [0,1]) this.sprite([frames[0]!],at,width,duration,(t,s)=>{
+      const phase=Math.max(0,Math.min(1,t))*(frames.length-1),index=Math.floor(phase),blend=phase-index;
+      s.texture=this.frames[frames[Math.min(frames.length-1,index+layer)]!]!;
+      update(t,s);s.alpha*=layer?blend:1-blend;
+    },ground,additive);
   }
   protected lifted(p: Pos, fraction: number): Point {
     const c = this.geometry.center(p),

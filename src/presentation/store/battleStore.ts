@@ -1027,7 +1027,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     selectedCardUid: null, pairSelection: null,
     handDiscard: null,
     wallOrientation: 'HORIZONTAL',
-    rotateIceWall() { const s=get(); if(!s.engine || inputLocked(s) || s.state?.player.hand.find(c=>c.uid===s.selectedCardUid)?.cardId!=='ice_wall') return; const wallOrientation=s.wallOrientation==='HORIZONTAL'?'VERTICAL':'HORIZONTAL'; s.engine.wallOrientation=wallOrientation; set({wallOrientation,aim:s.aim?{...s.aim}:null}); },
+    rotateIceWall() { const s=get(); if(!s.engine || inputLocked(s) || !['ice_wall','glacial_field'].includes(s.state?.player.hand.find(c=>c.uid===s.selectedCardUid)?.cardId??'')) return; const wallOrientation=s.wallOrientation==='HORIZONTAL'?'VERTICAL':'HORIZONTAL'; s.engine.wallOrientation=wallOrientation; set({wallOrientation,aim:s.aim?{...s.aim}:null}); },
     aim: null,
     notice: null,
     log: [],

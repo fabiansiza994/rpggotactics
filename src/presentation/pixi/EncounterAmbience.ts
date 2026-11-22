@@ -17,6 +17,11 @@ export class EncounterAmbience {
   readonly art = new Graphics();
   readonly lighting = new Container({ eventMode: 'none' });
   readonly foreground = new Container({ eventMode: 'none' });
+  private winterActive=false;
+  private winterAlpha=0;
+  private winterFlakes:Graphics[]=[];
+  private winterGlow:Graphics|null=null;
+  setFrozenWorld(active:boolean):void {this.winterActive=active;}
   private pools: Graphics[] = [];
   private fog: Graphics[] = [];
   private sparks: { art: Graphics; x: number; y: number; phase: number }[] = [];
@@ -42,6 +47,11 @@ export class EncounterAmbience {
     this.pools = [];
     this.fog = [];
     this.sparks = [];
+    this.winterFlakes=[];
+    this.winterGlow=new Graphics().ellipse(left+width/2,height*.52,width*.55,height*.48).fill({color:0x83c9ef,alpha:.045});
+    this.foreground.addChild(this.winterGlow);
+    for(let i=0;i<20;i++){const g=new Graphics().circle(0,0,i%4===0?1.4:.8).fill({color:0xe5faff,alpha:.55});g.eventMode='none';this.foreground.addChild(g);this.winterFlakes.push(g);}
+
     const theme = encounterIdentity(scenario);
     const cold = new Graphics();
     for (let i = 6; i > 0; i--)
@@ -66,6 +76,10 @@ export class EncounterAmbience {
   }
   tick(ms: number, reduced: boolean, compact = false) {
     this.clock += ms;
+    const target=this.winterActive?1:0;
+    this.winterAlpha+=(target-this.winterAlpha)*Math.min(1,ms/350);
+    if(this.winterGlow)this.winterGlow.alpha=this.winterAlpha;
+    this.winterFlakes.forEach((g,i)=>{g.visible=!reduced&&this.winterAlpha>.01&&(!compact||i<7);if(!g.visible)return;const phase=(i*.173+this.clock*.000055)%1;g.position.set(this.left+((i*.371+phase*.13)%1)*this.width,phase*this.height);g.alpha=Math.sin(phase*Math.PI)*this.winterAlpha*.5;});
     const { lights, fog: fogWake, motes } = this.wake;
     if (this.environment) this.environment.wake = Math.min(1,lights);
     for (const [i, pool] of this.pools.entries()) {

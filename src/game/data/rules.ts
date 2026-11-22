@@ -15,6 +15,7 @@ export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
   ICE_PRISON: {id:'ICE_PRISON',name:'Prisión de Hielo',negative:true,tick:'NEVER',stacking:'IGNORE',moveReduction:2},
   ARCANE_SKATING: {id:'ARCANE_SKATING',name:'Patinaje Arcano',negative:false,tick:'NEVER',stacking:'IGNORE'},
   GLACIAL_REFLECTION: {id:'GLACIAL_REFLECTION',name:'Reflejo Glacial',negative:false,tick:'NEVER',stacking:'IGNORE'},
+  PERMAFROST: {id:'PERMAFROST',name:'Permafrost',negative:true,tick:'TURN_START',tickDamage:1,tickDamageType:'ICE',tickIgnoresArmor:true,stacking:'REFRESH',moveReduction:1},
   AVALANCHE_SLOW: {id:'AVALANCHE_SLOW',name:'Avalancha: -1 PM',negative:true,tick:'NEVER',stacking:'IGNORE',moveReduction:1},
   ARCANE_INVERSION: {id:'ARCANE_INVERSION',name:'Inversión Arcana',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true,damageToHealingCap:3},
   THUNDER_INCARNATION: {id:'THUNDER_INCARNATION',name:'Encarnación del Dios del Trueno',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true,thunderEconomy:true},
