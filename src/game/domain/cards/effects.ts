@@ -392,6 +392,14 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     pending.push({ scope: fx.scope, amount: fx.amount, sourceCardId: e.cardId ?? '' });
     e.ctx.emit({ type: 'COST_DISCOUNT_GRANTED', unitId: e.caster.id, scope: fx.scope, amount: fx.amount });
   },
+  PLACE_WINTER_HEART: e => {
+    const target=unitAt(e.ctx.state,e.resolved.impact);
+    const linked=!!e.caster.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0);
+    (e.ctx.state.glyphs??=[]).push({id:`glyph-${e.ctx.state.nextId++}`,glyphId:'eternal_winter_heart',ownerId:e.caster.id,
+      tiles:e.resolved.affectedTiles.map(p=>({...p})),origin:{...e.resolved.impact},damage:5,damageType:'ICE',
+      winterHeart:{mode:linked?'UNIT':'TILE',...(linked&&target?{targetId:target.id}:{}),lastKnown:{...e.resolved.impact},phase:1,
+        lastTurn:e.ctx.state.duel?.turns??e.ctx.state.round}});
+  },
   PLACE_GLYPH: (e, fx) => {
     placeGlyph(e.ctx, e.caster, e.resolved.affectedTiles, fx.glyphId, fx.damage, fx.damageType, fx.activations, fx.maxTargets, fx.activations !== undefined ? e.resolved.impact : undefined);
   },

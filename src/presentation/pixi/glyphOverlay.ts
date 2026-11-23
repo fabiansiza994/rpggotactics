@@ -17,6 +17,7 @@ export function drawGlyphOverlay(g: Graphics, proj: GridProjection, vm: BoardVie
     g.circle(c.x+5,c.y-2,1.7).fill({color:0xb5273b,alpha:0.8});
   }
   for (const glyph of vm.state.glyphs ?? []) {
+    if(glyph.winterHeart){const h=glyph.winterHeart,at=vm.state.units.find(u=>u.id===h.targetId)?.pos??h.lastKnown,c=proj.getTileCenter(at);g.ellipse(c.x,c.y,18,8).stroke({color:0x96e6ff,width:2,alpha:.8});continue;}
     if (glyph.glyphId === 'thunder_orb' && glyph.tiles.length) {
       const mean = glyph.tiles.reduce((a,p)=>({x:a.x+p.x,y:a.y+p.y}),{x:0,y:0});
       const c=proj.getTileCenter(glyph.origin ?? {x:Math.round(mean.x/glyph.tiles.length),y:Math.round(mean.y/glyph.tiles.length)});

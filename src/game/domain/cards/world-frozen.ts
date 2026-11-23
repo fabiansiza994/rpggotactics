@@ -4,6 +4,7 @@ import type {GameState} from '../state';
 export const worldFrozen=(unit:Pick<Unit,'statuses'>|undefined):boolean=>!!unit?.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0);
 /** A cast takes one deterministic snapshot of its upgrade BEFORE validation/payment. */
 export function worldFrozenCard(card:CardDefinition,caster:Pick<Unit,'statuses'>|undefined):CardDefinition{
+ if(card.id==='eternal_winter_heart'&&worldFrozen(caster))return {...card,worldFrozenActive:true,targeting:{type:'UNIT',range:3,unitFilter:'ENEMY',requiresLineOfSight:true,area:{shape:'CROSS',radius:1}}};
  if(!card.worldFrozenUpgrade||!worldFrozen(caster))return card;
  return {...card,...card.worldFrozenUpgrade,worldFrozenActive:true};
 }

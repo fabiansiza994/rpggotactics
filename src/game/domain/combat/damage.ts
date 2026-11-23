@@ -128,6 +128,9 @@ export function defeatUnit(ctx: RuleContext, unit: Unit, reason?:'DAMAGE'|'MELT'
   if(unit.defId==='snow_soldier'&&!reason)reason='DAMAGE';
   const { state } = ctx;
   if (!state.units.includes(unit)) return;
+  // Capture the final authoritative tile before removal; never bind a replacement occupant.
+  for(const glyph of state.glyphs??[])if(glyph.winterHeart?.targetId===unit.id)glyph.winterHeart.lastKnown={...unit.pos};
+  if(state.glyphs)state.glyphs=state.glyphs.filter(g=>!g.winterHeart||g.ownerId!==unit.id);
   state.units = state.units.filter((u) => u !== unit);
   pruneBloodTrails(state);
   pruneLifeFeathers(state);pruneScoutResources(state);

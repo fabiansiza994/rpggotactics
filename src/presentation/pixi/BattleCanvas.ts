@@ -910,6 +910,7 @@ export class BattleCanvas {
     }
     this.mechanisms.update(vm, this.proj);
     this.sections.update(vm, this.proj);
+    this.effects.icePremium.syncHearts(vm.state,id=>{const view=this.units.get(id);return view?{x:view.root.x,y:view.root.y}:undefined;},this.actorLayer.toLocal({x:0,y:32}).y);
     this.targetingPreview.sync(vm, this.proj);
     this.drawOverlay(vm);
   }

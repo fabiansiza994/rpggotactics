@@ -7,6 +7,8 @@ import type { Pos } from '../core/position';
  * Never blocks movement or line of sight.
  */
 export interface Glyph {
+  /** Immutable targeting contract; progress only at a new owner turn. */
+  winterHeart?: {mode:'TILE'|'UNIT'; targetId?:string; lastKnown:Pos; phase:1|2; lastTurn:number};
   id: string;
   /** Content key of the glyph kind (presentation reads it; rules only use the numbers below). */
   glyphId: string;

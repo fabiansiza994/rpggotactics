@@ -22,7 +22,7 @@ const card = (
   rarity: "ULTRA",
   maxCopies: 2,
   commercialUltra: true,
-  category: effects.some((fx) => fx.type === "DAMAGE") ? "ATTACK" : "UTILITY",
+  category: (id === "eternal_winter_heart" || effects.some((fx) => fx.type === "DAMAGE")) ? "ATTACK" : "UTILITY",
   tags: ["commercial-box", element.toLowerCase()],
   targeting,
   effects,
@@ -87,21 +87,9 @@ export const MARKET_BOX_ULTRAS: CardDefinition[] = [
     "Corazón del Invierno Eterno",
     "mage",
     3,
-    { type: "UNIT", range: 3, unitFilter: "ENEMY", requiresLineOfSight: true },
-    [
-      {
-        type: "DAMAGE",
-        amount: 2,
-        damageType: "ICE",
-        to: "ENEMIES",
-        bonus: {
-          when: { type: "TARGET_ON_TERRAIN", terrains: ["ICE"] },
-          amount: 1,
-        },
-      },
-      { type: "APPLY_STATUS", status: "SLOWED", duration: 1, to: "ENEMIES" },
-    ],
-    "Inflige 2 de hielo a un enemigo con visión a distancia 3; 3 si está sobre ICE. Lo ralentiza durante su próximo turno. No inmoviliza ni prolonga el hielo.",
+    { type: "TILE", range: 3, tileFilter: "NOT_BLOCKED", requiresLineOfSight: true, area: {shape: "CROSS", radius: 1} },
+    [{ type: "PLACE_WINTER_HEART" }],
+    "Ritual de 3 turnos propios: reúne un fragmento por turno. En el tercero cae: 5 de daño al centro y 1 a enemigos ortogonales. Sin Mundo Gélido fija una casilla; con Mundo Gélido al lanzar sigue a un enemigo. Si muere, conserva su última casilla.",
     "ICE",
   ),
   card(

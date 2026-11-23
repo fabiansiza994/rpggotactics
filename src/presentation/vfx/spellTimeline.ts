@@ -45,7 +45,7 @@ export function compileTimeline(
       cursor=effectAt=start+prepare+travel;recoveryUntil=cursor;
     } else if (event.type === 'GLYPH_ACTIVATED') {
       cursor=Math.max(cursor,recoveryUntil);add(cursor,'event',event);
-      cursor+=reduced?60:180;effectAt=cursor;
+      cursor+=event.kind==='eternal_winter_heart'?(reduced?180:660):(reduced?60:180);effectAt=cursor;
     } else if (event.type === 'COUNTER_ATTACK') {
       // Reactions are separate visual actions, not another simultaneous hit.
       // The authoritative event sequence/payload remains untouched.

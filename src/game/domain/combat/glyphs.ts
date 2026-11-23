@@ -1,6 +1,7 @@
+import {allPositions} from '../board/board';
 import { areHostile, unitById } from '../board/occupancy';
 import type { RuleContext } from '../context';
-import { comparePos, posKey, type Pos } from '../core/position';
+import { comparePos, manhattan, posKey, type Pos } from '../core/position';
 import type { Faction, Unit } from '../entities/unit';
 import type { DamageType } from './damage-types';
 import { dealDamage } from './damage';
@@ -36,6 +37,25 @@ export function resolveGlyphs(ctx: RuleContext, faction: Faction): void {
   for (const glyph of [...glyphs]) {
     const owner = unitById(ctx.state, glyph.ownerId);
     if (owner && owner.faction !== faction) continue;
+    if(glyph.winterHeart){
+      const heart=glyph.winterHeart;
+      if(!owner){ctx.state.glyphs=ctx.state.glyphs!.filter(g=>g!==glyph);continue;}
+      const turn=ctx.state.duel?.turns??ctx.state.round;
+      if(turn<=heart.lastTurn)continue;
+      heart.lastTurn=turn;
+      const linked=heart.targetId?unitById(ctx.state,heart.targetId):undefined;
+      if(linked)heart.lastKnown={...linked.pos};
+      glyph.origin={...heart.lastKnown};
+      glyph.tiles=allPositions(ctx.state.board).filter(p=>manhattan(p,heart.lastKnown)<=1);
+      if(heart.phase===1){heart.phase=2;continue;}
+      // Remove BEFORE damage: reaction hooks, snapshots and retries cannot strike twice.
+      ctx.state.glyphs=ctx.state.glyphs!.filter(g=>g!==glyph);
+      const targets=ctx.state.units.filter(u=>areHostile(owner,u)&&
+        (manhattan(u.pos,heart.lastKnown)===1||(heart.mode==='UNIT'?u.id===heart.targetId:manhattan(u.pos,heart.lastKnown)===0)));
+      ctx.emit({type:'GLYPH_ACTIVATED',glyphId:glyph.id,kind:glyph.glyphId,ownerId:owner.id,origin:{...heart.lastKnown},targets:targets.map(u=>({unitId:u.id,pos:{...u.pos}})),remaining:0});
+      for(const target of targets)dealDamage(ctx,target,manhattan(target.pos,heart.lastKnown)===0?5:1,owner.id,'ICE');
+      continue;
+    }
     if (glyph.activationsLeft !== undefined) glyph.activationsLeft -= 1;
     if (!owner || glyph.activationsLeft === undefined || glyph.activationsLeft <= 0) ctx.state.glyphs = ctx.state.glyphs!.filter((g) => g !== glyph);
     if (!owner) continue;

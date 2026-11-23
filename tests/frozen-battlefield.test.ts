@@ -32,12 +32,12 @@ import type {Env} from '../server/src/db';
 import {Container} from 'pixi.js';
 import {IceSpellEffects} from '../src/presentation/vfx/IceSpellEffects';
 import {FrozenBreathView,breathesInCold} from '../src/presentation/pixi/FrozenBreathView';
-import {compileTimeline} from '../src/presentation/vfx/spellTimeline';
+
 describe('Frozen Battlefield presentation lifecycle and compatibility',()=>{
  it('old clients cannot enter new rooms; reconnect retains prior release support',()=>{expect(supportsRoomRelease(PREVIOUS_CONTENT_RELEASE,CONTENT_RELEASE)).toBe(false);expect(supportsRoomRelease(CONTENT_RELEASE,PREVIOUS_CONTENT_RELEASE)).toBe(true);expect(contentTransition(new Request('https://example.org/api/tactics/pvp/create?clientRelease='+PREVIOUS_CONTENT_RELEASE),{RELEASE2_CLIENT_REQUIRED:'1'}as Env)?.status).toBe(426);expect(contentTransition(new Request('https://example.org/api/tactics/pvp/connect?clientRelease='+PREVIOUS_CONTENT_RELEASE),{RELEASE2_CLIENT_REQUIRED:'1'}as Env)).toBe(null);});
  it('heart and avalanche pool allocations happen on emission, never on frame advance',()=>{const a=new Container(),g=new Container(),fx=new IceSpellEffects(a,g,{center:p=>({x:p.x*96,y:p.y*48}),footprint:()=>({w:96,h:48}),quad:()=>[],depth:p=>p.y});fx.heart(p(2,2),620);fx.heartRelease(p(2,2),[p(2,2)]);fx.avalanche(p(1,2),[p(2,2),p(3,2),p(3,3)],950);const n=fx.stats.created;for(let i=0;i<160;i++)fx.tick(16);expect(fx.stats.created).toBe(n);expect(fx.stats.active).toBe(0);expect(a.children.length+g.children.length).toBe(0);fx.destroy();expect(fx.stats.free).toBe(0);a.destroy();g.destroy();});
  it('living breath reuses wisps, respects reduced motion and stops on expiry',()=>{expect(breathesInCold('mage')).toBe(true);expect(breathesInCold('pact_golem')).toBe(false);expect(breathesInCold('snow_soldier')).toBe(false);const v=new FrozenBreathView(100,3);v.sync(true,false);const count=v.children.length;for(let i=0;i<200;i++)v.advance(16,false,'W');expect(v.children).toHaveLength(count);v.sync(false,false);expect(v.visible).toBe(false);v.sync(true,true);v.advance(16,true,'E');expect(v.children.slice(0,3).every(c=>!c.visible)).toBe(true);v.destroy({children:true});});
- it('heart HP follows its unique impact, never the anticipation',()=>{const e=setup(),r=cast(e,'eternal_winter_heart');expect(r.ok).toBe(true);if(!r.ok)return;const plan=compileTimeline(r.events,id=>DEFAULT_CONTENT.cards[id]?.presentation.visualKey??id,false),impact=plan.cues.find(c=>c.kind==='spellImpact')!;expect(impact.at).toBe(840);expect(plan.cues.filter(c=>c.event.type==='UNIT_DAMAGED').every(c=>c.at===impact.at)).toBe(true);});
+ it('heart cast begins a persistent ritual, with no premature HP loss',()=>{const e=setup(),r=cast(e,'eternal_winter_heart');expect(r.ok).toBe(true);if(!r.ok)return;expect(r.events.some(e=>e.type==='UNIT_DAMAGED')).toBe(false);expect(e.state.glyphs?.some(g=>g.winterHeart?.phase===1)).toBe(true);});
 });
 
 import {endTurn} from './helpers';

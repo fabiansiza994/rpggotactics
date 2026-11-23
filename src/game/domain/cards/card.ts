@@ -308,6 +308,7 @@ export type EffectDef =
    * Delayed, public area (Runa de Ignición): marks the affected tiles; at the START of the caster's
    * next turn every hostile unit still inside takes `damage`, then the glyph is gone.
    */
+  | { type: 'PLACE_WINTER_HEART' }
   | { type: 'PLACE_GLYPH'; glyphId: string; damage: number; damageType: DamageType; activations?: number; maxTargets?: number }
   | { type: 'SUMMON'; summonId: string }
   /**

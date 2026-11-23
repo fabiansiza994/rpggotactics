@@ -1,0 +1,6 @@
+import {it,expect} from 'vitest';
+import {CONTENT_RELEASE,supportsRoomRelease} from '../src/game/pvp/content-release';
+import {contentTransition} from '../server/src/contentTransition';
+import type {Env} from '../server/src/db';
+it('requires the new client for new heart rooms while retaining old reconnect support',()=>{expect(CONTENT_RELEASE).toBe('winter-heart-2');expect(supportsRoomRelease('frozen-battlefield-3',CONTENT_RELEASE)).toBe(false);expect(supportsRoomRelease(CONTENT_RELEASE,'frozen-battlefield-3')).toBe(true);const env={RELEASE2_CLIENT_REQUIRED:'1'}as Env;expect(contentTransition(new Request('https://example.org/api/tactics/pvp/create?clientRelease=frozen-battlefield-3'),env)?.status).toBe(426);expect(contentTransition(new Request('https://example.org/api/tactics/pvp/connect?clientRelease=frozen-battlefield-3'),env)).toBe(null);});
+it('drain stops admissions but keeps reconnect and payments available to current clients',()=>{const env={RELEASE2_CLIENT_REQUIRED:'1',CONTENT_RELEASE_DRAIN:'1'}as Env;expect(contentTransition(new Request('https://example.org/api/tactics/pvp/create?clientRelease='+CONTENT_RELEASE),env)?.status).toBe(503);for(const path of ['pvp/connect','store/paypal/live/capture'])expect(contentTransition(new Request('https://example.org/api/tactics/'+path+'?clientRelease='+CONTENT_RELEASE),env)).toBe(null);});
