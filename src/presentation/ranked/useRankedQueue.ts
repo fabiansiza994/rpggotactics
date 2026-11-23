@@ -74,36 +74,27 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     return () => clearInterval(timer);
   }, [queue.state, apply]);
 
-  // One server-side claim per ticket. Human matching still runs first inside POST bot.
-  useEffect(() => {
-    if (
-      queue.state !== "SEARCHING" ||
-      !queue.botOffer ||
-      accepting.current === queue.since
-    )
-      return;
-    const ticket = queue.since,
-      epoch = generation.current;
+  // Explicit consent only. The server still gives human pairing the final opportunity.
+  async function acceptBot() {
+    if (queue.state !== "SEARCHING" || !queue.botOffer || accepting.current === queue.since) return;
+    const ticket = queue.since, epoch = ++generation.current;
     accepting.current = ticket;
-    void rankedApi
-      .acceptBot(ticket)
-      .then((r) => {
-        if (epoch !== generation.current) return;
-        if (r?.ok) apply(r.data.queue);
-        else {
-          accepting.current = null;
-          setError(r ? r.error.message : "No se pudo preparar el rival.");
-        }
-      })
-      .catch(() => {
-        if (epoch === generation.current) {
-          accepting.current = null;
-          setError(
-            "No se pudo preparar el rival. Puedes cancelar la búsqueda.",
-          );
-        }
-      });
-  }, [queue, apply]);
+    setBusy(true);
+    setError("");
+    try {
+      const r = await rankedApi.acceptBot(ticket);
+      if (epoch !== generation.current) return;
+      if (r?.ok) apply(r.data.queue);
+      else setError(r ? r.error.message : "No se pudo preparar el rival.");
+    } catch {
+      if (epoch === generation.current) setError("No se pudo preparar el rival. Puedes seguir buscando.");
+    } finally {
+      if (epoch === generation.current) {
+        accepting.current = null;
+        setBusy(false);
+      }
+    }
+  }
 
   async function run(call: () => ReturnType<typeof rankedApi.join>) {
     const epoch = ++generation.current;
@@ -130,6 +121,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     busy,
     error,
     refresh,
+    acceptBot,
     search: (heroId: string, deckId?: string) =>
       run(() => rankedApi.join(heroId, deckId)),
     cancel: () => run(() => rankedApi.cancel()),

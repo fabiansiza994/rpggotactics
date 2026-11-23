@@ -1,6 +1,5 @@
 import { DEFAULT_CONTENT, type GameContent } from "../../src/game";
-import { copyLimit, validateDeck } from "../../src/game/collection/deck-rules";
-import { DECK_RULES } from "../../src/game/data/rules";
+import { botStarterDeck } from "../../src/game/ai/ranked-bot-deck";
 import type { BotIdentity } from "../../src/game/ai/ranked-bot-policy";
 import { rankedBotCatalog } from "./rankedBotCatalog";
 import type { D1Database, Env } from "./db";
@@ -17,18 +16,13 @@ export function playableBotChampions(
 ): BotChampion[] {
   const catalog = rankedBotCatalog(content, env);
   return BOT_CHAMPION_SUPPORT.filter((id) => {
-    const hero = catalog.heroes[id];
-    return (
-      !!hero &&
-      !validateDeck(
-        hero.deck,
-        id,
-        (card) =>
-          catalog.cards[card] ? copyLimit(catalog.cards[card]!, DECK_RULES) : 0,
-        catalog,
-        DECK_RULES,
-      ).length
-    );
+    if (!catalog.heroes[id]) return false;
+    try {
+      botStarterDeck(catalog, id);
+      return true;
+    } catch {
+      return false;
+    }
   });
 }
 /** Independent domain; adjacent seeds do not produce 48 identical champions. Never consumes combat RNG. */

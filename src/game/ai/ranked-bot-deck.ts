@@ -25,6 +25,24 @@ function families(card: CardDefinition) {
     ...card.effects.map((e) => e.type),
   ]);
 }
+/** The same legal 40-card foundation is used for availability and actual bot construction. */
+export function botStarterDeck(content: GameContent, heroId: BotIdentity["heroId"], seed = 0): DeckEntry[] {
+  const hero = content.heroes[heroId];
+  if (!hero) throw Error("BOT_CHAMPION_DISABLED");
+  const pool = Object.values(content.cards).filter(c => !c.heroId || c.heroId === heroId);
+  const owned = (id: string) => content.cards[id] ? copyLimit(content.cards[id]!, DECK_RULES) : 0;
+  let deck = starterDeck(hero);
+  if (validateDeck(deck, heroId, owned, content, STORY_RULES).filter(issue => issue.code !== "DECK_INCOMPLETE").length)
+    throw Error("BOT_STARTER_ILLEGAL");
+  const fillers=[...pool].sort((a,b)=>noise(seed,a.id)-noise(seed,b.id)||a.id.localeCompare(b.id));
+  while(deckSize(deck)<DECK_RULES.requiredSize){
+    const next=fillers.find(c=>!addCardIssue(deck,c.id,heroId,owned,content,DECK_RULES));
+    if(!next)throw Error('BOT_COLLECTION_TOO_SMALL');
+    deck=addCard(deck,next.id);
+  }
+  if (validateDeck(deck, heroId, owned, content, DECK_RULES).length) throw Error("BOT_STARTER_ILLEGAL");
+  return deck;
+}
 /** Account-independent: content.cards must already be filtered to the PUBLIC release by the server. */
 export function botDeck(content: GameContent, bot: BotIdentity): DeckEntry[] {
   const hero = content.heroes[bot.heroId];
@@ -34,15 +52,7 @@ export function botDeck(content: GameContent, bot: BotIdentity): DeckEntry[] {
   );
   const owned = (id: string) =>
     content.cards[id] ? copyLimit(content.cards[id]!, DECK_RULES) : 0;
-  let deck = starterDeck(hero);
-  if (validateDeck(deck, bot.heroId, owned, content, STORY_RULES).filter(issue => issue.code !== "DECK_INCOMPLETE").length)
-    throw Error("BOT_STARTER_ILLEGAL");
-  const fillers=[...pool].sort((a,b)=>noise(bot.seed,a.id)-noise(bot.seed,b.id)||a.id.localeCompare(b.id));
-  while(deckSize(deck)<DECK_RULES.requiredSize){
-    const next=fillers.find(c=>!addCardIssue(deck,c.id,bot.heroId,owned,content,DECK_RULES));
-    if(!next)throw Error('BOT_COLLECTION_TOO_SMALL');
-    deck=addCard(deck,next.id);
-  }
+  let deck = botStarterDeck(content, bot.heroId, bot.seed);
   // Advanced ritual templates are coherent packages, not isolated high-rarity cards.
   const requiredPieces = new Set<string>();
   if (

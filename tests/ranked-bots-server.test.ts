@@ -103,6 +103,9 @@ async function call(
   path: string,
   body?: unknown,
 ): Promise<{ status: number; body: Json }> {
+  // Positive API cases model the current explicit-accept client; legacy cases override this marker.
+  if (path === "/ranked/bot" && typeof body === "object" && body !== null)
+    body = { acceptance: "MANUAL", ...body };
   const res = await handle(
     new Request(
       `https://api.test/api/tactics${path}${path.includes("?") ? "&" : "?"}botProtocol=ranked-bots-1`,
@@ -166,6 +169,25 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("ranked bot authoritative room integration", () => {
+  it("rejects legacy automatic acceptance without reserving a bot and still prioritizes a waiting human", async () => {
+    const a = await player("legacy-auto"), b = await player("manual-human");
+    const q = (await queue(a)).body.queue;
+    vi.setSystemTime(Date.now() + 15_000);
+    db.sql.prepare("UPDATE tactics_ranked_queue SET expires_at=?").run(Date.now() + 20_000);
+    const legacy = await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:undefined});
+    expect(legacy.status).toBe(409);
+    expect(legacy.body.error.code).toBe("BOT_MANUAL_ACCEPTANCE_REQUIRED");
+    expect(rooms.size).toBe(0);
+    expect(count("tactics_match_reservations")).toBe(0);
+    expect((await poll(a)).body.queue.state).toBe("SEARCHING");
+    expect((await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:"AUTO"})).status).toBe(409);
+    await queue(b);
+    const paired = await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:undefined});
+    expect(paired.status).toBe(200);
+    expect(paired.body.queue.state).toBe("MATCHED");
+    expect((rooms.get(paired.body.queue.code)!.data.get("room") as Room).bot).toBeUndefined();
+  });
+
   it("offers at 15 seconds, preserves offer identity and always prioritizes a waiting human", async () => {
     const a = await player("bot-alpha"),
       b = await player("bot-beta");

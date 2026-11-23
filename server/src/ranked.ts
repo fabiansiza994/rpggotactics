@@ -478,7 +478,7 @@ async function acceptBot(
 ): Promise<Response> {
   if (!botsEnabled(env) || !env.PVP_ROOMS)
     return error(403, "BOTS_DISABLED", "La oferta IA no está disponible.");
-  let body: { since?: number };
+  let body: { since?: number; acceptance?: unknown };
   try {
     const raw = await request.text();
     if (raw.length > 1024)
@@ -500,6 +500,9 @@ async function acceptBot(
       "STALE_OFFER",
       "La búsqueda cambió. Actualiza la oferta.",
     );
+  // Old cached clients auto-posted {since}; they may still match humans, but cannot auto-create IA.
+  if (body.acceptance !== "MANUAL")
+    return error(409, "BOT_MANUAL_ACCEPTANCE_REQUIRED", "Actualiza el juego y acepta el rival IA manualmente, o sigue buscando una persona.");
   const own = await serverLoadout(
     env,
     caller,

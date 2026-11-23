@@ -82,6 +82,7 @@ export function RankedPanel({
   championName,
   onSearch,
   onCancel,
+  onAcceptBot,
 }: {
   mobile?: boolean;
   profile: Extract<RankedProfile, { enabled: true }>;
@@ -93,8 +94,10 @@ export function RankedPanel({
   championName: string;
   onSearch: () => void;
   onCancel: () => void;
+  onAcceptBot?: () => void;
 }) {
   const rank = rankFor(profile.rp);
+  const [humanOnlySince, setHumanOnlySince] = useState<number | null>(null);
   const searching = queue.state === "SEARCHING";
   const elapsed = useElapsed(searching ? queue.since : null);
   const next = RANKED_TIERS[rank.tierIndex + 1];
@@ -152,6 +155,15 @@ export function RankedPanel({
               <strong>Buscando rival…</strong>
               <b aria-label="Tiempo de búsqueda">{elapsed}</b>
             </div>
+            {queue.state === "SEARCHING" && queue.botOffer && humanOnlySince !== queue.since && (
+              <div className="ranked-bot-offer" role="group" aria-label="Oferta de rival IA">
+                <p>Hay un rival IA disponible. Puedes aceptarlo o seguir buscando una persona.</p>
+                <small>Victoria IA: +{queue.botOffer.rewards.rpDelta} RP · {queue.botOffer.rewards.xp} XP, según tus límites diarios.</small>
+                <button disabled={busy || !onAcceptBot} onClick={onAcceptBot}>Aceptar rival IA</button>
+                <button disabled={busy} onClick={() => setHumanOnlySince(queue.since)}>Seguir buscando rival humano</button>
+              </div>
+            )}
+            {queue.state === "SEARCHING" && humanOnlySince === queue.since && <p role="status">Sigues buscando un rival humano.</p>}
             <button disabled={busy} onClick={onCancel}>
               Cancelar búsqueda
             </button>

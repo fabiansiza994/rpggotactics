@@ -1024,6 +1024,7 @@ export function PvpScreen({
                 onSearch={() => {
                   if (deckValid && deckId) void ranked.search(hero, deckId);
                 }}
+                onAcceptBot={() => void ranked.acceptBot()}
                 onCancel={() => void ranked.cancel()}
               />
             ) : undefined

@@ -115,7 +115,7 @@ export const rankedApi = {
     ),
   poll: () => call<{ queue: RankedQueueState }>("/queue"),
   acceptBot: (since: number) =>
-    call<{ queue: RankedQueueState }>("/bot", "POST", { since }),
+    call<{ queue: RankedQueueState }>("/bot", "POST", { since, acceptance: "MANUAL" }),
   cancel: () => call<{ queue: RankedQueueState }>("/cancel", "POST", {}),
   track: () =>
     call<
