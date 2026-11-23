@@ -1,7 +1,7 @@
 import {COMPETITIVE_DECK_RULES,storedDeckRules} from './deck-formats';
-import { requireDef, type GameContent } from '../domain/content';
+import { type GameContent } from '../domain/content';
 import { deckSize, deckStatus, validateDeck, type DeckEntry, type DeckIssue, type DeckRules } from './deck-rules';
-import { heroProfile, ownedFor, starterDeck, type HeroProfile, type PlayerProfile, type SavedDeck } from './profile';
+import { heroProfile, ownedFor, ownedStarterDeck, type HeroProfile, type PlayerProfile, type SavedDeck } from './profile';
 
 export { STARTER_DECK_NAME } from './profile';
 
@@ -125,7 +125,7 @@ export function createDeck(
   if (hero.decks.length >= slots) return { ok: false, error: 'DECK_LIMIT' };
   const name = input.name === undefined ? NEW_DECK_NAME : normalizeDeckName(input.name);
   if (!name) return { ok: false, error: 'INVALID_NAME' };
-  const cards = input.cards ? clone(input.cards) : starterDeck(requireDef(content.heroes, heroId, 'hero'));
+  const cards = input.cards ? clone(input.cards) : ownedStarterDeck(profile, heroId, content, rules);
   if (input.cards) {
     const issues = validateDeck(cards, heroId, ownedFor(profile, heroId, content), content, rules);
     if (issues.length) return { ok: false, error: 'INVALID_DECK', issues };

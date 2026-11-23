@@ -82,7 +82,10 @@ export function verifyVictory(
     if (!command) return { ok: false, error: 'malformed command' };
     commands.push(command);
   }
-  const replay = replayBattle(currentEncounter(campaign, run), campaignBattleContent(content, profile, run, rules), proof.seed >>> 0, commands);
+  let battleContent: GameContent;
+  try { battleContent = campaignBattleContent(content, profile, run, rules); }
+  catch { return { ok: false, error: 'invalid deck for current rules' }; }
+  const replay = replayBattle(currentEncounter(campaign, run), battleContent, proof.seed >>> 0, commands);
   if (replay.rejectedAt !== null) return { ok: false, error: 'a command was rejected by the rules' };
   return replay.state.outcome?.result === 'WON' ? { ok: true } : { ok: false, error: 'the battle was not won' };
 }

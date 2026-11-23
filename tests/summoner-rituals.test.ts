@@ -470,7 +470,7 @@ describe('rewards and release switch', () => {
   });
 
   it('ritual pieces cost real deck slots and respect copy limits', () => {
-    const deck: DeckEntry[] = [...DEFAULT_CONTENT.heroes.summoner!.deck.filter((e) => e.cardId !== 'summon_fox'), { cardId: 'rune_stone', count: 2 }, { cardId: 'rune_shell', count: 1 }];
+    const deck: DeckEntry[] = [...createProfile(DEFAULT_CONTENT).heroes.summoner!.decks[0]!.cards.filter((e) => e.cardId !== 'summon_fox'), { cardId: 'rune_stone', count: 2 }, { cardId: 'rune_shell', count: 1 }];
     const all = () => 9;
     expect(validateDeck(deck, 'summoner', all, DEFAULT_CONTENT, DECK_RULES)).toEqual([]);
     const tooMany = [...deck.filter((e) => e.cardId !== 'rune_shell'), { cardId: 'rune_shell', count: 3 }];
@@ -496,6 +496,14 @@ const RITUAL_DECK: DeckEntry[] = [
   { cardId: 'summoner_dispel', count: 2 },
   { cardId: 'entangle', count: 2 },
 ];
+
+// Legal current-size fixture: fill only with real new-starter copies within their catalog caps.
+for (const entry of createProfile(DEFAULT_CONTENT).heroes.summoner!.decks[0]!.cards) {
+  while (RITUAL_DECK.reduce((n,e)=>n+e.count,0)<40 && (RITUAL_DECK.find(e=>e.cardId===entry.cardId)?.count??0)<entry.count) {
+    const existing=RITUAL_DECK.find(e=>e.cardId===entry.cardId);
+    if(existing)existing.count++;else RITUAL_DECK.push({cardId:entry.cardId,count:1});
+  }
+}
 
 /** Summoner mirror with the active seat holding ritual pieces in hand. */
 function ritualDuel(seed = 5) {

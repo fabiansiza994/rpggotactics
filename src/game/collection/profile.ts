@@ -1,3 +1,5 @@
+import { DECK_RULES } from '../data/rules';
+import { freshStarterDeck } from './fresh-starter';
 import type { CardDefinition } from '../domain/cards/card';
 import type { ChampionProgress } from './champion-unlocks';
 import { requireDef, type GameContent, type HeroDef } from '../domain/content';
@@ -139,7 +141,7 @@ export function starterShared(content: GameContent): SharedCollection {
 
 export function createProfile(content: GameContent): PlayerProfile {
   return {
-    heroes: Object.fromEntries(Object.values(content.heroes).map((h) => [h.id, starterHeroProfile(h, content)])),
+    heroes: Object.fromEntries(Object.values(content.heroes).map((h) => [h.id, starterHeroProfile({ ...h, deck: freshStarterDeck(h, content, DECK_RULES) }, content)])),
     shared: starterShared(content),
     selectedChampionId: defaultChampionId(content),
   };
@@ -249,19 +251,17 @@ export function saveActiveDeck(
 export interface BattleDeck {
   cards: DeckEntry[];
   /**
-   * SAVED: the active deck, fully legal. LEGACY: the active deck saved under the old size
-   * (20), otherwise legal, used exactly as saved during the transition. STARTER: the saved
-   * deck is broken in another way (e.g. content changed), so the always-legal starter fights.
+   * SAVED: legal active deck. INVALID: preserved editable deck rejected by standard modes.
+   * LEGACY and STARTER are retained only for explicitly injected historical rule sets.
    */
-  source: 'SAVED' | 'LEGACY' | 'STARTER';
+  source: 'SAVED' | 'LEGACY' | 'STARTER' | 'INVALID';
   issues: DeckIssue[];
 }
 
 /**
  * The deck a campaign or skirmish battle uses (`deckId`, else the default): the saved deck when it passes the same
- * validation as the Deck Builder, or when it is a LEGACY deck (transition: an existing
- * 20-card deck keeps working until its owner completes it; it is never refilled for them).
- * Anything else falls back to the starter deck. PvP is stricter (exactly 30, see duel.ts).
+ * validation as the Deck Builder. Historical decks remain unchanged and must be completed manually.
+ * Standard 40-card modes reject invalid decks without substituting or modifying them.
  */
 export function battleDeck(profile: PlayerProfile, heroId: string, content: GameContent, rules: DeckRules, deckId?: string): BattleDeck {
   const hero = heroProfile(profile, heroId, content);
@@ -270,6 +270,7 @@ export function battleDeck(profile: PlayerProfile, heroId: string, content: Game
   const saved = chosen.cards;
   const issues = validateDeck(saved, heroId, ownedFor(profile, heroId, content), content, rules);
   if (issues.length === 0) return { cards: cloneDeck(saved), source: 'SAVED', issues };
+  if (rules.requiredSize === 40) return { cards: cloneDeck(saved), source: 'INVALID', issues };
   if (isLegacyDeck(saved, issues, rules)) return { cards: cloneDeck(saved), source: 'LEGACY', issues };
   return { cards: starterDeck(requireDef(content.heroes, heroId, 'hero')), source: 'STARTER', issues };
 }
@@ -278,4 +279,17 @@ export function battleDeck(profile: PlayerProfile, heroId: string, content: Game
 export function withHeroDeck(content: GameContent, heroId: string, cards: readonly DeckEntry[]): GameContent {
   const hero = requireDef(content.heroes, heroId, 'hero');
   return { ...content, heroes: { ...content.heroes, [hero.id]: { ...hero, deck: cloneDeck(cards) } } };
+}
+
+/** Editable starter composition using only copies already owned; never grants inventory. */
+export function ownedStarterDeck(profile: PlayerProfile, heroId: string, content: GameContent, rules: DeckRules): DeckEntry[] {
+  const hero = requireDef(content.heroes, heroId, 'hero');
+  let planned: DeckEntry[];
+  try { planned = freshStarterDeck(hero, content, rules); }
+  catch { planned = starterDeck(hero); }
+  const owned = ownedFor(profile, heroId, content);
+  const cards = planned.map(entry => ({...entry, count: Math.min(entry.count, owned(entry.cardId))})).filter(entry => entry.count > 0);
+  if (!validateDeck(cards, heroId, owned, content, rules).length) return cards;
+  const existing = heroProfile(profile, heroId, content).decks.find(deck => !validateDeck(deck.cards, heroId, owned, content, rules).length);
+  return existing ? cloneDeck(existing.cards) : cards;
 }

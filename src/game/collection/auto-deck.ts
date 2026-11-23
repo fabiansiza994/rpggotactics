@@ -1,3 +1,4 @@
+import {MARKET_EXPANSIONS} from '../store/market-expansions';
 import type { GameContent } from "../domain/content";
 import type { CardDefinition, EffectCondition } from "../domain/cards/card";
 import { createBattle } from "../engine/setup";
@@ -415,6 +416,7 @@ export function generateDeck(
       message: "Campeón no disponible.",
     };
   const rng = { rngState: seed >>> 0 };
+  const published = new Set(MARKET_EXPANSIONS.filter(set=>set.status==='AVAILABLE' && set.pack).flatMap(set=>[...set.cardIds]));
   const pool = Object.values(content.cards)
     .filter(
       (c) =>
@@ -423,7 +425,7 @@ export function generateDeck(
         !c.tags.some((t) =>
           ["qa", "experimental", "prototype"].includes(t.toLowerCase()),
         ) &&
-        (!c.expansion ||
+        (!c.expansion || published.has(c.id) ||
           content.releasedExpansions?.includes(c.expansion) ||
           content.heroes[heroId]!.starterCollection?.some(
             (e) => e.cardId === c.id,

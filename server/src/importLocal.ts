@@ -15,7 +15,6 @@ import {
   starterDeck,
   starterHeroProfile,
   starterShared,
-  isLegacyDeck,
   validateDeck,
   type DeckRules,
   type GameContent,
@@ -125,7 +124,7 @@ export function sanitizeLocalImport(
       .map((d) => {
         const issues = validateDeck(d.cards, hero.id, owns, content, rules);
         // A LEGACY (old-size, otherwise legal) deck is imported exactly as it is: the player completes it.
-        const legal = issues.length === 0 || isLegacyDeck(d.cards, issues, rules);
+        const legal = issues.every(issue => issue.code === 'DECK_INCOMPLETE');
         if (!legal) notes.push(`${hero.id}: deck "${d.id}" was not legal; starter deck used`);
         return { id: d.id, name: d.name.slice(0, 40) || 'Mazo', cards: legal ? d.cards.map((e) => ({ ...e })) : starterDeck(hero) };
       });

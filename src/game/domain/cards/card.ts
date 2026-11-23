@@ -466,6 +466,8 @@ export const isExclusiveCard = (card: Pick<CardDefinition, 'acquisition'>): bool
 export interface CardInstance {
   /** Public only while in discard; cleared on entry into a private zone. */
   publicDiscard?: true;
+  /** Explicit recovery is once per instance; Story recycling preserves this flag. */
+  recoveredThisBattle?: true;
   unavailableThisTurn?: true;
   uid: string;
   cardId: string;

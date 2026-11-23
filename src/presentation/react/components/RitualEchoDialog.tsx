@@ -20,6 +20,7 @@ export function RitualEchoDialog({ state, engine }: { state: Readonly<GameState>
   const [choice, setChoice] = useState<string | null>(null);
   const instance = state.player.hand.find((c) => c.uid === uid);
   const active = !!instance && !!engine.content.cards[instance.cardId]?.discardSearch;
+  const exhausted = active ? state.player.discard.filter(card => card.recoveredThisBattle && engine.content.cards[card.cardId]?.ritualPiece) : [];
   const choices = active ? discardSearchChoices(state, engine.content) : [];
   const allowed = !!uid && engine.getCardPlayability(uid).playable && !busy;
   useEffect(() => {
@@ -63,6 +64,7 @@ export function RitualEchoDialog({ state, engine }: { state: Readonly<GameState>
           );
         })}
       </div>
+      {exhausted.length > 0 && <div className="summon-search-grid" aria-label="Recuperaciones agotadas">{exhausted.map(card => <button key={card.uid} type="button" disabled style={{opacity:.45}}><strong>{engine.content.cards[card.cardId]?.name}</strong><span>Recuperación utilizada</span></button>)}</div>}
       {!allowed && <p role="status">La búsqueda ya no está disponible. Cancela y revisa la carta.</p>}
       <footer>
         <button type="button" onClick={cancel}>

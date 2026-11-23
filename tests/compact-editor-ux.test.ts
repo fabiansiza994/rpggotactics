@@ -24,3 +24,11 @@ import{createElement}from'react';import{renderToStaticMarkup}from'react-dom/serv
 it('renders an actual ownership badge, a single collection face and unmodified deck faces',()=>{const props={cards:DEFAULT_CONTENT.cards,selected:null,onInspect:()=>{},onDragStart:()=>{},onDragEnd:()=>{}};const entries=[{cardId:'blink',count:8}];const html=renderToStaticMarkup(createElement(CompactCardGrid,{...props,entries,context:'collection'}));expect(html.match(/<li[^>]*data-card-id="blink"/g)).toHaveLength(1);expect(html).toContain('×8');expect(html).toContain('8 copias poseídas');const deck=renderToStaticMarkup(createElement(CompactCardGrid,{...props,entries:[{cardId:'blink',count:3}],context:'deck'}));expect(deck.match(/<li[^>]*data-card-id="blink"/g)).toHaveLength(3);expect(deck).not.toContain('db-owned-badge');});
 
 it('keeps all six real commercial expansions selectable even for a champion with no matching cards',()=>{expect(editorExpansionOptions(['blink']).filter(e=>e.status==='AVAILABLE').map(e=>e.id)).toEqual(MARKET_EXPANSIONS.filter(e=>e.status==='AVAILABLE'&&e.public!==false).map(e=>e.id));});
+
+it('renders catalog copy limits independently from ownership on every compact face',()=>{
+ const props={cards:DEFAULT_CONTENT.cards,selected:null,onInspect:()=>{},onDragStart:()=>{},onDragEnd:()=>{}};
+ for(const [cardId,limit] of [['winter_domain',1],['frost_nova',2],['fireball',3]] as const){
+  const html=renderToStaticMarkup(createElement(CompactCardGrid,{...props,entries:[{cardId,count:8}],context:'collection'}));
+  expect(html).toContain(`Máximo ${limit} copias por mazo`);expect(html).toContain('8 copias poseídas');expect(html).toContain('db-copy-limit');
+ }
+});

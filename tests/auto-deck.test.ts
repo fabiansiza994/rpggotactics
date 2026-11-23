@@ -33,7 +33,7 @@ describe("Owned intelligent auto decks", () => {
         expect(a).toEqual(b);
         expect(a.ok).toBe(true);
         if (!a.ok) return;
-        expect(a.cards.reduce((n, e) => n + e.count, 0)).toBe(30);
+        expect(a.cards.reduce((n, e) => n + e.count, 0)).toBe(40);
         expect(validateDeck(a.cards, hero, own, C, DECK_RULES)).toEqual([]);
         expect(a.cards.every((e) => e.count <= own(e.cardId))).toBe(true);
         expect(JSON.stringify(p)).toBe(before);
@@ -44,7 +44,7 @@ describe("Owned intelligent auto decks", () => {
       });
   it("explains an empty/incomplete inventory without fabricating cards", () => {
     const r = generateDeck(C, "mage", () => 0, DECK_RULES, "BALANCED");
-    expect(r).toMatchObject({ ok: false, available: 0, required: 30 });
+    expect(r).toMatchObject({ ok: false, available: 0, required: 40 });
   });
   it("caps extra owned copies, neutrals and Ultras using the existing validator", () => {
     const own = () => 999;
@@ -75,7 +75,7 @@ describe("Owned intelligent auto decks", () => {
     const r = generateDeck(C, "mage", () => 99, rules, "BALANCED");
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.cards.reduce((n, e) => n + e.count, 0)).toBe(20);
-    expect(DECK_RULES.requiredSize).toBe(30);
+    expect(DECK_RULES.requiredSize).toBe(40);
   });
   it("bounded simulations are reproducible, even after reload", () => {
     const p = createProfile(C),

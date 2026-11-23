@@ -1,4 +1,5 @@
-import {deckRulesFor,savedDeckFormat,type DeckFormat} from '../../../game/collection/deck-formats';
+import {ownedStarterDeck} from '../../../game/collection/profile';
+import {deckRulesFor} from '../../../game/collection/deck-formats';
 import {BASE_COLLECTION,editorExpansionOptions} from '../deckbuilder/expansionFilter';
 import {CompactCardGrid} from '../deckbuilder/CompactCardGrid';
 import {CardAcquisition} from '../../shop/CardAcquisition';
@@ -51,7 +52,7 @@ import {
   rarityOf,
   ritualsUsingPiece,
   sameDeck,
-  starterDeck,
+
   type CardCategory,
   type CardDefinition,
   type CardFamily,
@@ -312,7 +313,6 @@ function CardDetail({
   onAdd,
   onRemove,
   onClose,
-  context,
   onExpansion,
 }: {
   card: CardDefinition;
@@ -332,7 +332,6 @@ function CardDetail({
   const premiumRef = useCardPremiumEffect<HTMLDivElement>(card, 'large');
   return (
     <div
-      ref={premiumRef}
       className="db-detail-card"
       style={toneStyle(card)}
       data-card-id={card.id}
@@ -346,7 +345,7 @@ function CardDetail({
       >
         ×
       </button>
-      <div className="db-detail-face"><FeatureCard def={card} className="db-expanded-face" extras={{playable:true}} interactive={false}/></div>
+      <div ref={premiumRef} className="db-detail-face"><FeatureCard def={card} className="db-expanded-face" extras={{playable:true}} interactive={false}/></div>
       <h3 className="db-detail-name">{card.name}</h3>
       <p className="db-detail-tags">
         <CardCosmeticMark def={card} />
@@ -363,7 +362,7 @@ function CardDetail({
         </span>
         <span>Coste {card.cost}</span>
       </p>
-      <p className="db-detail-text">{card.rulesText}</p>
+      <details className="db-effect-access"><summary>Consultar efecto completo</summary><p>{card.rulesText}</p></details>
       <RitualDetail card={card} />
       <div className="db-detail-target">
         <CardPattern targeting={card.targeting} />
@@ -386,28 +385,14 @@ function CardDetail({
           </>
         )}
       </p>
-      <CardAcquisition context="editor" cardId={card.id} onExpansion={onExpansion}/>
-      <div className="db-detail-actions">
-        {addIssue && owned > 0 && (
-          <p className="db-detail-why">{deckIssueText(addIssue, heroName)}</p>
-        )}
-        <button
-          type="button"
-          className={`db-btn ${context === 'collection' ? 'db-btn-primary' : ''}`}
-          disabled={addIssue !== null}
-          onClick={onAdd}
-        >
-          Agregar al mazo
-        </button>
-        <button
-          type="button"
-          className={`db-btn ${context === 'deck' ? 'db-btn-primary' : ''}`}
-          disabled={inDeck === 0}
-          onClick={onRemove}
-        >
-          Quitar del mazo
-        </button>
+      <div className="db-detail-actions" role="group" aria-label={`Copias de ${card.name} en el mazo`}>
+        <button type="button" className="db-btn" aria-label="Quitar una copia del mazo" disabled={inDeck === 0} onClick={onRemove}>−</button>
+        <output aria-live="polite" aria-label="Copias en el mazo">{inDeck}</output>
+        <button type="button" className="db-btn db-btn-primary" aria-label="Agregar una copia al mazo" disabled={addIssue !== null} onClick={onAdd}>+</button>
+        <span className="db-detail-limit">Máx. {limit}</span>
       </div>
+      {addIssue && owned > 0 && <p className="db-detail-why" role="status">{deckIssueText(addIssue, heroName)}</p>}
+      <CardAcquisition context="editor" cardId={card.id} onExpansion={onExpansion}/>
     </div>
   );
 }
@@ -535,7 +520,7 @@ function StarterDialog({ onConfirm, onClose }: { onConfirm(): void; onClose(): v
     >
       <h2 id="db-starter-title">¿Cargar el mazo inicial?</h2>
       <p>
-        Reemplazará tus cambios en este borrador por el mazo inicial de 30 cartas. No se guardará
+        Reemplazará este borrador por las cartas iniciales que ya posees. Complétalo hasta 40 cartas. No se guardará
         hasta que pulses Guardar mazo.
       </p>
       <div className="confirm-actions">
@@ -578,7 +563,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const visitExpansion=(id:string)=>{setDetailOpen(false);setMarketExpansion(id);};
   const [autoOpen,setAutoOpen]=useState(false),[autoApplied,setAutoApplied]=useState(false);
   const [draft, setDraft] = useState<DeckEntry[]>(() => saved.cards.map((e) => ({ ...e })));
-  const [format,setFormat]=useState<DeckFormat>(()=>savedDeckFormat(saved.cards));
+  const format = 'STORY' as const;
   const rules=deckRulesFor(format);
   const [query, setQuery] = useState<CollectionQuery>(EMPTY_QUERY);
   const [inspected, setInspected] = useState<string | null>(saved.cards[0]?.cardId ?? null);
@@ -703,7 +688,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
 
   function loadStarter() {
     setStarterConfirm(false);
-    setDraft(starterDeck(heroDef));
+    setDraft(ownedStarterDeck(profile,heroId,DEFAULT_CONTENT,rules));
     say('', 'removed', 'Mazo inicial cargado (sin guardar)');
   }
   const endDrag = () => {
@@ -790,7 +775,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     >
       {renaming&&<DeckNameDialog name={saved.name} busy={renameBusy} error={renameError} onClose={()=>setRenaming(false)} onSave={name=>{setRenameBusy(true);void useBattleStore.getState().renameDeck(heroId,deckId,name).then(r=>{if(r.ok)setRenaming(false);else setRenameError(deckActionError(r));}).finally(()=>setRenameBusy(false));}}/>}
       <header className="db-header">
-        <label className="db-format-selector">Formato<select aria-label="Formato del mazo" value={format} onChange={e=>setFormat(e.target.value as DeckFormat)}><option value="STORY">Historia · 30 cartas</option><option value="COMPETITIVE">Ranked y Versus · 40 cartas</option></select></label>
+        <span className="db-format-selector">Todos los modos · 40 cartas</span>
         <button type="button" className="db-back" onClick={leave}>
           <span aria-hidden="true">‹</span> {backLabel}
         </button>
@@ -986,7 +971,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
               <span>/ {rules.requiredSize}</span>
             </div>
           </div>
-          <p className="db-format-note">{format==='COMPETITIVE'?'Ranked y Versus: exactamente 40 cartas. Historia conserva 30. Cambiar formato no añade ni retira cartas.':'Historia: 30 cartas. Para Ranked y Versus selecciona el formato de 40 cartas.'}</p>
+          <p className="db-format-note">Exactamente 40 cartas en todos los modos. Historia recicla el descarte; Ranked y Versus aplican Deck-Out al no poder robar.</p>
           <NeutralCounter count={status.neutralCards} limit={rules.maxNeutralCards} />
           <div
             className={`db-meter size-${sizeState}`}
@@ -1052,7 +1037,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
                 data-legacy-missing={rules.requiredSize - deckSize(saved.cards)}
               >
                 Este es tu mazo anterior de 20 cartas. No hemos cambiado ninguna carta. Añade 10
-                cartas para actualizarlo al nuevo formato de 30.
+                cartas para actualizarlo al formato de 40.
               </p>
             )}
             {feedback && (
@@ -1111,7 +1096,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             <button
               type="button"
               className="db-btn db-btn-ghost"
-              disabled={sameDeck(draft, starterDeck(heroDef))}
+              disabled={sameDeck(draft, ownedStarterDeck(profile,heroId,DEFAULT_CONTENT,rules))}
               onClick={() => (dirty ? setStarterConfirm(true) : loadStarter())}
             >
               Mazo inicial

@@ -485,6 +485,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       return error(404, 'UNKNOWN_DECK', 'Ese mazo no existe.');
     const run = createRun(context, content, deps.seed());
     const deck = battleDeck(record.profile, run.heroId, content, DECK_RULES, body.deckId as string | undefined);
+    if (deck.source === 'INVALID') return error(422, 'INVALID_DECK', 'El mazo necesita exactamente 40 cartas legales y poseídas.');
     await startSkirmish(db, caller.userId, run, deck.cards, now);
     return respond();
   }
@@ -631,6 +632,8 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     const runs = championRuns(record, heroId);
     const history = record.worldHistory[heroId] ?? {};
     if (route === 'POST /api/tactics/campaign/start') {
+      if (battleDeck(record.profile, heroId, content, DECK_RULES).source === 'INVALID')
+        return error(422, 'INVALID_DECK', 'El mazo necesita exactamente 40 cartas legales y poseídas.');
       // Unlocks are durable: replaying World 1 never closes World 2 again.
       if (!worldUnlocked(worlds, world, runs, history))
         return error(403, 'WORLD_LOCKED', 'Completa el mundo anterior con este campeón para entrar aquí.');

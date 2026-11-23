@@ -1,3 +1,4 @@
+import type {HeroDef} from '../src/game/domain/content';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -20,7 +21,6 @@ import {
   renameDeck,
   serializeProfile,
   setDefaultDeck,
-  starterDeck,
   STARTER_DECK_NAME,
   updateDeck,
   type DeckEntry,
@@ -35,6 +35,8 @@ import { addAccount, memoryD1 } from './support/d1';
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 type DB = ReturnType<typeof memoryD1>;
 
+
+const starterDeck = (hero: HeroDef) => createProfile(DEFAULT_CONTENT).heroes[hero.id]!.decks[0]!.cards.map(e=>({...e}));
 const C = DEFAULT_CONTENT;
 const mage = C.heroes.mage!;
 const ok = <T extends { ok: boolean }>(r: T): Extract<T, { ok: true }> => {
@@ -63,7 +65,7 @@ describe('multi-deck domain rules', () => {
     const r = ok(createDeck(empty, 'mage', { name: 'Bestiario' }, C, DECK_RULES, 100));
     expect(heroProfile(r.profile, 'mage', C).activeDeckId).toBe(r.deckId);
     expect(deckSummaries(r.profile, 'mage', C, DECK_RULES)).toEqual([
-      expect.objectContaining({ deckId: r.deckId, name: 'Bestiario', isDefault: true, valid: true, cardCount: 30, maxCards: 30 }),
+      expect.objectContaining({ deckId: r.deckId, name: 'Bestiario', isDefault: true, valid: true, cardCount: 40, maxCards: 40 }),
     ]);
   });
 
@@ -257,7 +259,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(1_800_000_000_000);
   db = memoryD1({ legacyProfiles: true });
-  for (const f of ['0004_pvp.sql', '0005_pvp_dominion.sql', '0006_pvp_maps.sql', '0009_tactics_social.sql', '0010_pvp_room_started.sql', '0019_tactics_pvp_history.sql'])
+  for (const f of ['0004_pvp.sql', '0005_pvp_dominion.sql', '0006_pvp_maps.sql', '0009_tactics_social.sql', '0010_pvp_room_started.sql', '0019_tactics_pvp_history.sql', '0030_tactics_ranked_bots.sql'])
     db.sql.exec(readFileSync(new URL(`../server/migrations/${f}`, import.meta.url), 'utf8'));
   env = { DB: db, PVP_ROOMS: namespace(), RANKED_PRESEASON_ENABLED: '1' };
 });
@@ -268,7 +270,7 @@ describe('multi-deck API', () => {
     const a = await player('nueva');
     for (const hero of ['mage', 'summoner'])
       expect(await list(a, hero)).toEqual([
-        { deckId: 'main', name: 'Mazo inicial', championId: hero, cardCount: 30, maxCards: 30, valid: true, isDefault: true, createdAt: Date.now(), updatedAt: Date.now() },
+        { deckId: 'main', name: 'Mazo inicial', championId: hero, cardCount: 40, maxCards: 40, valid: true, storyValid:true,competitiveValid:true, isDefault: true, createdAt: Date.now(), updatedAt: Date.now() },
       ]);
     expect((await call(a.token, 'GET', '/decks/mage')).body.slots).toBe(3);
   });
@@ -381,6 +383,7 @@ describe('multi-deck API', () => {
 
     const id = (await create(a, { name: 'Ranked' })).body.deckId as string;
     const q = await call(a.token, 'POST', '/ranked/queue', { heroId: 'mage', deckId: id });
+    expect(q.status,JSON.stringify(q.body.error)).toBe(200);
     expect(q.body.queue).toMatchObject({ state: 'SEARCHING', heroId: 'mage', deckId: id });
   });
 
@@ -473,7 +476,7 @@ describe('multi-deck API', () => {
     const both = await Promise.all([create(a, { name: 'A' }, 'summoner'), create(a, { name: 'B' }, 'summoner')]);
     expect(both.map((r) => r.status)).toEqual([200, 200]);
     expect(rows(a.id, 'summoner').map((r) => [r.deck_id === 'main', r.is_active])).toEqual([[true, 1], [false, 0], [false, 0]]);
-    expect(cardsOf(a.id, 'main', 'summoner')).toEqual(sorted(starterDeck(C.heroes.summoner!)));
+    expect(cardsOf(a.id, 'main', 'summoner')).toEqual(sorted(C.heroes.summoner!.deck));
   });
 });
 

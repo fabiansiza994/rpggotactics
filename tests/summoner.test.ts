@@ -42,7 +42,7 @@ describe('Summoner foundation', () => {
     const e = engine();
     expect(e.state.player.hand).toHaveLength(5);
     expect(e.state.player).toMatchObject({ handSize: 5, maxHandSize: 6 }); // no special 4-card cap any more
-    expect(deck.cards.reduce((n, c) => n + c.count, 0)).toBe(30);
+    expect(deck.cards.reduce((n, c) => n + c.count, 0)).toBe(40);
     expect(DEFAULT_CONTENT.heroes.summoner!.summonCapacity).toBe(2);
     const loaded = parseProfileSave(serializeProfile(profile), DEFAULT_CONTENT);
     expect(loaded.status).toBe('OK');
@@ -57,7 +57,7 @@ describe('Summoner foundation', () => {
     expect(old.status).toBe('OK');
     if (old.status === 'OK')
       expect(battleDeck(old.profile, 'summoner', DEFAULT_CONTENT, DECK_RULES).cards).toEqual(
-        deck.cards,
+        DEFAULT_CONTENT.heroes.summoner!.deck,
       );
   });
 

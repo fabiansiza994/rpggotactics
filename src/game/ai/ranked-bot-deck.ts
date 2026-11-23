@@ -35,7 +35,7 @@ export function botDeck(content: GameContent, bot: BotIdentity): DeckEntry[] {
   const owned = (id: string) =>
     content.cards[id] ? copyLimit(content.cards[id]!, DECK_RULES) : 0;
   let deck = starterDeck(hero);
-  if (validateDeck(deck, bot.heroId, owned, content, STORY_RULES).length)
+  if (validateDeck(deck, bot.heroId, owned, content, STORY_RULES).filter(issue => issue.code !== "DECK_INCOMPLETE").length)
     throw Error("BOT_STARTER_ILLEGAL");
   const fillers=[...pool].sort((a,b)=>noise(bot.seed,a.id)-noise(bot.seed,b.id)||a.id.localeCompare(b.id));
   while(deckSize(deck)<DECK_RULES.requiredSize){

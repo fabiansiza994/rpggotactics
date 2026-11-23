@@ -172,13 +172,14 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     player.discard = player.discard.filter(c => c.uid !== fromDiscard.uid);
     delete fromDiscard.publicDiscard;
     fromDiscard.unavailableThisTurn = true;
+    fromDiscard.recoveredThisBattle = true;
     player.hand.push(fromDiscard);
     // CARD_DRAWN is private in PvP (duelEvents hides it from the rival).
     ctx.emit({type:'CARD_DRAWN',cardUid:fromDiscard.uid,cardId:fromDiscard.cardId});
   }
   const directAttack = def.targeting.type === 'UNIT' && !def.targeting.area ? (def.targeting.range === 1 ? 'DIRECT_MELEE' as const : depthEnabled(ctx) ? 'DIRECT_RANGED' as const : undefined) : undefined;
   if (price.scope) ctx.emit({ type: 'COST_DISCOUNT_USED', unitId: caster.id, scope: price.scope, cardId: def.id, paid: price.cost });
-  applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id }, selectedEffects);
+  applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id, cardUid: card.uid }, selectedEffects);
 
   if (def.unique) {
     // Única: once per battle. Banished, so no recycle, search or second copy can bring it back.
@@ -215,5 +216,6 @@ export function summonSearchChoices(state: Readonly<import('../state').GameState
 
 /** Eco del Altar choices: ritual pieces in the player's own discard pile, most recent first. */
 export function discardSearchChoices(state: Readonly<import('../state').GameState>, content: import('../content').GameContent): CardInstance[] {
-  return state.player.discard.filter(c => content.cards[c.cardId]?.ritualPiece).reverse();
+  const unavailable = new Set([...state.player.hand, ...state.player.deck, ...(state.player.banished ?? []), ...(state.player.altar ?? [])].map(c => c.uid));
+  return state.player.discard.filter(c => content.cards[c.cardId]?.ritualPiece && !c.recoveredThisBattle && !unavailable.has(c.uid)).reverse();
 }

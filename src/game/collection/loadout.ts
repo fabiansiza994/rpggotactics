@@ -43,5 +43,7 @@ export function loadoutDeck(profile: PlayerProfile, loadout: BattleLoadout, cont
   const hero = heroProfile(profile, loadout.championId, content);
   if (!hero.decks.some((d) => d.id === loadout.deckId))
     throw new Error(`deck "${loadout.deckId}" does not belong to champion "${loadout.championId}"`);
-  return battleDeck(profile, loadout.championId, content, rules, loadout.deckId);
+  const deck = battleDeck(profile, loadout.championId, content, rules, loadout.deckId);
+  if (deck.source === 'INVALID') throw new Error('El mazo debe contener exactamente 40 cartas legales y poseídas.');
+  return deck;
 }

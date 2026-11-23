@@ -386,15 +386,15 @@ export const OBSTACLES: Readonly<Record<string, ObstacleDef>> = {
 export const HAND_RULES = { handSize: 5, turnHandCap: 6 } as const;
 
 /**
- * Deck building: every deck holds EXACTLY 30 cards (was 20). The single source for the Deck
+ * Deck building: every deck holds EXACTLY 40 cards. The single source for the Deck
  * Builder, battle deck resolution, the Worker and PvP. Copy limits are per card, by rarity.
- * 20-card decks saved before the change are LEGACY (see DeckRules.legacySize).
+ * 30-card decks saved before the change are LEGACY (see DeckRules.legacySize).
  */
 export const DECK_RULES: DeckRules = {
-  requiredSize: 30,
-  legacySize: 20,
+  requiredSize: 40,
+  legacySize: 30,
   maxCopiesByRarity: { COMMON: 3, UNCOMMON: 2, RARE: 1, LEGENDARY: 1, ULTRA: 1 },
   maxUltraCards: 1,
-  // Neutral cards are filler, not a shared core: at most 4 of 30 (probe: qa/neutral-summoner-pass).
+  // Neutral cards are filler, not a shared core: at most 4 of 40 (probe: qa/neutral-summoner-pass).
   maxNeutralCards: 4,
 };

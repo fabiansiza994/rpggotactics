@@ -15,7 +15,7 @@ export interface DeckRules {
   /**
    * Size decks had under the previous rules. A saved deck of exactly this size that passes
    * every other rule is LEGACY: kept untouched, shown as incomplete, never refilled for the
-   * player. Campaign/skirmish still accept it during the transition; PvP and saving do not.
+   * player. Standard modes reject it until its owner completes it; it remains editable.
    */
   legacySize?: number;
   /** Most copies of one card a deck may hold, by card rarity (missing rarity = COMMON). */
@@ -197,7 +197,7 @@ export function sameDeck(a: readonly DeckEntry[], b: readonly DeckEntry[]): bool
 
 /**
  * The two Deck Builder edits. Each changes exactly the chosen card by one copy: removing a
- * card leaves a gap (29/30) for the player to fill, nothing is ever picked for them.
+ * card leaves a gap (39/40) for the player to fill, nothing is ever picked for them.
  */
 export type DeckEdit = { type: 'ADD_CARD'; cardId: string } | { type: 'REMOVE_CARD'; cardId: string };
 

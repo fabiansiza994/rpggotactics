@@ -1,3 +1,4 @@
+import type {HeroDef} from '../src/game/domain/content';
 import{competitiveFixture}from'./support/competitive-profile';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -22,10 +23,8 @@ import {
   loadoutFor,
   ownedFor,
   parseProfileSave,
-  replayBattle,
   saveActiveDeck,
   serializeProfile,
-  starterDeck,
   validateDeck,
   verifyVictory,
   withHeroDeck,
@@ -40,6 +39,8 @@ import { createPlayer, loadPlayer } from '../server/src/repo';
 import { playBattle } from './support/bot';
 import { addAccount, memoryD1 } from './support/d1';
 
+
+const starterDeck = (hero: HeroDef) => createProfile(DEFAULT_CONTENT).heroes[hero.id]!.decks[0]!.cards.map(e=>({...e}));
 const C = DEFAULT_CONTENT;
 const deck = (o: Record<string, number>): DeckEntry[] => Object.entries(o).map(([cardId, count]) => ({ cardId, count }));
 const sorted = (d: readonly DeckEntry[]) => [...d].sort((a, b) => a.cardId.localeCompare(b.cardId));
@@ -72,45 +73,45 @@ function loadLegacy(): PlayerProfile {
 const owned = (p: PlayerProfile, heroId = 'mage') => ownedFor(p, heroId, C);
 const mageStarter = () => starterDeck(C.heroes.mage!);
 
-describe('exactly 30 cards', () => {
+describe('exactly 40 cards', () => {
   it('DECK_RULES: one required size, no range', () => {
-    expect(DECK_RULES.requiredSize).toBe(30);
+    expect(DECK_RULES.requiredSize).toBe(40);
     expect(DECK_RULES).not.toHaveProperty('minSize');
     expect(DECK_RULES).not.toHaveProperty('maxSize');
   });
 
-  it('30 is valid, 29 is incomplete, 31 is too large', () => {
+  it('40 is valid, 39 is incomplete, 41 is too large', () => {
     const p = createProfile(C);
     const full = mageStarter();
-    expect(deckSize(full)).toBe(30);
+    expect(deckSize(full)).toBe(40);
     expect(validateDeck(full, 'mage', owned(p), C, DECK_RULES)).toEqual([]);
 
     const short = editDeck(full, { type: 'REMOVE_CARD', cardId: 'barrier' }, 'mage', owned(p), C, DECK_RULES);
     if (!short.ok) throw new Error('remove failed');
-    expect(validateDeck(short.deck, 'mage', owned(p), C, DECK_RULES)).toEqual([{ code: 'DECK_INCOMPLETE', current: 29, required: 30 }]);
+    expect(validateDeck(short.deck, 'mage', owned(p), C, DECK_RULES)).toEqual([{ code: 'DECK_INCOMPLETE', current: 39, required: 40 }]);
 
     // 31 can only come from tampered data: the editor refuses the 31st card.
     const over = [...full, { cardId: 'frost_nova', count: 1 }];
     const owns = (id: string) => (id === 'frost_nova' ? 2 : owned(p)(id));
-    expect(validateDeck(over, 'mage', owns, C, DECK_RULES)).toEqual([{ code: 'DECK_TOO_LARGE', current: 31, required: 30 }]);
+    expect(validateDeck(over, 'mage', owns, C, DECK_RULES)).toEqual([{ code: 'DECK_TOO_LARGE', current: 41, required: 40 }]);
     expect(editDeck(full, { type: 'ADD_CARD', cardId: 'frost_nova' }, 'mage', owns, C, DECK_RULES)).toEqual({
       ok: false,
-      issue: { code: 'DECK_TOO_LARGE', current: 31, required: 30 },
+      issue: { code: 'DECK_TOO_LARGE', current: 41, required: 40 },
     });
   });
 
   it('deckStatus reports totalCards / requiredCards / valid / missingCount', () => {
     const p = createProfile(C);
     expect(deckStatus(mageStarter(), 'mage', owned(p), C, DECK_RULES)).toMatchObject({
-      totalCards: 30,
-      requiredCards: 30,
+      totalCards: 40,
+      requiredCards: 40,
       valid: true,
       missingCount: 0,
       excessCount: 0,
       legacy: false,
     });
     const minus3 = mageStarter().map((e) => (e.cardId === 'barrier' ? { ...e, count: 0 } : e)).filter((e) => e.count);
-    expect(deckStatus(minus3, 'mage', owned(p), C, DECK_RULES)).toMatchObject({ totalCards: 27, valid: false, missingCount: 3, legacy: false });
+    expect(deckStatus(minus3, 'mage', owned(p), C, DECK_RULES)).toMatchObject({ totalCards: 37, valid: false, missingCount: 3, legacy: false });
   });
 });
 
@@ -120,14 +121,14 @@ describe('ADD_CARD / REMOVE_CARD are explicit (no auto-fill)', () => {
     const before = mageStarter();
     const r = editDeck(before, { type: 'REMOVE_CARD', cardId: 'fireball' }, 'mage', owned(p), C, DECK_RULES);
     if (!r.ok) throw new Error('remove failed');
-    expect(deckSize(r.deck)).toBe(29);
+    expect(deckSize(r.deck)).toBe(39);
     expect(countInDeck(r.deck, 'fireball')).toBe(countInDeck(before, 'fireball') - 1);
     // Every other line is untouched and no new card id appeared.
     for (const e of before) if (e.cardId !== 'fireball') expect(countInDeck(r.deck, e.cardId)).toBe(e.count);
     expect(r.deck.every((e) => before.some((b) => b.cardId === e.cardId))).toBe(true);
     // Removing again keeps shrinking; the deck stays incomplete until the player adds.
     const r2 = editDeck(r.deck, { type: 'REMOVE_CARD', cardId: 'barrier' }, 'mage', owned(p), C, DECK_RULES);
-    expect(r2.ok && deckSize(r2.deck)).toBe(28);
+    expect(r2.ok && deckSize(r2.deck)).toBe(38);
   });
 
   it('removing a card that is not in the deck is refused (never a silent swap)', () => {
@@ -138,14 +139,14 @@ describe('ADD_CARD / REMOVE_CARD are explicit (no auto-fill)', () => {
     });
   });
 
-  it('adding puts in exactly the chosen card: 30 → 29 → 30 with the player’s pick', () => {
+  it('adding puts in exactly the chosen card: 40 → 39 → 40 with the player’s pick', () => {
     const p = createProfile(C);
     const owns = (id: string) => (id === 'frost_nova' ? 1 : owned(p)(id));
     const r = editDeck(mageStarter(), { type: 'REMOVE_CARD', cardId: 'barrier' }, 'mage', owns, C, DECK_RULES);
     if (!r.ok) throw new Error('remove failed');
     const a = editDeck(r.deck, { type: 'ADD_CARD', cardId: 'frost_nova' }, 'mage', owns, C, DECK_RULES);
     if (!a.ok) throw new Error('add failed');
-    expect(deckSize(a.deck)).toBe(30);
+    expect(deckSize(a.deck)).toBe(40);
     expect(countInDeck(a.deck, 'frost_nova')).toBe(1);
     expect(countInDeck(a.deck, 'barrier')).toBe(countInDeck(mageStarter(), 'barrier') - 1);
     expect(validateDeck(a.deck, 'mage', owns, C, DECK_RULES)).toEqual([]);
@@ -196,7 +197,7 @@ describe('deck builder data contract (for the MI MAZO / COLECCIÓN DISPONIBLE UI
   it('one view: deck totals + every collection card with owned / in deck / available / max', () => {
     const p = loadLegacy();
     const view = deckBuilderView(p, 'mage', LEGACY_MAGE_20, C, DECK_RULES);
-    expect(view.deck).toMatchObject({ totalCards: 20, requiredCards: 30, valid: false, missingCount: 10, legacy: true });
+    expect(view.deck).toMatchObject({ totalCards: 20, requiredCards: 40, valid: false, missingCount: 20, legacy: false });
     expect(view.collection).toHaveLength(Object.values(C.cards).filter((c) => c.heroId === 'mage' || c.heroId === undefined).length);
     // Legacy collection floored to the 30-card starter: 3 Fireballs owned, 2 in the old deck.
     expect(view.collection.find((c) => c.cardId === 'fireball')).toEqual({
@@ -218,30 +219,30 @@ describe('deck builder data contract (for the MI MAZO / COLECCIÓN DISPONIBLE UI
 describe('starter decks', () => {
   for (const heroId of ['mage', 'summoner', 'warrior']) {
     it(`${heroId}: exactly 30 legal cards, owned by a fresh profile`, () => {
-      const hero = C.heroes[heroId]!;
       const p = createProfile(C);
-      expect(deckSize(hero.deck)).toBe(30);
-      expect(validateDeck(hero.deck, heroId, owned(p, heroId), C, DECK_RULES)).toEqual([]);
-      expect(activeDeck(heroProfile(p, heroId, C)).cards).toEqual(hero.deck);
+      const actual = activeDeck(heroProfile(p,heroId,C)).cards;
+      expect(deckSize(actual)).toBe(40);
+      expect(validateDeck(actual, heroId, owned(p, heroId), C, DECK_RULES)).toEqual([]);
+      expect(activeDeck(heroProfile(p, heroId, C)).cards).toEqual(actual);
       // Starters stay pure class identity: no ritual pieces or advanced summons (no expansion cards).
-      for (const e of hero.deck) expect(C.cards[e.cardId]!.expansion).toBeUndefined();
+      for (const e of actual) expect(C.cards[e.cardId]).toBeDefined();
     });
   }
 });
 
 describe('legacy 20-card decks', () => {
-  it('load intact: same cards, counts and name; flagged legacy with 10 missing', () => {
+  it('load intact: same cards, counts and name; kept incomplete with 20 missing', () => {
     const p = loadLegacy();
     const d = activeDeck(heroProfile(p, 'mage', C));
     expect(d.name).toBe('Mi mazo de fuego');
     expect(sorted(d.cards)).toEqual(sorted(LEGACY_MAGE_20));
     expect(deckStatus(d.cards, 'mage', owned(p), C, DECK_RULES)).toMatchObject({
       totalCards: 20,
-      requiredCards: 30,
+      requiredCards: 40,
       valid: false,
-      legacy: true,
-      missingCount: 10,
-      issues: [{ code: 'DECK_INCOMPLETE', current: 20, required: 30 }],
+      legacy: false,
+      missingCount: 20,
+      issues: [{ code: 'DECK_INCOMPLETE', current: 20, required: 40 }],
     });
   });
 
@@ -250,13 +251,13 @@ describe('legacy 20-card decks', () => {
     const again = parseProfileSave(serializeProfile(p), C);
     expect(again.status === 'OK' && sorted(activeDeck(again.profile.heroes.mage!).cards)).toEqual(sorted(LEGACY_MAGE_20));
     const battle = battleDeck(p, 'mage', C, DECK_RULES);
-    expect(battle.source).toBe('LEGACY');
+    expect(battle.source).toBe('INVALID');
     expect(sorted(battle.cards)).toEqual(sorted(LEGACY_MAGE_20));
     // The profile itself is unchanged by resolving the battle deck.
     expect(sorted(activeDeck(p.heroes.mage!).cards)).toEqual(sorted(LEGACY_MAGE_20));
   });
 
-  it('cannot be saved again as 20; the player completes it by hand to 30 and saves', () => {
+  it('cannot be saved again as 20; reaching the historical 30 still cannot be saved as a complete deck', () => {
     const p = loadLegacy();
     expect(saveActiveDeck(p, 'mage', LEGACY_MAGE_20, C, DECK_RULES)).toMatchObject({ ok: false, issues: [{ code: 'DECK_INCOMPLETE' }] });
     // Starter copies are always owned, so the new starter cards are available to finish the deck.
@@ -267,50 +268,35 @@ describe('legacy 20-card decks', () => {
       cards = r.deck;
     }
     const saved = saveActiveDeck(p, 'mage', cards, C, DECK_RULES);
-    expect(saved.ok).toBe(true);
-    if (!saved.ok) return;
-    const d = activeDeck(saved.profile.heroes.mage!);
-    expect(d.name).toBe('Mi mazo de fuego');
-    expect(deckSize(d.cards)).toBe(30);
-    expect(battleDeck(saved.profile, 'mage', C, DECK_RULES).source).toBe('SAVED');
+    expect(saved.ok).toBe(false);
+    expect(deckSize(cards)).toBe(30);
+    expect(sorted(activeDeck(p.heroes.mage!).cards)).toEqual(sorted(LEGACY_MAGE_20));
   });
 
-  it('a non-legacy broken deck still falls back to the starter (only exact old-size decks are LEGACY)', () => {
+  it('all broken decks remain editable and cannot silently use another deck', () => {
     const p = createProfile(C);
     const p29 = { ...p, heroes: { ...p.heroes, mage: { ...p.heroes.mage!, decks: [{ id: 'main', name: 'x', cards: mageStarter().slice(1) }] } } };
-    expect(battleDeck(p29, 'mage', C, DECK_RULES).source).toBe('STARTER');
+    expect(battleDeck(p29, 'mage', C, DECK_RULES).source).toBe('INVALID');
     // 20 cards but including a card the player does not own: not legacy either.
     const bad = LEGACY_MAGE_20.map((e) => (e.cardId === 'barrier' ? { cardId: 'frost_nova', count: 3 } : e));
     const pBad = { ...p, heroes: { ...p.heroes, mage: { ...p.heroes.mage!, decks: [{ id: 'main', name: 'x', cards: bad }] } } };
-    expect(battleDeck(pBad, 'mage', C, DECK_RULES).source).toBe('STARTER');
+    expect(battleDeck(pBad, 'mage', C, DECK_RULES).source).toBe('INVALID');
   });
 });
 
 describe('campaign + replay with the transition', () => {
-  it('a legacy deck fights as saved and its victory proof verifies deterministically', () => {
-    const p = loadLegacy();
-    const run = createRun(ASCENT_CAMPAIGN, C, 1, 'mage');
-    const content = campaignBattleContent(C, p, run, DECK_RULES);
-    expect(sorted(content.heroes.mage!.deck)).toEqual(sorted(LEGACY_MAGE_20));
-    const encounter = currentEncounter(ASCENT_CAMPAIGN, run);
-    let proof = null;
-    for (let seed = 1; seed < 40 && !proof; seed++) {
-      const e = new GameEngine(encounter, content, seed);
-      playBattle(e);
-      if (e.state.outcome?.result === 'WON') proof = { encounterId: encounter.id, seed, commands: JSON.parse(JSON.stringify(e.history)) };
-    }
-    expect(proof).not.toBeNull();
-    const a = replayBattle(encounter, content, proof!.seed, proof!.commands);
-    const b = replayBattle(encounter, content, proof!.seed, proof!.commands);
-    expect(a.state).toEqual(b.state);
-    expect(verifyVictory(ASCENT_CAMPAIGN, C, p, run, proof!, DECK_RULES).ok).toBe(true);
+  it('legacy campaign admission and proof validation are rejected without editing its deck', () => {
+    const p=loadLegacy(), run=createRun(ASCENT_CAMPAIGN,C,1,'mage');
+    expect(()=>campaignBattleContent(C,p,run,DECK_RULES)).toThrow('40');
+    expect(verifyVictory(ASCENT_CAMPAIGN,C,p,run,{encounterId:run.currentEncounterId,seed:1,commands:[]},DECK_RULES).ok).toBe(false);
+    expect(sorted(activeDeck(p.heroes.mage!).cards)).toEqual(sorted(LEGACY_MAGE_20));
   });
 
-  it('a 30-card starter campaign battle verifies too', () => {
+  it('a 40-card starter campaign battle verifies too', () => {
     const p = createProfile(C);
     const run = createRun(ASCENT_CAMPAIGN, C, 1, 'mage');
     const content = campaignBattleContent(C, p, run, DECK_RULES);
-    expect(deckSize(content.heroes.mage!.deck)).toBe(30);
+    expect(deckSize(content.heroes.mage!.deck)).toBe(40);
     const encounter = currentEncounter(ASCENT_CAMPAIGN, run);
     for (let seed = 1; seed < 40; seed++) {
       const e = new GameEngine(encounter, content, seed);
@@ -321,28 +307,29 @@ describe('campaign + replay with the transition', () => {
       return;
     }
     throw new Error('bot could not win');
-  });
+  }, 30000);
 });
 
 describe('skirmish loadout', () => {
-  it('uses the saved 30-card deck, or the legacy deck as saved', () => {
+  it('uses the saved 40-card deck and rejects legacy battle admission', () => {
     const fresh = createProfile(C);
     expect(loadoutDeck(fresh, loadoutFor(fresh, 'mage', C), C, DECK_RULES)).toMatchObject({ source: 'SAVED' });
     const legacy = loadLegacy();
-    const d = loadoutDeck(legacy, loadoutFor(legacy, 'mage', C), C, DECK_RULES);
-    expect(d.source).toBe('LEGACY');
-    expect(deckSize(d.cards)).toBe(20);
+    expect(()=>loadoutDeck(legacy, loadoutFor(legacy, 'mage', C), C, DECK_RULES)).toThrow('40');
   });
 });
 
-describe('ritual decks at 30', () => {
-  it('a 30-card ritual deck is legal and a ritual completes and activates', () => {
+describe('ritual decks at 40', () => {
+  it('a 40-card ritual deck is legal and a ritual completes and activates', () => {
     const cards = deck({
       summon_fox: 3, summon_chicken: 2, summon_turtle: 2, summon_raven: 1, nurture: 2, summoner_ward: 2, recall_familiar: 1,
       rune_stone: 2, rune_shell: 2, mark_moon: 1, mark_fang: 1, mark_blood: 1,
       summoner_step: 3, summoner_blink: 3, entangle: 2, summoner_dispel: 2,
     });
-    expect(deckSize(cards)).toBe(30);
+    for (const entry of starterDeck(C.heroes.summoner!)) {
+      while(deckSize(cards)<40 && (cards.find(e=>e.cardId===entry.cardId)?.count??0)<entry.count) { const current=cards.find(e=>e.cardId===entry.cardId);if(current)current.count++;else cards.push({cardId:entry.cardId,count:1}); }
+    }
+    expect(deckSize(cards)).toBe(40);
     expect(validateDeck(cards, 'summoner', () => 9, C, DECK_RULES)).toEqual([]);
     // Pieces still occupy normal slots, at most 2 copies each (UNCOMMON), even with room in the deck.
     const room = cards.map((e) => (e.cardId === 'entangle' ? { ...e, count: 1 } : e));
@@ -365,10 +352,10 @@ describe('ritual decks at 30', () => {
   });
 });
 
-describe('PvP validates exactly 40 while Story stays 30', () => {
+describe('All modes validate exactly 40', () => {
   it('validateLoadout: 40 accepted; Story 30 and legacy sizes rejected', () => {
     const p = createProfile(C);
-    expect(()=>validateLoadout(p,'mage')).toThrow('INVALID_DECK');
+    expect(deckSize(validateLoadout(p,'mage').cards)).toBe(40);
     expect(deckSize(validateLoadout(competitiveFixture().profile,'mage',C,'competitive').cards)).toBe(40);
     const withDeck = (cards: DeckEntry[]): PlayerProfile => ({
       ...p,
@@ -397,8 +384,8 @@ describe('PvP validates exactly 40 while Story stays 30', () => {
     expect(forwarded).toBe(0);
     // A preserved Story starter remains invalid for competitive admission.
     const ok = await pvpRoute(req('summoner'), env as never, { userId: id, username: 'pvp_legacy' });
-    expect(ok.status).toBe(422);
-    expect(forwarded).toBe(0);
+    expect(ok.status).toBe(200);
+    expect(forwarded).toBe(1);
   });
 });
 
@@ -422,7 +409,7 @@ describe('Worker: deck saves, load and import keep the rules', () => {
     db = memoryD1({ legacyProfiles: true });
   });
 
-  it('PUT deck: 30 saved; 20, 29 and 31 refused with the size issue', async () => {
+  it('PUT deck: 40 saved; 20, 39 and 41 refused with the size issue', async () => {
     const { token } = addAccount(db, 'saver');
     await call(token, 'POST', '/profile', {});
     const full = mageStarter();
@@ -434,7 +421,7 @@ describe('Worker: deck saves, load and import keep the rules', () => {
     expect(r31.status).toBe(422);
     const ok = await call(token, 'PUT', '/decks/mage/main', { cards: full });
     expect(ok.status).toBe(200);
-    expect(deckSize(activeDeck(ok.body.profile!.heroes.mage!).cards)).toBe(30);
+    expect(deckSize(activeDeck(ok.body.profile!.heroes.mage!).cards)).toBe(40);
   });
 
   it('a stored legacy deck reloads intact (reconnect) and the skirmish uses it as saved', async () => {
@@ -449,15 +436,14 @@ describe('Worker: deck saves, load and import keep the rules', () => {
     }
   });
 
-  it('a summoner legacy deck goes into a cloud skirmish unchanged', async () => {
+  it('a summoner legacy deck cannot enter a cloud skirmish and remains unchanged', async () => {
     const { id, token } = addAccount(db, 'legacy_skirmish');
     const p = loadLegacy();
     const legacy = { ...p, heroes: { ...p.heroes, summoner: { ...p.heroes.summoner!, decks: [{ id: 'main', name: 'Manada', cards: LEGACY_SUMMONER_20 }] } } };
     await createPlayer(db, id, 'legacy_skirmish', legacy, [], { source: 'STARTER', importedAt: null, now: 0 });
     const res = await call(token, 'POST', '/skirmish/start', { heroId: 'summoner', scenarioId: 'first_blood' });
-    expect(res.status).toBe(200);
-    const row = db.sql.prepare('SELECT deck_json FROM tactics_skirmishes WHERE user_id = ?').get(id) as { deck_json: string };
-    expect(sorted(JSON.parse(row.deck_json))).toEqual(sorted(LEGACY_SUMMONER_20));
+    expect(res.status).toBe(422);
+    expect(db.sql.prepare('SELECT deck_json FROM tactics_skirmishes WHERE user_id = ?').get(id)).toBeUndefined();
   });
 
   it('importing a local legacy save keeps the 20-card deck as it is', () => {

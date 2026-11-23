@@ -12,9 +12,9 @@ const recycle = (e: GameEngine, events: GameEvent[] = []) => {
   return drawCards(ctxFor(e, events), 1);
 };
 
-describe('Arcane fatigue in shared battle core', () => {
+describe('Automatic Story recycling without fatigue', () => {
   it.each(['mage', 'summoner'])(
-    '%s first recycle free, then 1, 2, 3, conserving cards and seeded order',
+    '%s repeats free recycling while conserving cards and seeded order',
     (heroId) => {
       const a = makeEngine({ hero: { heroId, pos: p(0, 2) } }, DEFAULT_CONTENT, 123);
       const b = makeEngine({ hero: { heroId, pos: p(0, 2) } }, DEFAULT_CONTENT, 123);
@@ -29,8 +29,8 @@ describe('Arcane fatigue in shared battle core', () => {
         expect(new Set(cards.map((c) => c.uid)).size).toBe(30);
       }
       expect(a.state.player.deckRecycles).toBe(4);
-      expect(a.state.units[0]!.hp).toBe(startHp - 6);
-      expect(ofType(events, 'ARCANE_FATIGUE').map((e) => e.amount)).toEqual([1, 2, 3]);
+      expect(a.state.units[0]!.hp).toBe(startHp);
+      expect(ofType(events, 'ARCANE_FATIGUE').map((e) => e.amount)).toEqual([]);
     },
   );
 
@@ -62,11 +62,11 @@ describe('Arcane fatigue in shared battle core', () => {
     const hp = s.units[0]!.hp;
     expect(drawCards(ctxFor(e), 3)).toBe(0);
     expect(s.player.deckRecycles).toBe(3);
-    expect(s.units[0]!.hp).toBe(hp - 3);
+    expect(s.units[0]!.hp).toBe(hp);
     expect(s.player.discard).toEqual([{ uid: 'last', cardId: 'barrier' }]);
   });
 
-  it('uses ordinary armor/shield mitigation, and stops drawing when fatigue kills hero', () => {
+  it('does not consume shields or kill a low-HP hero when recycling', () => {
     const e = makeEngine();
     const s = mutable(e);
     const hero = s.units[0]!;
@@ -75,16 +75,16 @@ describe('Arcane fatigue in shared battle core', () => {
     s.player.deckRecycles = 2;
     recycle(e);
     expect(hero.hp).toBe(hero.maxHp);
-    expect(hero.shield).toBe(0);
+    expect(hero.shield).toBe(1);
     hero.armor = 0;
     hero.hp = 1;
     const events: GameEvent[] = [];
-    expect(recycle(e, events)).toBe(0);
-    expect(s.units.some((u) => u.id === e.heroId)).toBe(false);
-    expect(ofType(events, 'CARD_DRAWN')).toHaveLength(0);
+    expect(recycle(e, events)).toBe(1);
+    expect(s.units.some((u) => u.id === e.heroId)).toBe(true);
+    expect(ofType(events, 'CARD_DRAWN')).toHaveLength(1);
   });
 
-  it('a draw spell can lose to fatigue; it cannot draw or resolve later effects after caster death', () => {
+  it('a Story draw spell recycles safely and continues its remaining effects', () => {
     const content = {
       ...DEFAULT_CONTENT,
       cards: {
@@ -108,12 +108,12 @@ describe('Arcane fatigue in shared battle core', () => {
     const energy = s.player.energy;
     const result = e.dispatch({ type: 'PLAY_CARD', cardUid: uid!, target: null });
     expect(result.ok).toBe(true);
-    expect(e.state.outcome?.reason).toBe('HERO_DEFEATED');
-    expect(e.state.player.energy).toBe(energy - 1);
-    expect(ofType(result.events, 'CARD_DRAWN')).toHaveLength(0);
+    expect(e.state.outcome).toBeNull();
+    expect(e.state.player.energy).toBe(energy - 1 + 10);
+    expect(ofType(result.events, 'CARD_DRAWN')).toHaveLength(1);
   });
 
-  it('interactive commands and headless server replay match through lethal fatigue', () => {
+  it('interactive commands and server replay match through repeated safe Story recycling', () => {
     const content = { ...DEFAULT_CONTENT, heroes: { ...DEFAULT_CONTENT.heroes } };
     content.heroes.mage = {
       ...content.heroes.mage!,
@@ -136,8 +136,8 @@ describe('Arcane fatigue in shared battle core', () => {
     const replay = replayBattle(encounter, content, 19, commands);
     expect(replay.rejectedAt).toBeNull();
     expect(replay.state).toEqual(e.state);
-    expect(e.state.outcome?.reason).toBe('HERO_DEFEATED');
-    expect(e.dispatch({ type: 'END_TURN' }).ok).toBe(false);
+    expect(e.state.outcome).toBeNull();
+    expect(e.dispatch({ type: 'END_TURN' }).ok).toBe(true);
     expect(new GameEngine(encounter, content, 19).state.player.deckRecycles).toBe(0);
   });
 });

@@ -780,9 +780,9 @@ export const useBattleStore = create<BattleStore>((set, get) => {
   function neutralDeckBlocked(heroId: string, deckId?: string): boolean {
     const hero = heroProfile(get().profile, heroId, DEFAULT_CONTENT);
     const deck = deckId === undefined ? activeDeck(hero) : hero.decks.find(d => d.id === deckId);
-    const issue = deck && localDeckIssues(heroId, deck.cards).find(i => i.code === 'NEUTRAL_LIMIT');
-    if (!issue || issue.code !== 'NEUTRAL_LIMIT') return false;
-    set({notice:`Tu mazo contiene ${issue.count} cartas neutrales; el máximo es ${issue.limit}. Corrígelo en Colección/Mazo antes de iniciar una partida.`});
+    const issues = deck ? localDeckIssues(heroId, deck.cards) : [];
+    if (!issues.length) return false;
+    set({notice:'Completa tu mazo con exactamente 40 cartas legales y poseídas antes de iniciar una partida.'});
     return true;
   }
 

@@ -51,6 +51,7 @@ export function spawnSummon(
   owner: Unit,
   summonId: string,
   pos: Pos,
+  sourceCardUid?: string,
 ): Unit | null {
   const def = requireDef(ctx.content.summons ?? {}, summonId, 'summon');
   const limit = summonLimitFor(def, owner);
@@ -73,6 +74,7 @@ export function spawnSummon(
     statuses: [],
     targetPreference: 'HERO',
     summon: {
+      ...(sourceCardUid ? { sourceCardUid } : {}),
       ownerId: owner.id,
       capacityCost: def.capacityCost,
       lastActedRound: 0,

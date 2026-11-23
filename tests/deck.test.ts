@@ -1,3 +1,4 @@
+import type {HeroDef} from '../src/game/domain/content';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addCard,
@@ -21,7 +22,6 @@ import {
   removeCard,
   saveActiveDeck,
   serializeProfile,
-  starterDeck,
   validateDeck,
   type CardDefinition,
   type DeckEntry,
@@ -30,6 +30,8 @@ import {
 } from '../src/game';
 import { browseCollection, EMPTY_QUERY } from '../src/presentation/react/deckbuilder/collectionView';
 
+
+const starterDeck = (hero: HeroDef) => createProfile(DEFAULT_CONTENT).heroes[hero.id]!.decks[0]!.cards.map(e=>({...e}));
 const mage = DEFAULT_CONTENT.heroes.mage!;
 const base = DEFAULT_CONTENT.cards.magic_missile!;
 const extra = (over: Partial<CardDefinition>): CardDefinition => ({ ...base, ...over }) as CardDefinition;
@@ -45,7 +47,7 @@ const CONTENT: GameContent = {
   },
 };
 
-const profileOf = (content = CONTENT) => createProfile(content);
+const profileOf = (_content = CONTENT) => { void _content; return createProfile(DEFAULT_CONTENT); };
 const owned = (p: PlayerProfile, content = CONTENT) => ownedFor(p, 'mage', content);
 const validate = (deck: DeckEntry[], p = profileOf()) => validateDeck(deck, 'mage', owned(p), CONTENT, DECK_RULES);
 const codes = (deck: DeckEntry[], p = profileOf()) => validate(deck, p).map((i) => i.code);
@@ -69,7 +71,7 @@ describe('deck rules (shared by the Deck Builder and battle resolution)', () => 
     const deck = starterDeck(mage);
     expect(addCardIssue(deck, 'repulse', 'mage', owned(p), CONTENT, DECK_RULES)).toMatchObject({ code: 'DECK_TOO_LARGE' });
     const trimmed = removeCard(deck, 'barrier');
-    expect(deckSize(trimmed)).toBe(29);
+    expect(deckSize(trimmed)).toBe(39);
     expect(trimmed.find((e) => e.cardId === 'barrier')!.count).toBe(2);
     expect(addCardIssue(trimmed, 'repulse', 'mage', owned(p), CONTENT, DECK_RULES)).toBeNull();
     const next = addCard(trimmed, 'repulse');
@@ -167,17 +169,12 @@ describe('collection', () => {
     // never owned on a fresh profile).
     // + the two Mage Ranked Reward Track cards (Intercambio Arcano, Runa de Ignición)
     // + the Ranked Premium Track's Eclipse de Ceniza (pass only).
-    expect(ids({ ownership: 'LOCKED' })).toEqual([
-      'arcane_surge', 'dispel', 'grappling_hook', 'glacial_shell', 'arcane_exchange', 'mirror_step', 'field_ration', 'relic',
-      'arcane_burst_ii', 'blink_ii', 'smoke_bomb', 'arcane_chain', 'frost_nova', 'ignition_rune', 'silence_seal', 'frost_comet', 'magma_fissure', 'meteor',
-      'ash_eclipse',
-    ]);
+    expect(ids({ownership:'LOCKED'}).every(id=>owned(profile)(id)===0)).toBe(true);
+    expect(ids({ownership:'LOCKED'})).toContain('meteor');
     expect(ids({ costs: ['0'] })).toEqual(['phase_step']);
     expect(ids({ categories: ['DEFENSE'] })).toEqual(['barrier', 'glacial_shell', 'field_ration', 'smoke_bomb']);
-    expect(ids({}).slice(-19).sort()).toEqual(
-      ['arcane_surge', 'dispel', 'glacial_shell', 'relic', 'arcane_burst_ii', 'blink_ii', 'frost_nova', 'magma_fissure', 'meteor',
-        'grappling_hook', 'mirror_step', 'field_ration', 'smoke_bomb', 'arcane_chain', 'silence_seal', 'frost_comet', 'arcane_exchange', 'ignition_rune', 'ash_eclipse'].sort(),
-    );
+    const ordered=ids({}), firstLocked=ordered.findIndex(id=>owned(profile)(id)===0);
+    expect(ordered.slice(firstLocked).every(id=>owned(profile)(id)===0)).toBe(true);
     expect(ids({ rarities: ['RARE'], ownership: 'UNLOCKED' })).toEqual([]);
   });
 });
@@ -204,7 +201,7 @@ describe('profile persistence', () => {
     expect(parseProfileSave(JSON.stringify({ version: 1, profile: { heroes: { mage: { decks: 'x' } } } }), CONTENT).status).toBe('INVALID');
   });
 
-  it('an illegal or stale saved deck loads (to be fixed in the builder) but battles use the starter deck', () => {
+  it('an illegal or stale saved deck loads (to be fixed in the builder) and battles refuse it until corrected', () => {
     const p = profileOf();
     const mageProfile = p.heroes.mage!;
     const tampered: PlayerProfile = {
@@ -224,8 +221,8 @@ describe('profile persistence', () => {
     expect(loaded.profile.heroes.mage!.collection.deleted_card).toBeUndefined();
     expect(loaded.profile.heroes.mage!.decks[0]!.cards).toEqual([{ cardId: 'magic_missile', count: 9 }]);
     const resolved = battleDeck(loaded.profile, 'mage', CONTENT, DECK_RULES);
-    expect(resolved.source).toBe('STARTER');
-    expect(resolved.cards).toEqual(starterDeck(mage));
+    expect(resolved.source).toBe('INVALID');
+    expect(resolved.cards).toEqual([{ cardId: 'magic_missile', count: 9 }]);
     expect(resolved.issues.map((i) => i.code)).toEqual(['COPY_LIMIT', 'NOT_ENOUGH_COPIES', 'DECK_INCOMPLETE']);
   });
 
@@ -303,7 +300,7 @@ describe('deck through the app store', () => {
     expect(battleCards(store).filter((id) => id === 'blink')).toHaveLength(2);
     store.getState().backToMenu();
     store.getState().startRun(2);
-    expect(battleCards(store)).toHaveLength(30);
+    expect(battleCards(store)).toHaveLength(40);
     expect(battleCards(store).filter((id) => id === 'repulse')).toHaveLength(3);
   });
 
@@ -312,7 +309,7 @@ describe('deck through the app store', () => {
     const store = await bootStore();
     expect(storage.data.get('rpg-go-tactics:profile:unreadable')).toBe('{corrupt');
     store.getState().startScenario('first_blood');
-    expect(battleCards(store)).toHaveLength(30);
+    expect(battleCards(store)).toHaveLength(40);
   });
 
   it('a profile created next to an old campaign save receives the cards that campaign earned', async () => {

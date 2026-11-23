@@ -1,3 +1,4 @@
+import {ownedStarterDeck} from '../../src/game/collection/profile';
 import {
   copyName,
   DECK_RULES,
@@ -8,7 +9,7 @@ import {
   NEW_DECK_NAME,
   normalizeDeckName,
   ownedFor,
-  starterDeck,
+
   validateDeck,
   type DeckEntry,
   type GameContent,
@@ -172,7 +173,7 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
     const name = body.name === undefined ? NEW_DECK_NAME : normalizeDeckName(body.name);
     if (!name) return error(422, 'INVALID_NAME', 'Nombre de mazo inválido.');
     let cards: DeckEntry[];
-    if (body.cards === undefined) cards = starterDeck(content.heroes[heroId]!);
+    if (body.cards === undefined) cards = ownedStarterDeck(ctx.profile,heroId,content,DECK_RULES);
     else {
       const parsed = parseDeckCards(body.cards);
       if (!parsed) return error(400, 'BAD_REQUEST', 'Lista de cartas inválida.');

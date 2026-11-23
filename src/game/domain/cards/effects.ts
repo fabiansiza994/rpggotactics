@@ -49,6 +49,7 @@ export interface EffectContext {
   directAttack?: 'DIRECT_MELEE' | 'DIRECT_RANGED';
   /** Card being resolved (absent for rituals): provenance of a granted cost discount. */
   cardId?: string;
+  cardUid?: string;
 }
 
 /** Units currently standing inside the resolved area that match the selector. */
@@ -345,7 +346,7 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     for (const u of selectUnits(e, 'SUMMONS')) defeatUnit(e.ctx, u);
   },
   SUMMON: (e, fx) => {
-    spawnSummon(e.ctx, e.caster, fx.summonId, e.resolved.impact);
+    spawnSummon(e.ctx, e.caster, fx.summonId, e.resolved.impact, e.cardUid);
   },
   SACRIFICE_HP: (e, fx) => {
     // floor(14 / 2) = 7, floor(3 / 2) = 1; capped so the caster always keeps at least 1 HP.

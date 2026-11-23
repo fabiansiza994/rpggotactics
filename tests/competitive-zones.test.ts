@@ -32,7 +32,7 @@ function ctx(state: GameState) {
     events,
   };
 }
-describe("competitive formats leave Story unchanged", () => {
+describe("unified 40-card formats", () => {
   for (const n of [39, 40, 41])
     it(`requires exactly 40, not ${n}`, () => {
       const { profile, cards } = competitiveFixture();
@@ -51,33 +51,17 @@ describe("competitive formats leave Story unchanged", () => {
           validateLoadout(profile, "mage", content, "competitive"),
         ).toThrow("INVALID_DECK");
     });
-  it("old 30-card deck is preserved, accepted by Story and refused for PvP", () => {
-    const { profile } = competitiveFixture(),
-      h = heroProfile(profile, "mage", content),
-      original = structuredClone(h.decks[0]!);
-    expect(
-      validateDeck(
-        original.cards,
-        "mage",
-        ownedFor(profile, "mage", content),
-        content,
-        DECK_RULES,
-      ),
-    ).toEqual([]);
+  it("old 30-card deck is preserved and refused for every new battle", () => {
+    const { profile } = competitiveFixture(), h = heroProfile(profile, "mage", content);
+    h.decks[0]!.cards = structuredClone(content.heroes.mage!.deck);
+    const original = structuredClone(h.decks[0]!);
+    expect(validateDeck(original.cards, "mage", ownedFor(profile,"mage",content), content, DECK_RULES).map(i=>i.code)).toEqual(['DECK_INCOMPLETE']);
     expect(() => validateLoadout(profile, "mage")).toThrow("INVALID_DECK");
     expect(h.decks[0]).toEqual(original);
-    expect(DECK_RULES.requiredSize).toBe(30);
+    expect(DECK_RULES.requiredSize).toBe(40);
     const summaries = formatDeckSummaries(profile, "mage", content, DECK_RULES);
-    expect(summaries[0]).toMatchObject({
-      maxCards: 30,
-      storyValid: true,
-      competitiveValid: false,
-    });
-    expect(summaries[1]).toMatchObject({
-      maxCards: 40,
-      storyValid: false,
-      competitiveValid: true,
-    });
+    expect(summaries[0]).toMatchObject({maxCards:40,storyValid:false,competitiveValid:false});
+    expect(summaries[1]).toMatchObject({maxCards:40,storyValid:true,competitiveValid:true});
   });
 });
 describe("authoritative attempted-draw defeat", () => {

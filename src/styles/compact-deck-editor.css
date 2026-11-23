@@ -105,3 +105,16 @@
 .db-compact-editor .db-format-selector select{min-width:0;max-width:100%;background:#102233;color:#eadcbb;min-height:36px;border:1px solid #80734e;border-radius:6px;}
 .db-compact-editor .db-format-note{font-size:11px;color:#c7bb9f;margin:3px 0;}
 @media(max-width:767px){.db-compact-editor .db-header>.db-format-selector{grid-row:3;}.db-compact-editor .db-header{grid-template-rows:auto auto auto;}}
+
+/* Detail hotfix: fixed touch targets, one visual effect description, acquisition after controls. */
+.db-copy-limit{position:absolute;left:3px;bottom:3px;z-index:3;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid #d6b86a;background:#08121cf2;color:#fff0c9;font:700 11px/1 system-ui;pointer-events:none;}
+.db-compact-editor .db-detail-dialog{box-sizing:border-box;overflow-y:auto;overflow-x:hidden;max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:0;scroll-padding:52px 0 16px;}
+.db-compact-editor .db-detail-dialog .db-detail-card{transform:none!important;perspective:none;min-width:0;box-sizing:border-box;padding-bottom:max(16px,env(safe-area-inset-bottom));}
+.db-compact-editor .db-detail-dialog .db-detail-actions,.mobile-shell .deckbuilder.db-compact-editor .db-detail-dialog .db-detail-actions{position:static;display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:12px;padding:8px;min-width:0;grid-template-columns:none;}
+.db-compact-editor .db-detail-dialog .db-detail-actions button{flex:0 0 48px;min-width:48px;width:48px;height:48px;padding:0;font-size:26px;line-height:1;white-space:nowrap;}
+.db-compact-editor .db-detail-actions output{flex:0 0 32px;text-align:center;font-size:22px;font-weight:700;}
+.db-compact-editor .db-detail-limit{font-size:12px;white-space:nowrap;}
+.db-compact-editor .db-detail-dialog .db-detail-why{position:static;margin:0;overflow-wrap:anywhere;font-size:12px;}
+.db-compact-editor .db-effect-access{font-size:12px;min-width:0;}.db-compact-editor .db-effect-access summary{cursor:pointer;min-height:32px;display:flex;align-items:center;}.db-compact-editor .db-effect-access p{line-height:1.5;}
+.db-compact-editor .db-detail-dialog .db-detail-close{position:sticky;top:0;align-self:start;background:#0d1928;flex-shrink:0;}
+@media(max-width:600px){.db-compact-editor .db-detail-dialog .db-detail-face{width:min(252px,74vw);}.db-compact-editor .db-detail-dialog .db-detail-card{gap:8px;}.db-compact-editor .db-detail-dialog .db-detail-own{font-size:12px;}}
