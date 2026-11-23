@@ -1,9 +1,13 @@
+import {CompactCardGrid} from '../deckbuilder/CompactCardGrid';
+import {PLANNED_COMPETITIVE_DECK_SIZE} from '../deckbuilder/individualCopies';
 import {CardAcquisition} from '../../shop/CardAcquisition';
 import {AutoDeckBuilder} from './AutoDeckBuilder';
 import {visibleCollectionCopy,type CollectionScope} from '../../mobile/mobileUx';
 import {registerPlayNavigationGuard} from '../../play/navigation';
 import { MyDecks, DeckNameDialog, deckActionError } from './MyDecks';
 import '../../../styles/deckbuilder.css';
+import '../../../styles/compact-deck-editor.css';
+import {FeatureCard} from '../components/BattleCardFeature';
 const CardCosmeticPicker = lazy(() => import('../../cosmetics/CardCosmeticPicker').then(m => ({ default: m.CardCosmeticPicker })));
 import { DiscoverRarities } from '../../catalog/FreeCatalog';
 import { CardTypeVisual } from '../components/CardTypeVisual';
@@ -21,7 +25,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
   type DragEvent,
   type PointerEvent,
@@ -40,7 +43,6 @@ import {
   deckBuilderView,
   editDeck,
   heroProfile,
-  isNeutral,
   ownedCard,
   ownedFor,
   sharedPool,
@@ -95,14 +97,6 @@ const DRAG_TYPE = 'application/x-rpggo-card';
 
 /** Per-device "already shown" marker for NEW badges (a convenience: losing it only re-shows badges). */
 const seenKey = (heroId: string) => `rpg-go-tactics:seen-cards:${heroId}`;
-function readSeen(heroId: string): number {
-  try {
-    const raw = Number(window.localStorage.getItem(seenKey(heroId)));
-    return Number.isFinite(raw) ? raw : 0;
-  } catch {
-    return Number.POSITIVE_INFINITY; // no storage: show no badges rather than all of them
-  }
-}
 function writeSeen(heroId: string, acquisitions: number): void {
   try {
     window.localStorage.setItem(seenKey(heroId), String(acquisitions));
@@ -351,10 +345,7 @@ function CardDetail({
       >
         ×
       </button>
-      <div className={`db-detail-art${owned === 0 ? ' is-locked' : ''}`} aria-hidden="true">
-        <SpellArt cardId={card.id} spell={card.presentation.visualKey} /><CardTypeVisual card={card} /><CardPremiumFx def={card} />
-        <span className="db-cost db-cost-lg">{card.cost}</span>
-      </div>
+      <div className="db-detail-face"><FeatureCard def={card} className="db-expanded-face" extras={{playable:true}} interactive={false}/></div>
       <h3 className="db-detail-name">{card.name}</h3>
       <p className="db-detail-tags">
         <CardCosmeticMark def={card} />
@@ -501,7 +492,8 @@ function LeaveDialog({
 function DetailDialog({ onClose, children }: { onClose(): void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    ref.current?.showModal();
+    const previous=document.activeElement as HTMLElement|null;const node=ref.current;node?.showModal();
+    return()=>{node?.close();if(previous?.isConnected)previous.focus();};
   }, []);
   return (
     <dialog
@@ -572,32 +564,20 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const [renaming,setRenaming]=useState(false),[renameBusy,setRenameBusy]=useState(false),[renameError,setRenameError]=useState('');
   const owned = ownedFor(profile, heroId, DEFAULT_CONTENT);
   // NEW badges: cards acquired after the last time this device opened this champion's builder.
-  const [seenUpTo] = useState(() => readSeen(heroId));
+
   // Neutral cards count acquisitions in the shared pool, so they keep their own marker.
-  const [sharedSeenUpTo] = useState(() => readSeen(SHARED_POOL_ID));
+
   const sharedAcquisitions = sharedPool(profile, DEFAULT_CONTENT).acquisitions;
   useEffect(() => writeSeen(heroId, hero.acquisitions), [heroId, hero.acquisitions]);
   useEffect(() => writeSeen(SHARED_POOL_ID, sharedAcquisitions), [sharedAcquisitions]);
   const lookup = (cardId: string) => ownedCard(profile, heroId, cardId, DEFAULT_CONTENT);
-  const isNewCard = (cardId: string) => {
-    const card = DEFAULT_CONTENT.cards[cardId];
-    return (lookup(cardId)?.acquired ?? 0) > (card && isNeutral(card) ? sharedSeenUpTo : seenUpTo);
-  };
+
 
   const [marketExpansion,setMarketExpansion]=useState<string|null>(null);
   const visitExpansion=(id:string)=>{setDetailOpen(false);setMarketExpansion(id);};
   const [autoOpen,setAutoOpen]=useState(false),[autoApplied,setAutoApplied]=useState(false);
   const [draft, setDraft] = useState<DeckEntry[]>(() => saved.cards.map((e) => ({ ...e })));
   const [query, setQuery] = useState<CollectionQuery>(EMPTY_QUERY);
-  const compact = useSyncExternalStore(
-    (notify) => {
-      const media = window.matchMedia('(max-width: 1000px), (max-height: 500px)');
-      media.addEventListener('change', notify);
-      return () => media.removeEventListener('change', notify);
-    },
-    () => window.matchMedia('(max-width: 1000px), (max-height: 500px)').matches,
-    () => false,
-  );
   const [inspected, setInspected] = useState<string | null>(saved.cards[0]?.cardId ?? null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -622,7 +602,6 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const world2Visible = useBattleStore(world2ReleasedIn);
   const archerCampaignVisible = useBattleStore(archerCampaignReleasedIn);
   const [dropActive, setDropActive] = useState<'deck' | 'collection' | null>(null);
-  const pointerType = useRef<string>('mouse');
   const feedbackId = useRef(0);
 
   const pool = useMemo(() => cardsForHero(DEFAULT_CONTENT, heroId).filter(card =>
@@ -718,34 +697,9 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     }
     setDetailContext(context);
     setInspected(cardId);
-    if (open && compact) setDetailOpen(true);
+    if (open) setDetailOpen(true);
   };
 
-  /** Touch opens an action sheet; mouse single-click inspects, double-click adds exactly one. */
-  function activateTile(card: CardDefinition) {
-    const touch = pointerType.current === 'touch' || pointerType.current === 'pen';
-    pointerType.current = 'mouse';
-    if (inspectTimer.current) clearTimeout(inspectTimer.current);
-    if (!compact) return inspect(card.id, false);
-    if (touch) return inspect(card.id, true);
-    inspectTimer.current = setTimeout(() => inspect(card.id, true), 250);
-  }
-  function doubleAdd(cardId: string) {
-    if (inspectTimer.current) clearTimeout(inspectTimer.current);
-    tryAdd(cardId);
-  }
-  function activateLine(cardId: string) {
-    const touch = pointerType.current === 'touch' || pointerType.current === 'pen';
-    pointerType.current = 'mouse';
-    if (inspectTimer.current) clearTimeout(inspectTimer.current);
-    if (!compact) return inspect(cardId, false, 'deck');
-    if (touch) return inspect(cardId, true, 'deck');
-    inspectTimer.current = setTimeout(() => inspect(cardId, true, 'deck'), 250);
-  }
-  function doubleRemove(cardId: string) {
-    if (inspectTimer.current) clearTimeout(inspectTimer.current);
-    tryRemove(cardId);
-  }
   function loadStarter() {
     setStarterConfirm(false);
     setDraft(starterDeck(heroDef));
@@ -818,10 +772,6 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     if (zone === 'collection' && from === 'deck') tryRemove(cardId);
   }
 
-  const notePointer = (e: PointerEvent) => {
-    pointerType.current = e.pointerType;
-  };
-
   const filterCount =
     query.categories.length +
     query.families.length +
@@ -832,7 +782,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
 
   return (
     <div
-      className="deckbuilder"
+      className="deckbuilder db-compact-editor"
       data-tab={tab.toLowerCase()}
       data-collection-view={mobile&&tab==='COLLECTION'?collectionScope:undefined}
       data-detail={detailOpen && inspectedCard ? 'open' : 'closed'}
@@ -1000,37 +950,6 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
 
       <Suspense fallback={null}><CardCosmeticPicker /></Suspense>
       <main className="db-body">
-        {!compact && (
-          <aside className="db-detail" aria-label="Detalle de carta">
-            <h2 className="db-panel-title">Detalle de carta</h2>
-            {inspectedCard ? (
-              <CardDetail
-                card={inspectedCard}
-                owned={owned(inspectedCard.id)}
-                inDeck={countInDeck(draft, inspectedCard.id)}
-                addIssue={addCardIssue(
-                  draft,
-                  inspectedCard.id,
-                  heroId,
-                  owned,
-                  DEFAULT_CONTENT,
-                  DECK_RULES,
-                )}
-                heroName={heroDef.name}
-                context={detailContext}
-                onExpansion={visitExpansion}
-                onAdd={() => tryAdd(inspectedCard.id)}
-                onRemove={() => tryRemove(inspectedCard.id)}
-                onClose={() => {
-                  setDetailOpen(false);
-                  setInspected(null);
-                }}
-              />
-            ) : (
-              <p className="db-detail-empty">Selecciona una carta del mazo o la colección.</p>
-            )}
-          </aside>
-        )}
         <section
           className={`db-deck${dropActive === 'deck' ? ' is-drop' : ''}`}
           data-drag-state={dropActive === 'deck' ? (dragIssue ? 'invalid' : 'valid') : undefined}
@@ -1058,6 +977,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
               <span>/ {DECK_RULES.requiredSize}</span>
             </div>
           </div>
+          <details className="db-planned-format"><summary>Formato competitivo previsto · {PLANNED_COMPETITIVE_DECK_SIZE} cartas</summary><p>Ranked y Versus: exactamente {PLANNED_COMPETITIVE_DECK_SIZE} en una entrega futura. Ahora se valida con las reglas vigentes ({DECK_RULES.requiredSize}). Historia conserva su formato.</p></details>
           <NeutralCounter count={status.neutralCards} limit={DECK_RULES.maxNeutralCards} />
           <div
             className={`db-meter size-${sizeState}`}
@@ -1074,7 +994,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             {status.missingCount
               ? `Falta${status.missingCount === 1 ? '' : 'n'} ${status.missingCount} carta${status.missingCount === 1 ? '' : 's'}`
               : status.valid
-                ? '30 / 30 ✓ Listo para jugar'
+                ? `${DECK_RULES.requiredSize} / ${DECK_RULES.requiredSize} ✓ Listo para jugar`
                 : 'Revisa las cartas del mazo'}
           </p>
           {dropMessage('deck') && <p className="db-drop-hint">{dropMessage('deck')}</p>}
@@ -1108,77 +1028,8 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             </div>
           </details>
           {lines.length || status.missingCount ? (
-            <ol className="db-list">
-              {lines.map(({ card, count }) => (
-                <li
-                  key={card.id}
-                  className={`db-line${dragged?.from === 'deck' && dragged.cardId === card.id ? ' is-dragging' : ''}${inspected === card.id ? ' is-selected' : ''}`}
-                  data-card-id={card.id}
-                  data-premium={card.id === 'summon_war_drake' || undefined}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(DRAG_TYPE, `deck:${card.id}`);
-                    e.dataTransfer.effectAllowed = 'move';
-                    if (inspectTimer.current) clearTimeout(inspectTimer.current);
-                    setDragged({ from: 'deck', cardId: card.id });
-                  }}
-                  onDragEnd={endDrag}
-                  style={toneStyle(card)}
-                >
-                  <button
-                    type="button"
-                    className="db-line-main"
-                    aria-label={`${card.name}, coste ${card.cost}, ${count} ${count === 1 ? 'copia' : 'copias'}. Ver detalle`}
-                    onPointerDown={notePointer}
-                    onClick={() => activateLine(card.id)}
-                    onDoubleClick={() => doubleRemove(card.id)}
-                    title="Doble clic para quitar una copia"
-                  >
-                    <span className="db-cost db-cost-sm" aria-hidden="true">
-                      {card.cost}
-                    </span>
-                    <span className="db-line-art" aria-hidden="true">
-                      <SpellArt cardId={card.id} spell={card.presentation.visualKey} />
-                      <CardTypeVisual card={card} /><CardPremiumFx def={card} />
-                    </span>
-                    <span className="db-line-name">{card.name}</span><CardCosmeticMark def={card} />
-                    <span className="db-line-count" aria-hidden="true">
-                      ×{count}
-                    </span>
-                  </button>
-                  {feedback?.cardId === card.id &&
-                    (feedback.kind === 'added' || feedback.kind === 'removed') && (
-                      <span
-                        key={feedback.id}
-                        className={`db-flash flash-${feedback.kind}`}
-                        aria-hidden="true"
-                      />
-                    )}
-                  <button
-                    type="button"
-                    className="db-line-remove"
-                    aria-label={`Quitar una copia de ${card.name}`}
-                    onClick={() => tryRemove(card.id)}
-                  >
-                    <span aria-hidden="true">−</span>
-                  </button>
-                </li>
-              ))}
-              {Array.from({ length: status.missingCount }, (_, i) => (
-                <li key={`gap-${i}`} className="db-empty-slot">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTab('COLLECTION');
-                      document.querySelector<HTMLInputElement>('.db-search input')?.focus();
-                    }}
-                    aria-label={`Elegir carta para espacio vacío ${i + 1}`}
-                  >
-                    <span>+</span> Carta
-                  </button>
-                </li>
-              ))}
-            </ol>
+            <CompactCardGrid entries={draft} cards={DEFAULT_CONTENT.cards} context="deck" selected={inspected} onInspect={id=>inspect(id,true,'deck')} onDragStart={cardId=>setDragged({from:'deck',cardId})} onDragEnd={endDrag}/>
+
           ) : (
             <p className="db-empty">El mazo está vacío. Añade cartas desde la colección.</p>
           )}
@@ -1252,37 +1103,8 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
           </h2>
           {dropMessage('collection') && <p className="db-drop-hint">{dropMessage('collection')}</p>}
           {shown.length ? (
-            <ul className="db-grid">
-              {shown.map((card) => (
-                <CollectionTile
-                  key={card.id}
-                  card={card}
-                  owned={owned(card.id)}
-                  inDeck={countInDeck(draft, card.id)}
-                  selected={inspected === card.id}
-                  pulse={feedback?.cardId === card.id ? feedback : null}
-                  isNew={isNewCard(card.id)}
-                  onPointerDown={notePointer}
-                  onActivate={() => activateTile(card)}
-                  onInspect={() => inspect(card.id, true)}
-                  onAdd={() => tryAdd(card.id)}
-                  onDoubleClick={() => doubleAdd(card.id)}
-                  onDrag={() => {
-                    if (inspectTimer.current) clearTimeout(inspectTimer.current);
-                    setDragged({ from: 'collection', cardId: card.id });
-                  }}
-                  onDragEnd={endDrag}
-                  dragging={dragged?.from === 'collection' && dragged.cardId === card.id}
-                  availability={copyStatus.get(card.id)!.availableCopies}
-                  canAdd={copyStatus.get(card.id)!.canAdd}
-                  addReason={
-                    copyStatus.get(card.id)!.addIssue
-                      ? deckIssueText(copyStatus.get(card.id)!.addIssue!, heroDef.name)
-                      : ''
-                  }
-                />
-              ))}
-            </ul>
+            <CompactCardGrid entries={shown.map(card=>({cardId:card.id,count:mobile&&collectionScope==='owned'?owned(card.id):copyStatus.get(card.id)!.availableCopies}))} cards={DEFAULT_CONTENT.cards} context="collection" selected={inspected} onInspect={id=>inspect(id,true,'collection')} onDragStart={cardId=>setDragged({from:'collection',cardId})} onDragEnd={endDrag}/>
+
           ) : (
             <p className="db-empty">
               {query.ownership === 'LOCKED' && !query.text && unlockedCount === pool.length
@@ -1300,7 +1122,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
         </section>
       </main>
 
-      {compact && detailOpen && inspectedCard && (
+      {detailOpen && inspectedCard && (
         <DetailDialog
           onClose={() => {
             setDetailOpen(false);
