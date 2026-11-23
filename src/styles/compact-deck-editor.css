@@ -118,3 +118,19 @@
 .db-compact-editor .db-effect-access{font-size:12px;min-width:0;}.db-compact-editor .db-effect-access summary{cursor:pointer;min-height:32px;display:flex;align-items:center;}.db-compact-editor .db-effect-access p{line-height:1.5;}
 .db-compact-editor .db-detail-dialog .db-detail-close{position:sticky;top:0;align-self:start;background:#0d1928;flex-shrink:0;}
 @media(max-width:600px){.db-compact-editor .db-detail-dialog .db-detail-face{width:min(252px,74vw);}.db-compact-editor .db-detail-dialog .db-detail-card{gap:8px;}.db-compact-editor .db-detail-dialog .db-detail-own{font-size:12px;}}
+
+/* Own every detail grid placement: legacy deckbuilder selectors also target these children. */
+.deckbuilder.db-compact-editor .db-detail-dialog{
+ width:min(820px,calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+ max-width:100%;overscroll-behavior:contain;
+}
+.deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card > :not(.db-detail-face,.db-detail-close){grid-column:2;grid-row:auto;min-width:0;overflow-wrap:anywhere;}
+.deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card > .db-detail-close{grid-column:1/-1;grid-row:1;position:sticky;top:0;right:auto;left:auto;justify-self:end;margin:0;width:48px;height:48px;}
+.deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card > .db-detail-face{grid-column:1;grid-row:2/span 8;max-width:100%;}
+.deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card > .db-detail-actions{display:grid;grid-template-columns:48px minmax(2ch,max-content) 48px;justify-content:center;align-items:center;gap:8px 12px;width:100%;box-sizing:border-box;}
+.deckbuilder.db-compact-editor .db-detail-dialog .db-detail-actions > .db-detail-limit{grid-column:1/-1;text-align:center;white-space:normal;}
+@media(max-width:600px){
+ .deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card{grid-template-columns:minmax(0,1fr);}
+ .deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card > :not(.db-detail-face,.db-detail-close){grid-column:1;}
+ .deckbuilder.db-compact-editor .db-detail-dialog .db-detail-card > .db-detail-face{grid-column:1;grid-row:2;justify-self:center;}
+}
