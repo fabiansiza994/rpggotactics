@@ -1,3 +1,4 @@
+import {BASE_COLLECTION,editorExpansionOptions} from '../deckbuilder/expansionFilter';
 import {CompactCardGrid} from '../deckbuilder/CompactCardGrid';
 import {PLANNED_COMPETITIVE_DECK_SIZE} from '../deckbuilder/individualCopies';
 import {CardAcquisition} from '../../shop/CardAcquisition';
@@ -614,7 +615,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const view = deckBuilderView(profile, heroId, draft, DEFAULT_CONTENT, DECK_RULES);
   const copyStatus = new Map(view.collection.map((c) => [c.cardId, c]));
   // Keep browsing order/filters, but show only owned copies not already in the draft.
-  const shown = browseCollection(pool, lookup, query).filter(
+  const shown = browseCollection(pool, lookup, query, DEFAULT_CONTENT).filter(
     card => visibleCollectionCopy(mobile?collectionScope:'available',owned(card.id),copyStatus.get(card.id)?.availableCopies??0),
   );
   const status = view.deck;
@@ -641,7 +642,6 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     setFeedback({ id: ++feedbackId.current, cardId, kind, text });
 
   function tryAdd(cardId: string) {
-    if(mobile&&tab==='COLLECTION'&&collectionScope==='owned')return;
     if (inspectTimer.current) {
       clearTimeout(inspectTimer.current);
       inspectTimer.current = null;
@@ -666,7 +666,6 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
 
   /** Only removes: the gap stays until the player picks a card (nothing is added for them). */
   function tryRemove(cardId: string) {
-    if(mobile&&tab==='COLLECTION'&&collectionScope==='owned')return;
     if (inspectTimer.current) {
       clearTimeout(inspectTimer.current);
       inspectTimer.current = null;
@@ -778,7 +777,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     query.costs.length +
     query.rarities.length +
     (query.ownership !== 'ALL' ? 1 : 0) +
-    (query.origin !== 'ALL' ? 1 : 0);
+    (query.origin !== 'ALL' ? 1 : 0) + (query.expansion && query.expansion !== 'ALL' ? 1 : 0);
 
   return (
     <div
@@ -840,6 +839,13 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
         role="group"
         aria-label="Filtros de la colección"
       >
+        <label className="db-filter-group db-expansion-filter">Expansión
+          <select aria-label="Expansión" value={query.expansion??'ALL'} onChange={e=>setQuery({...query,expansion:e.target.value})}>
+            <option value="ALL">Todas las expansiones</option>
+            <option value={BASE_COLLECTION}>Colección base · inicial</option>
+            {editorExpansionOptions(pool.map(c=>c.id)).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </label>
         <div className="db-filter-group" role="group" aria-label="Estado">
           {(Object.keys(OWNERSHIP_LABEL) as OwnershipFilter[]).map((o) => (
             <Chip
@@ -930,7 +936,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
         )}
       </div>
 
-      {mobile&&<section className="m2-collection-purpose"><p>{tab==='COLLECTION'&&collectionScope==='owned'?'Consulta tus cartas poseídas. Para editar, abre Mi mazo o Disponibles para añadir.':`Editando ${saved.name} · los cambios se guardan solo al confirmar.`}</p>{tab==='COLLECTION'&&<div role="group" aria-label="Vista de colección"><button aria-pressed={collectionScope==='owned'} onClick={()=>setCollectionScope('owned')}>Todas mis cartas</button><button aria-pressed={collectionScope==='available'} onClick={()=>setCollectionScope('available')}>Disponibles para añadir</button></div>}</section>}
+      {mobile&&<section className="m2-collection-purpose"><p>{tab==='COLLECTION'&&collectionScope==='owned'?'Tus copias poseídas; edita desde el detalle de cada carta.':`Editando ${saved.name} · los cambios se guardan solo al confirmar.`}</p>{tab==='COLLECTION'&&<div role="group" aria-label="Vista de colección"><button aria-pressed={collectionScope==='owned'} onClick={()=>setCollectionScope('owned')}>Todas mis cartas</button><button aria-pressed={collectionScope==='available'} onClick={()=>setCollectionScope('available')}>Disponibles para añadir</button></div>}</section>}
       <nav className="db-tabs" aria-label="Secciones">
         <NeutralCounter count={status.neutralCards} limit={DECK_RULES.maxNeutralCards} compact />
         <button type="button" aria-pressed={tab === 'DECK'} onClick={() => setTab('DECK')}>
@@ -1058,7 +1064,45 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             )}
           </div>
 
-          <div className="db-actions">
+
+        </section>
+        <section
+          className={`db-collection${dropActive === 'collection' ? ' is-drop' : ''}`}
+          data-drag-state={dropActive === 'collection' ? 'valid' : undefined}
+          aria-labelledby="db-collection-title"
+          data-drop-zone="collection"
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        >
+          <DiscoverRarities heroId={heroId} onExpansion={visitExpansion}/>
+          <h2 id="db-collection-title" className="menu-section-title">
+            {mobile?(collectionScope==='owned'?'Todas mis cartas':'Disponibles para añadir'):'Colección disponible'}{' '}
+            <span className="db-section-count">
+              {unlockedCount}/{pool.length} desbloqueadas
+            </span>
+          </h2>
+          {dropMessage('collection') && <p className="db-drop-hint">{dropMessage('collection')}</p>}
+          {shown.length ? (
+            <CompactCardGrid entries={shown.map(card=>({cardId:card.id,count:owned(card.id)}))} cards={DEFAULT_CONTENT.cards} context="collection" selected={inspected} onInspect={id=>inspect(id,true,'collection')} onDragStart={cardId=>setDragged({from:'collection',cardId})} onDragEnd={endDrag}/>
+
+          ) : (
+            <p className="db-empty">
+              {query.ownership === 'LOCKED' && !query.text && unlockedCount === pool.length
+                ? `Ya tienes todas las cartas del ${heroDef.name}.`
+                : mobile&&collectionScope==='owned'?'No hay cartas poseídas que coincidan con los filtros.':'No hay copias disponibles que coincidan con los filtros.'}{' '}
+              <button
+                type="button"
+                className="db-clear"
+                onClick={() => setQuery({ ...EMPTY_QUERY, sort: query.sort })}
+              >
+                Limpiar filtros
+              </button>
+            </p>
+          )}
+        </section>
+      </main>
+          <div className="db-actions" role="group" aria-label="Acciones del mazo">
             <button
               type="button"
               className="db-btn db-btn-ghost"
@@ -1084,43 +1128,6 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
               {saving ? 'Guardando…' : 'Guardar mazo'}
             </button>
           </div>
-        </section>
-        <section
-          className={`db-collection${dropActive === 'collection' ? ' is-drop' : ''}`}
-          data-drag-state={dropActive === 'collection' ? 'valid' : undefined}
-          aria-labelledby="db-collection-title"
-          data-drop-zone="collection"
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-        >
-          <DiscoverRarities heroId={heroId} onExpansion={visitExpansion}/>
-          <h2 id="db-collection-title" className="menu-section-title">
-            {mobile?(collectionScope==='owned'?'Todas mis cartas':'Disponibles para añadir'):'Colección disponible'}{' '}
-            <span className="db-section-count">
-              {unlockedCount}/{pool.length} desbloqueadas
-            </span>
-          </h2>
-          {dropMessage('collection') && <p className="db-drop-hint">{dropMessage('collection')}</p>}
-          {shown.length ? (
-            <CompactCardGrid entries={shown.map(card=>({cardId:card.id,count:mobile&&collectionScope==='owned'?owned(card.id):copyStatus.get(card.id)!.availableCopies}))} cards={DEFAULT_CONTENT.cards} context="collection" selected={inspected} onInspect={id=>inspect(id,true,'collection')} onDragStart={cardId=>setDragged({from:'collection',cardId})} onDragEnd={endDrag}/>
-
-          ) : (
-            <p className="db-empty">
-              {query.ownership === 'LOCKED' && !query.text && unlockedCount === pool.length
-                ? `Ya tienes todas las cartas del ${heroDef.name}.`
-                : mobile&&collectionScope==='owned'?'No hay cartas poseídas que coincidan con los filtros.':'No hay copias disponibles que coincidan con los filtros.'}{' '}
-              <button
-                type="button"
-                className="db-clear"
-                onClick={() => setQuery({ ...EMPTY_QUERY, sort: query.sort })}
-              >
-                Limpiar filtros
-              </button>
-            </p>
-          )}
-        </section>
-      </main>
 
       {detailOpen && inspectedCard && (
         <DetailDialog

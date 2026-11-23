@@ -79,3 +79,24 @@
  .deckbuilder.db-compact-editor .db-title .db-rename{font-size:0;min-width:32px;padding:2px;}
  .deckbuilder.db-compact-editor .db-title .db-rename::after{content:'✎';font-size:18px;}
 }
+/* The toolbar is a real layout row: neither the grid nor its drop zones sit underneath it. */
+.deckbuilder.db-compact-editor{grid-template-rows:auto auto auto auto minmax(0,1fr) auto;padding-bottom:0;}
+.db-compact-editor>.db-header{grid-row:1;}
+.db-compact-editor>.db-filters{grid-row:2;}
+.db-compact-editor>.m2-collection-purpose{grid-row:3;}
+.db-compact-editor>.db-tabs{grid-row:4;}
+.db-compact-editor>.db-body{grid-row:5;}
+.deckbuilder.db-compact-editor>.db-actions{grid-row:6;position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:8px 0;margin:0;border-top:1px solid #b99b6555;background:#0d1928;z-index:auto;}
+.db-compact-editor>.db-actions .db-btn{min-width:0;min-height:44px;padding:8px 4px;white-space:normal;}
+.deckbuilder.db-compact-editor .db-deck,.deckbuilder.db-compact-editor .db-collection{scroll-padding-bottom:12px;padding-bottom:12px;}
+.db-owned-badge{position:absolute;right:3px;bottom:3px;z-index:2;min-width:24px;padding:3px 5px;border:1px solid #d6b86a;border-radius:5px;background:#08121cf2;color:#fff0c9;box-shadow:0 1px 4px #000b;font:700 12px/1.2 system-ui;pointer-events:none;}
+.db-expansion-filter{min-width:0;max-width:100%;font-size:12px;color:#cfc0a2;}
+.db-expansion-filter select{max-width:100%;min-height:44px;background:#102233;color:#eadcbb;border:1px solid #80734e;border-radius:6px;padding:6px;}
+/* Scope the frame change to the mounted editor; normal navigation/battle keeps its layout. */
+.mobile-shell:has(.db-compact-editor){height:100dvh;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;box-sizing:border-box;}
+.mobile-shell:has(.db-compact-editor)>.m2-content{min-height:0;padding-bottom:0;display:grid;grid-template-rows:minmax(0,1fr);overflow:hidden;}
+.mobile-shell:has(.db-compact-editor)>.m2-bottom-nav{position:static;transform:none;width:100%;box-sizing:border-box;}
+.mobile-shell .deckbuilder.db-compact-editor{height:100%;min-height:0;}
+.mobile-shell .deckbuilder.db-compact-editor[data-collection-view=owned] .db-detail-actions{display:grid;}
+@media(max-width:767px){.db-compact-editor>.db-actions .db-btn{font-size:12px;}.db-owned-badge{font-size:11px;padding:2px 4px;}}
+.mobile-shell .m2-cards:has(>.db-compact-editor){height:100%;min-height:0;display:grid;grid-template-rows:minmax(0,1fr);overflow:hidden;}

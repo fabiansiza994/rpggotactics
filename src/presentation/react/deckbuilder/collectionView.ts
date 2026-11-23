@@ -1,3 +1,4 @@
+import {matchesEditorExpansion} from './expansionFilter';
 import {
   CARD_FAMILIES,
   cardFamily,
@@ -23,6 +24,7 @@ export type OriginFilter = 'ALL' | 'CHAMPION' | 'NEUTRAL';
 
 export interface CollectionQuery {
   text: string;
+  expansion?: string;
   categories: readonly CardCategory[];
   /** Deck-building families (Invocaciones / Rituales / Apoyo / Control). */
   families: readonly CardFamily[];
@@ -35,6 +37,7 @@ export interface CollectionQuery {
 
 export const EMPTY_QUERY: CollectionQuery = {
   text: '',
+  expansion: 'ALL',
   categories: [],
   families: [],
   costs: [],
@@ -84,7 +87,7 @@ const byCostThenName = (a: CardDefinition, b: CardDefinition) => a.cost - b.cost
 
 export function isFiltered(q: CollectionQuery): boolean {
   return Boolean(
-    q.text.trim() || q.categories.length || q.families.length || q.costs.length || q.rarities.length || q.ownership !== 'ALL' || q.origin !== 'ALL',
+    (q.expansion && q.expansion !== 'ALL') || q.text.trim() || q.categories.length || q.families.length || q.costs.length || q.rarities.length || q.ownership !== 'ALL' || q.origin !== 'ALL',
   );
 }
 
@@ -101,10 +104,11 @@ export function facets(cards: readonly CardDefinition[]) {
   };
 }
 
-export function browseCollection(cards: readonly CardDefinition[], hero: OwnedLookup, q: CollectionQuery): CardDefinition[] {
+export function browseCollection(cards: readonly CardDefinition[], hero: OwnedLookup, q: CollectionQuery, content?: GameContent): CardDefinition[] {
   const text = normalize(q.text);
   const result = cards.filter(
     (c) =>
+      matchesEditorExpansion(c.id,q.expansion,content) &&
       (!text || normalize(c.name).includes(text)) &&
       (!q.categories.length || q.categories.includes(c.category)) &&
       (!q.families.length || q.families.includes(cardFamily(c))) &&
