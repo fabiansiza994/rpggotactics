@@ -1,0 +1,143 @@
+/* The existing footer's outer columns are safe HUD space, outside the battlefield canvas. */
+.battle .battle-pile-bank {
+  width: 64px;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  align-self: end;
+  color: #eadcbb;
+}
+.battle-pile-bank > small {
+  text-align: center;
+  font-size: 10px;
+}
+.battle .battle-pile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  justify-items: center;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid #a88b58;
+  border-radius: 6px;
+  background: #0b1727;
+  color: #f3e2ba;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.battle-pile > b {
+  font-size: 16px;
+}
+.battle-pile > span:last-child {
+  grid-column: 1/-1;
+  font-size: 8px;
+}
+.battle-pile-back {
+  display: block;
+  width: 19px;
+  height: 26px;
+  transform: rotate(-5deg);
+  box-shadow:
+    2px 1px #8b734f,
+    4px 2px #352c20;
+}
+.battle-pile-back .card-back-face,
+.battle-pile-back img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 2px;
+}
+.battle-grave-dialog {
+  width: min(850px, calc(100vw - 20px));
+  max-height: calc(100dvh - 20px);
+  overflow: auto;
+  background: #0b1727;
+  color: #f2e2be;
+  border: 1px solid #b79659;
+  border-radius: 10px;
+  padding: 14px;
+}
+.battle-grave-dialog::backdrop {
+  background: #000a;
+}
+.battle-grave-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: sticky;
+  top: -14px;
+  background: #0b1727;
+  z-index: 3;
+}
+.battle-grave-dialog > header h2 {
+  font-size: 18px;
+}
+.battle-grave-dialog button {
+  min-height: 44px;
+}
+.battle-grave-dialog > header button {
+  min-width: 44px;
+}
+.battle-grave-dialog .db-copy-grid {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+.battle-grave-dialog .grave-card-detail {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.grave-card-detail p {
+  line-height: 1.55;
+}
+.grave-card-detail > .feature-card {
+  width: 100%;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  .battle .battle-pile-bank {
+    position: absolute;
+    top: 0;
+    left: max(8px, env(safe-area-inset-left));
+    width: calc(50% - 12px);
+    height: 56px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 10px 44px;
+    gap: 1px 4px;
+  }
+  .battle .battle-pile-bank.is-rival {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+  }
+  .battle-pile-bank > small {
+    grid-column: 1/-1;
+    font-size: 9px;
+  }
+  .battle .battle-pile {
+    min-height: 44px;
+    grid-template-columns: 18px 1fr;
+    padding: 2px 4px;
+  }
+  .battle-pile-back {
+    width: 13px;
+    height: 18px;
+  }
+  .battle-pile > span:last-child {
+    font-size: 9px;
+  }
+  .battle-grave-dialog .db-copy-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .battle-grave-dialog .grave-card-detail {
+    grid-template-columns: 1fr;
+  }
+  .grave-card-detail > .feature-card {
+    max-width: 252px;
+    justify-self: center;
+  }
+}

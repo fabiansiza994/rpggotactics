@@ -19,7 +19,7 @@ import type { PvpMode } from "../../src/game/pvp/dominion";
 import {
   activeDeck,
   DECK_ID_PATTERN,
-  DECK_RULES,
+  COMPETITIVE_DECK_RULES as DECK_RULES,
   deckStatus,
   DEFAULT_CONTENT,
   fallbackDiscardUid,
@@ -321,7 +321,7 @@ export async function serverLoadout(
         { error: { code: "UNKNOWN_DECK", message: "Ese mazo no existe." } },
         404,
       );
-    // PvP takes no legacy transition: exactly 30 legal cards, checked against the stored profile.
+    // PvP takes no legacy transition: exactly 40 legal cards, checked against the stored profile.
     const hero = heroProfile(record.profile, heroId, PVP_CONTENT);
     const deck = (
       (typeof deckId === "string" && hero.decks.find((d) => d.id === deckId)) ||
@@ -1282,11 +1282,11 @@ export class PvPMatchRoom {
       r.deadline = Date.now() + 90000 + (botTiming?.visualMs ?? 0);
     if (r.game.outcome) {
       const winner =
-        r.game.dominion?.winner ??
+        r.game.duel?.winner ?? r.game.dominion?.winner ??
         (r.game.units.some((u) => u.id === r.game!.duel!.champions[0]) ? 0 : 1);
       await this.finish(
         winner,
-        r.game.dominion?.winner != null
+        r.game.outcome?.reason === "DECK_OUT" ? "DECK_OUT" : r.game.dominion?.winner != null
           ? "DOMINION_SCORE"
           : "CHAMPION_DEFEATED",
         writes,
@@ -1525,11 +1525,11 @@ export class PvPMatchRoom {
           r.deadline = now + 90000;
           if (r.game.outcome)
             await this.finish(
-              r.game.dominion?.winner ??
+              r.game.duel?.winner ?? r.game.dominion?.winner ??
                 (r.game.units.some((u) => u.id === r.game!.duel!.champions[0])
                   ? 0
                   : 1),
-              r.game.dominion?.winner != null
+              r.game.outcome?.reason === "DECK_OUT" ? "DECK_OUT" : r.game.dominion?.winner != null
                 ? "DOMINION_SCORE"
                 : "CHAMPION_DEFEATED",
               writes,

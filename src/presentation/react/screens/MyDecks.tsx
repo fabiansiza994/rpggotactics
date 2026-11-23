@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  deckSummaries,
+  formatDeckSummaries as deckSummaries,
   neutralCount,
   heroProfile,
   DECK_RULES,

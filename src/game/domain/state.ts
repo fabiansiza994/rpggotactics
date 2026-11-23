@@ -52,7 +52,7 @@ export interface PlayerState {
 }
 
 export type OutcomeReason =
-  'OBJECTIVES_COMPLETED' | 'HERO_DEFEATED' | 'PROTECTED_TARGET_DESTROYED' | 'ROUND_LIMIT_REACHED';
+  'DECK_OUT' | 'OBJECTIVES_COMPLETED' | 'HERO_DEFEATED' | 'PROTECTED_TARGET_DESTROYED' | 'ROUND_LIMIT_REACHED';
 
 export interface BattleOutcome {
   result: 'WON' | 'LOST';
@@ -64,6 +64,9 @@ export interface BattleOutcome {
  * no functions, no references to renderer objects.
  */
 export interface GameState {
+  competitiveRules?: '40_DECK_OUT_V1';
+  /** Wire-only rival discard identities that were already publicly revealed. */
+  opponentDiscard?: CardInstance[];
   /** Private sorted candidate projection for own deck search; never authoritative draw order. */
   searchChoices?: CardInstance[];
   /** Authoritative static PvP map identifier; terrain itself is in board snapshots. */

@@ -464,6 +464,8 @@ export const isExclusiveCard = (card: Pick<CardDefinition, 'acquisition'>): bool
 
 /** A concrete copy of a card inside deck/hand/discard. */
 export interface CardInstance {
+  /** Public only while in discard; cleared on entry into a private zone. */
+  publicDiscard?: true;
   unavailableThisTurn?: true;
   uid: string;
   cardId: string;

@@ -4,7 +4,7 @@ import { rankedBotCatalog } from "../server/src/rankedBotCatalog";
 import { botIdentity, BOT_LEVELS } from "../src/game/ai/ranked-bot-policy";
 import { botDeck } from "../src/game/ai/ranked-bot-deck";
 import { validateDeck, copyLimit } from "../src/game/collection/deck-rules";
-import { DECK_RULES } from "../src/game/data/rules";
+import { COMPETITIVE_DECK_RULES as DECK_RULES } from "../src/game/collection/deck-formats";
 import type { Env } from "../server/src/db";
 const env = {
   SHAPESHIFTER_ENABLED: "1",
@@ -53,7 +53,7 @@ describe("published account-independent bot decks", () => {
           ),
         ).toEqual([]);
         expect(botDeck(content, bot)).toEqual(deck);
-        expect(deck.reduce((n, e) => n + e.count, 0)).toBe(30);
+        expect(deck.reduce((n, e) => n + e.count, 0)).toBe(40);
         expect(
           deck.every((e) => !content.cards[e.cardId]!.tags.includes("nature")),
         ).toBe(true);

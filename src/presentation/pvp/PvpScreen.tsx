@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   GameEngine,
   deckSummaries,
-  DECK_RULES,
+  COMPETITIVE_DECK_RULES as DECK_RULES,
   type GameState,
   type GameEvent,
   type Command,
@@ -96,6 +96,7 @@ interface Snapshot {
   ranked?: RankedSnapshot | null;
 }
 const REASONS: Record<string, string> = {
+  DECK_OUT: "Derrota por agotamiento del mazo",
   DOMINION_SCORE: "Victoria por Dominio Arcano",
   CHAMPION_DEFEATED: "Campeón derrotado",
   SURRENDER: "Rendición",

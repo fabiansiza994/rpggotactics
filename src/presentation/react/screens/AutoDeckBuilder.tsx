@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   DECK_RULES,
+  type DeckRules,
   ownedFor,
   validateDeck,
   type DeckEntry,
@@ -27,10 +28,12 @@ const labels = {
 };
 /** Proposal only. The editor owns the draft and the existing Save button owns persistence. */
 export function AutoDeckBuilder({
+  rules=DECK_RULES,
   heroId: hero,
   onApply,
   onClose,
 }: {
+  rules?:DeckRules;
   heroId: string;
   onApply: (cards: DeckEntry[]) => void;
   onClose: () => void;
@@ -61,7 +64,7 @@ export function AutoDeckBuilder({
         CONTENT,
         hero,
         ownedFor(profile, hero, CONTENT),
-        DECK_RULES,
+        rules,
         style,
         ++seed.current,
       ),
@@ -76,7 +79,7 @@ export function AutoDeckBuilder({
         hero,
         ownedFor(current, hero, CONTENT),
         CONTENT,
-        DECK_RULES,
+        rules,
       ).length
     ) {
       setError("Tu colección cambió. Regenera antes de aplicar.");
@@ -145,8 +148,8 @@ export function AutoDeckBuilder({
         {analysis && proposal?.ok && (
           <>
             <h3>
-              {DECK_STYLES[style]} · {DECK_RULES.requiredSize}/
-              {DECK_RULES.requiredSize} cartas
+              {DECK_STYLES[style]} · {rules.requiredSize}/
+              {rules.requiredSize} cartas
             </h3>
             <section
               className="auto-deck-stats"
@@ -197,7 +200,7 @@ export function AutoDeckBuilder({
                 {Object.entries(analysis.curve).map(([cost, count]) => (
                   <p key={cost}>
                     {cost} energía{" "}
-                    <meter max={DECK_RULES.requiredSize} value={count} />{" "}
+                    <meter max={rules.requiredSize} value={count} />{" "}
                     {count}
                   </p>
                 ))}

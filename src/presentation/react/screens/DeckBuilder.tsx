@@ -1,6 +1,6 @@
+import {deckRulesFor,savedDeckFormat,type DeckFormat} from '../../../game/collection/deck-formats';
 import {BASE_COLLECTION,editorExpansionOptions} from '../deckbuilder/expansionFilter';
 import {CompactCardGrid} from '../deckbuilder/CompactCardGrid';
-import {PLANNED_COMPETITIVE_DECK_SIZE} from '../deckbuilder/individualCopies';
 import {CardAcquisition} from '../../shop/CardAcquisition';
 import {AutoDeckBuilder} from './AutoDeckBuilder';
 import {visibleCollectionCopy,type CollectionScope} from '../../mobile/mobileUx';
@@ -578,6 +578,8 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const visitExpansion=(id:string)=>{setDetailOpen(false);setMarketExpansion(id);};
   const [autoOpen,setAutoOpen]=useState(false),[autoApplied,setAutoApplied]=useState(false);
   const [draft, setDraft] = useState<DeckEntry[]>(() => saved.cards.map((e) => ({ ...e })));
+  const [format,setFormat]=useState<DeckFormat>(()=>savedDeckFormat(saved.cards));
+  const rules=deckRulesFor(format);
   const [query, setQuery] = useState<CollectionQuery>(EMPTY_QUERY);
   const [inspected, setInspected] = useState<string | null>(saved.cards[0]?.cardId ?? null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -612,7 +614,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   ), [heroId,world2Visible,archerCampaignVisible,profile]);
   const available = useMemo(() => facets(pool), [pool]);
   const lines = deckLines(draft, DEFAULT_CONTENT);
-  const view = deckBuilderView(profile, heroId, draft, DEFAULT_CONTENT, DECK_RULES);
+  const view = deckBuilderView(profile, heroId, draft, DEFAULT_CONTENT, rules);
   const copyStatus = new Map(view.collection.map((c) => [c.cardId, c]));
   // Keep browsing order/filters, but show only owned copies not already in the draft.
   const shown = browseCollection(pool, lookup, query, DEFAULT_CONTENT).filter(
@@ -621,7 +623,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   const status = view.deck;
   const { totalCards: size, issues } = status;
   // The saved deck is an old 20-card one: shown untouched, the player adds the rest by hand.
-  const savedLegacy = deckStatus(saved.cards, heroId, owned, DEFAULT_CONTENT, DECK_RULES).legacy;
+  const savedLegacy = deckStatus(saved.cards, heroId, owned, DEFAULT_CONTENT, rules).legacy;
   const dirty = autoApplied || !sameDeck(draft, saved.cards);
   useEffect(()=>registerPlayNavigationGuard(()=>!dirty||window.confirm('¿Salir del editor? Los cambios sin guardar se perderán.')),[dirty]);
   const unlockedCount = pool.filter((c) => owned(c.id) > 0).length;
@@ -654,14 +656,14 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
       heroId,
       owned,
       DEFAULT_CONTENT,
-      DECK_RULES,
+      rules,
     );
     if (!result.ok)
       return result.issue.code === 'NOT_IN_DECK'
         ? undefined
         : say(cardId, 'rejected', deckIssueText(result.issue, heroDef.name));
     setDraft(result.deck);
-    say(cardId, 'added', `${card.name} añadida (${size + 1}/${DECK_RULES.requiredSize})`);
+    say(cardId, 'added', `${card.name} añadida (${size + 1}/${rules.requiredSize})`);
   }
 
   /** Only removes: the gap stays until the player picks a card (nothing is added for them). */
@@ -678,11 +680,11 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
       heroId,
       owned,
       DEFAULT_CONTENT,
-      DECK_RULES,
+      rules,
     );
     if (!result.ok) return;
     setDraft(result.deck);
-    say(cardId, 'removed', `${card.name} quitada (${size - 1}/${DECK_RULES.requiredSize})`);
+    say(cardId, 'removed', `${card.name} quitada (${size - 1}/${rules.requiredSize})`);
   }
 
   const inspect = (
@@ -710,7 +712,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   };
   const dragIssue =
     dragged?.from === 'collection'
-      ? addCardIssue(draft, dragged.cardId, heroId, owned, DEFAULT_CONTENT, DECK_RULES)
+      ? addCardIssue(draft, dragged.cardId, heroId, owned, DEFAULT_CONTENT, rules)
       : null;
   const dropMessage = (zone: 'deck' | 'collection') =>
     !dragged || dragged.from === zone
@@ -724,7 +726,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
   /** Local or cloud save. A failed cloud write keeps the draft and says so (never "saved"). */
   async function save(): Promise<boolean> {
     setSaving(true);
-    const result = await saveDeck(heroId, draft, deckId);
+    const result = await saveDeck(heroId, draft, deckId,format);
     setSaving(false);
     if (!result.ok) {
       say(
@@ -788,6 +790,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
     >
       {renaming&&<DeckNameDialog name={saved.name} busy={renameBusy} error={renameError} onClose={()=>setRenaming(false)} onSave={name=>{setRenameBusy(true);void useBattleStore.getState().renameDeck(heroId,deckId,name).then(r=>{if(r.ok)setRenaming(false);else setRenameError(deckActionError(r));}).finally(()=>setRenameBusy(false));}}/>}
       <header className="db-header">
+        <label className="db-format-selector">Formato<select aria-label="Formato del mazo" value={format} onChange={e=>setFormat(e.target.value as DeckFormat)}><option value="STORY">Historia · 30 cartas</option><option value="COMPETITIVE">Ranked y Versus · 40 cartas</option></select></label>
         <button type="button" className="db-back" onClick={leave}>
           <span aria-hidden="true">‹</span> {backLabel}
         </button>
@@ -938,11 +941,11 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
 
       {mobile&&<section className="m2-collection-purpose"><p>{tab==='COLLECTION'&&collectionScope==='owned'?'Tus copias poseídas; edita desde el detalle de cada carta.':`Editando ${saved.name} · los cambios se guardan solo al confirmar.`}</p>{tab==='COLLECTION'&&<div role="group" aria-label="Vista de colección"><button aria-pressed={collectionScope==='owned'} onClick={()=>setCollectionScope('owned')}>Todas mis cartas</button><button aria-pressed={collectionScope==='available'} onClick={()=>setCollectionScope('available')}>Disponibles para añadir</button></div>}</section>}
       <nav className="db-tabs" aria-label="Secciones">
-        <NeutralCounter count={status.neutralCards} limit={DECK_RULES.maxNeutralCards} compact />
+        <NeutralCounter count={status.neutralCards} limit={rules.maxNeutralCards} compact />
         <button type="button" aria-pressed={tab === 'DECK'} onClick={() => setTab('DECK')}>
           Mi mazo{' '}
           <span className={`db-count-inline size-${sizeState}`}>
-            {size}/{DECK_RULES.requiredSize}
+            {size}/{rules.requiredSize}
           </span>
         </button>
         <button
@@ -980,27 +983,29 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
               key={feedback?.kind === 'added' || feedback?.kind === 'removed' ? feedback.id : 0}
             >
               <strong>{size}</strong>
-              <span>/ {DECK_RULES.requiredSize}</span>
+              <span>/ {rules.requiredSize}</span>
             </div>
           </div>
-          <details className="db-planned-format"><summary>Formato competitivo previsto · {PLANNED_COMPETITIVE_DECK_SIZE} cartas</summary><p>Ranked y Versus: exactamente {PLANNED_COMPETITIVE_DECK_SIZE} en una entrega futura. Ahora se valida con las reglas vigentes ({DECK_RULES.requiredSize}). Historia conserva su formato.</p></details>
-          <NeutralCounter count={status.neutralCards} limit={DECK_RULES.maxNeutralCards} />
+          <p className="db-format-note">{format==='COMPETITIVE'?'Ranked y Versus: exactamente 40 cartas. Historia conserva 30. Cambiar formato no añade ni retira cartas.':'Historia: 30 cartas. Para Ranked y Versus selecciona el formato de 40 cartas.'}</p>
+          <NeutralCounter count={status.neutralCards} limit={rules.maxNeutralCards} />
           <div
             className={`db-meter size-${sizeState}`}
             role="meter"
             aria-label="Cartas en el mazo"
             aria-valuemin={0}
-            aria-valuemax={DECK_RULES.requiredSize}
+            aria-valuemax={rules.requiredSize}
             aria-valuenow={size}
           >
-            <span style={{ width: `${Math.min(100, (size / DECK_RULES.requiredSize) * 100)}%` }} />
+            <span style={{ width: `${Math.min(100, (size / rules.requiredSize) * 100)}%` }} />
           </div>
 
           <p className={`db-missing size-${sizeState}`} role="status">
             {status.missingCount
               ? `Falta${status.missingCount === 1 ? '' : 'n'} ${status.missingCount} carta${status.missingCount === 1 ? '' : 's'}`
-              : status.valid
-                ? `${DECK_RULES.requiredSize} / ${DECK_RULES.requiredSize} ✓ Listo para jugar`
+              : size > rules.requiredSize
+                ? `Sobran ${size-rules.requiredSize} carta${size-rules.requiredSize===1?'':'s'}`
+                : status.valid
+                ? `${rules.requiredSize} / ${rules.requiredSize} ✓ Listo para jugar`
                 : 'Revisa las cartas del mazo'}
           </p>
           {dropMessage('deck') && <p className="db-drop-hint">{dropMessage('deck')}</p>}
@@ -1044,7 +1049,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             {savedLegacy && (
               <p
                 className="db-legacy"
-                data-legacy-missing={DECK_RULES.requiredSize - deckSize(saved.cards)}
+                data-legacy-missing={rules.requiredSize - deckSize(saved.cards)}
               >
                 Este es tu mazo anterior de 20 cartas. No hemos cambiado ninguna carta. Añade 10
                 cartas para actualizarlo al nuevo formato de 30.
@@ -1147,7 +1152,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
                 heroId,
                 owned,
                 DEFAULT_CONTENT,
-                DECK_RULES,
+                rules,
               )}
               heroName={heroDef.name}
               context={detailContext}
@@ -1167,7 +1172,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
         </DetailDialog>
       )}
       {marketExpansion&&<DeckMarket expansionId={marketExpansion} mobile={mobile} onClose={()=>setMarketExpansion(null)}/>}
-      {autoOpen&&<AutoDeckBuilder heroId={heroId} onClose={()=>setAutoOpen(false)} onApply={cards=>{setDraft(cards.map(e=>({...e})));setAutoApplied(true);setTab('DECK');setInspected(cards[0]?.cardId??null);setDetailOpen(false);say('','added','Propuesta aplicada al borrador. Pulsa Guardar mazo para conservarla.');}}/>}
+      {autoOpen&&<AutoDeckBuilder rules={rules} heroId={heroId} onClose={()=>setAutoOpen(false)} onApply={cards=>{setDraft(cards.map(e=>({...e})));setAutoApplied(true);setTab('DECK');setInspected(cards[0]?.cardId??null);setDetailOpen(false);say('','added','Propuesta aplicada al borrador. Pulsa Guardar mazo para conservarla.');}}/>}
       {starterConfirm && (
         <StarterDialog onConfirm={loadStarter} onClose={() => setStarterConfirm(false)} />
       )}

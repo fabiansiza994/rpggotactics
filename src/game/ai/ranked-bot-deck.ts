@@ -6,9 +6,12 @@ import {
   removeCard,
   validateDeck,
   copyLimit,
+  addCardIssue,
+  deckSize,
   type DeckEntry,
 } from "../collection/deck-rules";
-import { DECK_RULES } from "../data/rules";
+import {DECK_RULES as STORY_RULES} from "../data/rules";
+import {COMPETITIVE_DECK_RULES as DECK_RULES} from "../collection/deck-formats";
 import type { BotIdentity } from "./ranked-bot-policy";
 const noise = (seed: number, id: string) => {
   let n = seed >>> 0;
@@ -32,8 +35,14 @@ export function botDeck(content: GameContent, bot: BotIdentity): DeckEntry[] {
   const owned = (id: string) =>
     content.cards[id] ? copyLimit(content.cards[id]!, DECK_RULES) : 0;
   let deck = starterDeck(hero);
-  if (validateDeck(deck, bot.heroId, owned, content, DECK_RULES).length)
+  if (validateDeck(deck, bot.heroId, owned, content, STORY_RULES).length)
     throw Error("BOT_STARTER_ILLEGAL");
+  const fillers=[...pool].sort((a,b)=>noise(bot.seed,a.id)-noise(bot.seed,b.id)||a.id.localeCompare(b.id));
+  while(deckSize(deck)<DECK_RULES.requiredSize){
+    const next=fillers.find(c=>!addCardIssue(deck,c.id,bot.heroId,owned,content,DECK_RULES));
+    if(!next)throw Error('BOT_COLLECTION_TOO_SMALL');
+    deck=addCard(deck,next.id);
+  }
   // Advanced ritual templates are coherent packages, not isolated high-rarity cards.
   const requiredPieces = new Set<string>();
   if (

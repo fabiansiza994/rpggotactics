@@ -1,3 +1,5 @@
+import{competitiveFixture}from'./support/competitive-profile';
+import{createPlayer}from'../server/src/repo';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { DEFAULT_CONTENT } from "../src/game";
@@ -114,7 +116,7 @@ async function call(
 
 async function player(name: string) {
   const account = addAccount(db, name);
-  expect((await call(account.token, "POST", "/profile", {})).status).toBe(200);
+  const profile=competitiveFixture().profile;for(const hero of ['mage','summoner']){profile.heroes[hero]=competitiveFixture(hero).profile.heroes[hero]!;profile.heroes[hero]!.activeDeckId='competitive';}await createPlayer(db,account.id,name,profile,[],{source:'STARTER',importedAt:null,now:Date.now()});
   return { ...account, name };
 }
 type Player = Awaited<ReturnType<typeof player>>;
@@ -325,7 +327,7 @@ describe("ranked queue v0.1 (first available → first paired)", () => {
     expect(r.ranked!.rp).toEqual([0, 0]);
     expect(r.members.map((m) => m.id)).toEqual([alice.id, bob.id]);
     expect(r.members[0]!.loadout.cards.reduce((n, e) => n + e.count, 0)).toBe(
-      30,
+      40,
     ); // stored deck, not the forged one
     expect((await me(alice)).rp).toBe(0);
     expect((await me(bob)).rp).toBe(0);
@@ -593,4 +595,8 @@ describe("ranked results (server-decided, applied once per matchId)", () => {
         .matches,
     ).toBe(1);
   });
+});
+
+it('Deck-Out records authoritative winner and Ranked rewards once, including restart',async()=>{
+ const[a,b]=[await player('deckout_a'),await player('deckout_b')];const{room}=await started(a,b,['mage','mage']);const r=room.data.get('room')as Room;const game=r.game!;game.player.deck=[];game.player.hand=[];game.duel!.other.deck=[];game.duel!.other.hand=[];game.duel!.turns=2;const seat=game.duel!.active, loser=1-seat, winner=r.members[seat]!.id!;room.live=room.make();await Promise.resolve();await Promise.resolve();await room.live.webSocketMessage(sock(room.sockets[seat]!),JSON.stringify({id:'draw-empty',version:r.version,command:{type:'END_TURN'}}));const done=room.data.get('room')as Room;expect(done.result).toMatchObject({winner,loser:r.members[loser]!.id,reason:'DECK_OUT'});expect(rpOf(winner)).toBe(20);expect(count('tactics_ranked_results')).toBe(2);const before=count('tactics_pvp_match_players');await room.make().alarm();expect(count('tactics_pvp_match_players')).toBe(before);expect(rpOf(winner)).toBe(20);expect((await me(a)).wins+(await me(b)).wins).toBe(1);
 });

@@ -45,7 +45,7 @@ describe("Auto-builder editor integration safety contracts", () => {
     expect(s).toContain("setDraft(cards.map");
     expect(s).toContain("setAutoApplied(true)");
     expect(s).toContain("autoApplied || !sameDeck(draft, saved.cards)");
-    expect(s).toContain("saveDeck(heroId, draft, deckId)");
+    expect(s).toContain("saveDeck(heroId, draft, deckId,format)");
     expect(s).toContain("setAutoApplied(false)");
     expect(s).toContain("registerPlayNavigationGuard");
     expect(s).toContain("<LeaveDialog");

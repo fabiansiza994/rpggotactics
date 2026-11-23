@@ -1,3 +1,4 @@
+import {storedDeckRules,type DeckFormat} from '../../game/collection/deck-formats';
 import {drawRitual,classifyDraws} from '../cards/drawRitual';
 import { pairTargets, planCardSelection, type PairSelection } from '../input/pairSelection';
 import { saveQaCampaignTransition } from './campaignStorage';
@@ -258,7 +259,7 @@ interface BattleStore {
   /** Persist the champion for selectable modes (Skirmish, future PvP). Campaign keeps its own hero. */
   selectChampion(championId: string): void;
   /** Validate and persist one of the hero's decks (default deck when `deckId` is omitted). */
-  saveDeck(heroId: string, cards: readonly DeckEntry[], deckId?: string): Promise<SaveDeckResult>;
+  saveDeck(heroId: string, cards: readonly DeckEntry[], deckId?: string,format?:DeckFormat): Promise<SaveDeckResult>;
   /**
    * "Mis Mazos" (max DEFAULT_DECK_SLOTS_PER_CHAMPION per champion). Guest: local profile;
    * account: the server decides (limits hold across devices). List with `deckSummaries`.
@@ -765,13 +766,13 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       : { ok: false, error: 'CLOUD', message: get().cloud.error ?? 'No se pudo guardar en la nube.' };
   }
 
-  function localDeckIssues(heroId: string, cards: readonly DeckEntry[]): DeckIssue[] {
+  function localDeckIssues(heroId: string, cards: readonly DeckEntry[],format?:DeckFormat): DeckIssue[] {
     return validateDeck(
       cards,
       heroId,
       ownedFor(get().profile, heroId, DEFAULT_CONTENT),
       DEFAULT_CONTENT,
-      DECK_RULES,
+      storedDeckRules(cards,format),
     );
   }
 
@@ -1212,19 +1213,19 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       else commitProfile(result.profile);
     },
 
-    async saveDeck(heroId, cards, chosenDeckId) {
+    async saveDeck(heroId, cards, chosenDeckId,format) {
       if (!championUsableIn(get(), heroId)) return { ok: false, issues: [], error: 'Todavía no has desbloqueado este campeón.' };
-      const issues = localDeckIssues(heroId, cards);
+      const issues = localDeckIssues(heroId, cards,format);
       if (issues.length) return { ok: false, issues };
       const deckId = chosenDeckId ?? activeDeck(heroProfile(get().profile, heroId, DEFAULT_CONTENT)).id;
       if (!cloudActive(get())) {
-        const result = updateDeck(get().profile, heroId, deckId, cards, DEFAULT_CONTENT, DECK_RULES, Date.now());
+        const result = updateDeck(get().profile, heroId, deckId, cards, DEFAULT_CONTENT, storedDeckRules(cards,format), Date.now());
         if (!result.ok) return { ok: false, issues: result.issues ?? [], error: result.error === 'UNKNOWN_DECK' ? 'Ese mazo no existe.' : undefined };
         commitProfile(result.profile);
         return { ok: true };
       }
       const saved = await cloudStep('Guardar mazo', (t) =>
-        tacticsApi.saveDeck(t, heroId, deckId, cards),
+        tacticsApi.saveDeck(t, heroId, deckId, cards,format),
       );
       return saved
         ? { ok: true }
@@ -1237,7 +1238,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       return deckAction(
         heroId,
         'Crear mazo',
-        () => createDeckOp(get().profile, heroId, input, DEFAULT_CONTENT, DECK_RULES, Date.now()),
+        () => createDeckOp(get().profile, heroId, input, DEFAULT_CONTENT, storedDeckRules(input.cards??[]), Date.now()),
         (t) => tacticsApi.createDeck(t, heroId, { ...input, requestId }),
       );
     },

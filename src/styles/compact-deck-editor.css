@@ -100,3 +100,8 @@
 .mobile-shell .deckbuilder.db-compact-editor[data-collection-view=owned] .db-detail-actions{display:grid;}
 @media(max-width:767px){.db-compact-editor>.db-actions .db-btn{font-size:12px;}.db-owned-badge{font-size:11px;padding:2px 4px;}}
 .mobile-shell .m2-cards:has(>.db-compact-editor){height:100%;min-height:0;display:grid;grid-template-rows:minmax(0,1fr);overflow:hidden;}
+
+.db-compact-editor .db-format-selector{font-size:11px;grid-column:1/-1;display:flex;align-items:center;gap:8px;min-width:0;}
+.db-compact-editor .db-format-selector select{min-width:0;max-width:100%;background:#102233;color:#eadcbb;min-height:36px;border:1px solid #80734e;border-radius:6px;}
+.db-compact-editor .db-format-note{font-size:11px;color:#c7bb9f;margin:3px 0;}
+@media(max-width:767px){.db-compact-editor .db-header>.db-format-selector{grid-row:3;}.db-compact-editor .db-header{grid-template-rows:auto auto auto;}}

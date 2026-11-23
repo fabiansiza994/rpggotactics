@@ -142,6 +142,7 @@ export function releaseRitualPiece(ctx: RuleContext, cardUid: string): RuleResul
   const card = altarOf(player).find((c) => c.uid === cardUid);
   if (!card) return fail('PIECE_NOT_ON_ALTAR', 'Esa pieza no está en tu altar.');
   player.altar = altarOf(player).filter((c) => c.uid !== cardUid);
+  delete card.publicDiscard;
   player.discard.push(card);
   ctx.emit({ type: 'RITUAL_PIECE_RELEASED', casterId: who.caster.id, cardUid: card.uid, cardId: card.cardId, altarSize: player.altar.length });
   return OK;
@@ -201,6 +202,7 @@ export function activateRitual(ctx: RuleContext, ritualId: string, target: Pos |
     consumed.push(card);
   }
   player.altar = altar;
+  for(const c of consumed)c.publicDiscard=true;
   player.discard.push(...consumed);
   player.ritualsResolved = [...(player.ritualsResolved ?? []), ritual.id];
   ctx.emit({

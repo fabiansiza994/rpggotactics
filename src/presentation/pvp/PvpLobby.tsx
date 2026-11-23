@@ -11,7 +11,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { activeDeck, DECK_RULES, deckSize, heroProfile } from "../../game";
+import { activeDeck, COMPETITIVE_DECK_RULES as DECK_RULES, deckSize, heroProfile } from "../../game";
 import { type PvpMode } from "../../game/pvp/dominion";
 import {
   PVP_MAPS,
@@ -236,13 +236,13 @@ export function PvpLobby(props: Props) {
   const deck =
     heroDecks.decks.find((d) => d.id === deckId) ?? activeDeck(heroDecks);
   const selectedDeck = decks?.find(d => d.deckId === deckId);
-  const deckValid = decks ? !!selectedDeck?.valid : true;
-  const deckCards = deckSize(deck.cards);
+  const deckCards = selectedDeck?.cardCount ?? deckSize(deck.cards);
+  const deckValid = deckCards === DECK_RULES.requiredSize && (decks ? !!selectedDeck?.valid : true);
   function activeDeckInfo(className: string) {
     return <div className={`${className} pvp-active-deck`} aria-label="Mazo activo">
       <span>Mazo activo: {selectedDeck?.name ?? (decks ? 'No disponible' : deck.name)} · {selectedDeck?.cardCount ?? deckCards}/{selectedDeck?.maxCards ?? DECK_RULES.requiredSize}</span>
       {!deckValid && <>
-        <small role="status">El mazo activo no es válido para este campeón. Configúralo en Cartas antes de jugar.</small>
+        <small role="status">{deckCards<DECK_RULES.requiredSize?`Faltan ${DECK_RULES.requiredSize-deckCards} cartas. `:deckCards>DECK_RULES.requiredSize?`Sobran ${deckCards-DECK_RULES.requiredSize} cartas. `:''}El mazo activo no es válido para este campeón. Configúralo en Cartas antes de jugar.</small>
         <button type="button" disabled={!onCards || loadoutLocked || !!room} onClick={onCards}>Configurar en Cartas</button>
         {!!room && <small>Sal de la sala para configurar tu mazo.</small>}
       </>}

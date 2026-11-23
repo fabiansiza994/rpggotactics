@@ -1,3 +1,4 @@
+import {COMPETITIVE_DECK_RULES,storedDeckRules} from './deck-formats';
 import { requireDef, type GameContent } from '../domain/content';
 import { deckSize, deckStatus, validateDeck, type DeckEntry, type DeckIssue, type DeckRules } from './deck-rules';
 import { heroProfile, ownedFor, starterDeck, type HeroProfile, type PlayerProfile, type SavedDeck } from './profile';
@@ -31,6 +32,8 @@ export interface ChampionDeckSummary {
   maxCards: number;
   /** Legal right now (size, ownership, Única/Ultra/neutral limits). PvP and Ranked require it. */
   valid: boolean;
+  storyValid?: boolean;
+  competitiveValid?: boolean;
   isDefault: boolean;
   /** Epoch ms; absent for a starter deck that was never stored. */
   createdAt?: number;
@@ -193,4 +196,10 @@ export function setDefaultDeck(profile: PlayerProfile, heroId: string, deckId: s
   const hero = heroProfile(profile, heroId, content);
   if (!findDeck(hero, deckId)) return { ok: false, error: 'UNKNOWN_DECK' };
   return { ok: true, deckId, profile: withHero(profile, { ...hero, activeDeckId: deckId }) };
+}
+
+/** Editor/storage may retain either format; admission still checks its own mode explicitly. */
+export function formatDeckSummaries(profile:PlayerProfile,heroId:string,content:GameContent,rules:DeckRules):ChampionDeckSummary[]{
+ const hero=heroProfile(profile,heroId,content),owned=ownedFor(profile,heroId,content);
+ return deckSummaries(profile,heroId,content,rules).map(summary=>{const cards=hero.decks.find(d=>d.id===summary.deckId)!.cards,selected=storedDeckRules(cards);return{...summary,maxCards:selected.requiredSize,valid:deckStatus(cards,heroId,owned,content,selected).valid,storyValid:deckStatus(cards,heroId,owned,content,rules).valid,competitiveValid:deckStatus(cards,heroId,owned,content,COMPETITIVE_DECK_RULES).valid};});
 }

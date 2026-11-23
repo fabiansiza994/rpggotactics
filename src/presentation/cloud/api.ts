@@ -1,3 +1,4 @@
+import type {DeckFormat} from '../../game';
 import type { ChampionDeckSummary, DeckEntry, PlayerProfile, RunState, VictoryProof, WorldView } from '../../game';
 import { CLOUD_CONFIG } from './config';
 import { request, type CloudResult } from './http';
@@ -94,9 +95,9 @@ export const tacticsApi = {
   unlockChampion: (token: string, heroId: string) => api(token, 'POST', '/champions/unlock', { heroId }),
   setChampion: (token: string, championId: string) =>
     api(token, 'PUT', '/champion', { championId }),
-  saveDeck: (token: string, heroId: string, deckId: string, cards: readonly DeckEntry[]) =>
+  saveDeck: (token: string, heroId: string, deckId: string, cards: readonly DeckEntry[],format?:DeckFormat) =>
     api(token, 'PUT', `/decks/${encodeURIComponent(heroId)}/${encodeURIComponent(deckId)}`, {
-      cards,
+      cards, ...(format?{format}:{}),
     }),
   /**
    * Multi-deck (server/src/decks.ts). Mutations return the full state plus `deckId` (the deck

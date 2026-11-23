@@ -90,14 +90,7 @@ export function updateObjectives(ctx: RuleContext): boolean {
     const own = state.units.some(u => u.id === state.player.heroId);
     const rival = state.units.some(u => u.id === state.duel!.other.heroId);
     if (own && rival) return false;
-    state.outcome = { result: own ? 'WON' : 'LOST', reason: 'HERO_DEFEATED' };
-    state.phase = 'ENDED';
-    pruneBloodTrails(state);
-  pruneLifeFeathers(state);pruneScoutResources(state);
-    clearBattleForms(state, ctx.content);
-    clearTurtleHobble(state);
-    ctx.emit({ type: own ? 'BATTLE_WON' : 'BATTLE_LOST', outcome: state.outcome });
-    return true;
+    return finishBattle(ctx,{result:own?'WON':'LOST',reason:'HERO_DEFEATED'});
   }
 
   // Interactive battlefield first: plates/gates settle before objectives read them (PvE only).
@@ -119,12 +112,14 @@ export function updateObjectives(ctx: RuleContext): boolean {
   }
 
   if (!outcome) return false;
-  state.outcome = outcome;
-  state.phase = 'ENDED';
-  pruneBloodTrails(state);
-  pruneLifeFeathers(state);pruneScoutResources(state);
-  clearBattleForms(state, ctx.content);
-    clearTurtleHobble(state);
-  ctx.emit({ type: outcome.result === 'WON' ? 'BATTLE_WON' : 'BATTLE_LOST', outcome } as const);
-  return true;
+  return finishBattle(ctx,outcome);
+}
+/** Shared terminal transition; Deck-Out changes no HP and emits the result exactly once. */
+export function finishBattle(ctx:RuleContext,outcome:BattleOutcome):boolean{
+ const {state}=ctx;if(state.outcome)return false;
+ state.outcome=outcome;state.phase='ENDED';
+ pruneBloodTrails(state);pruneLifeFeathers(state);pruneScoutResources(state);
+ clearBattleForms(state,ctx.content);clearTurtleHobble(state);
+ ctx.emit({type:outcome.result==='WON'?'BATTLE_WON':'BATTLE_LOST',outcome});
+ return true;
 }

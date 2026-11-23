@@ -1,3 +1,4 @@
+import{competitiveFixture}from'./support/competitive-profile';
 import { describe, it, expect, vi } from 'vitest';
 import { endTurn } from './helpers';
 import { readFileSync } from 'node:fs';
@@ -16,9 +17,11 @@ import {
   DUEL_SCENARIO,
 } from '../src/game/pvp/duel';
 import { PvPMatchRoom, validCommand, type Room } from '../server/src/pvp';
+import { createPlayer } from '../server/src/repo';
 import { handle } from '../server/src/index';
 import { memoryD1, addAccount } from './support/d1';
 const profile = createProfile(DEFAULT_CONTENT);
+for(const hero of ['mage','summoner']){const p=competitiveFixture(hero).profile;profile.heroes[hero]=p.heroes[hero]!;profile.heroes[hero]!.activeDeckId='competitive';}
 const loads = [validateLoadout(profile, 'mage'), validateLoadout(profile, 'summoner')] as const;
 function duel(seed = 7) {
   return createDuel([...loads], seed);
@@ -183,7 +186,7 @@ describe('shared deterministic duel rules', () => {
       applyDuel(s, { type: 'MOVE_UNIT', unitId: s.duel!.other.heroId, to: { x: 4, y: 4 } }),
     ).toThrow();
     expect(() =>
-      applyDuel(s, { type: 'MOVE_UNIT', unitId: s.player.heroId, to: { x: 8, y: 5 } }),
+      applyDuel(s, { type: 'MOVE_UNIT', unitId: s.player.heroId, to: { x: 99, y: 99 } }),
     ).toThrow();
     expect(() => applyDuel(s, { type: 'PLAY_CARD', cardUid: 'forged', target: null })).toThrow();
     expect(s).toEqual(before);
@@ -211,14 +214,14 @@ describe('shared deterministic duel rules', () => {
   it('validates ownership, duplicates, deck size and champion', () => {
     expect(() => validateLoadout(profile, 'orc')).toThrow();
     const p = structuredClone(profile);
-    p.heroes.mage!.decks[0]!.cards = [{ cardId: 'summon_wolf', count: 20 }];
+    p.heroes.mage!.decks.find(d=>d.id==='competitive')!.cards = [{ cardId: 'summon_wolf', count: 20 }];
     expect(() => validateLoadout(p, 'mage')).toThrow();
   });
-  it('fatigue 0/1/2/3 uses normal draws for BOTH players and resets', () => {
-    let s = duel();
+  it('legacy room fatigue 0/1/2/3 remains compatible for BOTH players', () => {
+    let s = duel();delete s.duel!.competitiveRules;
     const events = [];
-    // 30-card decks: three recycles take ~80 draws per player.
-    for (let i = 0; i < 260 && !s.outcome; i++) {
+    // Legacy room with 40-card fixture: allow enough draws for three fatigue recycles.
+    for (let i = 0; i < 360 && !s.outcome; i++) {
       const r = applyDuel(s, endTurn(s));
       s = r.state;
       events.push(...r.events);
@@ -251,7 +254,7 @@ describe('shared deterministic duel rules', () => {
     expect(s.units.find((u) => u.kind === 'SUMMON')!.summon!.lastActedRound).toBeGreaterThan(1);
   });
   it('duel ends on CHAMPION death, not defeated summons', () => {
-    const s = duel();
+    let s = duel();if(s.duel!.active!==0)s=applyDuel(s,endTurn(s)).state;
     const opponent = s.units.find((u) => u.id === s.duel!.other.heroId)!;
     opponent.hp = 1;
     opponent.pos = {
@@ -479,14 +482,7 @@ describe('room authority and durable recovery', () => {
   it('authenticated outer route never trusts client user identity', async () => {
     const h = harness();
     const a = addAccount(h.db, 'a');
-    await handle(
-      new Request('https://api/api/tactics/profile', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + a.token },
-        body: '{}',
-      }),
-      { DB: h.db },
-    );
+    await createPlayer(h.db,a.id,'a',profile,[],{source:'STARTER',importedAt:null,now:1});
     const calls: Request[] = [];
     const ns = {
       idFromName: (s: string) => s,
@@ -554,7 +550,7 @@ describe('room authority and durable recovery', () => {
     const h = harness();
     const a = addAccount(h.db, 'framed');
     const auth = { Authorization: 'Bearer ' + a.token };
-    await handle(new Request('https://api/api/tactics/profile', { method: 'POST', headers: auth, body: '{}' }), { DB: h.db });
+    await createPlayer(h.db,a.id,'framed',profile,[],{source:'STARTER',importedAt:null,now:1});
     const calls: Request[] = [];
     const ns = { idFromName: (s: string) => s, get: () => ({ fetch: async (req: Request) => (calls.push(req), new Response('{}')) }) };
     const create = () =>

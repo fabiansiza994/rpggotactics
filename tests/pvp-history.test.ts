@@ -1,3 +1,4 @@
+import{competitiveFixture}from'./support/competitive-profile';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createProfile, DEFAULT_CONTENT } from '../src/game';
@@ -8,6 +9,7 @@ import { matchPlayerStatements, HISTORY_PAGE_SIZE, type FinishedMatch } from '..
 import { memoryD1, addAccount } from './support/d1';
 
 const profile = createProfile(DEFAULT_CONTENT);
+for(const hero of ['mage','summoner']){const p=competitiveFixture(hero).profile;profile.heroes[hero]=p.heroes[hero]!;profile.heroes[hero]!.activeDeckId='competitive';}
 type DB = ReturnType<typeof memoryD1>;
 
 function database() {

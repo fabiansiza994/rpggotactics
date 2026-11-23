@@ -45,6 +45,7 @@ export function discardForHandLimit(ctx: RuleContext, discardUid: string | undef
   const i = player.hand.findIndex((c) => c.uid === discardUid);
   if (i < 0) return;
   const [card] = player.hand.splice(i, 1);
+  delete card!.publicDiscard;
   player.discard.push(card!);
   ctx.emit({ type: 'CARD_DISCARDED', cardUid: card!.uid, cardId: card!.cardId, reason: 'HAND_LIMIT' });
 }

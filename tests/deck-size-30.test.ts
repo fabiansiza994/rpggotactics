@@ -1,3 +1,4 @@
+import{competitiveFixture}from'./support/competitive-profile';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   activeDeck,
@@ -364,10 +365,11 @@ describe('ritual decks at 30', () => {
   });
 });
 
-describe('PvP validates exactly 30 server-side', () => {
-  it('validateLoadout: 30 accepted; 20 (legacy), 29 and 31 rejected', () => {
+describe('PvP validates exactly 40 while Story stays 30', () => {
+  it('validateLoadout: 40 accepted; Story 30 and legacy sizes rejected', () => {
     const p = createProfile(C);
-    expect(deckSize(validateLoadout(p, 'mage').cards)).toBe(30);
+    expect(()=>validateLoadout(p,'mage')).toThrow('INVALID_DECK');
+    expect(deckSize(validateLoadout(competitiveFixture().profile,'mage',C,'competitive').cards)).toBe(40);
     const withDeck = (cards: DeckEntry[]): PlayerProfile => ({
       ...p,
       heroes: { ...p.heroes, mage: { ...p.heroes.mage!, decks: [{ id: 'main', name: 'x', cards }] } },
@@ -390,13 +392,13 @@ describe('PvP validates exactly 30 server-side', () => {
     const res = await pvpRoute(req('mage'), env as never, { userId: id, username: 'pvp_legacy' });
     expect(res.status).toBe(422);
     const body = (await res.json()) as { error: { code: string; message: string; totalCards: number } };
-    expect(body.error).toMatchObject({ code: 'INVALID_DECK', totalCards: 20, requiredCards: 30 });
-    expect(body.error.message).toContain('20/30');
+    expect(body.error).toMatchObject({ code: 'INVALID_DECK', totalCards: 20, requiredCards: 40 });
+    expect(body.error.message).toContain('20/40');
     expect(forwarded).toBe(0);
-    // A 30-card deck (the Summoner's untouched starter in that save) reaches the room.
+    // A preserved Story starter remains invalid for competitive admission.
     const ok = await pvpRoute(req('summoner'), env as never, { userId: id, username: 'pvp_legacy' });
-    expect(ok.status).toBe(200);
-    expect(forwarded).toBe(1);
+    expect(ok.status).toBe(422);
+    expect(forwarded).toBe(0);
   });
 });
 

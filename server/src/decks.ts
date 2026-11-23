@@ -1,7 +1,8 @@
 import {
   copyName,
   DECK_RULES,
-  deckSummaries,
+  storedDeckRules,
+  formatDeckSummaries as deckSummaries,
   DEFAULT_DECK_SLOTS_PER_CHAMPION,
   heroProfile,
   NEW_DECK_NAME,
@@ -147,6 +148,7 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
   if (!m) return null;
   const [, heroId, deckId, action] = m as unknown as [string, string, string | undefined, string | undefined];
   const { db, userId, content, body } = ctx;
+  if(body.format!==undefined&&body.format!=='STORY'&&body.format!=='COMPETITIVE')return error(400,'BAD_REQUEST','Formato de mazo inválido.');
   if (!content.heroes[heroId]) return error(422, 'UNKNOWN_CHAMPION', 'Campeón desconocido.');
 
   if (method === 'GET' && !deckId)
@@ -174,7 +176,7 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
     else {
       const parsed = parseDeckCards(body.cards);
       if (!parsed) return error(400, 'BAD_REQUEST', 'Lista de cartas inválida.');
-      const issues = validateDeck(parsed, heroId, ownedFor(ctx.profile, heroId, content), content, DECK_RULES);
+      const issues = validateDeck(parsed, heroId, ownedFor(ctx.profile, heroId, content), content, storedDeckRules(parsed,body.format as 'STORY'|'COMPETITIVE'|undefined));
       if (issues.length) return error(422, 'INVALID_DECK', 'El mazo no es válido.', { issues });
       cards = parsed;
     }
@@ -236,7 +238,7 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
     const name = body.name === undefined ? source.name : normalizeDeckName(body.name);
     if (!name) return error(422, 'INVALID_NAME', 'Nombre de mazo inválido.');
     // Same rules as the Deck Builder, against the collection the SERVER holds.
-    const issues = validateDeck(cards, heroId, ownedFor(ctx.profile, heroId, content), content, DECK_RULES);
+    const issues = validateDeck(cards, heroId, ownedFor(ctx.profile, heroId, content), content, storedDeckRules(cards,body.format as 'STORY'|'COMPETITIVE'|undefined));
     if (issues.length) return error(422, 'INVALID_DECK', 'El mazo no es válido.', { issues });
     await write(ctx, heroId, () => [
       db.prepare(`DELETE FROM tactics_deck_cards WHERE ${where}`).bind(userId, heroId, deckId),

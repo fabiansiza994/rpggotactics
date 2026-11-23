@@ -310,3 +310,7 @@ export type {
 export type { InteractionOption } from './domain/mechanisms/mechanism-rules';
 export type { MechanismLink, MechanismView, MechanismVisual, MechanismVisualState } from './domain/mechanisms/mechanism-view';
 export { mechanismView } from './domain/mechanisms/mechanism-view';
+export {COMPETITIVE_DECK_RULES,deckRulesFor,savedDeckFormat,storedDeckRules} from './collection/deck-formats';
+export type {DeckFormat} from './collection/deck-formats';
+
+export {formatDeckSummaries} from './collection/decks';

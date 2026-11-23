@@ -4,7 +4,8 @@ import {pruneBloodTrails} from '../domain/combat/blood-trail';
 import {summonSearchChoices} from '../domain/cards/play-card';
 import { createDominion, refreshDominion, scoreDominion, type PvpMode } from './dominion';
 import { pvpMap, mapScenario, mapSpawns } from './maps';
-import { DEFAULT_CONTENT, DECK_RULES } from '../data';
+import {COMPETITIVE_DECK_RULES} from '../collection/deck-formats';
+import { DEFAULT_CONTENT } from '../data';
 import { withHeroDeck } from '../collection/profile';
 import { heroProfile, ownedFor, activeDeck, type PlayerProfile } from '../collection/profile';
 import { validateDeck, type DeckEntry } from '../collection/deck-rules';
@@ -37,6 +38,9 @@ export const DUEL_SCENARIO: ScenarioDef = {
   defaultSeed: 1,
 };
 export interface DuelMeta {
+  competitiveRules?: '40_DECK_OUT_V1';
+  /** Explicit winner: Deck-Out leaves both champions alive. */
+  winner?: 0|1;
   /** Absent in pre-release persisted games: preserve their original summon rules. */
   beastsRelease?: true;
   scoutSiegeRelease?: true;
@@ -67,7 +71,7 @@ export function validateLoadout(profile: PlayerProfile, heroId: unknown, content
   const hero = heroProfile(profile, heroId, content),
     deck = deckId === undefined || deckId === null ? activeDeck(hero) : hero.decks.find((d) => d.id === deckId);
   if (!deck) throw Error('UNKNOWN_DECK');
-  if (validateDeck(deck.cards, heroId, ownedFor(profile, heroId, content), content, DECK_RULES).length)
+  if (validateDeck(deck.cards, heroId, ownedFor(profile, heroId, content), content, COMPETITIVE_DECK_RULES).length)
     throw Error('INVALID_DECK');
   return { heroId, cards: structuredClone(deck.cards), deckId: deck.id };
 }
@@ -103,7 +107,7 @@ export function createDuel(
   a.units.push(heroB);
   a.rngState = b.rngState;
   a.nextId = Math.max(a.nextId, b.nextId) + 100;
-  a.duel = { scoutSiegeRelease:true, beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
+  a.duel = { competitiveRules:'40_DECK_OUT_V1', scoutSiegeRelease:true, beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
   if (randomInt(a, 2) === 1) swapDuelTurn(a);
   a.mapId = map.id;
   if (mode === 'DOMINION') a.dominion = createDominion(map.objectiveNodes);
@@ -184,6 +188,9 @@ export function duelView(
   if (meta.active !== seat)
     for (const u of view.units) u.faction = u.faction === 'PLAYER' ? 'ENEMY' : 'PLAYER';
   view.player = own;
+  view.competitiveRules = meta.competitiveRules;
+  // Only previously public identities may be disclosed. Hidden end-turn/overflow discards stay hidden.
+  view.opponentDiscard = rival.discard.filter(c=>c.publicDiscard===true);
   // Only the owner's active search card authorizes a private unordered candidate list.
   view.searchChoices = own.hand.some(c => content.cards[c.cardId]?.deckSearch)
     ? summonSearchChoices({...state, player: own, pileCounts: undefined}, content) : [];
@@ -197,8 +204,8 @@ export function duelView(
   if (state.outcome)
     view.outcome = {
       result: (
-        state.dominion?.winner !== null && state.dominion?.winner !== undefined
-          ? state.dominion.winner === seat
+        (meta.winner ?? state.dominion?.winner) !== null && (meta.winner ?? state.dominion?.winner) !== undefined
+          ? (meta.winner ?? state.dominion?.winner) === seat
           : state.units.some((u) => u.id === state.duel!.champions[seat])
       )
         ? 'WON'

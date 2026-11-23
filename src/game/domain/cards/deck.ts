@@ -1,3 +1,4 @@
+import {finishBattle} from '../objectives/objective-rules';
 import { getHero } from '../board/occupancy';
 import { dealDamage } from '../combat/damage';
 import type { RuleContext } from '../context';
@@ -30,8 +31,14 @@ export function drawCards(ctx: RuleContext, count: number): number {
   const { player } = ctx.state;
   let drawn = 0;
   for (let i = 0; i < count; i++) {
+    if(ctx.state.duel?.competitiveRules&&ctx.state.outcome)break;
     if (!getHero(ctx.state)) break;
     if (player.deck.length === 0) {
+      if(ctx.state.duel?.competitiveRules==='40_DECK_OUT_V1'){
+        ctx.state.duel.winner=ctx.state.duel.active===0?1:0;
+        finishBattle(ctx,{result:'LOST',reason:'DECK_OUT'});
+        break;
+      }
       if (player.discard.length === 0) break;
       player.deck = shuffleInPlace(ctx.state, player.discard);
       player.discard = [];
@@ -46,6 +53,7 @@ export function drawCards(ctx: RuleContext, count: number): number {
     }
     const card = player.deck.shift();
     if (!card) break;
+    delete card.publicDiscard;
     ctx.emit({ type: 'CARD_DRAWN', cardUid: card.uid, cardId: card.cardId });
     if (player.hand.length >= player.maxHandSize) {
       player.discard.push(card);

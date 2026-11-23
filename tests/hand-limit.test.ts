@@ -1,6 +1,6 @@
+import{competitiveFixture}from'./support/competitive-profile';
 import { describe, expect, it } from 'vitest';
 import {
-  createProfile,
   DEFAULT_CONTENT,
   fallbackDiscardUid,
   GameEngine,
@@ -186,8 +186,7 @@ describe('replay, PvP authority and fallback', () => {
   });
 
   const duelAtSix = () => {
-    const profile = createProfile(DEFAULT_CONTENT);
-    let s = createDuel([validateLoadout(profile, 'summoner'), validateLoadout(profile, 'mage')], 31);
+    let s = createDuel([validateLoadout(competitiveFixture('summoner').profile,'summoner',undefined,'competitive'), validateLoadout(competitiveFixture().profile,'mage',undefined,'competitive')], 31);
     // Both seats take their first turn (5 cards); the next active seat draws to 6.
     for (let i = 0; i < 2; i++) s = applyDuel(s, { type: 'END_TURN' }).state;
     expect(s.player.hand).toHaveLength(6);

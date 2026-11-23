@@ -232,6 +232,7 @@ export const OBJECTIVE_TAG: Record<ObjectiveDef['type'], string> = {
 
 export const OUTCOME_LABEL = {
   OBJECTIVES_COMPLETED: 'Objetivo cumplido',
+  DECK_OUT: 'Mazo agotado: no puede robar',
   HERO_DEFEATED: 'El Mago ha caído',
   PROTECTED_TARGET_DESTROYED: 'El cristal fue destruido',
   ROUND_LIMIT_REACHED: 'Se agotaron las rondas',

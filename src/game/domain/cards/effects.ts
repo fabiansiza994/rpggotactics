@@ -413,6 +413,7 @@ export function applyEffect(ectx: EffectContext, effect: EffectDef): void {
 /** Effects resolve in order; unit selection is re-evaluated per effect (after pushes, deaths…). */
 export function applyEffects(ectx: EffectContext, effects: readonly EffectDef[]): void {
   for (const effect of effects) {
+    if(ectx.ctx.state.outcome?.reason==='DECK_OUT')break;
     if (!ectx.ctx.state.units.includes(ectx.caster)) break;
     applyEffect(ectx, effect);
   }

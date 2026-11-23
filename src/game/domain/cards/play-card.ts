@@ -158,6 +158,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
 
   if (found) {
     player.deck = player.deck.filter(c => c.uid !== found.uid);
+    delete found.publicDiscard;
     found.unavailableThisTurn = true;
     if(typeof def.deckSearch==='object'){
       (player.searchUsesThisTurn??={})[def.id]=(player.searchUsesThisTurn?.[def.id]??0)+1;
@@ -169,6 +170,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   if (fromDiscard) {
     // Same lock as the deck search: not playable and not sealable until the next own turn.
     player.discard = player.discard.filter(c => c.uid !== fromDiscard.uid);
+    delete fromDiscard.publicDiscard;
     fromDiscard.unavailableThisTurn = true;
     player.hand.push(fromDiscard);
     // CARD_DRAWN is private in PvP (duelEvents hides it from the rival).
@@ -183,6 +185,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     (player.banished ??= []).push(card);
     ctx.emit({ type: 'CARD_BANISHED', cardUid: card.uid, cardId: def.id });
   } else {
+    card.publicDiscard=true;
     player.discard.push(card);
     ctx.emit({ type: 'CARD_DISCARDED', cardUid: card.uid, cardId: def.id, reason: 'PLAYED' });
   }

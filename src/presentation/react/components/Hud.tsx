@@ -1,3 +1,4 @@
+import {BattlePileBank} from '../../battle/BattlePileZones';
 import {worldFrozenCard} from '../../../game/domain/cards/world-frozen';
 import {WinterAtmosphere} from './WinterAtmosphere';
 import '../../../styles/legendary-status.css';
@@ -8,7 +9,6 @@ import { CardActivationLabel } from './CardActivationLabel';
 import { mobileCombat, mobileEndTurnAllowed } from '../mobileCombat';
 import { isActionableTile } from '../../input/aim';
 import { BattleResultPresentation } from '../../results/BattleResultPresentation';
-import { EquippedCardBack } from '../../cosmetics/CardBack';
 import '../../../styles/combat-clarity.css';
 import type { CombatPhase } from '../../combat/clarity';
 import { ResolvingCardPreview } from './ResolvingCardPreview';
@@ -309,14 +309,9 @@ export function EnemyPanel({
 export function HandBar({ state, engine }: { state: Readonly<GameState>; engine: GameEngine }) {
   const footerRef = useRef<HTMLElement>(null);
   const drawVisual=useDrawVisual();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const [pile, setPile] = useState<'deck' | 'discard' | null>(null);
   // PvP rebuilds its read-only engine on every authoritative snapshot, not a new battle.
   const online = useBattleStore((s) => s.onlineCommand !== null);
   const activationBattle = online ? null : engine;
-  useEffect(() => {
-    if (pile && !dialogRef.current?.open) dialogRef.current?.showModal();
-  }, [pile]);
   useEffect(() => {
     const footer = footerRef.current;
     if (!footer) return;
@@ -431,16 +426,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         <button type="button" disabled={busy} onClick={() => useBattleStore.getState().cancelPairTarget()}>Cambiar primer objetivo</button>
       </div>}
       {discarding && <HandDiscardBar state={state} />}
-      <button
-        type="button"
-        className="pile pile-deck"
-        aria-label={`Mazo: ${state.pileCounts?.deck ?? state.player.deck.length} cartas`}
-        onClick={() => setPile('deck')}
-      >
-        <EquippedCardBack />
-        <span className="pile-count">{state.pileCounts?.deck ?? state.player.deck.length}</span>
-        <span className="pile-label">Mazo</span>
-      </button>
+      <BattlePileBank state={state} content={engine.content}/>
       <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''}`}>
         {dealt &&
           state.player.hand.map((card, i) => {
@@ -506,50 +492,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           <kbd>E</kbd>
         </button>
       </div>
-      <button
-        type="button"
-        className="pile pile-discard"
-        aria-label={`Descartes: ${state.player.discard.length} cartas`}
-        onClick={() => setPile('discard')}
-      >
-        <GameIcon name="discard" />
-        <span className="pile-count">{state.player.discard.length}</span>
-        <span className="pile-label">Descartes</span>
-      </button>
-      {pile && (
-        <dialog
-          className="pile-dialog"
-          ref={dialogRef}
-          onClose={() => setPile(null)}
-          onCancel={() => setPile(null)}
-          aria-label={pile === 'deck' ? 'Cartas en el mazo' : 'Cartas descartadas'}
-        >
-          <h2>{pile === 'deck' ? 'Mazo' : 'Descartes'}</h2>
-          <p>
-            Al agotarse el mazo se baraja el descarte. Primer reciclaje gratis; después, Fatiga
-            Arcana 1, 2, 3…
-          </p>
-          <p>
-            Reciclajes: {state.player.deckRecycles} · Próxima fatiga: {state.player.deckRecycles}
-          </p>
-          <ul>
-            {state.player[pile].map((card) => (
-              <li key={card.uid}>
-                {engine.content.cards[card.cardId]?.name} · coste{' '}
-                {engine.content.cards[card.cardId]?.cost}
-              </li>
-            ))}
-          </ul>
-          {pile === 'deck' && state.pileCounts ? (
-            <p>El orden del mazo lo conserva el servidor.</p>
-          ) : (
-            state.player[pile].length === 0 && <p>No hay cartas.</p>
-          )}
-          <button type="button" autoFocus onClick={() => setPile(null)}>
-            Cerrar
-          </button>
-        </dialog>
-      )}
+      <BattlePileBank state={state} content={engine.content} opponent/>
+
     </footer>
   );
 }
