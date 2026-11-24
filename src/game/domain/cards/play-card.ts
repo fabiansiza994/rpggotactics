@@ -1,4 +1,5 @@
-import { exchangeHandCard } from './hand-trade';
+import {hasLegalSilenceResponse} from './silence-eligibility';
+import { exchangeHandCard, cardClassAllowed } from './hand-trade';
 import { missingRivalZone } from './rival-zones';
 import { resurrectionChoices } from './resurrection';
 import { triggerCardCurse } from './cancellation';
@@ -48,7 +49,7 @@ export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = fa
   if(def.id==='absolute_zero'&&worldFrozen(caster))return fail('INVALID_TARGET','Mundo Gélido ya está activo: no se renueva ni se consume otra copia.') as Playability;
   if(def.category==='ATTACK'&&caster.statuses.some(s=>s.id==='SNOW_WAR'))return fail('CASTER_INCAPACITATED','Guerra de Nieve impide jugar otras cartas ATTACK; puedes usar las demás categorías.') as Playability;
   if(caster.statuses.some(s=>s.id==='GLACIER_CLAW') && allCardEffects(def).some(fx=>['STEP_CASTER','ICE_WALK','CHARGE_CASTER','TELEPORT_CASTER','SWAP_WITH_TARGET','SWAP_PAIR'].includes(fx.type)))return fail('MOVEMENT_PREVENTED','Garra del Glaciar impide desplazamientos voluntarios; todavía puedes atacar y jugar otras cartas.') as Playability;
-  if (def.heroId && def.heroId !== caster.defId && !(card.traded && card.controllerId === caster.id)) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as Playability;
+  if (!cardClassAllowed(card, def, caster)) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as Playability;
   const formRequirement = checkFormRequirement(caster, def.requiredForms, ctx.content);
   if (!formRequirement.ok) return formRequirement as Playability;
   for (const fx of allCardEffects(def)) {
@@ -169,7 +170,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
       ctx.emit({ type: 'COST_DISCOUNT_USED', unitId: caster.id, scope: price.scope, cardId: def.id, paid: price.cost });
     }
     ctx.state.stats.cardsPlayed += 1;
-    if (ctx.state.duel?.darkLightRelease && !card.twistedCurse) {
+    if (ctx.state.duel?.darkLightRelease && !card.twistedCurse && hasLegalSilenceResponse(ctx)) {
       const id = `cast-${ctx.state.nextId++}`;
       ctx.state.pendingCast = { id, cardUid, cardId: def.id, casterId: caster.id, respondingHeroId: ctx.state.duel.other.heroId, target: target ? { ...target } : null, searchUid, secondary: secondary ? { ...secondary } : secondary, wallOrientation, paidEnergy: price.cost, deadline: 0 };
       ctx.emit({ type: 'CARD_CAST_PENDING', cardUid, cardId: def.id, casterId: caster.id, windowId: id });

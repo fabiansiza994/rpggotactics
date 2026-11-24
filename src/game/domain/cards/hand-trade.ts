@@ -1,5 +1,5 @@
 import type { RuleContext } from '../context';
-import type { CardInstance } from './card';
+import type { CardInstance, CardDefinition } from './card';
 import { randomInt } from '../core/rng';
 /** Called only after both hands have been validated in the existing atomic card transaction. */
 export function exchangeHandCard(ctx: RuleContext, selectedUid: string): void {
@@ -12,4 +12,9 @@ export function exchangeHandCard(ctx: RuleContext, selectedUid: string): void {
   own.hand[own.hand.indexOf(offered)]=received;
   other.hand[other.hand.indexOf(received)]=offered;
   ctx.emit({type:'CARDS_EXCHANGED',casterId:own.heroId,opponentId:other.heroId});
+}
+
+/** Shared class exception applies only to an instance authoritatively exchanged in this battle. */
+export function cardClassAllowed(card: CardInstance, definition: CardDefinition, caster: {id:string;defId:string}) {
+  return !definition.heroId || definition.heroId === caster.defId || !!(card.traded && card.controllerId === caster.id);
 }

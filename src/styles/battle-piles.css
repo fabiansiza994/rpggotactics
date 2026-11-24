@@ -166,3 +166,20 @@
 @media(min-width:601px),(orientation:landscape){
   .battle .board-column > .battle-pile-bank {width:clamp(310px,32vw,680px);max-width:100%;align-self:center;}
 }
+
+/* Compact zones retain 44px touch targets; labels belong to the consultation panels. */
+.battle .board-column > .battle-pile-bank {padding:0 6px;gap:4px;min-height:44px;}
+.battle .board-column > .battle-pile-bank .battle-pile {
+  width:auto;min-width:64px;min-height:44px;grid-template-columns:22px auto;gap:7px;
+  padding:5px 8px;border-color:transparent;border-radius:22px;
+  background:linear-gradient(135deg,#12253788,#0b172744);box-shadow:none;
+}
+.battle .board-column > .battle-pile-bank .battle-pile:hover {background:#24374c;border-color:#a88b5870;}
+.battle .board-column > .battle-pile-bank .battle-pile:focus-visible {outline:2px solid #efd28c;outline-offset:-2px;}
+/* Keep the left information control clear; the right control already uses the end-turn gutter. */
+@media(max-width:600px) and (orientation:portrait) {
+  .battle .board-column > .battle-pile-bank.is-rival {
+    padding-left:calc(56px + env(safe-area-inset-left));
+    padding-right:calc(6px + env(safe-area-inset-right));
+  }
+}

@@ -1,4 +1,4 @@
-import { SilenceResponseDialog } from './SilenceResponseDialog';
+import { SilenceResponseContext, useSilenceContext } from './SilenceResponseDialog';
 import { PendingCardChoiceDialog } from './PendingCardChoiceDialog';
 import {worldFrozenCard} from '../../../game/domain/cards/world-frozen';
 import {WinterAtmosphere} from './WinterAtmosphere';
@@ -310,6 +310,7 @@ export function EnemyPanel({
 export function HandBar({ state, engine }: { state: Readonly<GameState>; engine: GameEngine }) {
   const footerRef = useRef<HTMLElement>(null);
   const drawVisual=useDrawVisual();
+  const silence=useSilenceContext(state,engine);
   // PvP rebuilds its read-only engine on every authoritative snapshot, not a new battle.
   const online = useBattleStore((s) => s.onlineCommand !== null);
   const activationBattle = online ? null : engine;
@@ -374,7 +375,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   const aimedCard = state.player.hand.find(c => c.uid === selectedCardUid);
   const aimedName = selectedCardUid===LEGENDARY_STEP_SELECTION?'Desplazamiento eléctrico':aimedCard ? engine.content.cards[aimedCard.cardId]?.name : null;
   const canActivateAim = !busy && aim?.source === 'tap' && isActionableTile(engine, selectedCardUid, aim.pos, pair);
-  const hint = !discarding && inspected ? blocks.get(inspected) : undefined;
+  const hint = !state.responseWindow && !discarding && inspected ? blocks.get(inspected) : undefined;
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
   return (
     <footer ref={footerRef} className="hand-bar" aria-busy={busy}>
@@ -382,7 +383,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         <div className="mobile-enemies">{state.units.filter(u => u.faction !== hero?.faction && u.hp > 0).map(u => <span key={u.id} title={engine.content.enemies[u.defId]?.name ?? u.defId} aria-label={`${engine.content.enemies[u.defId]?.name ?? u.defId}: ${u.hp} HP`}><b>{(engine.content.enemies[u.defId]?.name ?? u.defId).slice(0, 2)}</b><small>{u.hp}</small></span>)}</div>
         <div><small>RONDA {state.round}</small><strong>{busy ? 'Resolviendo…' : state.phase === 'PLAYER' ? 'Tu turno' : 'Turno rival'}</strong></div>
       </div>
-      {!discarding && (selectedCardUid || aim?.source === 'tap') && <div className="mobile-aim-controls" role="group" aria-label="Objetivo de carta">
+      {!state.responseWindow && !discarding && (selectedCardUid || aim?.source === 'tap') && <div className="mobile-aim-controls" role="group" aria-label="Objetivo de carta">
         <span><small>{selectedCardUid ? canActivateAim ? 'Activa la carta' : 'Selecciona un objetivo válido' : 'Confirma el destino'}</small>{selectedCardUid && <strong>{aimedName ?? 'Carta seleccionada'}</strong>}</span>
         <button type="button" disabled={!canActivateAim} onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>
         <button type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}>×</button>
@@ -411,14 +412,14 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       )}
       <DrawRitual state={state} engine={engine} busy={busy} footer={footerRef}/>
       <SummonSearchDialog key={selectedCardUid ?? 'no-search'} state={state} engine={engine} />
-      <SilenceResponseDialog key={state.responseWindow?.id ?? "no-response"} state={state} engine={engine} />
+      <SilenceResponseContext context={silence} engine={engine} footer={footerRef} />
       <PendingCardChoiceDialog state={state} engine={engine} />
       <RitualEchoDialog key={`echo-${selectedCardUid ?? 'none'}`} state={state} engine={engine} />
       <RitualTransfer heroId={engine.heroId} />
       {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.ritualPiece && <RitualCardActions key={`ritual-choice:${aimedCard.uid}`} uid={aimedCard.uid} state={state} engine={engine} busy={busy}/> }
-      <ResolvingCardPreview engine={engine} />
-      <BattleCardFeature state={state} engine={engine} selectedCardUid={selectedCardUid} hoveredCardUid={discarding ? null : inspected}
-        inspectedCardUid={discarding ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} />
+      {!state.responseWindow && <ResolvingCardPreview engine={engine} />}
+      <BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected}
+        inspectedCardUid={discarding || state.responseWindow ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} />
       <AltarPanel key={`${state.player.heroId}:${hero?.defId}`} state={state} engine={engine} busy={busy} />
       {handPulse > 0 && (
         <span key={handPulse} className="draw-feedback" aria-live="polite">
@@ -432,7 +433,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       </div>}
       {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.handTrade && <div className="pair-target-controls" role="group" aria-label="Trueque del Duende"><span>Elige otra carta de tu mano para intercambiar.</span><button type="button" onClick={()=>selectCard(null)}>Cancelar</button></div>}
       {discarding && <HandDiscardBar state={state} />}
-      <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''}`}>
+      <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''} ${silence.active ? 'is-silence-response' : ''}`}>
         {dealt &&
           state.player.hand.map((card, i) => {
             const source=engine.content.cards[card.cardId];
@@ -442,20 +443,24 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
             return (
               <CardView
                 key={card.uid}
-                presentationHidden={drawVisual.queue.some(t=>t.uid===card.uid)}
+                presentationHidden={!silence.active && drawVisual.queue.some(t=>t.uid===card.uid)}
                 uid={card.uid}
                 def={def}
                 effectiveCost={engine.getCardCost(card.uid)?.cost ?? def.cost}
                 hotkey={i + 1}
                 handSize={state.player.hand.length}
-                disabled={busy}
-                selected={discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
-                playable={!block}
-                block={block}
+                disabled={silence.active ? false : busy}
+                responseRole={silence.role(card.uid)}
+                responseProgress={silence.active && card.uid===silence.sealUid ? silence.remaining/5000 : undefined}
+                selected={silence.active ? false : discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
+                playable={silence.active || !block}
+                block={silence.active ? undefined : block}
                 onInspect={(on) => setInspected((cur) => (on ? card.uid : cur === card.uid ? null : cur))}
-                onLongInspect={() => { useBattleStore.getState().cancelAim(); setDetailUid(card.uid); }}
-                onCancel={discarding ? undefined : () => useBattleStore.getState().cancelAim()}
+                onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); setDetailUid(card.uid); }}
+                onCancel={silence.active || discarding ? undefined : () => useBattleStore.getState().cancelAim()}
                 onClick={() => {
+                  if(silence.active){silence.choose(card.uid);return;}
+                  if(state.responseWindow)return;
                   // A ritual can still be usable on the altar even when its cast is blocked.
                   const canSeal = def.ritualPiece && engine.getCommitPlayability(card.uid).playable;
                   activateHandCard(card.uid, canSeal ? undefined : block, {

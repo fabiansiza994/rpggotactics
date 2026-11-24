@@ -1,4 +1,26 @@
-/* Response overlay leaves the board inspectable; the engine alone gates combat actions. */
-.silence-response{position:fixed;z-index:80;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));width:min(350px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:16px;border:1px solid #bb9bd8;border-radius:12px;background:rgba(20,22,38,.97);color:#f5edff;box-shadow:0 12px 36px #0008;pointer-events:auto}
-.silence-response h2{font-size:20px;margin:0 0 10px;color:#f6d98e}.silence-response p{font-size:14px;line-height:1.4;margin:10px 0}.silence-response label{display:block;font-size:14px;margin:10px 0}.silence-response select{display:block;width:100%;min-height:44px;margin-top:4px;background:#20253b;color:#fff;border:1px solid #9c8bb1;border-radius:6px;padding:8px}.silence-response button{display:block;width:100%;min-height:48px;padding:10px;margin-top:10px;border:1px solid #d9bc78;border-radius:8px;background:#63487c;color:#fff;font-weight:700}.silence-response button:last-of-type{background:#28364e}.silence-response button:disabled{opacity:.5}.silence-response :focus-visible{outline:3px solid #f1d988;outline-offset:2px}
-@media(max-width:600px){.silence-response{top:auto;bottom:max(12px,env(safe-area-inset-bottom));max-height:60dvh}}
+/* Context only: no layout rows, modal, backdrop or server-side timer ownership. */
+.silence-context {position:fixed;z-index:82;display:flex;gap:8px;width:104px;height:48px;pointer-events:auto;animation:silence-context-in 140ms ease-out;}
+.silence-context button {width:48px;min-width:48px;height:48px;min-height:48px;padding:11px;border:1px solid;border-radius:50%;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 12px #0008;}
+.silence-context button svg {width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+.silence-accept {color:#b9ffda;background:radial-gradient(circle,#24634d,#0b2820);border-color:#6fe7ac!important;}
+.silence-pass {color:#ffd2d2;background:radial-gradient(circle,#683740,#2d101b);border-color:#f18b9c!important;}
+.silence-context button:disabled {opacity:.55;cursor:default;}
+.silence-context button:focus-visible {outline:3px solid #f4d592;outline-offset:3px;}
+.silence-context-caption {position:fixed;top:var(--silence-caption-top);left:clamp(8px,var(--silence-caption-left),calc(100vw - 222px));width:min(214px,calc(100vw - 16px));padding:3px 6px;border:1px solid #b49aca80;border-radius:7px;background:#131c2be8;color:#f4e9ce;font-size:11px;line-height:16px;text-align:center;pointer-events:none;box-sizing:border-box;}
+.silence-context-caption span {display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.silence-context-caption strong {font-size:10px;line-height:13px;display:block;color:#dfc2ff;}
+.silence-wait {position:fixed;z-index:24;left:50%;transform:translateX(-50%);top:58px;padding:3px 8px;background:#101d2de8;color:#eadcf9;font-size:11px;border-radius:6px;pointer-events:none;}
+.battle .hand .card[data-silence-role] {transition:transform 140ms ease-out,filter 140ms ease-out;}
+.battle .hand .card[data-silence-role='muted'] {filter:brightness(.72) saturate(.8);}
+.battle .hand .card[data-silence-role='seal'],.battle .hand .card[data-silence-role='chosen'] {outline:2px solid #c0a1ff;outline-offset:1px;box-shadow:0 0 12px #b679ef99;animation:silence-glow 1.2s ease-in-out infinite;}
+.battle .hand .card[data-silence-role='chosen'] {transform:translateY(-8px);z-index:12;}
+.battle .hand .card[data-silence-role='chosen']::after {content:'';position:absolute;z-index:20;left:3px;right:3px;top:3px;height:3px;background:#f0d791;transform:scaleX(var(--silence-progress,1));transform-origin:left;pointer-events:none;}
+.battle .hand .card[data-silence-role='discard'] {outline:2px solid #e5c881;outline-offset:-2px;filter:none;cursor:pointer;}
+@keyframes silence-glow {50% {box-shadow:0 0 18px #cba0f5;outline-color:#f1d48d;}}
+@keyframes silence-context-in {from {opacity:0;transform:translateY(4px)}to {opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.silence-context,.battle .hand .card[data-silence-role] {animation:none;transition:none;}}
+/* A response is a hand interaction: expose full touchable cards instead of overlapping fans. */
+@media(max-width:600px) and (orientation:portrait) {
+  .battle .hand.is-silence-response {overflow-x:auto;overflow-y:hidden;justify-content:safe center;gap:8px;overscroll-behavior-x:contain;scroll-padding-inline:8px;}
+  .battle .hand.is-silence-response .card {margin-left:0!important;}
+}

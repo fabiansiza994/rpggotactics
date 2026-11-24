@@ -1,16 +1,20 @@
 import {expect,it} from 'vitest';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createElement} from 'react';
-import {SilenceResponseDialog} from '../src/presentation/react/components/SilenceResponseDialog';
+import {silenceChoices} from '../src/presentation/react/components/SilenceResponseDialog';
+import {HandBar} from '../src/presentation/react/components/Hud';
+import {useBattleStore} from '../src/presentation/store/battleStore';
 import {GameEngine,createProfile} from '../src/game';
 import {createDuel,duelView,validateLoadout,DUEL_SCENARIO} from '../src/game/pvp/duel';
 import {PVP_CONTENT} from '../server/src/pvp';
-it('renders an optional nonmodal response panel with no backdrop, real choices and expired-state controls',()=>{
- const p=createProfile(PVP_CONTENT),load=validateLoadout(p,'mage',PVP_CONTENT),s=createDuel([load,load],47,'DUEL','classic',PVP_CONTENT);
- s.player.hand=[{uid:'seal',cardId:'dark_silence_seal'},{uid:'cost',cardId:'fireball'}];s.player.energy=4;
- const view=duelView(s,s.duel!.active,PVP_CONTENT);view.responseWindow={id:'window',cardId:'barrier',casterId:s.duel!.other.heroId,respondingHeroId:view.player.heroId,deadline:Date.now()+5000};
- const engine=GameEngine.fromSnapshot(view,PVP_CONTENT,DUEL_SCENARIO);
- const render=()=>renderToStaticMarkup(createElement(SilenceResponseDialog,{state:view,engine}));
- const html=render();expect(html).toContain('aria-modal="false"');expect(html).toContain('Pasar');expect(html).toContain('Fireball');expect(html).not.toContain('<dialog');expect(html).not.toContain('disabled=""');
- view.responseWindow.deadline=0;const expired=render();expect(expired).toContain('Esperando resolución del servidor');expect(expired.match(/disabled=""/g)).toHaveLength(2);
+function fixture(){const p=createProfile(PVP_CONTENT),load=validateLoadout(p,'mage',PVP_CONTENT),s=createDuel([load,load],47,'DUEL','classic',PVP_CONTENT);s.player.hand=[{uid:'seal',cardId:'dark_silence_seal'},{uid:'seal2',cardId:'dark_silence_seal'},{uid:'cost',cardId:'fireball'}];s.player.energy=4;const view=duelView(s,s.duel!.active,PVP_CONTENT);view.phase='ENEMY';view.responseWindow={id:'window',cardId:'barrier',casterId:s.duel!.other.heroId,respondingHeroId:view.player.heroId,deadline:Date.now()+5000};const engine=GameEngine.fromSnapshot(view,PVP_CONTENT,DUEL_SCENARIO);return{view,engine}}
+it('renders response candidates directly in the real hand, with no form/dialog/select or automatic discard',()=>{
+ const{view,engine}=fixture();useBattleStore.setState({state:view,engine,introLocked:false,playbackBusy:true});
+ const html=renderToStaticMarkup(createElement(HandBar,{state:view,engine}));
+ expect(html).not.toContain('<select');expect(html).not.toContain('class="silence-response"');expect(html).not.toContain('Respuesta ·');
+ expect(html).toContain('data-silence-role="chosen"');expect(html).toContain('data-silence-role="seal"');expect(html).toContain('data-silence-role="muted"');
+ expect(html).toContain('Seleccionar esta copia de Sello');expect(html).not.toContain('data-silence-role="discard"');
 });
+it('uses the same executable-response query without mutating state or revealing a hidden curse',()=>{const{view,engine}=fixture();view.player.hand[0]!.twistedCurse=true;const before=JSON.stringify(view);expect(silenceChoices(view,engine).map(c=>c.uid)).toEqual(['seal','seal2']);expect(JSON.stringify(view)).toBe(before);view.player.energy=0;expect(silenceChoices(view,engine)).toEqual([])});
+it('handles traded Seals and rejects invalid untraded class, unavailable copies and missing discard',()=>{const{view,engine}=fixture();const hero=view.units.find(u=>u.id===view.player.heroId)!;hero.defId='summoner';expect(silenceChoices(view,engine)).toEqual([]);Object.assign(view.player.hand[1]!,{traded:true,controllerId:hero.id});expect(silenceChoices(view,engine).map(c=>c.uid)).toEqual(['seal2']);view.player.hand[1]!.unavailableThisTurn=true;expect(silenceChoices(view,engine)).toEqual([]);view.player.hand=view.player.hand.slice(0,1);hero.defId='mage';expect(silenceChoices(view,engine)).toEqual([])});
+it('cleans hand response presentation on expiry and when there is no authoritative window',()=>{const{view,engine}=fixture();view.responseWindow!.deadline=0;useBattleStore.setState({state:view,engine,introLocked:false});let html=renderToStaticMarkup(createElement(HandBar,{state:view,engine}));expect(html).not.toContain('data-silence-role=');delete view.responseWindow;html=renderToStaticMarkup(createElement(HandBar,{state:view,engine}));expect(html).not.toContain('data-silence-role=');expect(html).not.toContain('silence-context-caption')});

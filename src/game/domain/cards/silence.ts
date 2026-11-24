@@ -2,9 +2,8 @@ import type { RuleContext } from '../context';
 import type { Pos } from '../core/position';
 import type { WallOrientation } from './targeting';
 import { playCard } from './play-card';
-import { effectiveCost } from './form-effects';
+import {checkSilenceResponse} from './silence-eligibility';
 import { consumeCanceledCard, triggerCardCurse } from './cancellation';
-import { isActionPrevented } from '../board/occupancy';
 import { updateObjectives } from '../objectives/objective-rules';
 import { fail, OK, type RuleResult } from '../result';
 
@@ -31,13 +30,9 @@ export function resolveSilence(ctx: RuleContext, response: SilenceResponse): Rul
   if (!pending || pending.id !== response.windowId || !other || other.heroId !== pending.respondingHeroId) return fail('INVALID_TARGET', 'La ventana de respuesta ya no existe.');
   let negate = false;
   if (!response.pass) {
-    const caster = ctx.state.units.find(unit => unit.id === other.heroId);
-    const seal = other.hand.find(card => card.uid === response.sealUid);
-    const discard = other.hand.find(card => card.uid === response.discardUid && card.uid !== response.sealUid);
-    const definition = seal ? ctx.content.cards[seal.cardId] : undefined;
-    if (!caster || isActionPrevented(ctx, caster) || !seal || seal.cardId !== 'dark_silence_seal' || seal.unavailableThisTurn || !discard || !definition || (definition.heroId && caster.defId !== definition.heroId)) return fail('INVALID_TARGET', 'La respuesta necesita un Sello válido y otra carta propia.');
-    const price = effectiveCost(ctx.content, caster, definition);
-    if (other.energy < price.cost) return fail('NOT_ENOUGH_ENERGY', 'No hay energía para el Sello.');
+    const check = checkSilenceResponse(ctx, response.sealUid, response.discardUid);
+    if (!check.ok) return check;
+    const {caster, seal, discard, definition, price} = check;
     const from = other.energy;
     other.energy -= price.cost;
     ctx.emit({ type: 'ENERGY_CHANGED', unitId: caster.id, from, to: other.energy, max: other.maxEnergy });

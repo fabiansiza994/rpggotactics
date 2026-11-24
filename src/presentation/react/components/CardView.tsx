@@ -19,6 +19,8 @@ import { STAGGER, staggerDelay } from '../../motion/tokens';
 import type { CardBlock } from '../cardBlock';
 
 interface Props {
+  responseRole?: string;
+  responseProgress?: number;
   presentationHidden?: boolean;
   def: CardDefinition;
   hotkey: number;
@@ -62,6 +64,8 @@ export function CardView({
   playable,
   disabled,
   block,
+  responseRole,
+  responseProgress,
   onInspect,
   onClick,
   onCancel,
@@ -107,6 +111,7 @@ export function CardView({
   return (
     <div
       ref={premiumRef}
+      data-silence-role={responseRole}
       data-world-frozen={def.worldFrozenActive||undefined}
       data-disabled={disabled || undefined}
       data-draw-hidden={presentationHidden||undefined}
@@ -128,6 +133,7 @@ export function CardView({
 
       style={
         {
+          '--silence-progress': responseProgress,
           '--card-tone': identity?.tone,
           '--card-rise': `${Math.min(8, Math.abs(hotkey - (handSize + 1) / 2) * 2.5)}px`,
           '--card-tilt': `${Math.max(-4, Math.min(4, (hotkey - (handSize + 1) / 2) * 1.3))}deg`,
@@ -158,7 +164,7 @@ export function CardView({
         disabled={disabled}
         aria-pressed={selected}
         aria-label={`${def.name}; ${def.heroId ? '' : 'Neutral; '} coste ${effectiveCost}; ${CATEGORY_LABEL[def.category]} · ${rangeText(def)}; ${def.rulesText}`}
-        aria-description={block ? `No se puede jugar: ${block.detail}` : undefined}
+        aria-description={responseRole === 'discard' ? 'Seleccionar esta carta como descarte para Sello del Silencio' : responseRole === 'seal' || responseRole === 'chosen' ? 'Seleccionar esta copia de Sello del Silencio para responder' : block ? `No se puede jugar: ${block.detail}` : undefined}
       />
       {block && !block.quiet && (
         <span className="card-block" aria-hidden="true">

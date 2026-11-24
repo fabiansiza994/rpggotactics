@@ -55,9 +55,9 @@ export function BattlePileBank({
       className={`battle-pile-bank ${opponent ? "is-rival" : "is-own"}`}
       aria-label={opponent ? "Zonas del rival" : "Tus zonas"}
     >
-      <small>{opponent ? "Rival" : "Tú"}</small>
       <button
         className="battle-pile battle-pile-deck"
+        title={`${who} mazo`}
         aria-label={`${who} mazo: ${deck} cartas`}
         onClick={() => {
           setInspect(null);
@@ -72,10 +72,10 @@ export function BattlePileBank({
           )}
         </span>
         <b>{deck}</b>
-        <span>Mazo</span>
       </button>
       <button
         className="battle-pile battle-pile-grave"
+        title={`${who} cementerio`}
         aria-label={`${who} cementerio: ${count} cartas`}
         onClick={() => {
           setInspect(null);
@@ -84,7 +84,6 @@ export function BattlePileBank({
       >
         <GameIcon name="discard" />
         <b>{count}</b>
-        <span>Cementerio</span>
       </button>
       {opened && (
         <dialog

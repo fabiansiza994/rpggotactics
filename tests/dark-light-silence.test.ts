@@ -71,9 +71,9 @@ describe('Silence: a real persisted response window', () => {
     expect(result.events.filter(event => event.type === 'CARD_CURSE_TRIGGERED')).toHaveLength(1);
     expect(result.events.some(event => event.type === 'CARD_CAST_PENDING')).toBe(false);
   });
-  it('opens the same window when the defender has no Seal (no hidden-hand disclosure)', () => {
+  it('resolves immediately when the defender has no legal response (new approved contract)', () => {
     const state = setup(); state.duel!.other.hand = [];
-    expect(announce(state).state.pendingCast).toBeDefined();
+    expect(announce(state).state.pendingCast).toBeUndefined();
   });
   it('old room snapshots preserve their original immediate resolution', () => {
     const state = setup(); delete state.duel!.darkLightRelease;

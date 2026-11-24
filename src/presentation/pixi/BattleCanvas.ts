@@ -809,9 +809,8 @@ export class BattleCanvas {
     }
     const { width, height } = this.app.screen;
     const bounds = this.framingBounds();
-    // Reserve a small non-tactical lane below the surface; the surface itself stays fully visible.
-    const noticeSpace = this.portraitQuery.matches ? (height >= 550 ? 76 : 44) : 0;
-    const framedHeight = Math.max(1, height - this.bleed() - noticeSpace);
+    // Notices use the existing compact zone row; never shrink the arena for an empty overlay.
+    const framedHeight = Math.max(1, height - this.bleed());
     const fit = fitBattlefield(width, framedHeight, bounds, PADDING);
     // DOM controls retain their own sizes. Only the shared projected world fits this viewport.
     this.world.scale.set(fit.scale);
@@ -822,7 +821,13 @@ export class BattleCanvas {
       const rect=this.app.canvas.getBoundingClientRect();
       const edge=[{x:0,y:0},{x:this.boardSize.w-1,y:0},{x:0,y:this.boardSize.h-1},{x:this.boardSize.w-1,y:this.boardSize.h-1}];
       const bottom=Math.max(...edge.flatMap(p=>this.proj.getTilePolygon(p).map(v=>rect.top + (fit.y + v.y * fit.scale) * rect.height / height)));
-      const lane=noticeLane(rect.left,bottom,rect.right,rect.bottom-4);
+      const bank=this.host.parentElement?.querySelector('.battle-pile-bank.is-rival') ?? this.host.parentElement?.querySelector('.battle-pile-bank.is-own');
+      const buttons=bank?.querySelectorAll('button.battle-pile');
+      const a=buttons?.[0]?.getBoundingClientRect(),b=buttons?.[1]?.getBoundingClientRect();
+      const left=a&&b?Math.min(a.right,b.right)+6:0,right=a&&b?Math.max(a.left,b.left)-6:0;
+      const lane=a&&b&&right-left>=96
+        ? {left,top:Math.min(a.top,b.top)+8,width:right-left,capacity:1}
+        : noticeLane(rect.left,bottom,rect.right,rect.bottom-4);
       this.opponentNotices.setCapacity(lane.capacity);this.callbacks.onNoticeLane?.(lane);
     } else { this.opponentNotices.setCapacity(2); this.callbacks.onNoticeLane?.(null); }
     this.compactAmbient = window.matchMedia(

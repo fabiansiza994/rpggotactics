@@ -179,3 +179,20 @@
   }
   .battle .altar-aim-controls button { min-height:44px; min-width:108px; padding:8px 12px; border:1px solid #b0826d; border-radius:6px; background:#321d26; color:#f2e5cf; font:inherit; font-size:12px; }
 }
+
+/* Stable mobile budget: only the hand/vitals (and permanent altar) reserve rows.
+   Selection, discard, support, notices and response panels remain overlays. */
+@media (orientation:portrait) and (max-width:600px) {
+  body .battle { --mobile-hand-space:152px; }
+  body .battle,
+  body .battle.pvp-battle,
+  body .battle:has(.hand-discard-bar),
+  body .battle:has(.mobile-aim-controls),
+  body .battle:has(.altar-panel),
+  body .battle:has(.altar-panel):has(.hand-discard-bar) {
+    grid-template-rows:calc(58px + env(safe-area-inset-top)) minmax(0,1fr) 0 calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom));
+  }
+  body .battle .board-column {gap:0;}
+  body .battle .board-host {min-height:0;}
+  body .battle .mobile-opponent-notices {z-index:8;}
+}

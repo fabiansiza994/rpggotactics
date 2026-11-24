@@ -123,7 +123,7 @@ class FakeSocket {
   }
 }
 describe('Dark/light room response deadlines (local DO harness)', () => {
-  async function pendingRoom() {
+  async function pendingRoom(allowResponse = true) {
     const h = harness(); await h.setup();
     const room = h.data.get('room') as Room;
     const profile = createProfile(DEFAULT_CONTENT);
@@ -132,6 +132,8 @@ describe('Dark/light room response deadlines (local DO harness)', () => {
     room.game.duel!.active = 0;
     room.game.player.energy = 5;
     room.game.player.hand = [{ uid: 'cast', cardId: 'magic_missile' }];
+    room.game.duel!.other.energy=3;
+    room.game.duel!.other.hand=allowResponse ? [{uid:'seal',cardId:'dark_silence_seal'},{uid:'cost',cardId:'fireball'}] : [];
     room.game.units.find(u => u.id === room.game!.player.heroId)!.pos = { x: 2, y: 2 };
     room.game.units.find(u => u.id === room.game!.duel!.other.heroId)!.pos = { x: 3, y: 2 };
     room.deadline = Date.now() + 45000;
@@ -145,6 +147,18 @@ describe('Dark/light room response deadlines (local DO harness)', () => {
     await driver.applyRoomCommand(0, { id: 'cast-once', version: room.version, command });
     return { ...h, live: restored, driver, snapshot: () => h.data.get('room') as Room };
   }
+  it('without a legal response never pauses the turn clock or installs a response deadline', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(3000000);
+    try {
+      const h = await pendingRoom(false), state = h.snapshot();
+      expect(state.game!.pendingCast).toBeUndefined();
+      expect(state.deadline).toBe(3045000);
+      expect(state.responseTurnRemainingMs).toBeFalsy();
+      expect(h.alarm()).not.toBe(3005000);
+      expect(state.game!.player.energy).toBe(4);
+      expect(state.game!.player.discard.filter(c => c.uid === 'cast')).toHaveLength(1);
+    } finally { vi.restoreAllMocks(); }
+  });
   it('persists a five-second absolute deadline and restores it without extending it', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(1000000);
     try {
