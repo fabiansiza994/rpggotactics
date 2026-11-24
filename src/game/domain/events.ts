@@ -19,6 +19,12 @@ import type { TerrainType } from './terrain/terrain';
  * `sourceId` conventions: a unit id, `terrain:<TYPE>` or `status:<ID>`.
  */
 export type GameEvent =
+  | {type:'REDEMPTION_SUPPORT';unitId:string;targetId:string;action:'HEAL'|'PROTECT';from:Pos;to:Pos;cost:number}
+  | { type: 'REAPER_DISPOSITION'; unitId: string; ownerId: string; disposition: 'ALLY' | 'LOYAL' | 'REBEL' }
+  | { type: 'CARD_CAST_PENDING'; cardUid: string; cardId: string; casterId: string; windowId: string }
+  | { type: 'CARD_NEGATED'; cardUid: string; cardId: string; casterId: string; responderId: string }
+  | { type: 'EXECUTIONER_RESULT'; casterId: string; targetId: string; result: 'SELF' | 'ENEMY' | 'BOTH' }
+  | { type: 'CARD_CURSE_TRIGGERED'; cardUid: string; cardId: string; casterId: string; pos: Pos; hpLost: number; hpAfter: number }
   | {type:'RAVEN_SCAVENGER';unitId:string;preyId:string;pos:Pos;kind:'MOVE'|'ATTACK'}
   | {type:'SCOUT_RESOURCE_CREATED';id:string;ownerId:string;foxId:string;kind:'HEAL'|'ARMOR'|'ENERGY';pos:Pos;expiresRound:number}
   | {type:'SCOUT_RESOURCE_COLLECTED';resourceId:string;unitId:string;pos:Pos;kind:'HEAL'|'ARMOR'|'ENERGY'}
@@ -74,6 +80,7 @@ export type GameEvent =
   | { type: 'ROUND_STARTED'; round: number }
   | { type: 'TURN_STARTED'; faction: Faction; round: number }
   | { type: 'TURN_ENDED'; faction: Faction; round: number }
+  | { type: 'BATTLE_DRAW'; outcome: BattleOutcome }
   | { type: 'BATTLE_WON'; outcome: BattleOutcome }
   | { type: 'BATTLE_LOST'; outcome: BattleOutcome }
 
@@ -84,7 +91,7 @@ export type GameEvent =
       cardUid: string;
       cardId: string;
       /** HAND_FULL: drawn over the turn cap. HAND_LIMIT: the end-of-turn discard (player's choice). */
-      reason: 'PLAYED' | 'HAND_FULL' | 'HAND_LIMIT';
+      reason: 'PLAYED' | 'HAND_FULL' | 'HAND_LIMIT' | 'EFFECT';
     }
   /** Último Bastión held: `prevented` HP of this hit was not lost (the unit stays at `hpAfter`). */
   | { type: 'DEATH_PREVENTED'; unitId: string; sourceId: string; prevented: number; hpAfter: number }
@@ -138,7 +145,7 @@ export type GameEvent =
       affectedTiles: Pos[];
     }
   | { type: 'RITUAL_RESOLVED'; ritualId: string; casterId: string }
-  | { type: 'ENERGY_CHANGED'; from: number; to: number; max: number }
+  | { type: 'ENERGY_CHANGED'; unitId?: string; from: number; to: number; max: number }
   | { type: 'MOVE_POINTS_CHANGED'; from: number; to: number; max: number }
 
   // ── Movement ───────────────────────────────────────────────────────

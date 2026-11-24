@@ -1,3 +1,4 @@
+import { MISSING_UNIT_ART } from '../assets/missingUnitArt';
 import {FrozenBreathView,breathesInCold} from './FrozenBreathView';
 import {ShieldBarrierView}from './ShieldBarrierView';
 import {clawScaleForUnit} from './glacierClawMotion';
@@ -89,6 +90,13 @@ export class UnitView {
   private readonly crystalDamage = new Graphics();
   private readonly legendaryFx = new LegendaryStatusView();
   private readonly shieldBarrier:ShieldBarrierView;
+  private reaperMood = '';
+  setReaperMood(mood: 'ALLY' | 'LOYAL' | 'REBEL'): void {
+    if (this.defId !== 'dark_the_reaper' || mood === this.reaperMood) return;
+    this.reaperMood = mood;
+    const color = mood === 'REBEL' ? 0xe24e87 : mood === 'LOYAL' ? 0xb67bec : 0x877a9b;
+    this.aura.clear().ellipse(0, 0, 31, 11).stroke({ color, width: 8, alpha: .06 }).ellipse(0, 0, 26, 8).stroke({ color, width: 1.6, alpha: .55 });
+  }
   shieldImpact(side=1):void {this.shieldBarrier.impact(side);}
   shieldGain():void {this.shieldBarrier.gained();}
   shieldBreak():void {this.shieldBarrier.shatter();}
@@ -454,7 +462,7 @@ export class UnitView {
   animationSnapshot() {
     return {
       defId: this.defId,
-      art: this.body instanceof PaintedFigure ? 'painted' : 'vector',
+      art: MISSING_UNIT_ART[this.defId] && !(this.body instanceof PaintedFigure) ? 'missing' : this.body instanceof PaintedFigure ? 'painted' : 'vector',
       artVariant: this.body instanceof PaintedFigure ? this.body.animationVariantId : this.defId,
       animated: this.animator !== null,
       facing: this.wizardDirection,
@@ -643,13 +651,17 @@ export class UnitView {
     )
       this.figure.scale.y *=
         1 + Math.sin(this.clock / (this.defId === 'war_drake' ? 700 : 1200)) * 0.003;
+    if(this.defId==='light_redemption_spirit')this.body.alpha=this.redemptionLuminosity;
     const shadow = contactShadow(-this.figure.y, reduced);
     this.contact.scale.set(shadow.scale);
     this.contact.alpha = shadow.alpha;
     this.aura.alpha = reduced ? 0.6 : 0.72 + Math.sin(phase * 1.4) * 0.2;
   }
 
+  private redemptionLuminosity = 1;
+
   update(unit: Unit, intent: EnemyIntent | undefined, focused: boolean, phaseName?: string): void {
+    if(unit.defId==='light_redemption_spirit')this.redemptionLuminosity=.4+.6*Math.max(0,unit.hp)/unit.maxHp;
     this.healthAnimation.set(unit.hp, unit.maxHp, this.animateNextHealth && premiumVfxEnabled());
     this.animateNextHealth = false;
     if(phaseName && phaseName!==this.veilPhase)this.pulseLight(0xb994d5,260);
@@ -670,6 +682,7 @@ export class UnitView {
       unit.maxHp,
       unit.shield,
       unit.statuses,
+      unit.summon?.durationTurnsLeft,
       unit.combatFacing,
       unit.momentum?.value,
       unit.focus?.value,
@@ -745,6 +758,7 @@ export class UnitView {
       .fill(0x081320)
       .stroke({ color: unit.shield ? 0xf0d28b : color, alpha: 0.75, width: 1 });
     this.chrome.addChild(g, this.healthInk, text(String(unit.hp), -39, -2.5, 0xe2eaf0, 11));
+    if (MISSING_UNIT_ART[this.defId] && !(this.body instanceof PaintedFigure)) this.chrome.addChild(text(MISSING_UNIT_ART[this.defId]!,0,-58,0xf0dafa,11),text('ARTE PENDIENTE',0,-44,0xf0dafa,9));
     if (unit.defId === 'ancient_wolf')
       this.chrome.addChild(text('✧ ANCESTRAL', -36, -16, 0xe6cf93, 9));
     if (unit.combatFacing) this.chrome.addChild(text(({UP:'↑',DOWN:'↓',LEFT:'←',RIGHT:'→'})[unit.combatFacing], 36, -3, 0xe6c58a, 15));
@@ -829,11 +843,16 @@ export class UnitView {
     this.statusRow.scale.set(this.statusScale);
     this.statusRow.position.set(0,-25);
     this.chrome.addChild(this.statusRow);
+    if(unit.summon?.durationTurnsLeft!==undefined){
+      const index=otherStatuses.length,x=-30+(index%4)*29,y=-Math.floor(index/4)*17;
+      const glyph=new Graphics().path(new GraphicsPath(ICON_PATHS.wait)).stroke({color:0xffdfaa,width:1.8});glyph.scale.set(.5);glyph.position.set(x,y-6);
+      this.statusRow.addChild(glyph,text(String(unit.summon.durationTurnsLeft),x+17,y,0xffdfaa,12));
+    }
     otherStatuses.forEach((s,i)=>{
       const x = -30 + (i % 4)*29, y = -Math.floor(i/4)*17;
       const glyph=new Graphics().path(new GraphicsPath(ICON_PATHS[statusIcon(s.id)])).stroke({color:0xffdfaa,width:1.8});
       glyph.scale.set(.5);glyph.position.set(x,y-6);
-      this.statusRow!.addChild(glyph, text(s.turnsLeft > 0 ? String(s.turnsLeft) : '∞',x+17,y,0xffdfaa,12));
+      this.statusRow!.addChild(glyph, text(s.expiresAtCasterTurnStart ? '↻' : s.turnsLeft > 0 ? String(s.turnsLeft) : '∞',x+17,y,0xffdfaa,12));
     });
   }
 

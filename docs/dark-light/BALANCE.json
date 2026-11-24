@@ -1,0 +1,724 @@
+[
+  {
+    "id_propuesto": "dark_dark_world",
+    "nombre": "Mundo Oscuro",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Ultra",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Campo durante 6 turnos propios contando este. Tu Llamado del Verdugo usa 20/60/20; el Minotauro Abisal paga 1 HP por turno; tu Rey Escorpión no se deteriora; tu Parca es leal y tiene alcance 2. Sustituye el Mundo de Luz u Oscuro anterior.",
+    "dependencias": "Campo propietario y expiración anterior al mantenimiento.",
+    "arte_vfx": "Campo Premium persistente.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "ALIGNMENT_WORLD",
+        "alignment": "DARK_WORLD",
+        "duration": 6
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_executioner_call",
+    "nombre": "Llamado del Verdugo",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Legendaria",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Ruleta: pierdes 5 HP, el rival pierde 5 HP o ambos pierden 5 HP. Probabilidades iguales. Con tu Mundo Oscuro: 20%, 60%, 20%. La pérdida de HP no es daño mitigable.",
+    "dependencias": "RNG, pérdida HP y doble KO simultáneo.",
+    "arte_vfx": "Reloj original, aguja, calavera e impactos.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "EXECUTIONER_ROULETTE"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_abyssal_minotaur",
+    "nombre": "Minotauro Abisal",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Cambiaformas",
+    "rareza_propuesta": "Legendaria",
+    "coste_propuesto": 4,
+    "max_copias": 2,
+    "efecto_propuesto": "Adopta la forma de Minotauro Abisal: +1 PM y +1 daño directo respecto al Minotauro, sin armadura adicional. Desde tu siguiente turno, paga 2 HP por turno (1 con tu Mundo Oscuro). Si no puedes pagar dejando 1 HP, vuelves a forma humana.",
+    "dependencias": "Forma nueva, modificadores y coste por turno; no altera el Minotauro existente.",
+    "arte_vfx": "Atlas completo: transformación, idle, andar, ataque, hit y retorno.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "TRANSFORM",
+        "formId": "dark_abyssal_minotaur"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_scorpion_king",
+    "nombre": "Rey Escorpión",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Invocador",
+    "rareza_propuesta": "Ultra",
+    "coste_propuesto": 4,
+    "max_copias": 2,
+    "efecto_propuesto": "Sacrifica al menos la mitad de tus HP actuales, redondeando arriba, y conserva al menos 1. Invoca al Rey Escorpión con 6 + HP sacrificados de vida, mueve 3, daño 4 y capacidad 2. Aplica veneno 1 durante 5 turnos, sin acumular. Pierde 1 HP al inicio de cada turno propio salvo con tu Mundo Oscuro. Actúa desde la siguiente ronda.",
+    "dependencias": "Selección de sacrificio atómica, criatura, veneno y deterioro.",
+    "arte_vfx": "Atlas articulado pinzas/cola/aguijón; ritual, ataques, hit y desintegración.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "SUMMON_SCORPION_SACRIFICE"
+      }
+    ],
+    "estadisticas_implementadas": {
+      "id": "dark_scorpion_king",
+      "name": "Rey Escorpión",
+      "maxHp": 6,
+      "armor": 0,
+      "moveRange": 3,
+      "damage": 4,
+      "capacityCost": 2,
+      "visualKey": "dark_scorpion_king",
+      "behavior": "PRESSURE",
+      "attackRange": 1,
+      "onHitStatus": {
+        "status": "POISONED",
+        "duration": 5
+      }
+    }
+  },
+  {
+    "id_propuesto": "dark_twisted_curse",
+    "nombre": "Maldición Retorcida",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Maldice en secreto una instancia aleatoria del mazo rival. Cuando intente activarla, se anula completamente su efecto original y su usuario pierde 5 HP. La maldición se consume y la carta se considera utilizada.",
+    "dependencias": "Intercepción autoritativa por UID, privacidad, costes/zonas y resolución idempotente; sin adaptadores de inversión.",
+    "arte_vfx": "Presentación breve de la carta anulada, humo negro, desintegración y energía oscura al campeón; barra HP. Sin animación/VFX original.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "reglas_confirmadas": [
+      "Selección aleatoria de instancia, sin filtrar por familia de efecto.",
+      "Identidad oculta hasta la activación.",
+      "Anulación completa y pérdida de 5 HP al usuario de esa instancia.",
+      "Consumo de la maldición y zona de carta utilizada/anulada.",
+      "Sin inversión ni adaptadores; presentación exclusiva de anulación."
+    ],
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "CURSE_RANDOM_OPPONENT_DECK"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_shadow_hand",
+    "nombre": "Mano de las Sombras",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Descarta una instancia aleatoria de la mano rival, sin revelar su identidad. Requiere una mano rival no vacía.",
+    "dependencias": "RNG y cambio de zona privado.",
+    "arte_vfx": "Mano espectral y desplazamiento al descarte.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "DISCARD_OPPONENT",
+        "from": "HAND",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_profane_burial",
+    "nombre": "Sepultura Profana",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Envía hasta 3 cartas del principio del mazo rival a su cementerio, sin revelar sus identidades. No roba ni causa Deck-Out. Requiere un mazo rival no vacío.",
+    "dependencias": "Molido separado del robo y contadores.",
+    "arte_vfx": "Sepultura, tres rastros y polvo oscuro.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "DISCARD_OPPONENT",
+        "from": "DECK",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_despair_tribute",
+    "nombre": "Tributo de la Desesperación",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Elige y descarta otra carta de tu mano; después descarta dos instancias aleatorias de la mano rival. Requiere una carta propia adicional y al menos dos cartas en la mano rival.",
+    "dependencias": "Coste adicional y descarte aleatorio sin reemplazo.",
+    "arte_vfx": "Tributo y dos vínculos de sombra.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "DISCARD_OPPONENT",
+        "from": "HAND",
+        "count": 2,
+        "requireFullCount": true
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_silence_seal",
+    "nombre": "Sello del Silencio",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Respuesta: paga 2 energía y descarta otra carta propia para negar una activación rival pendiente. Una respuesta por activación; no responde a otro Sello. El rival no recupera su energía.",
+    "dependencias": "Ventana real persistente, prioridad, timeout e idempotencia.",
+    "arte_vfx": "Sello interruptor sincronizado con negación real.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": []
+  },
+  {
+    "id_propuesto": "dark_serpent_king",
+    "nombre": "Rey Serpiente",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Invocador",
+    "rareza_propuesta": "Legendaria",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Invoca al Rey Serpiente: 9 HP, mueve 3, daño 2. Sus ataques que causan daño aplican veneno de 1 HP durante 3 turnos, sin acumular. +1 daño directo contra enemigos ya envenenados. Actúa desde la siguiente ronda.",
+    "dependencias": "Motor autoritativo, snapshots y QA por instancia; implementación en curso.",
+    "arte_vfx": "Ilustración y sprite según diseño recuperado.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "SUMMON",
+        "summonId": "dark_serpent_king"
+      }
+    ],
+    "estadisticas_implementadas": {
+      "id": "dark_serpent_king",
+      "name": "Rey Serpiente",
+      "maxHp": 9,
+      "armor": 0,
+      "moveRange": 3,
+      "damage": 2,
+      "capacityCost": 1,
+      "visualKey": "dark_serpent_king",
+      "behavior": "PRESSURE",
+      "attackRange": 1,
+      "onHitStatus": {
+        "status": "POISONED",
+        "duration": 3
+      }
+    }
+  },
+  {
+    "id_propuesto": "dark_the_reaper",
+    "nombre": "La Parca",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Legendaria",
+    "coste_propuesto": 4,
+    "max_copias": 2,
+    "efecto_propuesto": "Sacrifica 4 HP sin morir. Invoca La Parca: 12 HP, mueve 2, daño 3, capacidad 0. Con tu Mundo Oscuro es leal y ataca a alcance 2. Sin él, alcance 1 y a 10% o menos de tu HP te persigue y ataca. Actúa desde la siguiente ronda.",
+    "dependencias": "Sacrificio atómico, IA de lealtad/traición con prioridad de campo propietario, alcance dinámico, snapshots y fuente de campo efectiva.",
+    "arte_vfx": "Sprite espectral original con hacha: idle, movimiento, ataques 1/2 casillas, hit, muerte y rebelión. Vínculo de energía con Mundo Oscuro; ruptura del vínculo y cambio de aura Premium al activarse traición.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "tipo_confirmado": "INVOCACION",
+    "reglas_confirmadas": [
+      "Neutral, cualquier campeón; máximo dos copias por ID.",
+      "Sacrificio definitivo de 4 HP no letal; requiere al menos 5 HP.",
+      "Mundo Oscuro propio activo: lealtad total y alcance 2, incluso a ≤10% HP.",
+      "Sin Mundo Oscuro propio: alcance 1 y evaluación de traición al comenzar la acción.",
+      "Umbral exacto: 10×HP actual ≤ HP máximo autoritativo.",
+      "Campo rival no protege de traición ni amplía alcance.",
+      "Expiración/sustitución elimina inmediatamente lealtad por campo y alcance extra; próxima acción reevalúa la traición.",
+      "Curación por encima del 10% restablece comportamiento aliado en la próxima evaluación.",
+      "Propiedad y control no se transfieren; no se permite cancelar la traición mediante órdenes.",
+      "Vínculo con campo, cambio de aura y rebelión mediante Pixi/VFX Premium."
+    ],
+    "estadisticas_confirmadas": {
+      "energia": 4,
+      "sacrificio_hp": 4,
+      "vida": 12,
+      "dano": 3,
+      "movimiento": 2,
+      "capacidad": 0
+    },
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "FIXED_HP_SACRIFICE",
+        "amount": 4
+      },
+      {
+        "type": "SUMMON",
+        "summonId": "dark_the_reaper"
+      }
+    ],
+    "estadisticas_implementadas": {
+      "id": "dark_the_reaper",
+      "name": "La Parca",
+      "maxHp": 12,
+      "armor": 0,
+      "moveRange": 2,
+      "damage": 3,
+      "capacityCost": 0,
+      "visualKey": "dark_the_reaper",
+      "behavior": "PRESSURE",
+      "attackRange": 1,
+      "damageType": "PHYSICAL"
+    }
+  },
+  {
+    "id_propuesto": "dark_warrior_pact",
+    "nombre": "Pacto del Guerrero",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Guerrero",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Sacrifica permanentemente 1 PM máximo durante esta batalla (mínimo 1). Tus ataques directos que causan daño aplican Sangrado: 1 HP durante 2 turnos. No acumula; nuevas aplicaciones renuevan su duración.",
+    "dependencias": "Motor autoritativo, snapshots y QA por instancia; implementación en curso.",
+    "arte_vfx": "Pacto, pérdida PM e impacto rojo.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "WARRIOR_BLOOD_PACT"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_crypt_whisper",
+    "nombre": "Susurro de la Cripta",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 0,
+    "max_copias": 2,
+    "efecto_propuesto": "Mira las dos primeras cartas de tu mazo. Elige una y ponla al fondo; la otra permanece arriba. No roba.",
+    "dependencias": "Elección de instancia y orden privado.",
+    "arte_vfx": "Susurro y dos dorsos, elección breve.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "CHOOSE_TOP_TO_BOTTOM",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_ash_mark",
+    "nombre": "Marca de Ceniza",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Guerrero",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 0,
+    "max_copias": 2,
+    "efecto_propuesto": "Marca un enemigo a distancia 3 con visión. Tu siguiente ataque directo contra él durante este turno gana +1 daño antes de mitigación. No acumula.",
+    "dependencias": "Marca consumible y clasificación de ataque.",
+    "arte_vfx": "Ceniza, objetivo e impacto adicional.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "APPLY_STATUS",
+        "status": "ASH_MARK",
+        "duration": 1,
+        "to": "ENEMIES",
+        "untilCasterTurnEnd": true
+      }
+    ]
+  },
+  {
+    "id_propuesto": "dark_umbral_step",
+    "nombre": "Paso Umbrío",
+    "expansion": "Oscuridad",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Avanza por una ruta válida de hasta 2 PM sin gastar tus PM actuales. Respeta inmovilizaciones, terreno, obstáculos y ocupación. No es un teletransporte.",
+    "dependencias": "Ruta validada y reglas de terreno, no teletransporte.",
+    "arte_vfx": "Estela de sombra siguiendo el recorrido.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "STEP_CASTER"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_light_world",
+    "nombre": "Mundo de Luz",
+    "expansion": "Luz",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Ultra",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Durante 6 turnos propios contando este, tus efectos explícitos de curación y escudo ganan +1. Sustituye el Mundo de Luz u Oscuro anterior.",
+    "dependencias": "Lista blanca de efectos y campo propietario.",
+    "arte_vfx": "Campo Premium de luz persistente.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "ALIGNMENT_WORLD",
+        "alignment": "LIGHT_WORLD",
+        "duration": 6
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_beyond_call",
+    "nombre": "Llamado del Más Allá",
+    "expansion": "Luz",
+    "campeon_propuesto": "Invocador",
+    "rareza_propuesta": "Ultra",
+    "coste_propuesto": 4,
+    "max_copias": 2,
+    "efecto_propuesto": "Elige una casilla libre a distancia 2 con visión y recupera una invocación propia muerta: Pollo, Zorro, Tortuga, Cuervo o Lobo. Regresa con toda su vida, ocupa capacidad normal y actúa desde la siguiente ronda. Su instancia consume la recuperación única de la partida.",
+    "dependencias": "Procedencia carta→criatura, registro de muerte y selección; exclusiones por revisar.",
+    "arte_vfx": "Portal y reconstrucción de la criatura real.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "RESURRECT_SUMMON"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_second_chance",
+    "nombre": "Segunda Oportunidad",
+    "expansion": "Luz",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Devuelve hasta 3 instancias aleatorias elegibles de tu cementerio al mazo y barájalo. Cada instancia solo puede recuperarse una vez por partida.",
+    "dependencias": "Recuperación por UID, RNG sin reemplazo y barajado.",
+    "arte_vfx": "Tres vínculos luminosos y regreso al mazo.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "RECOVER_RANDOM_TO_DECK",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_divine_inspiration",
+    "nombre": "Inspiración Divina",
+    "expansion": "Luz",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Roba 2 cartas. En Ranked y Versus, intentar robar sin cartas provoca Deck-Out.",
+    "dependencias": "Robo existente, sin vía alternativa.",
+    "arte_vfx": "Dos cartas y luz breve.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "DRAW",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_restoring_grace",
+    "nombre": "Gracia Restauradora",
+    "expansion": "Luz",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Roba 3 cartas y después elige una instancia de tu mano para devolverla al mazo y barajarlo. No consume recuperación del cementerio.",
+    "dependencias": "Resolución con elección pendiente y robo terminal.",
+    "arte_vfx": "Tres haces, selección privada y mezcla.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "DRAW",
+        "count": 3
+      },
+      {
+        "type": "CHOOSE_HAND_TO_DECK"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_destiny_rebirth",
+    "nombre": "Renacer del Destino",
+    "expansion": "Luz",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Devuelve las otras cartas de tu mano al mazo, barájalo y roba la misma cantidad. Esto no consume su recuperación del cementerio.",
+    "dependencias": "Movimiento de instancias atómico y orden privado.",
+    "arte_vfx": "Anillo de renovación y nueva mano.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "REDRAW_HAND"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_pact_fairy",
+    "nombre": "Hada del Pacto",
+    "expansion": "Luz",
+    "campeon_propuesto": "Invocador",
+    "rareza_propuesta": "Rara",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Invoca un Hada: 4 HP, mueve 2, daño 0, capacidad 0. Mientras vive, concede +1 capacidad. Dura 5 turnos propios contando este. Dos Hadas conceden +2; al desaparecer se pierde su bonificación.",
+    "dependencias": "Bonus temporal por fuente y limpieza; valores requieren revisión.",
+    "arte_vfx": "Sprite propio, alas, idle, andar, apoyo, hit y desaparición.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "SUMMON",
+        "summonId": "light_pact_fairy"
+      }
+    ],
+    "estadisticas_implementadas": {
+      "id": "light_pact_fairy",
+      "name": "Hada del Pacto",
+      "maxHp": 4,
+      "armor": 0,
+      "moveRange": 2,
+      "damage": 0,
+      "capacityCost": 0,
+      "visualKey": "light_pact_fairy",
+      "behavior": "GUARD",
+      "capacityAura": 1,
+      "durationTurns": 5
+    }
+  },
+  {
+    "id_propuesto": "light_grace_call",
+    "nombre": "Llamado de la Gracia",
+    "expansion": "Luz",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 2,
+    "max_copias": 2,
+    "efecto_propuesto": "Elige una instancia elegible de tu cementerio y devuélvela a tu mano. Cada instancia solo puede recuperarse una vez por partida.",
+    "dependencias": "Motor autoritativo, snapshots y QA por instancia; implementación en curso.",
+    "arte_vfx": "Ilustración/VFX pendientes del efecto.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": []
+  },
+  {
+    "id_propuesto": "light_dawn_shield",
+    "nombre": "Escudo del Alba",
+    "expansion": "Luz",
+    "campeon_propuesto": "Guerrero",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 0,
+    "max_copias": 2,
+    "efecto_propuesto": "Un aliado a distancia 3 con visión gana 1 de escudo hasta consumirse o el inicio de su siguiente turno.",
+    "dependencias": "Escudo existente, fuente y caducidad.",
+    "arte_vfx": "Barrera Premium existente en formato breve.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "SHIELD",
+        "amount": 1,
+        "to": "ALLIES"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_purifying_flash",
+    "nombre": "Destello Purificador",
+    "expansion": "Luz",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Elige y elimina un único estado menor de un aliado a distancia 3 con visión: Ardiendo, Veneno, Sangrado, Ralentizado o Entorpecido. No elimina inmovilizaciones, congelación ni maldiciones.",
+    "dependencias": "Lista blanca de limpieza y selección validada.",
+    "arte_vfx": "Purificación Premium breve.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "CLEANSE_ONE_MINOR",
+        "to": "ALLIES"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_light_step",
+    "nombre": "Paso de Luz",
+    "expansion": "Luz",
+    "campeon_propuesto": "Invocador",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Elige un aliado a distancia 3 con visión y una casilla ortogonal adyacente libre para desplazarlo sin gastar PM. Respeta inmovilizaciones, obstáculos y ocupación.",
+    "dependencias": "Movimiento ajeno de una casilla validado.",
+    "arte_vfx": "Trayectoria luminosa sobre el paso real.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "STEP_TARGET"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_minor_blessing",
+    "nombre": "Bendición Menor",
+    "expansion": "Luz",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 0,
+    "max_copias": 2,
+    "efecto_propuesto": "Cura 1 HP a un aliado herido a distancia 3 con visión. No sobrecura.",
+    "dependencias": "Curación existente y selección.",
+    "arte_vfx": "Partículas de curación y barra HP.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "HEAL",
+        "amount": 1,
+        "to": "ALLIES"
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_celestial_clarity",
+    "nombre": "Claridad Celestial",
+    "expansion": "Luz",
+    "campeon_propuesto": "Mago",
+    "rareza_propuesta": "Común",
+    "coste_propuesto": 0,
+    "max_copias": 2,
+    "efecto_propuesto": "Mira la primera carta de tu mazo. Puedes mantenerla o ponerla al fondo. No roba; solo tú ves la carta.",
+    "dependencias": "Elección de instancia y filtrado privado.",
+    "arte_vfx": "Revelación breve del dorso al propietario.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "CHOOSE_TOP_TO_BOTTOM",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_protective_light",
+    "nombre": "Luz Protectora",
+    "expansion": "Luz",
+    "campeon_propuesto": "Guerrero",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Un aliado a distancia 3 con visión reduce en 1 su siguiente daño válido hasta el inicio de tu próximo turno. No acumula cargas.",
+    "dependencias": "Reducción consumible por fuente/turno.",
+    "arte_vfx": "Superficie luminosa y reacción localizada.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "APPLY_STATUS",
+        "status": "LIGHT_PROTECTION",
+        "duration": 1,
+        "to": "ALLIES",
+        "untilCasterNextTurnStart": true
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_guardian_vigil",
+    "nombre": "Vigilia del Guardián",
+    "expansion": "Luz",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Infrecuente",
+    "coste_propuesto": 1,
+    "max_copias": 2,
+    "efecto_propuesto": "Un aliado a distancia 3 con visión bloquea una única aplicación de estado negativo menor hasta el inicio de tu próximo turno. No bloquea daño, terreno, desplazamientos ni maldiciones de cartas.",
+    "dependencias": "Protección antes de aplicar estado, consumo y caducidad.",
+    "arte_vfx": "Vigilia y ruptura al consumir protección.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Aprobación formal del propietario 759e0a9a; tres ajustes finales autorizados",
+    "efectos_implementados": [
+      {
+        "type": "APPLY_STATUS",
+        "status": "LIGHT_VIGIL",
+        "duration": 1,
+        "to": "ALLIES",
+        "untilCasterNextTurnStart": true
+      }
+    ]
+  },
+  {
+    "id_propuesto": "light_redemption_spirit",
+    "nombre": "Espíritu de la Redención",
+    "expansion": "Luz",
+    "campeon_propuesto": "Neutral",
+    "rareza_propuesta": "Legendaria",
+    "coste_propuesto": 3,
+    "max_copias": 2,
+    "efecto_propuesto": "Invoca un Espíritu inmóvil: 8 HP, armadura 0, mueve 0, daño 0, capacidad 0. Máximo 1 activo. Desde la siguiente ronda, una acción manual por turno: curar hasta 2 HP pagando 1 HP por punto base efectivo, o dar 2 de escudo pagando 2 HP, a otro aliado a distancia 2. No recibe curación ni acumula escudo con esta habilidad. Con tu Mundo de Luz, +1 al beneficio sin aumentar el sacrificio. El escudo expira al inicio del próximo turno propio. Puede sacrificarse hasta morir. Permanece hasta ser destruido o retirado.",
+    "estado": "APROBADO_DEFINITIVO_20261123",
+    "aprobacion": "Contrato explícito del propietario 711e7f97",
+    "efectos_implementados": [
+      {
+        "type": "SUMMON",
+        "summonId": "light_redemption_spirit"
+      }
+    ],
+    "invocacion": {
+      "id": "light_redemption_spirit",
+      "name": "Espíritu de la Redención",
+      "maxHp": 8,
+      "armor": 0,
+      "moveRange": 0,
+      "damage": 0,
+      "capacityCost": 0,
+      "maxPerOwner": 1,
+      "visualKey": "light_redemption_spirit",
+      "behavior": "GUARD"
+    }
+  }
+]

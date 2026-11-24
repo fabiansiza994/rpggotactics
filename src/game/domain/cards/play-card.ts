@@ -1,3 +1,7 @@
+import { missingRivalZone } from './rival-zones';
+import { resurrectionChoices } from './resurrection';
+import { triggerCardCurse } from './cancellation';
+import { recoveryChoices, recoverToHand } from './recovery';
 import {areHostile} from '../board/occupancy';
 import {manhattan} from '../core/position';
 import {worldFrozenCard,worldFrozen} from './world-frozen';
@@ -24,7 +28,7 @@ export type Playability =
   | Extract<RuleResult, { ok: false }>;
 
 /** Can this card be played right now (ignoring the target)? */
-export function checkPlayability(ctx: RuleContext, cardUid: string): Playability {
+export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = false): Playability {
   const card = ctx.state.player.hand.find((c) => c.uid === cardUid);
   if (!card) return fail('CARD_NOT_IN_HAND', 'Card is not in hand.') as Playability;
   if(ctx.state.player.searchBlockedCardIds?.includes(card.cardId))return fail('CARD_UNAVAILABLE_THIS_TURN','La búsqueda impide activar esta carta durante este turno.') as Playability;
@@ -35,12 +39,15 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
   if (!caster || isActionPrevented(ctx, caster)) {
     return fail('CASTER_INCAPACITATED', 'The hero cannot act.') as Playability;
   }
+  if (def.responseOnly) return fail('INVALID_TARGET', 'Esta carta solo se utiliza en una ventana de respuesta.') as Playability;
+  const missingZone = missingRivalZone(ctx.state, def);
+  if (missingZone) return fail('RIVAL_ZONE_UNAVAILABLE', `Este encuentro no dispone de ${missingZone === 'HAND' ? 'mano' : 'mazo'} rival. Esta carta necesita instancias reales en esa zona.`) as Playability;
   def=worldFrozenCard(def,caster);
   if(def.id==='absolute_zero'&&worldFrozen(caster))return fail('INVALID_TARGET','Mundo Gélido ya está activo: no se renueva ni se consume otra copia.') as Playability;
   if(def.category==='ATTACK'&&caster.statuses.some(s=>s.id==='SNOW_WAR'))return fail('CASTER_INCAPACITATED','Guerra de Nieve impide jugar otras cartas ATTACK; puedes usar las demás categorías.') as Playability;
   if(caster.statuses.some(s=>s.id==='GLACIER_CLAW') && allCardEffects(def).some(fx=>['STEP_CASTER','ICE_WALK','CHARGE_CASTER','TELEPORT_CASTER','SWAP_WITH_TARGET','SWAP_PAIR'].includes(fx.type)))return fail('MOVEMENT_PREVENTED','Garra del Glaciar impide desplazamientos voluntarios; todavía puedes atacar y jugar otras cartas.') as Playability;
   if (def.heroId && def.heroId !== caster.defId) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as Playability;
-  const formRequirement = checkFormRequirement(caster, def.requiredForms);
+  const formRequirement = checkFormRequirement(caster, def.requiredForms, ctx.content);
   if (!formRequirement.ok) return formRequirement as Playability;
   for (const fx of allCardEffects(def)) {
     if (fx.type !== 'TRANSFORM') continue;
@@ -60,7 +67,7 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
   if(caster.statuses.some(s=>s.id==='FROZEN') && allCardEffects(def).some(fx=>fx.type==='ICE_WALK'||fx.type==='STEP_CASTER'||fx.type==='CHARGE_CASTER') && ctx.state.player.movePoints<1)
     return fail('MOVEMENT_PREVENTED','Congelado requiere 1 PM para el próximo movimiento voluntario.') as Playability;
   const { cost } = effectiveCost(ctx.content, caster, def);
-  if (ctx.state.player.energy < cost) {
+  if (!prepaid && ctx.state.player.energy < cost) {
     return fail('NOT_ENOUGH_ENERGY', `Needs ${cost} energy.`) as Playability;
   }
   if (def.minCasterHp && caster.hp < def.minCasterHp)
@@ -70,8 +77,33 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
     return fail('UNIQUE_ALREADY_USED', 'Esta carta Única ya se usó en este combate.') as Playability;
   if (def.focusCost && (caster.focus?.value ?? 0) < def.focusCost)
     return fail('NOT_ENOUGH_FOCUS', `Necesita ${def.focusCost} de Concentración.`) as Playability;
-  if (def.discardSearch && !discardSearchChoices(ctx.state, ctx.content).length)
-    return fail('NO_ELIGIBLE_PIECE', 'No hay piezas de ritual en tu descarte.') as Playability;
+  if (def.discardHandCost && ctx.state.player.hand.length <= 1) return fail('INVALID_TARGET', 'Necesitas otra carta propia para pagar el descarte.') as Playability;
+  if (def.effects.some(effect => effect.type === 'SUMMON_SCORPION_SACRIFICE') && (caster.hp < 2 || summonUsage(ctx.state, caster.id) + 2 > summonCapacityOf(ctx.content, caster)))
+    return fail('INVALID_TARGET', 'El sacrificio necesita al menos 2 HP y dos puntos de capacidad disponibles.') as Playability;
+  if (def.effects.some(effect => effect.type === 'RESURRECT_SUMMON') && !resurrectionChoices(ctx).length)
+    return fail('INVALID_TARGET', 'No hay una invocación muerta, propia y recuperable con capacidad disponible.') as Playability;
+  // Private client snapshots expose counts and public champions, never either deck or rival hand.
+  // The authoritative branch keeps validating the actual instances (including hidden curses).
+  const rivalHeroId = ctx.state.duel?.other.heroId ?? (ctx.state.pileCounts
+    ? ctx.state.units.find(unit => unit.kind === 'HERO' && areHostile(caster, unit))?.id : undefined);
+  if (def.effects.some(effect => effect.type === 'EXECUTIONER_ROULETTE') && !ctx.state.units.some(unit => unit.id === rivalHeroId))
+    return fail('INVALID_TARGET', 'No hay un campeón rival elegible.') as Playability;
+  if (def.effects.some(effect => effect.type === 'DISCARD_OPPONENT' && (effect.from === 'HAND' ? ctx.state.duel?.other.hand.length ?? ctx.state.pileCounts?.opponentHand ?? 0 : ctx.state.duel?.other.deck.length ?? ctx.state.pileCounts?.opponentDeck ?? 0) < (effect.requireFullCount ? effect.count : 1)))
+    return fail('INVALID_TARGET', 'El rival no tiene cartas en la zona requerida.') as Playability;
+  if (def.effects.some(effect => effect.type === 'CHOOSE_TOP_TO_BOTTOM' && (ctx.state.pileCounts?.deck ?? ctx.state.player.deck.length) < effect.count))
+    return fail('INVALID_TARGET', 'El mazo no contiene suficientes cartas para esta elección.') as Playability;
+  if (def.effects.some(effect => effect.type === 'REDRAW_HAND') && ctx.state.player.hand.length <= 1)
+    return fail('INVALID_TARGET', 'Necesitas otra carta en la mano.') as Playability;
+  if (def.effects.some(effect => effect.type === 'CURSE_RANDOM_OPPONENT_DECK') && !(ctx.state.duel ? ctx.state.duel.other.deck.some(instance => !instance.twistedCurse) : (ctx.state.pileCounts?.opponentDeck ?? 0) > 0))
+    return fail('INVALID_TARGET', 'No hay instancias elegibles en el mazo rival.') as Playability;
+  if (def.effects.some(effect => effect.type === 'FIXED_HP_SACRIFICE' && caster.hp <= effect.amount))
+    return fail('NOT_ENOUGH_HP', 'El sacrificio debe dejar al menos 1 HP.') as Playability;
+  if (def.effects.some(effect => effect.type === 'WARRIOR_BLOOD_PACT') && (caster.warriorPact || ctx.state.player.maxMovePoints <= 1))
+    return fail('INVALID_TARGET', 'El pacto ya está activo o dejaría el movimiento máximo por debajo de 1.') as Playability;
+  if (def.effects.some(effect => effect.type === 'RECOVER_RANDOM_TO_DECK') && !recoveryChoices(ctx.state, ctx.content).length)
+    return fail('INVALID_TARGET', 'No hay instancias recuperables en tu cementerio.') as Playability;
+  if (def.discardSearch && !discardSearchChoices(ctx.state, ctx.content, def).length)
+    return fail('NO_ELIGIBLE_PIECE', def.discardSearch === 'ANY_ONCE' ? 'No hay instancias recuperables en tu cementerio.' : 'No hay piezas de ritual en tu descarte.') as Playability;
   if (def.deckSearch) {
     // Explicit product rule: six cards before playing blocks the search, even though it consumes itself.
     if (ctx.state.player.hand.length >= ctx.state.player.maxHandSize)
@@ -95,15 +127,18 @@ export function checkPlayability(ctx: RuleContext, cardUid: string): Playability
  * Validate → pay → resolve effects → discard. Emits CARD_PLAYED before any effect event so
  * the presentation can play a cast animation first.
  */
-export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, searchUid?: string, secondary?: Pos | null, wallOrientation?: import('./targeting').WallOrientation): RuleResult {
-  const check = checkPlayability(ctx, cardUid);
+export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, searchUid?: string, secondary?: Pos | null, wallOrientation?: import('./targeting').WallOrientation, resolution?: 'PREPAID'): RuleResult {
+  const prepaid = resolution === 'PREPAID';
+  const check = checkPlayability(ctx, cardUid, prepaid);
   if (!check.ok) return check;
+  if (missingRivalZone(ctx.state, check.def, true)) return fail('RIVAL_ZONE_UNAVAILABLE', 'Este encuentro no dispone de las instancias rivales necesarias.');
   const { card, def, caster } = check;
   const found = searchUid && def.deckSearch ? ctx.state.player.deck.find(c => c.uid === searchUid) : undefined;
   // Eco del Altar: the chosen uid must be a ritual piece in THIS player's real discard pile now.
-  const fromDiscard = searchUid && def.discardSearch ? discardSearchChoices(ctx.state, ctx.content).find(c => c.uid === searchUid) : undefined;
-  if (def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSearch(found, ctx.content, caster.defId,def) : searchUid !== undefined)
-    return fail('INVALID_TARGET', def.discardSearch ? 'Elige una pieza de ritual de tu descarte.' : 'Elige una invocación válida del mazo.');
+  const fromHandCost = searchUid && def.discardHandCost ? ctx.state.player.hand.find(copy => copy.uid === searchUid && copy.uid !== cardUid) : undefined;
+  const fromDiscard = searchUid && def.discardSearch ? discardSearchChoices(ctx.state, ctx.content, def).find(c => c.uid === searchUid) : undefined;
+  if (def.discardHandCost ? !fromHandCost : def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSearch(found, ctx.content, caster.defId,def) : searchUid !== undefined)
+    return fail('INVALID_TARGET', def.discardSearch ? 'Elige una instancia recuperable de tu cementerio.' : 'Elige una invocación válida del mazo.');
 
   if (wallOrientation !== undefined && (!['ice_wall','glacial_field'].includes(def.id) || !['HORIZONTAL','VERTICAL'].includes(wallOrientation))) return fail('INVALID_TARGET', 'Orientación no permitida.');
   const resolved = resolveTarget(ctx, caster, def.targeting, target, secondary, wallOrientation);
@@ -120,14 +155,32 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   const price = effectiveCost(ctx.content, caster, def);
   const incarnation=caster.statuses.find(s=>ctx.content.statuses[s.id]?.thunderEconomy);
   const thunder=isThunderCard(def);
-  if(incarnation && thunder) incarnation.discountUsed=true;
-  setEnergy(ctx, player.energy - price.cost);
-  if (price.scope) {
-    caster.costDiscounts = caster.costDiscounts!.filter((d) => d.scope !== price.scope);
-    if (!caster.costDiscounts.length) delete caster.costDiscounts;
+  if (!prepaid) {
+    if(incarnation && thunder) incarnation.discountUsed=true;
+    setEnergy(ctx, player.energy - price.cost);
+    if (price.scope) {
+      caster.costDiscounts = caster.costDiscounts!.filter((discount) => discount.scope !== price.scope);
+      if (!caster.costDiscounts.length) delete caster.costDiscounts;
+      ctx.emit({ type: 'COST_DISCOUNT_USED', unitId: caster.id, scope: price.scope, cardId: def.id, paid: price.cost });
+    }
+    ctx.state.stats.cardsPlayed += 1;
+    if (ctx.state.duel?.darkLightRelease && !card.twistedCurse) {
+      const id = `cast-${ctx.state.nextId++}`;
+      ctx.state.pendingCast = { id, cardUid, cardId: def.id, casterId: caster.id, respondingHeroId: ctx.state.duel.other.heroId, target: target ? { ...target } : null, searchUid, secondary: secondary ? { ...secondary } : secondary, wallOrientation, paidEnergy: price.cost, deadline: 0 };
+      ctx.emit({ type: 'CARD_CAST_PENDING', cardUid, cardId: def.id, casterId: caster.id, windowId: id });
+      return OK;
+    }
   }
-  player.hand = player.hand.filter((c) => c.uid !== card.uid);
-  ctx.state.stats.cardsPlayed += 1;
+  player.hand = player.hand.filter((copy) => copy.uid !== card.uid);
+
+  if (card.twistedCurse) { triggerCardCurse(ctx, player, card, def, caster); return OK; }
+
+  if (fromHandCost) {
+    player.hand = player.hand.filter(copy => copy.uid !== fromHandCost.uid);
+    delete fromHandCost.publicDiscard;
+    player.discard.push(fromHandCost);
+    ctx.emit({ type: 'CARD_DISCARDED', cardUid: fromHandCost.uid, cardId: fromHandCost.cardId, reason: 'EFFECT' });
+  }
 
   ctx.emit({
     type: 'CARD_PLAYED',
@@ -168,17 +221,9 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     ctx.emit({type:'CARD_DRAWN',cardUid:found.uid,cardId:found.cardId});
   }
   if (fromDiscard) {
-    // Same lock as the deck search: not playable and not sealable until the next own turn.
-    player.discard = player.discard.filter(c => c.uid !== fromDiscard.uid);
-    delete fromDiscard.publicDiscard;
-    fromDiscard.unavailableThisTurn = true;
-    fromDiscard.recoveredThisBattle = true;
-    player.hand.push(fromDiscard);
-    // CARD_DRAWN is private in PvP (duelEvents hides it from the rival).
-    ctx.emit({type:'CARD_DRAWN',cardUid:fromDiscard.uid,cardId:fromDiscard.cardId});
+    recoverToHand(ctx, fromDiscard.uid, def.discardSearch, def.discardSearch === 'RITUAL_PIECE');
   }
   const directAttack = def.targeting.type === 'UNIT' && !def.targeting.area ? (def.targeting.range === 1 ? 'DIRECT_MELEE' as const : depthEnabled(ctx) ? 'DIRECT_RANGED' as const : undefined) : undefined;
-  if (price.scope) ctx.emit({ type: 'COST_DISCOUNT_USED', unitId: caster.id, scope: price.scope, cardId: def.id, paid: price.cost });
   applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id, cardUid: card.uid }, selectedEffects);
 
   if (def.unique) {
@@ -197,7 +242,8 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     if(!incarnation.stepUsed) incarnation.stepReady=true;
     ctx.emit({type:'LEGENDARY_TRIGGER',unitId:caster.id,status:incarnation.id,kind:'THUNDER',amount:1,pos:caster.pos});
   }
-  ctx.emit({ type: 'CARD_RESOLVED', cardUid: card.uid, cardId: def.id });
+  if (player.pendingCardChoice) player.pendingCardChoice.sourceCardUid = card.uid;
+  else ctx.emit({ type: 'CARD_RESOLVED', cardUid: card.uid, cardId: def.id });
   return OK;
 }
 
@@ -215,7 +261,6 @@ export function summonSearchChoices(state: Readonly<import('../state').GameState
 }
 
 /** Eco del Altar choices: ritual pieces in the player's own discard pile, most recent first. */
-export function discardSearchChoices(state: Readonly<import('../state').GameState>, content: import('../content').GameContent): CardInstance[] {
-  const unavailable = new Set([...state.player.hand, ...state.player.deck, ...(state.player.banished ?? []), ...(state.player.altar ?? [])].map(c => c.uid));
-  return state.player.discard.filter(c => content.cards[c.cardId]?.ritualPiece && !c.recoveredThisBattle && !unavailable.has(c.uid)).reverse();
+export function discardSearchChoices(state: Readonly<import('../state').GameState>, content: import('../content').GameContent, search?: CardDefinition): CardInstance[] {
+  return recoveryChoices(state, content, search?.discardSearch ?? 'RITUAL_PIECE');
 }

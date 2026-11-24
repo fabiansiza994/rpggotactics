@@ -1,3 +1,4 @@
+import { isMinorNegativeStatus } from './minor-statuses';
 import {pruneScoutResources} from '../combat/scout-siege';
 import {pruneLifeFeathers} from '../combat/raven';
 import {pruneBloodTrails} from '../combat/blood-trail';
@@ -17,6 +18,10 @@ export function applyStatus(
   keep?: readonly Unit[],
 ): void {
   if (duration <= 0 || !ctx.state.units.includes(unit)) return;
+  if (isMinorNegativeStatus(statusId) && unit.statuses.some(status => status.id === 'LIGHT_VIGIL')) {
+    removeStatus(ctx, unit, 'LIGHT_VIGIL', 'CONSUMED');
+    return;
+  }
   const def = ctx.content.statuses[statusId];
   const sourced = isSourcedStatus(def);
   if (sourced)
@@ -84,7 +89,7 @@ export function decrementStatuses(ctx: RuleContext, unit: Unit): void {
   for (const instance of [...unit.statuses]) {
     const def = ctx.content.statuses[instance.id];
     if (instance.id==='DRAKE_BURN')continue;
-    if (def.ownerStartLifetime || def.expiresAtOwnerTurnStart || def.permanent || def.summonActivationClock) continue;
+    if (instance.expiresAtCasterTurnStart || def.ownerStartLifetime || def.expiresAtOwnerTurnStart || def.permanent || def.summonActivationClock) continue;
     instance.turnsLeft -= 1;
     if (instance.turnsLeft <= 0) removeStatus(ctx, unit, instance.id, 'EXPIRED');
   }

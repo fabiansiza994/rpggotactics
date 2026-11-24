@@ -6,6 +6,8 @@ export function statusIcon(id: StatusId): IconName {
 }
 export function statusEffect(def: StatusDef): string {
   const effects:string[]=[];
+  if(def.id==='LIGHT_PROTECTION')return 'Reduce 1 el siguiente daño válido; se consume o expira al inicio del próximo turno del lanzador';
+  if(def.id==='LIGHT_VIGIL')return 'Bloquea un estado menor; se consume o expira al inicio del próximo turno del lanzador';
   if(def.damageToHealingCap)effects.push(`Primera instancia de daño por turno → hasta ${def.damageToHealingCap} PV; no consume escudo`);
   if(def.thunderEconomy)effects.push('Primera eléctrica −1 energía; cada eléctrica +1 PM; desplazamiento adyacente opcional una vez por turno');
   if(def.outgoingDamageBonus) effects.push(`Ataques +${def.outgoingDamageBonus}`);

@@ -1,6 +1,11 @@
 import type { StatusId } from '../../game';
 
 export const STATUS_LABEL: Record<StatusId, string> = {
+  LIGHT_PROTECTION: 'Luz Protectora',
+  LIGHT_VIGIL: 'Vigilia del Guardián',
+  ASH_MARK: 'Marca de Ceniza',
+  DARK_WORLD: 'Mundo Oscuro',
+  LIGHT_WORLD: 'Mundo de Luz',
  SNOW_WAR:'Guerra de Nieve',GLACIER_CLAW:'Garra del Glaciar',
  ABSOLUTE_ZERO:'Mundo Gélido',
  FROZEN:'Congelado: próximo movimiento +1 PM',

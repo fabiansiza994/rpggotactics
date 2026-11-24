@@ -1,3 +1,5 @@
+import { computeReachable } from '../board/pathfinding';
+import { isMinorNegativeStatus } from '../statuses/minor-statuses';
 import { summonCanActNow } from '../summons/summons';
 import { allPositions, tileAt, inBounds, isPlayable, type Board } from '../board/board';
 import { hasLineOfSight } from '../board/line-of-sight';
@@ -52,6 +54,7 @@ export interface ResolvedTarget {
   focusSpent?: number;
   /** `pairSwap` only: tile of the unit that swaps with the target (the caster's tile, or a second summon's). */
   swapPartner?: Pos;
+  stepDestination?: Pos;
 }
 
 export function matchesUnitFilter(caster: Unit, unit: Unit, filter: UnitFilter): boolean {
@@ -247,6 +250,7 @@ type UnitTargeting = Extract<TargetingDef, { type: 'UNIT' }>;
  * swap is a teleport, but rooting is the counterplay), structures are never summons.
  */
 export function pairSwapPartners(ctx: RuleContext, caster: Unit, targeting: UnitTargeting, first: Unit): (Pos | null)[] {
+  if (targeting.adjacentStep) return isMovementPrevented(ctx, first) || first.kind === 'STRUCTURE' ? [] : DIRECTIONS.map(direction => step(first.pos, direction)).filter(pos => canEnter(ctx, pos, first.id)).sort(comparePos);
   const rule = targeting.pairSwap;
   if (!rule || isMovementPrevented(ctx, first)) return [];
   const out: (Pos | null)[] = isMovementPrevented(ctx, caster) ? [] : [null];
@@ -282,7 +286,9 @@ export function getValidTargets(ctx: RuleContext, caster: Unit, targeting: Targe
         .filter((u) => !targeting.excludeStructures || u.kind !== 'STRUCTURE')
         .filter((u) => !targeting.preyOnly || isPreyOf(u, caster.id))
         .filter((u) => !targeting.readySummon || summonCanActNow(ctx.state, u))
-        .filter((u) => !targeting.pairSwap || pairSwapPartners(ctx, caster, targeting, u).length > 0)
+        .filter((u) => !targeting.injuredOnly || u.hp < u.maxHp)
+        .filter((u) => !targeting.minorNegativeOnly || u.statuses.some(status => isMinorNegativeStatus(status.id)))
+        .filter((u) => !(targeting.pairSwap || targeting.adjacentStep) || pairSwapPartners(ctx, caster, targeting, u).length > 0)
         .map((u) => u.pos)
         .filter((p) => inRange(caster, p, targeting.range, targeting.minRange))
         .filter((p) => !targeting.requiresLineOfSight || hasLineOfSight(ctx, caster.pos, p))
@@ -303,7 +309,7 @@ export function getValidTargets(ctx: RuleContext, caster: Unit, targeting: Targe
         .filter((p) => chargeLane(ctx, caster, p, targeting.range, targeting.minRange))
         .sort(comparePos);
     case 'STEP':
-      return targeting.away ? retreatTiles(ctx, caster, targeting.range) : stepTiles(ctx, caster, targeting.range);
+      return (targeting.away ? retreatTiles(ctx, caster, targeting.range) : stepTiles(ctx, caster, targeting.range)).filter(pos => !targeting.terrainCost || computeReachable(ctx, caster, targeting.range).has(posKey(pos)));
     case 'CROSS':
     case 'AREA':
       return allPositions(board)
@@ -344,7 +350,7 @@ export function resolveTarget(
   wallOrientation?: WallOrientation,
 ): ResolvedTarget | null {
   const board = ctx.state.board;
-  const pairSwap = targeting.type === 'UNIT' && !!targeting.pairSwap;
+  const pairSwap = targeting.type === 'UNIT' && !!(targeting.pairSwap || targeting.adjacentStep);
   if (secondary && !pairSwap) return null;
 
   if (targeting.type === 'SELF') {
@@ -394,6 +400,12 @@ export function resolveTarget(
       affectedTiles: [target],
       hitUnitId: unitAt(ctx.state, target)?.id ?? null,
     };
+  }
+
+  if (targeting.type === 'UNIT' && targeting.adjacentStep) {
+    const first = unitAt(ctx.state, target)!;
+    if (!secondary || !pairSwapPartners(ctx, caster, targeting, first).some(pos => pos && samePos(pos, secondary))) return null;
+    return { target, impact: target, direction: alignedDirection(first.pos, secondary), affectedTiles: [target], hitUnitId: first.id, stepDestination: secondary };
   }
 
   if (targeting.type === 'UNIT' && targeting.pairSwap) {

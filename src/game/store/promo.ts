@@ -40,7 +40,7 @@ export type PromoRewardItem =
 export type PromoReward = PromoRewardItem | { type: 'MULTI'; items: PromoRewardItem[] };
 
 /** Upper bounds that keep a typo in a seed from becoming a giant grant. */
-const MAX_CRYSTALS = 10_000;
+const MAX_CRYSTALS = 16_000;
 const MAX_ITEMS = 8;
 
 export interface PromoContext {

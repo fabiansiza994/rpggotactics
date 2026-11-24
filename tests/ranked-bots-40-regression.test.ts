@@ -31,11 +31,11 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {RankedPanel} from '../src/presentation/ranked/RankedViews';
 import {botIdentity} from '../src/game/ai/ranked-bot-policy';
 import type {RankedQueueState} from '../src/presentation/ranked/rankedApi';
-it('renders explicit IA acceptance and continued human search only when the server offers it',()=>{
+it('renders neutral automatic search without IA confirmation even for a cached offer',()=>{
  const profile={enabled:true as const,rp:0,wins:0,losses:0,draws:0,milestones:[],queue:{state:'IDLE' as const}};
  const queue:RankedQueueState={state:'SEARCHING',heroId:'mage',since:Date.now(),botOffer:{identity:botIdentity('ui',0,7),rewards:{rpDelta:10,xp:22,lossRp:0,abandonRp:0,lossXp:15,restrictions:[]}}};
  const props={profile,queue,busy:false,error:'',blocked:null,championName:'Mago',onSearch:()=>{},onCancel:()=>{},onAcceptBot:()=>{}};
- const offered=renderToStaticMarkup(createElement(RankedPanel,props));expect(offered).toContain('Aceptar rival IA');expect(offered).toContain('Seguir buscando rival humano');
+ const offered=renderToStaticMarkup(createElement(RankedPanel,props));expect(offered).not.toContain('Aceptar rival IA');expect(offered).not.toContain('Seguir buscando rival humano');expect(offered).toContain('Buscando rival');
  expect(renderToStaticMarkup(createElement(RankedPanel,{...props,queue:{state:'SEARCHING',heroId:'mage',since:Date.now()}}))).not.toContain('Aceptar rival IA');
  expect(renderToStaticMarkup(createElement(RankedPanel,{...props,queue:{state:'MATCHED',code:'ABCD1234'}}))).not.toContain('Aceptar rival IA');
 });

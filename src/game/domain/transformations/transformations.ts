@@ -25,6 +25,11 @@ export interface TransformationDef {
   nature?: FormNature;
   /** Phase 1 sandbox values; additive so changing form preserves other armor modifiers. */
   armorBonus: number;
+  inheritsForm?: string;
+  moveBonus?: number;
+  directDamageBonus?: number;
+  upkeepHp?: number;
+  darkUpkeepHp?: number;
   provisional?: boolean;
 }
 export const activeForm = (unit: Unit): string | null => unit.activeForm ?? null;
@@ -32,8 +37,9 @@ export const activeForm = (unit: Unit): string | null => unit.activeForm ?? null
 export function checkFormRequirement(
   unit: Unit,
   requiredForms?: readonly (string | null)[],
+  content?: GameContent,
 ): RuleResult {
-  return requiredForms && !requiredForms.includes(activeForm(unit))
+  return requiredForms && !requiredForms.includes(activeForm(unit)) && !(unit.activeForm && content?.transformations?.[unit.activeForm]?.inheritsForm && requiredForms.includes(content.transformations[unit.activeForm]!.inheritsForm!))
     ? fail('FORM_REQUIRED', 'Esta carta requiere otra forma activa.')
     : OK;
 }
@@ -68,6 +74,9 @@ export function transform(ctx: RuleContext, unit: Unit, formId: string | null): 
   const oldBonus = previous ? (ctx.content.transformations?.[previous]?.armorBonus ?? 0) : 0;
   const nextBonus = formId ? ctx.content.transformations![formId]!.armorBonus : 0;
   unit.armor = Math.max(0, unit.armor - oldBonus + nextBonus);
+  const mobility = (formId ? ctx.content.transformations?.[formId]?.moveBonus ?? 0 : 0) - (previous ? ctx.content.transformations?.[previous]?.moveBonus ?? 0 : 0);
+  adjustFormMobility(ctx.state, unit, mobility);
+  if (mobility && ctx.state.player.heroId === unit.id) ctx.emit({ type: 'MOVE_POINTS_CHANGED', from: Math.max(0, ctx.state.player.movePoints - mobility), to: ctx.state.player.movePoints, max: ctx.state.player.maxMovePoints });
   if (formId === null) delete unit.activeForm;
   else unit.activeForm = formId;
   // No HP, maxHP, shield, statuses, energy or movement refresh.
@@ -103,6 +112,26 @@ export function clearBattleForms(state: GameState, content: GameContent): void {
       0,
       unit.armor - (content.transformations?.[unit.activeForm]?.armorBonus ?? 0),
     );
+    adjustFormMobility(state, unit, -(content.transformations?.[unit.activeForm]?.moveBonus ?? 0));
     delete unit.activeForm;
   }
+}
+
+
+function adjustFormMobility(state: GameState, unit: Unit, delta: number): void {
+  if (!delta) return;
+  unit.moveRange = Math.max(1, unit.moveRange + delta);
+  const bank = state.player.heroId === unit.id ? state.player : state.duel?.other.heroId === unit.id ? state.duel.other : undefined;
+  if (bank) { bank.maxMovePoints = Math.max(1, bank.maxMovePoints + delta); bank.movePoints = Math.max(0, bank.movePoints + delta); }
+}
+
+/** Runs after field expiration and only at a real owner turn start. */
+export function payFormUpkeep(ctx: RuleContext, unit: Unit): void {
+  const definition = unit.activeForm ? ctx.content.transformations?.[unit.activeForm] : undefined;
+  if (!definition?.upkeepHp) return;
+  const dark = unit.statuses.some(status => status.id === 'DARK_WORLD' && status.turnsLeft > 0);
+  const amount = dark ? definition.darkUpkeepHp ?? definition.upkeepHp : definition.upkeepHp;
+  if (unit.hp <= amount) { transform(ctx, unit, null); return; }
+  unit.hp -= amount;
+  ctx.emit({ type: 'HP_SACRIFICED', unitId: unit.id, cardId: 'dark_abyssal_minotaur', amount, hpAfter: unit.hp });
 }

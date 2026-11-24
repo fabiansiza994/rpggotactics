@@ -1,6 +1,8 @@
+import {DARK_LIGHT_CARDS} from '../data/dark-light';
 import {MARKET_BOX_MEMBERSHIP} from '../data/market-box-cards';
 /** Commercial identity only: never changes release gates, ownership or acquisition. */
 export const PRIMARY_MARKET_EXPANSION: Readonly<Record<string,string>> = {
+ ...Object.fromEntries(DARK_LIGHT_CARDS.map(card=>[card.id,card.expansion!])),
  ...Object.fromEntries(Object.entries(MARKET_BOX_MEMBERSHIP).flatMap(([e,ids])=>ids.map(id=>[id,e]))),
   "voltaic_armor": "thunder_god",
   "storm_avatar": "thunder_god",

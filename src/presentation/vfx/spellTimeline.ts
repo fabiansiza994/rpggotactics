@@ -39,7 +39,21 @@ export function compileTimeline(
   const add = (at: number, kind: CueKind, event: GameEvent, duration = 0, key = spell?.key ?? '') =>
     cues.push({ at, kind, event, duration, key });
   for (const event of events) {
-    if(event.type==='SNOWBALL_FIRED'){
+    if(event.type==='REDEMPTION_SUPPORT'){const start=Math.max(cursor,recoveryUntil);add(start,'event',event,reduced?90:480,'redemption-support');cursor=effectAt=start+(reduced?90:480);}
+    else if (event.type === 'REAPER_DISPOSITION' && event.disposition === 'REBEL') {
+      add(cursor, 'event', event, reduced ? 60 : 580); cursor += reduced ? 60 : 580; effectAt = cursor;
+    } else if(event.type==='CARD_NEGATED'){
+      const start=Math.max(cursor,recoveryUntil),total=reduced?180:900;
+      add(start,'event',event,reduced?120:800,'negate-card');
+      add(start+(reduced?30:220),'event',event,reduced?100:650,'negate-seal');
+      cursor=effectAt=start+total;
+    } else if (event.type === 'CARD_CURSE_TRIGGERED') {
+      const start = Math.max(cursor, recoveryUntil), total = reduced ? 220 : 1150;
+      add(start, 'event', event, reduced ? 140 : 850, 'curse-card');
+      add(start + (reduced ? 40 : 260), 'event', event, reduced ? 100 : 620, 'curse-smoke');
+      add(start + (reduced ? 140 : 800), 'event', event, reduced ? 80 : 350, 'curse-beam');
+      cursor = effectAt = start + total;
+    } else if(event.type==='SNOWBALL_FIRED'){
       const start=Math.max(cursor,recoveryUntil,effectAt),prepare=reduced?40:180,travel=reduced?100:420;
       add(start,'event',event,prepare,'snowball');add(start+prepare,'projectile',event,travel,'snowball');
       cursor=effectAt=start+prepare+travel;recoveryUntil=cursor;

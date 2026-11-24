@@ -1,9 +1,11 @@
+import { loseHpTogether } from '../cards/hp-loss';
+import { payFormUpkeep } from '../transformations/transformations';
 import {snowTurnEnd} from '../combat/snow';
 import { actSummons } from '../summons/summons';
 import { declareAllIntents, executeIntent, planIntent, type IntentPlan } from '../ai/ai';
 import { canEnter, effectiveMoveRange, getHero, terrainDefAt, unitAt } from '../board/occupancy';
 import { drawCards, setEnergy, setMovePoints } from '../cards/deck';
-import { expireShield } from '../combat/damage';
+import { expireShield, defeatUnit } from '../combat/damage';
 import { resolveGlyphs } from '../combat/glyphs';
 import { requireDef } from '../content';
 import type { RuleContext } from '../context';
@@ -11,7 +13,7 @@ import { comparePos, manhattan } from '../core/position';
 import type { Faction, Unit } from '../entities/unit';
 import { updateObjectives } from '../objectives/objective-rules';
 import type { EnemySpawnDef } from '../scenario';
-import { decrementStatuses, expireTurnStartStatuses, tickStatuses } from '../statuses/status-rules';
+import { decrementStatuses, expireTurnStartStatuses, tickStatuses, removeStatus } from '../statuses/status-rules';
 import { allPositions } from '../board/board';
 import { applyEndTurnTerrain, tickBoardDurations } from '../terrain/terrain-rules';
 import { fireRoundTrigger } from '../mechanisms/mechanism-rules';
@@ -31,9 +33,15 @@ export function startFactionTurn(ctx: RuleContext, faction: Faction): void {
   ctx.state.activeFaction = faction;
   ctx.state.phase = faction;
   ctx.emit({ type: 'TURN_STARTED', faction, round: ctx.state.round });
+  const startingOwners = new Set(unitsOf(ctx, faction).map(unit => unit.id));
+  for(const unit of ctx.state.units) for(const status of [...unit.statuses])
+    if(status.expiresAtCasterTurnStart && startingOwners.has(status.expiresAtCasterTurnStart)) removeStatus(ctx,unit,status.id,'EXPIRED');
   for (const unit of unitsOf(ctx, faction)) {
     expireShield(ctx, unit);
     expireTurnStartStatuses(ctx, unit);
+    payFormUpkeep(ctx, unit);
+    if (unit.defId === 'dark_scorpion_king' && !ctx.state.units.find(owner => owner.id === unit.summon?.ownerId)?.statuses.some(status => status.id === 'DARK_WORLD' && status.turnsLeft > 0)) loseHpTogether(ctx, [unit], 1, 'scorpion-deterioration');
+    if (!ctx.state.units.includes(unit)) continue;
     tickStatuses(ctx, unit, 'TURN_START');
   }
   resolveGlyphs(ctx, faction);
@@ -42,6 +50,7 @@ export function startFactionTurn(ctx: RuleContext, faction: Faction): void {
 export function endFactionTurn(ctx: RuleContext, faction: Faction): void {
   for (const unit of unitsOf(ctx, faction)) {
     snowTurnEnd(ctx,unit);
+    if (unit.summon?.durationTurnsLeft !== undefined && --unit.summon.durationTurnsLeft <= 0) { defeatUnit(ctx, unit); continue; }
     if(!ctx.state.units.includes(unit))continue;
     applyEndTurnTerrain(ctx, unit);
     if (!ctx.state.units.includes(unit)) continue;
@@ -49,6 +58,9 @@ export function endFactionTurn(ctx: RuleContext, faction: Faction): void {
     if (!ctx.state.units.includes(unit)) continue;
     decrementStatuses(ctx, unit);
   }
+  const endingOwners = new Set(ctx.state.units.filter(unit => unit.faction === faction).map(unit => unit.id));
+  for (const unit of ctx.state.units) for (const status of [...unit.statuses])
+    if (status.expiresAfterCasterTurn && endingOwners.has(status.expiresAfterCasterTurn)) removeStatus(ctx, unit, status.id, 'EXPIRED');
   ctx.emit({ type: 'TURN_ENDED', faction, round: ctx.state.round });
 }
 

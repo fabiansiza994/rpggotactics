@@ -1,3 +1,5 @@
+import { redemptionOptions, type RedemptionAction } from '../domain/summons/redemption';
+const supportKey = (key: string) => { const m = /^redemption:(HEAL|PROTECT):(.+)$/.exec(key); return m ? {action:m[1] as RedemptionAction,unitId:m[2]!}:null; };
 import {worldFrozenCard} from '../domain/cards/world-frozen';
 import {LEGENDARY_STEP_SELECTION,legendaryStepTargets} from '../domain/combat/legendary-step';
 import type { IntentPlan } from '../domain/ai/ai';
@@ -146,6 +148,7 @@ export class GameEngine {
   }
 
   getCardPlayability(cardUid: string): CardPlayability {
+    if(supportKey(cardUid))return this.getValidTargets(cardUid).length?{playable:true}:{playable:false,reason:'INVALID_TARGET',message:'Apoyo no disponible.'};
     if (this.current.phase !== 'PLAYER') {
       return { playable: false, reason: 'NOT_PLAYER_TURN', message: 'Not the player turn.' };
     }
@@ -159,6 +162,7 @@ export class GameEngine {
 
   /** Targeting of a selection key (hand card or ritual), or null when it does not exist. */
   selectionTargeting(key: string): TargetingDef | null {
+    if (supportKey(key)) return {type:'UNIT',range:2,unitFilter:'ALLY',requiresLineOfSight:true};
     if(key===LEGENDARY_STEP_SELECTION)return {type:'TILE',range:1,tileFilter:'EMPTY'};
     const ritualId = ritualIdOf(key);
     if (ritualId) return (Object.hasOwn(this.content.rituals ?? {}, ritualId) && this.content.rituals![ritualId]?.targeting) || null;
@@ -169,6 +173,7 @@ export class GameEngine {
 
   /** The command that acting with this selection on `target` sends (`secondary`: pairSwap cards only). */
   selectionCommand(key: string, target: Pos | null, secondary?: Pos | null): Command {
+    const support = supportKey(key); if (support) return {type:'REDEMPTION_SUPPORT',...support,targetId:this.current.units.find(u=>target&&u.pos.x===target.x&&u.pos.y===target.y)?.id??''};
     if(key===LEGENDARY_STEP_SELECTION && target)return {type:'LEGENDARY_STEP',to:target};
     const ritualId = ritualIdOf(key);
     if (ritualId) return { type: 'ACTIVATE_RITUAL', ritualId, target };
@@ -183,7 +188,7 @@ export class GameEngine {
     if (this.current.phase !== 'PLAYER') return [];
     const ctx = this.query();
     const check = checkPlayability(ctx, cardUid);
-    if (!check.ok || check.def.targeting.type !== 'UNIT' || !check.def.targeting.pairSwap) return [];
+    if (!check.ok || check.def.targeting.type !== 'UNIT' || !(check.def.targeting.pairSwap || check.def.targeting.adjacentStep)) return [];
     if (!getValidTargets(ctx, check.caster, check.def.targeting).some((p) => p.x === target.x && p.y === target.y)) return [];
     const first = unitAt(ctx.state, target);
     return first ? pairSwapPartners(ctx, check.caster, check.def.targeting, first) : [];
@@ -200,6 +205,7 @@ export class GameEngine {
   }
 
   getValidTargets(cardUid: string): Pos[] {
+    const support=supportKey(cardUid); if(support)return redemptionOptions(this.query(),support.unitId,support.action).map(o=>o.target.pos);
     if(cardUid===LEGENDARY_STEP_SELECTION)return legendaryStepTargets(this.query());
     const ctx = this.query();
     if (this.current.phase !== 'PLAYER') return [];
@@ -219,6 +225,13 @@ export class GameEngine {
 
   previewCard(cardUid: string, target: Pos | null, secondary?: Pos | null): CardPreview {
     const none: CardPreview = { valid: false, resolved: null, predictedEvents: [] };
+    const support=supportKey(cardUid);
+    if(support){
+      if(!target||!this.getValidTargets(cardUid).some(p=>p.x===target.x&&p.y===target.y))return none;
+      const predictedEvents:GameEvent[]=[];
+      const result=executeCommand({state:structuredClone(this.current),content:this.content,emit:e=>predictedEvents.push(e)},this.selectionCommand(cardUid,target));
+      return result.ok?{valid:true,resolved:{target,impact:target,affectedTiles:[target],direction:null,hitUnitId:unitAt(this.current,target)?.id??null},predictedEvents}:none;
+    }
     if(cardUid===LEGENDARY_STEP_SELECTION) {
       if(!target || !legendaryStepTargets(this.query()).some(p=>p.x===target.x&&p.y===target.y))return none;
       return {valid:true,resolved:{target,impact:target,affectedTiles:[target],direction:null,hitUnitId:null},predictedEvents:[]};

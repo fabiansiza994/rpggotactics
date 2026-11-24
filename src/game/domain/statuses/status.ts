@@ -1,6 +1,11 @@
 import type { DamageType } from '../combat/damage-types';
 
 export type StatusId =
+  | 'LIGHT_PROTECTION'
+  | 'LIGHT_VIGIL'
+  | 'ASH_MARK'
+  | 'DARK_WORLD'
+  | 'LIGHT_WORLD'
   | 'SNOW_WAR'
   | 'GLACIER_CLAW'
   | 'ABSOLUTE_ZERO'
@@ -163,6 +168,9 @@ export const isSourcedStatus = (def: Pick<StatusDef, 'preyMark' | 'taunt'>): boo
 
 /** Duration is counted in the owner's turns and decremented at the end of each of them. */
 export interface StatusInstance {
+  expiresAfterCasterTurn?: string;
+  /** Absolute lifecycle boundary tied to the caster, including when applied to another ally. */
+  expiresAtCasterTurnStart?: string;
   id: StatusId;
   turnsLeft: number;
   /** Serialized battle-only trigger consumption; never reset by a snapshot. */

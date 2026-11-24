@@ -20,6 +20,7 @@ export type RuleError =
   | 'NOT_ENOUGH_HP'
   /** A Única card whose copy was already banished this battle (no second resolution). */
   | 'UNIQUE_ALREADY_USED'
+  | 'RIVAL_ZONE_UNAVAILABLE'
   | 'INVALID_TARGET'
   | 'CASTER_INCAPACITATED'
   | 'WRONG_CLASS'

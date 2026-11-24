@@ -1,3 +1,9 @@
+import { beginResurrection } from './resurrection';
+import { loseHpTogether } from './hp-loss';
+import { computeReachable } from '../board/pathfinding';
+import { beginCardChoice, beginMinorCleanse, beginScorpionSacrifice } from './card-choice';
+import { randomInt, nextRandom, shuffleInPlace } from '../core/rng';
+import { recoverRandomToDeck } from './recovery';
 import { transform } from '../transformations/transformations';
 import { activateSummonNow, spawnSummon, summonCapacityOf } from '../summons/summons';
 import { areHostile } from '../board/occupancy';
@@ -233,10 +239,10 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     if (focus && e.ctx.state.units.includes(e.caster)) gainFocus(e.ctx, e.caster, focus);
   },
   HEAL: (e, fx) => {
-    for (const u of selectUnits(e, fx.to)) healUnit(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u), e.caster.id);
+    for (const u of selectUnits(e, fx.to)) healUnit(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u) + (e.caster.statuses.some(status => status.id === 'LIGHT_WORLD' && status.turnsLeft > 0) ? 1 : 0), e.caster.id);
   },
   SHIELD: (e, fx) => {
-    for (const u of selectUnits(e, fx.to)) addShield(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u), e.caster.id, e.cardId&&e.ctx.content.cards[e.cardId]?.presentation.element==='ICE'?'ICE':undefined);
+    for (const u of selectUnits(e, fx.to)) addShield(e.ctx, u, fx.amount + bonusFor(e, fx.bonus, u) + (e.caster.statuses.some(status => status.id === 'LIGHT_WORLD' && status.turnsLeft > 0) ? 1 : 0), e.caster.id, e.cardId&&e.ctx.content.cards[e.cardId]?.presentation.element==='ICE'?'ICE':undefined);
   },
   APPLY_STATUS: (e, fx) => {
     const marked: Unit[] = [];
@@ -245,6 +251,8 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
       applyStatus(e.ctx, u, fx.status, fx.duration, e.caster.id, fx.everyTarget ? marked : undefined);
       const instance=u.statuses.find(s=>s.id===fx.status);
       if(!prior && instance && fx.power!==undefined)instance.power=fx.power;
+      if(instance && fx.untilCasterNextTurnStart){instance.expiresAtCasterTurnStart=e.caster.id;delete instance.expiresAfterCasterTurn;}
+      if (instance && fx.untilCasterTurnEnd) { instance.expiresAfterCasterTurn = e.caster.id; instance.sourceId = e.caster.id; }
       marked.push(u);
       // A challenged enemy re-declares its (public) intent at once: the telegraph shows the new target.
       if (e.ctx.content.statuses[fx.status].taunt && u.kind === 'ENEMY' && e.ctx.state.units.includes(u)) {
@@ -256,6 +264,9 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
         }
       }
     }
+  },
+  CLEANSE_ONE_MINOR: (e, fx) => {
+    for (const unit of selectUnits(e, fx.to)) beginMinorCleanse(e.ctx, unit, e.cardId ?? '');
   },
   CLEANSE: (e, fx) => {
     for (const u of selectUnits(e, fx.to)) cleanseUnit(e.ctx, u);
@@ -297,12 +308,17 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
     }
     if (path.length) walkUnit(ctx, caster, path, 0, 'CHARGE');
   },
+  STEP_TARGET: (e) => {
+    const unit = e.ctx.state.units.find(unit => unit.id === e.resolved.hitUnitId);
+    if (unit && e.resolved.stepDestination && !isMovementPrevented(e.ctx, unit)) walkUnit(e.ctx, unit, [e.resolved.stepDestination], 0);
+  },
   STEP_CASTER: (e) => {
     const { caster, ctx } = e;
     const to = e.resolved.impact;
     if (samePos(caster.pos, to) || isMovementPrevented(ctx, caster)) return;
     // Shortest walk to the chosen tile (STEP targeting already proved one exists).
-    const path = stepPath(ctx, caster, to);
+    const targeting = e.cardId ? ctx.content.cards[e.cardId]?.targeting : undefined;
+    const path = targeting?.type === 'STEP' && targeting.terrainCost ? computeReachable(ctx, caster, targeting.range).get(posKey(to))?.path : stepPath(ctx, caster, to);
     if (path) walkUnit(ctx, caster, path, 0);
   },
   GAIN_MOMENTUM: (e, fx) => {
@@ -366,6 +382,61 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
       to: summonCapacityOf(e.ctx.content, e.caster),
       bonus: e.caster.summonCapacityBonus,
     });
+  },
+  CHOOSE_TOP_TO_BOTTOM: (e, fx) => { beginCardChoice(e.ctx, e.cardId ?? '', 'BOTTOM_TOP_CARD', fx.count); },
+  CHOOSE_HAND_TO_DECK: (e) => { beginCardChoice(e.ctx, e.cardId ?? '', 'RETURN_HAND_CARD'); },
+  DISCARD_OPPONENT: (e, fx) => {
+    const rival = e.ctx.state.duel?.other;
+    if (!rival) return;
+    const zone = fx.from === 'HAND' ? rival.hand : rival.deck;
+    for (let n = 0; n < fx.count && zone.length; n++) {
+      const [card] = zone.splice(fx.from === 'HAND' ? randomInt(e.ctx.state, zone.length) : 0, 1);
+      delete card!.publicDiscard;
+      rival.discard.push(card!);
+      e.ctx.emit({ type: 'CARD_DISCARDED', cardUid: card!.uid, cardId: card!.cardId, reason: 'EFFECT' });
+    }
+  },
+  SUMMON_SCORPION_SACRIFICE: (e) => { beginScorpionSacrifice(e.ctx, e.resolved.impact); },
+  RESURRECT_SUMMON: (e) => { beginResurrection(e.ctx, e.resolved.impact, e.cardId ?? ''); },
+  EXECUTIONER_ROULETTE: (e) => {
+    const rival = e.ctx.state.units.find(unit => unit.id === e.ctx.state.duel?.other.heroId);
+    if (!rival) return;
+    const dark = e.caster.statuses.some(status => status.id === 'DARK_WORLD' && status.turnsLeft > 0);
+    const draw = nextRandom(e.ctx.state);
+    const outcome = draw < (dark ? 0.2 : 1 / 3) ? 'SELF' : draw < (dark ? 0.8 : 2 / 3) ? 'ENEMY' : 'BOTH';
+    e.ctx.emit({ type: 'EXECUTIONER_RESULT', casterId: e.caster.id, targetId: rival.id, result: outcome });
+    loseHpTogether(e.ctx, outcome === 'SELF' ? [e.caster] : outcome === 'ENEMY' ? [rival] : [e.caster, rival], 5, e.caster.id);
+  },
+  REDRAW_HAND: (e) => {
+    const hand = e.ctx.state.player.hand.splice(0);
+    for (const card of hand) { delete card.publicDiscard; e.ctx.state.player.deck.push(card); }
+    shuffleInPlace(e.ctx.state, e.ctx.state.player.deck);
+    drawCards(e.ctx, hand.length);
+  },
+  CURSE_RANDOM_OPPONENT_DECK: (e) => {
+    const choices = e.ctx.state.duel?.other.deck.filter(card => !card.twistedCurse) ?? [];
+    const selected = choices[randomInt(e.ctx.state, choices.length)];
+    if (selected) selected.twistedCurse = true;
+  },
+  ALIGNMENT_WORLD: (e, fx) => {
+    for (const unit of e.ctx.state.units) {
+      removeStatus(e.ctx, unit, 'DARK_WORLD', 'CONSUMED');
+      removeStatus(e.ctx, unit, 'LIGHT_WORLD', 'CONSUMED');
+    }
+    applyStatus(e.ctx, e.caster, fx.alignment, fx.duration, e.caster.id);
+  },
+  FIXED_HP_SACRIFICE: (e, fx) => {
+    e.caster.hp -= fx.amount;
+    e.ctx.emit({ type: 'HP_SACRIFICED', unitId: e.caster.id, cardId: e.cardId, amount: fx.amount, hpAfter: e.caster.hp });
+  },
+  WARRIOR_BLOOD_PACT: (e) => {
+    e.caster.warriorPact = true;
+    e.caster.moveRange = Math.max(1, e.caster.moveRange - 1);
+    e.ctx.state.player.maxMovePoints -= 1;
+    setMovePoints(e.ctx, Math.max(0, e.ctx.state.player.movePoints - 1));
+  },
+  RECOVER_RANDOM_TO_DECK: (e, fx) => {
+    recoverRandomToDeck(e.ctx, fx.count);
   },
   DRAW: (e, fx) => {
     drawCards(e.ctx, fx.count);

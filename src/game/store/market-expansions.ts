@@ -1,3 +1,4 @@
+import {DARK_LIGHT_CARDS,DARK_LIGHT_EXPANSIONS} from '../data/dark-light';
 import {primaryMarketCardIds} from './market-primary';
 import {
   ARCANE_PACK_POLICY,
@@ -195,6 +196,7 @@ export const MARKET_EXPANSIONS: readonly MarketExpansion[] = [
  {id:'pack_pact',name:'Pacto de la Manada',description:'Invocaciones, vínculos y rituales: domina la arena junto a tus criaturas.',art:'/art/summoner/wolf.webp',status:'AVAILABLE',poolType:'GENERAL',cardIds:primaryMarketCardIds('pack_pact'),pack:standardPack('pack-pact-v1')},
  {id:'warrior_promise',name:'Promesa del Guerrero',description:'Defensa, embestidas y golpes decisivos.',art:'/art/store-cards/heavy_strike.webp',status:'AVAILABLE',poolType:'GENERAL',cardIds:primaryMarketCardIds('warrior_promise'),pack:standardPack('warrior-promise-v1')},
  {id:'reserva_cazador',name:'Cazador',description:'Presa, flechas y trampas: prepara el momento de atacar.',art:'/art/archer-cards/archer_shot.webp',status:'AVAILABLE',poolType:'GENERAL',cardIds:primaryMarketCardIds('reserva_cazador'),pack:standardPack('hunter-v1')},
+ ...([{id:DARK_LIGHT_EXPANSIONS.dark,name:'Aliados de la Oscuridad',card:'dark_dark_world'},{id:DARK_LIGHT_EXPANSIONS.light,name:'Camino hacia la Luz',card:'light_light_world'}].map(e=>({id:e.id,name:e.name,description:e.name,art:`/art/dark-light/cards/${e.card}.jpg`,status:'AVAILABLE' as const,poolType:'GENERAL' as const,cardIds:DARK_LIGHT_CARDS.filter(c=>c.expansion===e.id).map(c=>c.id),pack:standardPack(`${e.id}-box-v1`)}))),
  {id:'furia_elemental',name:'Furia Elemental',description:'Fuego e interacción elemental. Una futura colección en preparación.',art:'/art/checkpoint05/cards/fireball.webp',status:'COMING_SOON',cardIds:primaryMarketCardIds('furia_elemental')},
  {id:'reserva_cambiaformas_formas',name:'Cambiaformas',description:'Una futura colección de transformaciones.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'COMING_SOON',public:false,cardIds:primaryMarketCardIds('reserva_cambiaformas_formas')},
  {id:'reserva_cambiaformas_legado',name:'Cambiaformas',description:'Una futura colección de transformaciones.',art:'/art/checkpoint05/cards/arcane_burst.webp',status:'COMING_SOON',public:false,cardIds:primaryMarketCardIds('reserva_cambiaformas_legado')},

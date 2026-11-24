@@ -117,6 +117,21 @@ function harness() {
   }
   return { db, data, sockets, ctx, call, setup, alarm: () => alarm };
 }
+/** Legacy combat drivers explicitly pass the new server response, never bypass it. */
+async function passPendingResponse(h: ReturnType<typeof harness>, live: PvPMatchRoom) {
+  const room = h.data.get('room') as Room;
+  const pending = room.game?.pendingCast;
+  if (!pending) return;
+  expect(pending.deadline).toBeGreaterThan(0);
+  const defender = room.game!.duel!.active === 0 ? 1 : 0;
+  const socket = h.sockets.find(socket => socket.seat === defender && !socket.closed)!;
+  await live.webSocketMessage(socketType(socket), JSON.stringify({
+    id: `pass-${pending.id}-${room.version}`, version: room.version,
+    command: { type: 'SILENCE_RESPONSE', windowId: pending.id, pass: true },
+  }));
+  expect((h.data.get('room') as Room).game?.pendingCast).toBeUndefined();
+}
+
 class FakeSocket {
   messages: string[] = [];
   closed = false;
@@ -456,6 +471,7 @@ describe('room authority and durable recovery', () => {
           socketType(ws),
           JSON.stringify({ id: 'full-' + commandId++, version: r.version, command: chosen }),
         );
+        await passPendingResponse(h, live);
       }
       r = h.data.get('room') as typeof r;
       if (!r.result)
@@ -787,6 +803,8 @@ describe('authoritative room summons survive storage hydration', () => {
         id: `spawn-${species}`, version: stored.version,
         command: { type: 'PLAY_CARD', cardUid: 'spawn-qa', target: { x: 4, y: 2 } },
       }));
+      expect((h.data.get('room') as Room).game!.pendingCast).toBeDefined();
+      await passPendingResponse(h, spawning);
       stored = h.data.get('room') as Room;
       const summon = stored.game!.units.find((u) => u.kind === 'SUMMON')!;
       expect(summon.defId).toBe(species);
@@ -809,8 +827,13 @@ describe('authoritative room summons survive storage hydration', () => {
         id: `hit-${species}`, version: stored.version,
         command: { type: 'PLAY_CARD', cardUid: 'hit-qa', target: summon.pos },
       }));
+      const pendingHit = h.data.get('room') as Room;
+      expect(pendingHit.version).toBe(stored.version + 1);
+      expect(pendingHit.game!.pendingCast).toBeDefined();
+      expect(pendingHit.game!.units.find(u => u.id === summon.id)!.hp).toBe(summon.hp);
+      await passPendingResponse(h, recovered);
       const after = h.data.get('room') as Room;
-      expect(after.version).toBe(stored.version + 1);
+      expect(after.version).toBe(stored.version + 2);
       expect(after.game!.units.find((u) => u.id === summon.id)!.hp).toBeLessThan(summon.hp);
     });
   }

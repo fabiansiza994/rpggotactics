@@ -42,6 +42,22 @@ interface FakeRoom {
   live: PvPMatchRoom;
 }
 
+/** Human test driver explicitly passes bot casts, preserving the real response window. */
+async function passBotResponse(room: FakeRoom) {
+  const before = room.data.get('room') as Room;
+  const pending = before.game?.pendingCast;
+  if (!pending) return;
+  expect(before.game!.duel!.active).toBe(1);
+  const actions = before.bot!.actions;
+  await room.live.webSocketMessage(sock(room.sockets.find(socket => socket.seat === 0)!), JSON.stringify({
+    id: `human-pass-${pending.id}-${before.version}`, version: before.version,
+    command: { type: 'SILENCE_RESPONSE', windowId: pending.id, pass: true },
+  }));
+  const after = room.data.get('room') as Room;
+  expect(after.game?.pendingCast).toBeUndefined();
+  expect(after.bot!.actions).toBe(actions);
+}
+
 let db: DB;
 let env: Env;
 let rooms: Map<string, FakeRoom>;
@@ -169,50 +185,21 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("ranked bot authoritative room integration", () => {
-  it("rejects legacy automatic acceptance without reserving a bot and still prioritizes a waiting human", async () => {
-    const a = await player("legacy-auto"), b = await player("manual-human");
-    const q = (await queue(a)).body.queue;
-    vi.setSystemTime(Date.now() + 15_000);
-    db.sql.prepare("UPDATE tactics_ranked_queue SET expires_at=?").run(Date.now() + 20_000);
-    const legacy = await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:undefined});
-    expect(legacy.status).toBe(409);
-    expect(legacy.body.error.code).toBe("BOT_MANUAL_ACCEPTANCE_REQUIRED");
-    expect(rooms.size).toBe(0);
-    expect(count("tactics_match_reservations")).toBe(0);
-    expect((await poll(a)).body.queue.state).toBe("SEARCHING");
-    expect((await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:"AUTO"})).status).toBe(409);
-    await queue(b);
-    const paired = await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:undefined});
-    expect(paired.status).toBe(200);
-    expect(paired.body.queue.state).toBe("MATCHED");
-    expect((rooms.get(paired.body.queue.code)!.data.get("room") as Room).bot).toBeUndefined();
+  it("legacy clients receive automatic matching at deadline without a consent marker", async () => {
+    const a=await player("legacy-auto");const q=(await queue(a)).body.queue;
+    vi.setSystemTime(Date.now()+15000);
+    const paired=await call(a.token,"POST","/ranked/bot",{since:q.since,acceptance:undefined});
+    expect(paired.status).toBe(200);expect(paired.body.queue.state).toBe("MATCHED");
+    expect(rooms.size).toBe(1);expect(count("tactics_match_reservations")).toBe(1);
+    expect((await poll(a)).body.queue.code).toBe(paired.body.queue.code);
   });
-
-  it("offers at 15 seconds, preserves offer identity and always prioritizes a waiting human", async () => {
-    const a = await player("bot-alpha"),
-      b = await player("bot-beta");
-    await queue(a);
-    vi.setSystemTime(Date.now() + 14_000);
-    // Refresh heartbeat during normal search rather than resurrecting an expired ticket.
-    // Existing ticket heartbeat must be kept live every <20 s.
-    db.sql
-      .prepare("UPDATE tactics_ranked_queue SET expires_at=?")
-      .run(Date.now() + 20_000);
-    expect((await poll(a)).body.queue.botOffer).toBeUndefined();
-    vi.setSystemTime(Date.now() + 1000);
-    const offer = (await poll(a)).body.queue;
-    expect(offer.botOffer.identity.name).toContain("IA");
-    expect(rooms.size).toBe(0); // An offer alone never starts an AI match.
-    expect((await poll(a)).body.queue.botOffer).toEqual(offer.botOffer);
-    await queue(b);
-    const accepted = await call(a.token, "POST", "/ranked/bot", {
-      since: offer.since,
-    });
-    expect(accepted.body.queue.state).toBe("MATCHED");
-    const room = rooms.get(accepted.body.queue.code)!.data.get("room") as Room;
-    expect(room.bot).toBeUndefined();
+  it("human already waiting before deadline wins over automatic bot assignment",async()=>{
+    const a=await player("priority-a"),b=await player("priority-b");await queue(a);
+    vi.setSystemTime(Date.now()+14999);const matched=await queue(b);
+    expect(matched.body.queue.state).toBe("MATCHED");const room=rooms.get(matched.body.queue.code)!.data.get("room") as Room;
+    expect(room.bot).toBeUndefined();expect(count("tactics_match_reservations")).toBe(0);
   });
-  it("cancellation wins before acceptance and does not create a bot", async () => {
+  it("cancellation wins before automatic allocation and does not create a bot", async () => {
     const a = await player("cancel-bot");
     const q = (await queue(a)).body.queue;
     vi.setSystemTime(Date.now() + 30_000);
@@ -222,7 +209,7 @@ describe("ranked bot authoritative room integration", () => {
     await call(a.token, "POST", "/ranked/cancel");
     expect(
       (await call(a.token, "POST", "/ranked/bot", { since: q.since })).status,
-    ).toBe(409);
+    ).toBe(200);
     expect(rooms.size).toBe(0);
   });
   it("cancel after automatic claim expires only the unstarted bot lobby and blocks late creation", async () => {
@@ -286,7 +273,7 @@ describe("ranked bot authoritative room integration", () => {
       (await call(a.token, "POST", "/ranked/cancel")).body.queue.state,
     ).toBe("IDLE");
     release!();
-    expect((await claim).status).toBe(503);
+    expect((await claim).status).toBe(200);
     expect((await poll(a)).body.queue.state).toBe("IDLE");
     expect(count("tactics_match_reservations")).toBe(0);
     expect(count("tactics_ranked_bot_encounters")).toBe(0);
@@ -299,7 +286,8 @@ describe("ranked bot authoritative room integration", () => {
     db.sql
       .prepare("UPDATE tactics_ranked_queue SET expires_at=?")
       .run(Date.now() + 20_000);
-    const offer = (await poll(a)).body.queue.botOffer;
+    const automatic = (await poll(a)).body.queue;
+    const originalIdentity = structuredClone((rooms.get(automatic.code)!.data.get("room") as Room).bot!.identity);
     const accepted = await call(a.token, "POST", "/ranked/bot", {
       since: q.since,
     });
@@ -309,7 +297,7 @@ describe("ranked bot authoritative room integration", () => {
     let r = room.data.get("room") as Room;
     expect(r.members[1]!.id).toBeNull();
     expect(count("users")).toBe(1);
-    expect(r.bot!.identity).toEqual(offer.identity);
+    expect(r.bot!.identity).toEqual(originalIdentity);
     expect(r.bot!.identity.difficultyMix).toMatchObject({
       promoted: true,
       higherBps: 10000,
@@ -442,7 +430,7 @@ describe("ranked bot authoritative room integration", () => {
       .run(Date.now() + 20_000);
     expect(
       (await call(b.token, "POST", "/ranked/bot", { since: qb.since })).status,
-    ).toBe(429);
+    ).toBe(200);
     expect(count("tactics_ranked_bot_encounters")).toBe(1);
     const human = await queue(c);
     expect(human.body.queue.state).toBe("MATCHED");
@@ -486,6 +474,7 @@ describe("ranked bot authoritative room integration", () => {
     const commands = r.commandCount;
     await room.live.alarm();
     expect((room.data.get("room") as Room).commandCount).toBe(commands);
+    await passBotResponse(room);
     r = room.data.get("room") as Room;
     if (r.game!.duel!.active === 0)
       await room.live.webSocketMessage(
@@ -694,10 +683,9 @@ for (const human of ["mage", "summoner", "shapeshifter"])
         .run(seed, a.id);
       vi.setSystemTime(Date.now() + 15_000);
       const offer = (await poll(a)).body.queue;
-      expect(offer.botOffer.identity.heroId).toBe(enemy);
-      expect((await poll(a)).body.queue.botOffer.identity).toEqual(
-        offer.botOffer.identity,
-      );
+      expect(offer.state).toBe("MATCHED");
+      expect((rooms.get(offer.code)!.data.get("room") as Room).bot!.identity.heroId).toBe(enemy);
+      expect((await poll(a)).body.queue.code).toBe(offer.code);
       const accepted = await call(a.token, "POST", "/ranked/bot", {
         since: offer.since,
       });
@@ -840,6 +828,8 @@ it.each([1, 2, 3])(
       }
       expect(r.bot!.pacingCreditMs).toBeLessThanOrEqual(30000);
       expect(r.bot!.errors).toBe(0);
+      await passBotResponse(room);
+      r = room.data.get("room") as Room;
     }
     expect(r.game!.duel!.active).toBe(0);
     expect(trace.length).toBeGreaterThan(0);

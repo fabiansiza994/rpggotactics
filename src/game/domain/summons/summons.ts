@@ -76,6 +76,9 @@ export function spawnSummon(
     summon: {
       ...(sourceCardUid ? { sourceCardUid } : {}),
       ownerId: owner.id,
+      ...(sourceCardUid ? { sourceCardUid } : {}),
+      ...(def.durationTurns ? { durationTurnsLeft: def.durationTurns } : {}),
+      ...(def.capacityAura ? { capacityGranted: def.capacityAura } : {}),
       capacityCost: def.capacityCost,
       lastActedRound: 0,
       readyRound: ctx.state.round + 1,
@@ -84,6 +87,11 @@ export function spawnSummon(
   };
   if (depthEnabled(ctx)) unit.combatFacing = unit.faction === 'PLAYER' ? 'RIGHT' : 'LEFT';
   ctx.state.units.push(unit);
+  if (def.capacityAura) {
+    const from = summonCapacityOf(ctx.content, owner);
+    owner.summonCapacityBonus = (owner.summonCapacityBonus ?? 0) + def.capacityAura;
+    ctx.emit({ type: 'SUMMON_CAPACITY_CHANGED', unitId: owner.id, from, to: summonCapacityOf(ctx.content, owner), bonus: owner.summonCapacityBonus });
+  }
   ctx.emit({
     type: 'UNIT_SPAWNED',
     unitId: unit.id,
@@ -266,6 +274,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
       defeatUnit(ctx, unit);
       continue;
     }
+    if (unit.defId === 'light_redemption_spirit') continue; // Manual support only; never auto-consume its activation.
     unit.summon.lastActedRound = ctx.state.round;
     const hunting=unit.statuses.find(s=>s.id==='UNLEASHED_HUNT');
     const pursuit=unit.statuses.some(s=>s.id==='HUNT_PURSUIT');
@@ -277,7 +286,14 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     if (isActionPrevented(ctx, unit)) continue;
     const baseDef = requireDef(ctx.content.summons ?? {}, unit.defId, 'summon');
     const snowball=unit.defId==='snow_soldier'&&worldFrozen(unitById(ctx.state,unit.summon.ownerId));
-    const def=snowball?{...baseDef,damageType:'ICE' as const}:baseDef;
+    const owner = unitById(ctx.state, unit.summon.ownerId);
+    const loyalReaper = unit.defId === 'dark_the_reaper' && !!owner?.statuses.some(status => status.id === 'DARK_WORLD' && status.turnsLeft > 0);
+    const betraying = unit.defId === 'dark_the_reaper' && !!owner && !loyalReaper && owner.hp * 10 <= owner.maxHp;
+    if (unit.defId === 'dark_the_reaper') {
+      const disposition = loyalReaper ? 'LOYAL' : betraying ? 'REBEL' : 'ALLY';
+      if (unit.summon.reaperDisposition !== disposition) { unit.summon.reaperDisposition = disposition; ctx.emit({ type: 'REAPER_DISPOSITION', unitId: unit.id, ownerId: unit.summon.ownerId, disposition }); }
+    }
+    const def=snowball?{...baseDef,damageType:'ICE' as const}:loyalReaper?{...baseDef,attackRange:2}:baseDef;
     const statusSum = (key: 'summonDamageBonus' | 'summonMoveBonus' | 'summonPreyDamageBonus') =>
       unit.statuses.reduce((n, s) => n + (ctx.content.statuses[s.id]?.[key] ?? 0), 0);
     // Llamado de la Manada: planning sees the longer reach; the walk itself is the real unit's.
@@ -299,7 +315,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
         ctx.emit({type:'DRAKE_WINGS',unitId:unit.id,pos:unit.pos,readyRound:unit.summon!.wingsReadyRound});
       }
     };
-    const taunter = challenger(ctx, unit);
+    const taunter = betraying ? undefined : challenger(ctx, unit);
     const closest = (a: { pos: Pos; id: string }, b: { pos: Pos; id: string }) =>
       manhattan(unit.pos, a.pos) - manhattan(unit.pos, b.pos) || a.id.localeCompare(b.id);
     const pickup =
@@ -312,7 +328,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     ) : [];
     // In Ranked 1v1 the sole living rival is a pursuit target even outside the reaction radius.
     const pursuitTarget = enemyChampions.length === 1 ? enemyChampions[0] : undefined;
-    const target = taunter ?? pursuitTarget ?? ctx.state.units.filter((u) => u.faction !== unit.faction).sort(closest)[0];
+    const target = betraying ? owner : taunter ?? pursuitTarget ?? ctx.state.units.filter((u) => u.faction !== unit.faction).sort(closest)[0];
     const objective = ctx.state.dominion?.nodes
       .filter(
         (n) => !ctx.state.units.some((u) => samePos(u.pos, n.pos) && u.faction === unit.faction),
@@ -322,15 +338,15 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
           manhattan(unit.pos, a.pos) - manhattan(unit.pos, b.pos) || a.id.localeCompare(b.id),
       )[0];
     // Act III: any summon on a plate that accepts it keeps the plate pressed (attacks, never walks off).
-    const plateHold = !!ctx.state.mechanisms && holdsPlate(ctx.state, unit);
-    const holding = ctx.state.dominion?.nodes.some((n) => samePos(n.pos, unit.pos)) || plateHold;
+    const plateHold = !betraying && !!ctx.state.mechanisms && holdsPlate(ctx.state, unit);
+    const holding = !betraying && (ctx.state.dominion?.nodes.some((n) => samePos(n.pos, unit.pos)) || plateHold);
     const objectiveGoal =
-      objective && (!target || manhattan(unit.pos, target.pos) > 3) && !holding
+      objective && !betraying && (!target || manhattan(unit.pos, target.pos) > 3) && !holding
         ? objective.pos
         : undefined;
     const goal = pickup?.pos ?? objectiveGoal ?? target?.pos;
     const range = def.attackRange ?? 1;
-    const prey = markedPrey(ctx, unit);
+    const prey = betraying ? undefined : markedPrey(ctx, unit);
     const preyRoute = prey && !taunter && !plateHold && preyStrike(ctx, planner, def, prey, !!holding);
     // Out of reach this activation: close in along a safe route (Marcar Presa lasts 3 turns).
     const preyChase = prey && !taunter && !plateHold && !preyRoute ? preyPursuit(ctx, planner, def, prey, !!holding) : null;
@@ -397,7 +413,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
     const adjacent = ctx.state.units
       .filter(
         (u) =>
-          u.faction !== unit.faction &&
+          (betraying ? u.id === owner?.id : u.faction !== unit.faction) &&
           manhattan(unit.pos, u.pos) <= range &&
           hasLineOfSight(ctx, unit.pos, u.pos),
       )
@@ -443,7 +459,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
       const bite = dealDamage(
         ctx,
         adjacent,
-        attackDamage(ctx, unit, adjacent, (scavenging ? 3 : def.damage) + bonus),
+        attackDamage(ctx, unit, adjacent, (scavenging ? 3 : def.damage) + bonus + (unit.defId === 'dark_serpent_king' && adjacent.statuses.some(status => status.id === 'POISONED') ? 1 : 0)),
         unit.id,
         def.damageType ?? (range > 1 ? 'ARCANE' : 'PHYSICAL'),
         snowball?'DIRECT_RANGED':range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
@@ -455,7 +471,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
       if(beastsEnabled(ctx.state)&&unit.defId==='turtle' && range===1 && bite.hpLost>0)applyTurtleBite(ctx,adjacent,unit.id);
       if (beastsEnabled(ctx.state) && unit.defId === 'wolf' && range === 1 && bite.hpLost > 0 && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
         applyStatus(ctx, adjacent, 'BLEEDING', 2, unit.id);
-      if (def.onHitStatus && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
+      if (def.onHitStatus && (!['dark_serpent_king', 'dark_scorpion_king'].includes(unit.defId) || bite.hpLost > 0) && adjacent.kind !== 'STRUCTURE' && ctx.state.units.includes(adjacent))
         applyStatus(ctx, adjacent, def.onHitStatus.status, def.onHitStatus.duration, unit.id);
       if (def.behavior === 'RANGED') {
         const ally = ctx.state.units

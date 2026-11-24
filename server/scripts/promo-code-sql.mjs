@@ -9,7 +9,7 @@
  */
 export const PROMO_CODE = /^[A-Z0-9]{4,32}$/;
 const ID = /^[a-z0-9_]{1,64}$/;
-const MAX_CRYSTALS = 10_000;
+const MAX_CRYSTALS = 16_000;
 const MAX_ITEMS = 8;
 
 function checkItem(i) {

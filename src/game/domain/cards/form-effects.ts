@@ -10,7 +10,7 @@ export function effectsForCard(content: GameContent, caster: Unit, card: CardDef
   card=worldFrozenCard(card,caster);
   if (card.empowered && (caster.momentum?.value ?? 0) >= card.empowered.momentum)
     return card.empowered.effects;
-  const byForm = caster.activeForm ? card.formEffectsById?.[caster.activeForm] : undefined;
+  const byForm = caster.activeForm ? (card.formEffectsById?.[caster.activeForm] ?? card.formEffectsById?.[content.transformations?.[caster.activeForm]?.inheritsForm ?? '']) : undefined;
   if (byForm) return byForm;
   return card.formEffects?.[formNature(content, caster)] ?? card.effects;
 }

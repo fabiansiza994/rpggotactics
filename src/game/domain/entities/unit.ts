@@ -9,6 +9,8 @@ export type UnitKind = 'HERO' | 'ENEMY' | 'STRUCTURE' | 'SUMMON';
 export type TargetPreference = 'HERO' | 'OBJECTIVE';
 
 export interface Unit {
+  /** Battle-only covenant; never persisted to a player account. */
+  warriorPact?: true;
   /** QA depth only. Missing legacy values use faction's deterministic initial direction. */
   combatFacing?: import('../core/position').Direction;
   qaCounterRound?: number;
@@ -60,5 +62,5 @@ export interface Unit {
    */
   summonCapacityBonus?: number;
   /** `breathReadyRound`: first round its `SummonDef.breath` can be used again (absent = ready). */
-  summon?: { sourceCardUid?: string; ownerId: string; capacityCost: number; lastActedRound: number; readyRound: number; featherRollRound?: number; scoutRollRound?:number; scoutReadyRound?:number; wingsReadyRound?:number; meltTurnsLeft?:number; breathReadyRound?: number };
+  summon?: { reaperDisposition?: 'ALLY' | 'LOYAL' | 'REBEL'; sourceCardUid?: string; recoveredCard?: import('../cards/card').CardInstance; capacityGranted?: number; durationTurnsLeft?: number; ownerId: string; capacityCost: number; lastActedRound: number; readyRound: number; featherRollRound?: number; scoutRollRound?:number; scoutReadyRound?:number; wingsReadyRound?:number; meltTurnsLeft?:number; breathReadyRound?: number };
 }

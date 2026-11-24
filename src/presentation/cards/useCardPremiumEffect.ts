@@ -71,7 +71,9 @@ export function useCardPremiumEffect<T extends HTMLElement>(
       bounds = el.getBoundingClientRect();
       el.dataset.premiumActive = 'true';
     };
+    const readingRules = (event: PointerEvent) => event.target instanceof Element && !!event.target.closest('[data-card-rules-scroll="true"]');
     const down = (event: PointerEvent) => {
+      if (readingRules(event)) { reset(); return; }
       if (
         media.matches || document.hidden ||
         !interactive ||
@@ -87,6 +89,7 @@ export function useCardPremiumEffect<T extends HTMLElement>(
       el.dataset.premiumActive = 'true';
     };
     const move = (event: PointerEvent) => {
+      if (readingRules(event)) { reset(); return; }
       if (
         media.matches || document.hidden ||
         !interactive ||

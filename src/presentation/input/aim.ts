@@ -31,7 +31,7 @@ export function isActionableTile(
   // A hand card or a ritual activation (see GameEngine selection keys).
   const targeting = engine.selectionTargeting(selectedCardUid);
   if (!targeting) return false;
-  if (targeting.type === 'UNIT' && targeting.pairSwap && engine.getSecondaryTargets) return engine.getSecondaryTargets(selectedCardUid, pos).length > 0;
+  if (targeting.type === 'UNIT' && (targeting.pairSwap || targeting.adjacentStep) && engine.getSecondaryTargets) return engine.getSecondaryTargets(selectedCardUid, pos).length > 0;
   if (targeting.type === 'SELF') {
     const hero = engine.state.units.find((u) => u.id === engine.heroId);
     return !!hero && samePos(hero.pos, pos) && engine.previewCard(selectedCardUid, null).valid;

@@ -10,6 +10,8 @@ import type { CardinalView } from './directionalFacing';
 import type { CharacterMotion, AnimationFrames } from './CharacterAnimator.ts';
 
 export interface CharacterAnimationLayout {
+  anchorY?: number;
+  contractScale?: boolean;
   url: string;
   columns: number;
   cellSize: number;
@@ -303,3 +305,35 @@ CHARACTER_ANIMATIONS.pact_golem = {
 
 // Artist-approved Snow Soldier atlas is the normal candidate renderer.
 for(const age of [5,4,3,2,1])CHARACTER_ANIMATIONS[snowSoldierVariant(age)]=snowSoldierLayout(age);
+
+
+/** Original painted draft: seven distinct clips, one shared atlas, no per-frame uploads. */
+CHARACTER_ANIMATIONS.dark_the_reaper = {
+  url: '/art/dark-light/units/dark_the_reaper-atlas.png', columns: 8, cellSize: 168, runtimeScale: 1,
+  anchorY: .96, contractScale: true, actionStyle: 'martial',
+  clips: {
+    idle: { start: 0, count: 8, frameMs: 160, loop: true, animatedIdle: true },
+    walk: { start: 8, count: 8, frameMs: 100, loop: true },
+    run: { start: 8, count: 8, frameMs: 75, loop: true },
+    attack: { start: 16, count: 8, frameMs: 70, loop: false, contactFrame: 3, queueAfterHit: true },
+    bash: { start: 24, count: 8, frameMs: 70, loop: false, contactFrame: 3, queueAfterHit: true },
+    hit: { start: 32, count: 8, frameMs: 40, loop: false },
+    death: { start: 40, count: 8, frameMs: 100, loop: false, terminal: true },
+    ability: { start: 48, count: 8, frameMs: 65, loop: false, contactFrame: 3 },
+  },
+};
+
+/** Phase7 original poses: 6 idle,6 locomotion,6 action,3 recoil,3 dissolution. */
+for(const id of ['dark_abyssal_minotaur','dark_serpent_king','dark_scorpion_king','light_pact_fairy']) CHARACTER_ANIMATIONS[id]={
+ url:`/art/dark-light/units/v7/${id}-atlas.png`,columns:6,cellSize:256,runtimeScale:1,
+ anchorY:.9,contractScale:true,actionStyle:id==='light_pact_fairy'?'spell':'martial',
+ clips:{
+ idle:{start:0,count:6,frameMs:160,loop:true,animatedIdle:true},
+ walk:{start:6,count:6,frameMs:115,loop:true},run:{start:6,count:6,frameMs:85,loop:true},
+ attack:{start:12,count:6,frameMs:100,loop:false,contactFrame:3,queueAfterHit:true},
+ ability:{start:12,count:6,frameMs:100,loop:false,contactFrame:3},
+ hit:{start:18,count:3,frameMs:65,loop:false},death:{start:21,count:3,frameMs:210,loop:false,terminal:true},
+ },
+};
+
+CHARACTER_ANIMATIONS.light_redemption_spirit={url:'/art/dark-light/units/redemption/light_redemption_spirit-atlas.png',columns:6,cellSize:256,runtimeScale:1,anchorY:.94,contractScale:true,actionStyle:'spell',clips:{idle:{start:0,count:6,frameMs:180,loop:true,animatedIdle:true},arrival:{start:6,count:6,frameMs:100,loop:false},cast:{start:6,count:6,frameMs:100,loop:false},ability:{start:12,count:6,frameMs:80,loop:false,contactFrame:3},hit:{start:18,count:3,frameMs:70,loop:false},death:{start:21,count:3,frameMs:190,loop:false,terminal:true}}};

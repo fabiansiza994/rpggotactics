@@ -93,7 +93,7 @@ export function onUnitHit(
   const riposte = unit.statuses.find((s) => ctx.content.statuses[s.id]?.counterDamage);
   // The authored form response is public; only the optional QA frequency comparison stays gated.
   const passive = damageType === 'PHYSICAL' && source.hp > 0 && source.kind !== 'STRUCTURE' && attackKind === 'DIRECT_MELEE' && unit.defId === 'shapeshifter' &&
-    (unit.activeForm === 'bear' || unit.activeForm === 'minotaur') &&
+    (unit.activeForm === 'bear' || unit.activeForm === 'minotaur' || (!!unit.activeForm && ctx.content.transformations?.[unit.activeForm]?.inheritsForm === 'minotaur')) &&
     (!depthEnabled(ctx) || ctx.content.qaCombatDepth!.formCounter === 'perHit' || unit.qaCounterRound !== ctx.state.round);
   if (!riposte && !passive) return;
   // One reaction, never stack an existing Riposte with the innate response.

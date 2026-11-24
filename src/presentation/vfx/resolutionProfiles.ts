@@ -1,3 +1,5 @@
+import {DARK_LIGHT_CARD_ART} from '../assets/darkLightArt';
+import {HAMMER_TIMING} from './thunderHammerRecipe';
 import { isThunderAddition } from './thunderExpansionRecipe';
 import { PULSE_TIMING } from './paralyzingPulseRecipe';
 import { isThunderPremium, THUNDER_TIMING } from './thunderRecipe';
@@ -36,6 +38,8 @@ export function resolutionProfile(key: string, summon = false): ResolutionProfil
   if(key==='permafrost')return {family:'ice',cast:300,travel:180,aftermath:500,read:160};
   if (key==='frost_comet')return {family:'ice',cast:300,travel:520,aftermath:760,read:180};
   if (key==='frost_nova')return {family:'ice',cast:320,travel:0,aftermath:760,read:180};
+  if(Object.hasOwn(DARK_LIGHT_CARD_ART,key))return {...base,cast:400,aftermath:650,read:180};
+  if(key==='thunder_hammer')return {...base,...HAMMER_TIMING};
   if (isThunderAddition(key)) return {...base, cast:key==='storm_avatar'?360:260, travel:['fulminating_spear','thunder_hammer','lightning_step'].includes(key)?240:80, aftermath:480, read:180};
   if (key === 'paralyzing_pulse') return {...base, ...PULSE_TIMING};
   if (isThunderPremium(key)) return { ...base, ...THUNDER_TIMING[key] };

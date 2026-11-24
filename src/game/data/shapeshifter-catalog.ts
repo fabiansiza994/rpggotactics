@@ -320,7 +320,8 @@ export const SHAPESHIFTER_CATALOG_DECKS = {
 export function shapeshifterCatalog(base: GameContent): GameContent {
   const content = withShapeshifter2dQa(base);
   const reused = Object.values(content.cards)
-    .filter((c) => c.heroId === 'shapeshifter')
+    // Adapt only the original class catalog. Expansion cards retain tags, copy limits and ownership.
+    .filter((c) => c.heroId === 'shapeshifter' && oldGroups[c.id] !== undefined)
     .map((c) => ({
       ...c,
       maxCopies: undefined,

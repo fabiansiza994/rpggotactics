@@ -1,0 +1,13 @@
+import {expect,it} from 'vitest';import {createElement} from 'react';import {renderToStaticMarkup} from 'react-dom/server';import {stormOrbArcs,drawStormOrbs} from '../src/presentation/pixi/glyphOverlay';import {RankedPanel} from '../src/presentation/ranked/RankedViews';import {BattlePileBank} from '../src/presentation/battle/BattlePileZones';import {visualFixture,content} from '../qa/dark-light-visual-20261123/fixtures';
+it('orb arcs move continuously, remain bounded and freeze in reduced mode',()=>{for(let t=0;t<6000;t+=50){const arcs=stormOrbArcs(t);expect(arcs).toHaveLength(7);for(const a of arcs){expect(a.length).toBeGreaterThanOrEqual(15);expect(a.length).toBeLessThanOrEqual(23);expect(Math.abs(a.bend)).toBeLessThanOrEqual(4);}expect(arcs).not.toEqual(stormOrbArcs(t+50));}expect(stormOrbArcs(0,true)).toEqual(stormOrbArcs(6000,true));});
+it('search UI contains no bot offer, manual acceptance or rival-specific reward breakdown',()=>{const html=renderToStaticMarkup(createElement(RankedPanel,{profile:{enabled:true,rp:0,wins:0,losses:0,draws:0,milestones:[],queue:{state:'IDLE'}} as never,queue:{state:'SEARCHING',heroId:'mage',since:Date.now()-16000},busy:false,error:'',blocked:null,championName:'Mago',onSearch:()=>{},onCancel:()=>{}}));expect(html).toContain('Buscando rival');expect(html).not.toContain('Aceptar rival');expect(html).not.toContain('Victoria IA');});
+it('pile banks expose counts and public discard only, never deck identities',()=>{const {engine}=visualFixture('storm_orb');const state={...engine.state,pileCounts:{deck:8,opponentDeck:33,opponentDiscard:3,opponentHand:5,opponentAltar:0,discard:2}};const html=renderToStaticMarkup(createElement(BattlePileBank,{state,content,opponent:true}));expect(html).toContain('33 cartas');expect(html).toContain('3 cartas');expect(html).not.toContain('storm_orb');expect(html).not.toContain('fireball');});
+
+it('orb sampling never changes combat state and draws nothing after glyph removal',()=>{
+ const {engine}=visualFixture('storm_orb');const before=JSON.stringify(engine.state);let circles=0;
+ const g={circle:()=>{circles++;return g},fill:()=>g,stroke:()=>g,moveTo:()=>g,lineTo:()=>g};
+ const vm={state:{...engine.state,glyphs:[]}};
+ drawStormOrbs(g as never,{getTileCenter:()=>({x:100,y:100})} as never,vm as never,1000,false);expect(circles).toBe(0);
+ const active={state:{...engine.state,glyphs:[{glyphId:'thunder_orb',tiles:[{x:1,y:1}],origin:{x:1,y:1}}]}};
+ drawStormOrbs(g as never,{getTileCenter:()=>({x:100,y:100})} as never,active as never,1000,false);expect(circles).toBe(10);expect(JSON.stringify(engine.state)).toBe(before);
+});

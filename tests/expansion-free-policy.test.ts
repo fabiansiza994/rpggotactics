@@ -10,8 +10,8 @@ const ids=['origins_arcanos','thunder_god','antarctic_magic','pack_pact','warrio
 const content=releasedContent(DEFAULT_CONTENT,{...MARKET_FLAGS,DB:memoryD1()});
 const ctx={content,cosmetics:COSMETICS,rules:DECK_RULES};
 const freeId=(id:string)=>`booster_${id}_free`;
-it('permanent default: 5 Origins + 3 for every enabled expansion, total 20; identical paid pools and weights',()=>{
- const offers=boosterOffers(ctx),free=offers.filter(o=>o.booster?.freeGrant);expect(free).toHaveLength(6);expect(free.reduce((n,o)=>n+o.purchaseLimit!,0)).toBe(20);
+it('permanent default: 5 Origins + 3 for every enabled expansion, total 26; identical paid pools and weights',()=>{
+ const offers=boosterOffers(ctx),free=offers.filter(o=>o.booster?.freeGrant);expect(free).toHaveLength(8);expect(free.reduce((n,o)=>n+o.purchaseLimit!,0)).toBe(26);
  for(const id of ids){const f=free.find(o=>o.id===freeId(id))!,paid=offers.find(o=>o.id===`booster_${id}_x1`)!;expect(f.purchaseLimit).toBe(id==='origins_arcanos'?5:3);expect(f.contents).toEqual(paid.contents);expect(f.booster!.weights).toEqual({COMMON:55,UNCOMMON:30,RARE:12,LEGENDARY:3,ULTRA:0});expect(f.booster!.revision).toBe(paid.booster!.revision);expect(f.price).toBe(0);expect(f.giftable).toBe(false);}
 });
 it('future published definitions default to 3, but future/invalid pools grant nothing early',()=>{

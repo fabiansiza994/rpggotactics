@@ -12,7 +12,7 @@ export function pairTargets(
     return uid
       ? engine.getValidTargets(uid).filter((p) => {
           const t = engine.selectionTargeting(uid);
-          return t?.type !== 'UNIT' || !t.pairSwap || engine.getSecondaryTargets(uid, p).length > 0;
+          return t?.type !== 'UNIT' || !(t.pairSwap || t.adjacentStep) || engine.getSecondaryTargets(uid, p).length > 0;
         })
       : [];
   const hero = engine.state.units.find((u) => u.id === engine.heroId);
@@ -41,7 +41,7 @@ export function planCardSelection(
     } as const;
   }
   const targeting = engine.selectionTargeting(uid);
-  if (targeting?.type === 'UNIT' && targeting.pairSwap) {
+  if (targeting?.type === 'UNIT' && (targeting.pairSwap || targeting.adjacentStep)) {
     if (!pos || !engine.getSecondaryTargets(uid, pos).length) return { kind: 'invalid' } as const;
     return { kind: 'first', pair: { cardUid: uid, first: { ...pos } } } as const;
   }

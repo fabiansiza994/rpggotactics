@@ -102,7 +102,7 @@ export function checkCommit(ctx: RuleContext, cardUid: string): CommitCheck {
   if (!who.ok) return who;
   if (!def.ritualPiece) return fail('NOT_A_RITUAL_PIECE', 'Esta carta no es una pieza de ritual.') as CommitCheck;
   if (def.heroId && def.heroId !== who.caster.defId) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as CommitCheck;
-  const formRequirement = checkFormRequirement(who.caster, def.requiredForms);
+  const formRequirement = checkFormRequirement(who.caster, def.requiredForms, ctx.content);
   if (!formRequirement.ok) return formRequirement;
   const slots = altarSlots(ctx.content, who.caster.defId);
   if (slots <= 0) return fail('NO_ALTAR', 'Este campeón no tiene altar.') as CommitCheck;

@@ -1,3 +1,4 @@
+import {DARK_LIGHT_CARDS} from '../src/game/data/dark-light';
 import {MARKET_BOX_ULTRAS,MARKET_SEARCHERS,MARKET_BOX_MEMBERSHIP} from '../src/game/data/market-box-cards';
 import {createBoxStock,boxTotal} from '../src/game/store/boxes';
 import { beforeEach, describe, it, expect } from "vitest";
@@ -43,9 +44,9 @@ const expected = {
   reserva_cazador: 25,
 };
 describe("approved commercial reorganization", () => {
-  it("preserves original 224 IDs and mechanics except approved Mundo rarity; adds only 14 new cards", () => {
+  it("preserves original 224 IDs and mechanics except approved Mundo rarity; adds14 box cards and30 approved Light/Dark cards", () => {
     expect(Object.keys(content.cards).sort()).toEqual(
-      [...baseline.cards.map((c: { id: string }) => c.id),...MARKET_BOX_ULTRAS.map(c=>c.id),...MARKET_SEARCHERS.map(c=>c.id)].sort(),
+      [...baseline.cards.map((c: { id: string }) => c.id),...MARKET_BOX_ULTRAS.map(c=>c.id),...MARKET_SEARCHERS.map(c=>c.id),...DARK_LIGHT_CARDS.map(c=>c.id)].sort(),
     );
     for (const old of baseline.cards) {
       const c = content.cards[old.id]!;
@@ -64,8 +65,8 @@ describe("approved commercial reorganization", () => {
     expect(starterShared(content)).toEqual(baseline.sharedStarter);
   });
   it("has exactly one approved home per card and no missing target", () => {
-    expect(PRIMARY_MARKET_EXPANSION).toEqual({...baseline.primary,...Object.fromEntries(Object.entries(MARKET_BOX_MEMBERSHIP).flatMap(([e,ids])=>ids.map(id=>[id,e])))});
-    expect(Object.keys(PRIMARY_MARKET_EXPANSION)).toHaveLength(238);
+    expect(PRIMARY_MARKET_EXPANSION).toEqual({...baseline.primary,...Object.fromEntries(DARK_LIGHT_CARDS.map(c=>[c.id,c.expansion])),...Object.fromEntries(Object.entries(MARKET_BOX_MEMBERSHIP).flatMap(([e,ids])=>ids.map(id=>[id,e])))});
+    expect(Object.keys(PRIMARY_MARKET_EXPANSION)).toHaveLength(269);
     for (const e of Object.values(PRIMARY_MARKET_EXPANSION))
       expect(MARKET_EXPANSIONS.some((x) => x.id === e)).toBe(true);
   });
@@ -108,7 +109,7 @@ describe("approved commercial reorganization", () => {
   });
   it("cleans public metadata and does not sell future expansions", () => {
     const views = expansionViews(ctx, packs);
-    expect(views.filter((x) => x.packs.length)).toHaveLength(6);
+    expect(views.filter((x) => x.packs.length)).toHaveLength(8);
     expect(
       views.some((x) =>
         /Pendiente|Reserva|sin sobres/i.test(x.name + " " + x.description),
@@ -220,7 +221,7 @@ describe("authoritative store compatibility", () => {
       c.offers.filter(
         (x: { booster?: { freeGrant?: boolean } }) => x.booster?.freeGrant,
       ),
-    ).toHaveLength(6);
+    ).toHaveLength(8);
   });
   it("preserves prior launch claim while new packs are purchased", async () => {
     expect(
@@ -284,7 +285,7 @@ describe("authoritative store compatibility", () => {
   it("acquisition endpoint agrees with real pools and never grants", async () => {
     const before = (await f.call("GET", "/state")).data.profile,
       r = await f.call("GET", "/store/acquisition");
-    expect(Object.keys(r.data.cards)).toHaveLength(238);
+    expect(Object.keys(r.data.cards)).toHaveLength(269);
     for (const id of Object.keys(content.cards))
       expect(r.data.cards[id].inBooster).toBe(
         packs.some((p) =>

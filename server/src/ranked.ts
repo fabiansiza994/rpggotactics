@@ -408,6 +408,11 @@ async function pairOrState(
     );
   if (claimed.length !== 2) {
     if (claimed.length) await release(claimed.map((c) => c.user_id));
+    const pending = await queueState(env, caller, now);
+    if (pending.state === "SEARCHING" && pending.botOffer) {
+      const response = await assignBot(env, caller, now, pending);
+      if (response.ok) return (await response.json() as {queue: QueueState}).queue;
+    }
     return queueState(env, caller, now);
   }
   // Earlier ticket = seat A. Both loadouts come from each account's stored profile, right now.
@@ -490,19 +495,17 @@ async function acceptBot(
   // Human pairing always gets the final opportunity before an atomic bot claim.
   const state = await pairOrState(env, caller, now);
   if (state.state === "MATCHED") return json({ queue: state });
-  if (
-    state.state !== "SEARCHING" ||
-    !state.botOffer ||
-    body.since !== state.since
-  )
-    return error(
-      409,
-      "STALE_OFFER",
-      "La búsqueda cambió. Actualiza la oferta.",
-    );
-  // Old cached clients auto-posted {since}; they may still match humans, but cannot auto-create IA.
-  if (body.acceptance !== "MANUAL")
-    return error(409, "BOT_MANUAL_ACCEPTANCE_REQUIRED", "Actualiza el juego y acepta el rival IA manualmente, o sigue buscando una persona.");
+  // Legacy route remains compatible; the server now owns automatic assignment at the deadline.
+  if (state.state !== "SEARCHING" || body.since !== state.since)
+    return json({queue: state});
+  return json({queue: state});
+}
+
+async function assignBot(
+  env: Env, caller: Caller, now: number,
+  state: Extract<QueueState, {state: "SEARCHING"}>,
+): Promise<Response> {
+  if (!state.botOffer || !env.PVP_ROOMS) return json({queue:state});
   const own = await serverLoadout(
     env,
     caller,

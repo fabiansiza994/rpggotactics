@@ -119,6 +119,8 @@ export interface StructureDef {
  * custom content and the domain never imports concrete data files.
  */
 export interface SummonDef {
+  capacityAura?: number;
+  durationTurns?: number;
   maxPerOwner?:number;
   meltTurns?:number;
   /** Roles are deterministic behaviors, independent of presentation. */
@@ -155,6 +157,7 @@ export interface SummonDef {
 }
 
 export interface GameContent {
+  darkLightRelease?: true;
   /** Experimental rules, never registered by public content. Version pinned in QA replays. */
   qaCombatDepth?: { version: 1; backstab: boolean; formCounter: 'perHit' | 'oncePerRound' };
   transformations?: Readonly<Record<string, TransformationDef>>;

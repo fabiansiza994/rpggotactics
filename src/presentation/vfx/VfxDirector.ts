@@ -136,6 +136,7 @@ export class VfxDirector {
       this.host.redraw(initial);
     }
     this.effects.catalog?.beginBatch?.();
+    this.effects.darkLight.beginBatch();
     for (const [event, recipe] of catalogBatch(events, id => this.host.card(id))) this.catalogActions.set(event, recipe);
     for (const event of events) {
       if (['ENEMY_ATTACKED','SUMMON_ATTACKED','SUMMON_BREATH','COUNTER_ATTACK'].includes(event.type))
@@ -387,6 +388,7 @@ export class VfxDirector {
       if(e.cardId==='eternal_winter_heart')return;
       if(e.cardId==='avalanche'){fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,850,true);this.host.impulse('MEDIUM',reduced);return;}
       if(e.cardId==='frost_nova'||e.cardId==='frost_comet')return;
+      if(fx.darkLight.theme(e.cardId,e.impact,cue.duration))return;
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
         fx.catalog.charge(catalog,from,cue.duration,caster?.castOrigin()??undefined,e.impact,e.affectedTiles);
@@ -518,11 +520,12 @@ export class VfxDirector {
         return;
       }
       const caster = this.host.unit(e.casterId);
+      if(fx.darkLight.theme(e.cardId,e.impact,cue.duration,true))return;
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
         if(cue.key==='magma_fissure')fx.magmaFissure(e.affectedTiles,'impact');
         fx.catalog.impact(catalog,this.position(e.casterId)??e.impact,e.impact,e.affectedTiles);
-        if (catalog.bank === 'thunder-premium') this.host.impulse(cue.key === 'tempest_judgment' ? 'MEDIUM' : 'LIGHT', reduced);
+        if (catalog.bank === 'thunder-premium') this.host.impulse(['tempest_judgment','thunder_hammer'].includes(cue.key) ? 'MEDIUM' : 'LIGHT', reduced);
         return;
       }
       if (isArrowVisual(cue.key) && caster?.defId === ARCHER_VISUAL_ID) {
@@ -652,7 +655,7 @@ export class VfxDirector {
     }
     if (cue.kind !== 'event') return;
     if (e.type === 'CARD_RESOLVED') this.host.castCard?.(null);
-    const oldPosition = 'unitId' in e ? this.position(e.unitId) : undefined;
+    const oldPosition = 'unitId' in e && typeof e.unitId === 'string' ? this.position(e.unitId) : undefined;
     let deferCommit = false;
     // Read the pre-event position for removals / shield responses before projection commits.
     switch (e.type) {
@@ -774,10 +777,15 @@ export class VfxDirector {
         deferCommit = true;
         break;
       }
+      case 'REDEMPTION_SUPPORT':
+        this.host.unit(e.unitId)?.playAnimation('ability',reduced?90:480);
+        fx.catalog?.projectile({...familyRecipe('arcane','projectile'),tint:0xffe5a3},e.from,e.to,reduced?90:480);
+        this.host.unit(e.unitId)?.pulseLight(0xffdf8f,reduced?90:400);
+        break;
       case 'HP_SACRIFICED':
         this.host.unit(e.unitId)?.animateHealthChange?.();
         if (oldPosition) {
-          fx.forbiddenBond(oldPosition, 'sacrifice');
+          if(e.cardId==='light_redemption_spirit'){fx.catalog?.pulse?.('heal',oldPosition,e.hpAfter===0);if(e.hpAfter===0)fx.catalog?.impact({...familyRecipe('heal','contact'),tint:0xffe7a0},oldPosition,oldPosition,[oldPosition]);this.host.unit(e.unitId)?.pulseLight(0xffdf8f,reduced?90:350);}else fx.forbiddenBond(oldPosition, 'sacrifice');
           fx.number(e.unitId, oldPosition, e.amount, 'damage');
           this.host.unit(e.unitId)?.pulseLight(0xff3d6e, reduced ? 90 : 220);
         }
@@ -956,6 +964,7 @@ export class VfxDirector {
         if (e.kind === 'SUMMON') {
           motionCues.emit('summon_arrival');
           const ritualCreature=final.units.find(u=>u.id===e.unitId)?.defId;
+          if(ritualCreature==='light_redemption_spirit'){this.host.unit(e.unitId)?.playAnimation('arrival',reduced?120:600);fx.catalog?.impact({...familyRecipe('heal','contact'),tint:0xffe7a0},e.pos,e.pos,[e.pos]);break;}
           if(ritualCreature==='primordial_dragon')fx.ritual(e.pos,'LEGENDARY','arrival');
           if(ritualCreature==='ancient_turtle'||ritualCreature==='ancient_wolf')fx.ritual(e.pos,ritualCreature==='ancient_wolf'?'MAJOR':'MINOR','arrival');
           if(final.units.find(u=>u.id===e.unitId)?.defId==='ash_hound'){this.host.unit(e.unitId)?.playAnimation('arrival',90);fx.burst(e.pos,'FIRE',false,reduced?80:220);}
@@ -975,12 +984,26 @@ export class VfxDirector {
         this.host.impulse('LIGHT',reduced);
         break;
       }
+      case 'CARD_NEGATED': {
+        const at=this.position(e.casterId);if(!at)break;
+        if(cue.key==='negate-card')fx.darkLight.cursedCard(e.cardId,at,cue.duration);
+        else fx.darkLight.curseSmoke(at,cue.duration);
+        break;
+      }
+      case 'CARD_CURSE_TRIGGERED':
+        if (cue.key === 'curse-card') fx.darkLight.cursedCard(e.cardId, e.pos, cue.duration);
+        else if (cue.key === 'curse-smoke') fx.darkLight.curseSmoke(e.pos, cue.duration);
+        else if (cue.key === 'curse-beam') fx.catalog?.projectile({ ...familyRecipe('arcane', 'projectile'), tint: 0x7f3ca7 }, e.pos, e.pos, cue.duration, fx.lift(e.pos, 1.3));
+        break;
+      case 'REAPER_DISPOSITION':
+        if (e.disposition === 'REBEL') { if (!reduced) this.host.unit(e.unitId)?.playAnimation('ability', 240); this.host.unit(e.unitId)?.pulseLight(0xd27cff, reduced ? 80 : 380); }
+        break;
       case 'SUMMON_ATTACKED':
         if(attackingMarkedPrey(this.visual?.units??[],e.unitId,e.targetId)){if(!reduced)this.host.unit(e.unitId)?.pulseLight(0xc6a6ef,120);fx.preyCue(e.to);}
         this.host.unit(e.unitId)?.faceTarget(e.from,e.to,true);
-        this.host.unit(e.unitId)?.playAnimation('attack', reduced ? 40 : 180);
+        this.host.unit(e.unitId)?.playAnimation(this.host.unit(e.unitId)?.defId === 'dark_the_reaper' && e.ranged ? 'bash' : 'attack', reduced ? 40 : 180);
         if(this.host.unit(e.unitId)?.defId==='war_drake')fx.dragonBreath(e.from,e.to);
-        else if(e.ranged) {
+        else if(e.ranged && this.host.unit(e.unitId)?.defId !== 'dark_the_reaper') {
           const recipe=familyRecipe(this.attackFamilies.get(e)??'tactic','projectile');
           if(fx.catalog?.handles?.(recipe))fx.catalog.projectile(recipe,e.from,e.to,cue.duration,this.host.unit(e.unitId)?.castOrigin()??undefined);
         }

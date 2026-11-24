@@ -61,11 +61,11 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
         const result = pairSelection?.cardUid === selectedCardUid
           ? engine.previewCard(selectedCardUid, pairSelection.first, target ? pairSecondary(engine,target) : undefined)
           : engine.previewCard(selectedCardUid, target);
-        if (targeting.type === 'UNIT' && targeting.pairSwap && !pairSelection && target) {
+        if (targeting.type === 'UNIT' && (targeting.pairSwap || targeting.adjacentStep) && !pairSelection && target) {
           preview = { tiles: [target], valid: engine.getSecondaryTargets(selectedCardUid,target).length > 0, impact: null, predicted: [] };
         } else preview = result.valid
           ? {
-              element: engine.content.cards[state.player.hand.find(c => c.uid === selectedCardUid)?.cardId ?? '']?.presentation?.element,
+              element: selectedCardUid.startsWith('redemption:') ? 'ARCANE' : engine.content.cards[state.player.hand.find(c => c.uid === selectedCardUid)?.cardId ?? '']?.presentation?.element,
               tiles: [...(result.resolved?.affectedTiles ?? []), ...result.predictedEvents.filter(e => e.type === 'ARROW_REBOUNDED').map(e => e.pos)],
               valid: true,
               impact: result.resolved?.impact ?? null,
@@ -76,6 +76,10 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
     } else if (hoverTile) {
       hoverPath = base.moveTiles.find((n) => samePos(n.pos, hoverTile))?.path ?? [];
     }
+
+    const selectedId=state.player.hand.find(c=>c.uid===selectedCardUid)?.cardId;
+    if(preview&&selectedCardUid?.startsWith('redemption:'))preview.theme='LIGHT';
+    if(preview&&selectedId){preview.theme=selectedId.startsWith('light_')?'LIGHT':selectedId.startsWith('dark_')?'DARK':undefined;}
 
     return {
       state,

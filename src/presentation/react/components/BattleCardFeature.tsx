@@ -233,6 +233,7 @@ export function FeatureCard({
 }) {
   const def=engine?worldFrozenCard(baseDef,engine.state.units.find(u=>u.id===engine.heroId)):baseDef;
   const premiumRef = useCardPremiumEffect<HTMLElement>(def, 'large', true, interactive ?? !ariaHidden);
+  const readableRules = scrollableDescription ?? (!ariaHidden && ['allies_of_darkness', 'path_to_light'].includes(def.expansion ?? ''));
   const premium = def.id === 'summon_war_drake';
   const rarity = def.rarity ?? 'COMMON';
   const cost = engine?.getCardCost(engine.state.player.hand.find(c => c.cardId === def.id)?.uid ?? '')?.cost ?? def.cost;
@@ -248,6 +249,7 @@ export function FeatureCard({
       data-ritual-piece={def.ritualPiece || undefined}
       data-playable={playable}
       data-text-length={textLength(def.rulesText)}
+      data-rules-readable={readableRules || undefined}
       aria-hidden={ariaHidden || undefined}
       aria-label={ariaHidden ? undefined : `Carta elegida: ${def.name}`}
       style={{ '--card-tone': CARD_IDENTITY[def.presentation.visualKey]?.tone } as CSSProperties}
@@ -287,7 +289,7 @@ export function FeatureCard({
           )}
         </div>
         <WorldRewardBadge def={def} compact />
-        <p className="fc-text" tabIndex={scrollableDescription ? 0 : undefined}>{def.rulesText}
+        <p className="fc-text" tabIndex={readableRules ? 0 : undefined} role={readableRules ? 'region' : undefined} aria-label={readableRules ? `Efecto completo de ${def.name}; desplázate para leer` : undefined} data-card-rules-scroll={readableRules || undefined}>{def.rulesText}
          {def.worldFrozenUpgrade&&!def.worldFrozenActive&&<span className="fc-world-upgrade"><b>🌨 Mundo Gélido</b>{def.worldFrozenUpgrade.rulesText}</span>}
          {def.worldFrozenActive&&<span className="fc-world-active">🌨 Potenciada por Mundo Gélido</span>}
         </p>

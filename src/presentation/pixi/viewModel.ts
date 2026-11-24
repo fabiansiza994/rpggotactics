@@ -29,6 +29,7 @@ export interface BoardViewModel {
   /** Resolved area for the hovered target (null if nothing hovered / no card). */
   preview: {
     element?: import('../../game/domain/cards/card').VisualElement;
+    theme?: 'LIGHT'|'DARK';
     tiles: Pos[];
     valid: boolean;
     impact: Pos | null;

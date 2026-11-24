@@ -57,7 +57,7 @@ export function BattlePileBank({
     >
       <small>{opponent ? "Rival" : "Tú"}</small>
       <button
-        className="battle-pile"
+        className="battle-pile battle-pile-deck"
         aria-label={`${who} mazo: ${deck} cartas`}
         onClick={() => {
           setInspect(null);
@@ -75,7 +75,7 @@ export function BattlePileBank({
         <span>Mazo</span>
       </button>
       <button
-        className="battle-pile"
+        className="battle-pile battle-pile-grave"
         aria-label={`${who} cementerio: ${count} cartas`}
         onClick={() => {
           setInspect(null);
@@ -148,17 +148,21 @@ export function BattlePileBank({
                   </div>
                 </section>
               ) : cards.length ? (
-                <CompactCardGrid
-                  entries={graveEntries(cards)}
-                  cards={content.cards}
-                  context="collection"
-                  collectionLabel="en esta zona"
-                  draggable={false}
-                  selected={inspect}
-                  onInspect={setInspect}
-                  onDragStart={() => {}}
-                  onDragEnd={() => {}}
-                />
+                <>
+                  {cards.some(card => !card.recoveredThisBattle) && <CompactCardGrid
+                    entries={graveEntries(cards.filter(card => !card.recoveredThisBattle))}
+                    cards={content.cards} context="collection" collectionLabel="en esta zona" draggable={false}
+                    selected={inspect} onInspect={setInspect} onDragStart={() => {}} onDragEnd={() => {}}
+                  />}
+                  {cards.some(card => card.recoveredThisBattle) && <section className="grave-recovered" aria-label="Recuperación agotada">
+                    <h3>Recuperación agotada</h3>
+                    <p>Estas instancias ya fueron recuperadas durante esta partida. Puedes inspeccionarlas, pero no recuperarlas otra vez.</p>
+                    <CompactCardGrid entries={graveEntries(cards.filter(card => card.recoveredThisBattle))}
+                      cards={content.cards} context="collection" collectionLabel="ya recuperadas" draggable={false}
+                      selected={inspect} onInspect={setInspect} onDragStart={() => {}} onDragEnd={() => {}}
+                    />
+                  </section>}
+                </>
               ) : (
                 <p>No hay cartas reveladas en esta zona.</p>
               )}

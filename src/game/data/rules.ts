@@ -7,6 +7,11 @@ import { RANKED_PREMIUM_STATUSES } from './ranked-premium-cards';
 
 /** 02_MVP_RULES §10: each status declares duration handling, tick timing and stacking. */
 export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
+  LIGHT_PROTECTION: { id: 'LIGHT_PROTECTION', name: 'Luz Protectora', negative: false, tick: 'NEVER', stacking: 'REFRESH' },
+  LIGHT_VIGIL: { id: 'LIGHT_VIGIL', name: 'Vigilia del Guardián', negative: false, tick: 'NEVER', stacking: 'REFRESH' },
+  ASH_MARK: { id: 'ASH_MARK', name: 'Marca de Ceniza', negative: true, tick: 'NEVER', stacking: 'REFRESH' },
+  DARK_WORLD: { id: 'DARK_WORLD', name: 'Mundo Oscuro', negative: false, tick: 'NEVER', stacking: 'REFRESH' },
+  LIGHT_WORLD: { id: 'LIGHT_WORLD', name: 'Mundo de Luz', negative: false, tick: 'NEVER', stacking: 'REFRESH' },
   SNOW_WAR:{id:'SNOW_WAR',name:'Guerra de Nieve',negative:false,tick:'NEVER',stacking:'IGNORE'},
   GLACIER_CLAW:{id:'GLACIER_CLAW',name:'Garra del Glaciar',negative:true,tick:'NEVER',stacking:'IGNORE',preventsMovement:true},
   ABSOLUTE_ZERO: {id:'ABSOLUTE_ZERO',name:'Mundo Gélido',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true},

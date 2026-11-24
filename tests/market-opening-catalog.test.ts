@@ -26,8 +26,8 @@ function opening(ids:string[],packId='booster_reserva_cazador_x1'):NonNullable<P
 function renderSingle(o:NonNullable<PurchasePlan['opening']>){storage.set(packSceneKey('qa'),JSON.stringify({phase:'reveal',mask:15}));return renderToStaticMarkup(createElement(PackOpening,{opening:o,receiptId:'qa',onInspect:noop,onDone:noop}));}
 beforeEach(()=>{storage.clear();vi.stubGlobal('localStorage',{getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>storage.set(k,v)});vi.stubGlobal('matchMedia',()=>({matches:true}));});
 afterEach(()=>vi.unstubAllGlobals());
-it('derives six real pools with exactly 166 unique eligible cards',()=>{
- expect(offers).toHaveLength(6);expect(pool).toHaveLength(166);expect(new Set(pool.map(c=>c.id)).size).toBe(166);
+it('derives eight real pools with exactly 196 unique eligible cards',()=>{
+ expect(offers).toHaveLength(8);expect(pool).toHaveLength(197);expect(new Set(pool.map(c=>c.id)).size).toBe(197);
  expect(offers.every(o=>o.contents.length>0)).toBe(true);expect(offers.every(o=>o.contents.filter(c=>c.kind==='CARD'&&content.cards[c.cardId]?.rarity==='ULTRA').length===2)).toBe(true);
 });
 describe('every authoritative commercial card renders in the real opening and preview',()=>{

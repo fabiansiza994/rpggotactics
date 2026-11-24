@@ -23,6 +23,13 @@ export function createBoxStock(
     throw Error("Box requires a unique legal pool and at least two Ultras");
   if (!Number.isSafeInteger(target) || target < cards.length || target % 4)
     throw Error("Invalid box size");
+  if (target === 80 && cards.some(c => c.id === 'light_redemption_spirit')) {
+    const stock = createBoxStock(cards.filter(c => c.id !== 'light_redemption_spirit'), target);
+    stock.light_minor_blessing!--;
+    stock.light_dawn_shield!--;
+    stock.light_redemption_spirit = 2;
+    return stock;
+  }
   const sorted = [...cards].sort((a, b) => a.id.localeCompare(b.id)),
     stock: BoxStock = Object.fromEntries(sorted.map((c) => [c.id, 1]));
   const weight = { COMMON: 8, UNCOMMON: 5, RARE: 2, LEGENDARY: 1, ULTRA: 0 };

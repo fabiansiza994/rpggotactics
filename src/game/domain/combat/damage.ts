@@ -4,7 +4,7 @@ import {pruneBloodTrails} from './blood-trail';
 import {clearFrozenWorldTerrain} from '../terrain/terrain-rules';
 import {createTerrain} from '../terrain/terrain-rules';
 import {isStandable} from '../board/occupancy';
-import {removeStatus} from '../statuses/status-rules';
+import {applyStatus, removeStatus} from '../statuses/status-rules';
 import { behind, depthEnabled, type AttackKind } from './qa-depth';
 import { unitById, areHostile } from '../board/occupancy';
 import { terrainDefAt } from '../board/occupancy';
@@ -50,6 +50,7 @@ export function dealDamage(
   const cover = (attackKind === 'RANGED' || attackKind === 'DIRECT_RANGED') ? (terrainDefAt(ctx, unit.pos)?.rangedReduction ?? 0) : 0;
   const direct = directAttack ?? (attackKind === 'DIRECT_MELEE' || attackKind === 'DIRECT_RANGED' ? attackKind : undefined);
   const attacker = unitById(ctx.state, sourceId);
+  if (direct && attacker?.activeForm && areHostile(attacker, unit)) amount += ctx.content.transformations?.[attacker.activeForm]?.directDamageBonus ?? 0;
   if(unit.statuses.some(s=>s.id==='GLACIAL_REFLECTION') && attacker && areHostile(attacker,unit) && (direct==='DIRECT_RANGED'||attackKind==='RANGED')){
     const reduction=unit.statuses.find(s=>s.id==='GLACIAL_REFLECTION')?.power??2;
     removeStatus(ctx,unit,'GLACIAL_REFLECTION','CONSUMED');
@@ -67,6 +68,12 @@ export function dealDamage(
     !!direct &&
     attacker && areHostile(attacker, unit) && behind(attacker, unit) ? 1 : 0;
   const armorBonus=unit.statuses.reduce((n,s)=>n+(ctx.content.statuses[s.id]?.armorBonus??0),0);
+  const ash = unit.statuses.find(status => status.id === 'ASH_MARK' && status.sourceId === attacker?.id);
+  if (ash && direct && attacker && areHostile(attacker, unit)) { amount += 1; removeStatus(ctx, unit, 'ASH_MARK', 'CONSUMED'); }
+  if (unit.statuses.some(status => status.id === 'LIGHT_PROTECTION') && amount - cover - ((attackKind === 'GROUND_HAZARD' || attackKind === 'PIERCING') ? 0 : unit.armor + armorBonus) > 0) {
+    amount = Math.max(0, amount - 1);
+    removeStatus(ctx, unit, 'LIGHT_PROTECTION', 'CONSUMED');
+  }
   const result = computeDamage(
     attackKind === 'GROUND_HAZARD' || attackKind === 'PIERCING' ? { ...unit, armor: 0 } : {...unit,armor:unit.armor+armorBonus},
     Math.max(0, amount - cover),
@@ -117,6 +124,8 @@ export function dealDamage(
   const defeated = unit.hp <= 0;
   if (defeated) defeatUnit(ctx, unit);
   else onUnitHit(ctx, unit, sourceId, result.shieldAbsorbed + result.hpLost, direct ?? attackKind, damageType);
+  if (!defeated && result.hpLost > 0 && direct && attacker?.warriorPact && attacker.kind === 'HERO' && areHostile(attacker, unit) && unit.kind !== 'STRUCTURE')
+    applyStatus(ctx, unit, 'BLEEDING', 2, unit.statuses.find(status => status.id === 'BLEEDING')?.sourceId ?? attacker.id);
   return { ...result, defeated };
 }
 
@@ -131,6 +140,25 @@ export function defeatUnit(ctx: RuleContext, unit: Unit, reason?:'DAMAGE'|'MELT'
   // Capture the final authoritative tile before removal; never bind a replacement occupant.
   for(const glyph of state.glyphs??[])if(glyph.winterHeart?.targetId===unit.id)glyph.winterHeart.lastKnown={...unit.pos};
   if(state.glyphs)state.glyphs=state.glyphs.filter(g=>!g.winterHeart||g.ownerId!==unit.id);
+  if (unit.summon) {
+    const owner = state.units.find(owner => owner.id === unit.summon!.ownerId);
+    if (owner && unit.summon.capacityGranted) {
+      const before = (ctx.content.heroes[owner.defId]?.summonCapacity ?? 0) + (owner.summonCapacityBonus ?? 0);
+      owner.summonCapacityBonus = Math.max(0, (owner.summonCapacityBonus ?? 0) - unit.summon.capacityGranted);
+      ctx.emit({ type: 'SUMMON_CAPACITY_CHANGED', unitId: owner.id, from: before, to: (ctx.content.heroes[owner.defId]?.summonCapacity ?? 0) + owner.summonCapacityBonus, bonus: owner.summonCapacityBonus });
+    }
+    const bank = state.player.heroId === unit.summon.ownerId ? state.player : state.duel?.other.heroId === unit.summon.ownerId ? state.duel.other : undefined;
+    if (unit.summon.recoveredCard && bank) {
+      const card = unit.summon.recoveredCard;
+      card.publicDiscard = true;
+      if (!bank.discard.some(copy => copy.uid === card.uid)) bank.discard.push(card);
+    }
+    if (unit.summon.sourceCardUid && ['chicken', 'fox', 'turtle', 'raven', 'wolf'].includes(unit.defId)) {
+      const sources = state.deadSummonSources ??= [];
+      if (!sources.some(source => source.cardUid === unit.summon!.sourceCardUid && source.ownerId === unit.summon!.ownerId))
+        sources.push({ ownerId: unit.summon.ownerId, cardUid: unit.summon.sourceCardUid, summonId: unit.defId });
+    }
+  }
   state.units = state.units.filter((u) => u !== unit);
   pruneBloodTrails(state);
   pruneLifeFeathers(state);pruneScoutResources(state);
@@ -149,6 +177,7 @@ export function defeatUnit(ctx: RuleContext, unit: Unit, reason?:'DAMAGE'|'MELT'
 }
 
 export function healUnit(ctx: RuleContext, unit: Unit, amount: number, sourceId: string): number {
+  if (unit.defId === 'light_redemption_spirit') return 0;
   const healed = Math.max(0, Math.min(amount, unit.maxHp - unit.hp));
   if (healed === 0) return 0;
   unit.hp += healed;

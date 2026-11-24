@@ -9,6 +9,7 @@ import '../../styles/expansion-products.css';
 
 /** Editorial choices only. Each is checked against the live saleable contents before display. */
 export const EXPANSION_SPOTLIGHTS:Readonly<Record<string,string>>={
+ allies_of_darkness:'dark_dark_world',path_to_light:'light_light_world',
  origins_arcanos:'arcane_inversion',thunder_god:'thunder_incarnation',antarctic_magic:'absolute_zero',
  pack_pact:'summon_war_drake',warrior_promise:'execution',reserva_cazador:'hunters_net',
 };

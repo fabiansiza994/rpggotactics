@@ -83,6 +83,8 @@ export function explainCardBlock(
   const energyNote =
     energy < cost ? ` Además necesitas ${cost} de energía y tienes ${energy}.` : '';
   switch (check.reason) {
+    case 'RIVAL_ZONE_UNAVAILABLE':
+      return { code: check.reason, chip: 'Zona rival ausente', icon: 'target', detail: 'Este encuentro no dispone de la mano o el mazo rival que necesita esta carta. No consume energía ni se descarta.' };
     case 'NOT_ENOUGH_FOCUS': {
       const focus = state.units.find((u) => u.id === engine.heroId)?.focus;
       const required = def.focusCost ?? 0;

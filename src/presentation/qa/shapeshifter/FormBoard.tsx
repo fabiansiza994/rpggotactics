@@ -32,18 +32,18 @@ function FormActor({
         className="qa-form-stage"
         style={{ '--facing': facingFor(unit, units) } as CSSProperties}
       >
-        {cue?.motion === 'transform' && (
+        {cue?.motion === 'transform' && previous.assetStatus !== 'MISSING' && (
           <img className="qa-form-previous" src={previous.poses.idle} alt="" draggable={false} />
         )}
         <div className="qa-form-current">
           <div className="qa-form-body">
-            <img
+            {visual.assetStatus === 'MISSING' ? <span role="status">{visual.label}</span> : <img
               className="qa-form-idle"
               src={visual.poses.idle}
               alt={visual.label}
               draggable={false}
-            />
-            {cue && cue.motion !== 'transform' && (
+            />}
+            {visual.assetStatus !== 'MISSING' && cue && cue.motion !== 'transform' && (
               <img
                 className="qa-form-action"
                 src={visual.poses[cue.motion]}

@@ -1,0 +1,11 @@
+.redemption-controls{position:fixed;z-index:35;display:flex;gap:8px;width:104px;height:48px;pointer-events:auto;animation:redemption-appear .16s ease-out;user-select:none;-webkit-user-select:none}
+.redemption-control{position:relative;display:block;width:48px;height:48px;--support-color:#78edb2;--support-bg:#123c30}
+.redemption-control[data-kind=protect]{--support-color:#8ecfff;--support-bg:#132f58}
+.redemption-control button{display:grid;place-items:center;width:48px;height:48px;min-width:48px;min-height:48px;padding:11px;border-radius:50%;border:1px solid var(--support-color);background:radial-gradient(circle at 35% 25%,var(--support-bg),#07131c);color:var(--support-color);box-shadow:0 2px 7px #000b,inset 0 0 9px #ffffff18,0 0 9px color-mix(in srgb,var(--support-color) 35%,transparent);cursor:pointer;touch-action:manipulation}
+.redemption-control svg{width:24px;height:24px;fill:currentColor;filter:drop-shadow(0 0 3px currentColor)}
+.redemption-control button:disabled{opacity:.42;filter:grayscale(.8);box-shadow:0 2px 5px #0008;cursor:not-allowed;border-style:dashed}
+.redemption-control button:focus-visible{outline:2px solid #ffe5a0;outline-offset:3px}
+.redemption-control [role=tooltip]{display:none;position:absolute;bottom:56px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(230px,70vw);padding:7px 10px;border:1px solid #c2ab79;border-radius:7px;background:#07131cf5;color:#f4ebd4;font:12px/1.4 system-ui;pointer-events:none}
+@media(hover:hover){.redemption-control:hover [role=tooltip],.redemption-control:focus-within [role=tooltip]{display:block}}
+@keyframes redemption-appear{from{opacity:0;transform:translateY(5px) scale(.92)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.redemption-controls{animation:none}.redemption-control svg{filter:none}}

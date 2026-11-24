@@ -1,3 +1,4 @@
+import { DARK_LIGHT_EXPANSIONS } from './dark-light';
 import { UNLEASHED_HUNT_EXPANSION } from './unleashed-hunt';
 import type { GameContent } from '../domain/content';
 import { CARDS } from './cards';
@@ -9,7 +10,7 @@ import { TEMPLE_OBSTACLES } from './temple';
 
 export const DEFAULT_CONTENT: GameContent = {
   defaultHeroId: 'mage',
-  releasedExpansions: [UNLEASHED_HUNT_EXPANSION],
+  releasedExpansions: [UNLEASHED_HUNT_EXPANSION, DARK_LIGHT_EXPANSIONS.dark, DARK_LIGHT_EXPANSIONS.light],
   cards: CARDS,
   summons: SUMMONS,
   rituals: { ...RITUALS, ...PRIMORDIAL_RITUALS },

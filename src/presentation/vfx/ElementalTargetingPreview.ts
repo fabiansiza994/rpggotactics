@@ -35,13 +35,13 @@ export class ElementalTargetingPreview extends PaintedEffectPool {
     const element = p?.element;
     if (!p || !element) { this.shown = false; return; }
     const points = p.tiles.map(tile => ({ tile, center: proj.getTileCenter(tile), footprint: proj.footprint(tile), polygon: proj.getInsetPolygon(tile, .035).flatMap(v => [v.x, v.y]) }));
-    const key = JSON.stringify([element, points]);
+    const key = JSON.stringify([element, p.theme, points]);
     this.shown = true;
     if (key === this.key) return;
     this.key = key;
     this.clear(); this.painted = false;
     this.maskShape.clear(); this.lines.clear();
-    const color = targetingColors[element];
+    const color = p.theme==='LIGHT'?0xffe39a:p.theme==='DARK'?0xa46be0:targetingColors[element];
     for (const p of points) {
       this.maskShape.poly(p.polygon).fill(0xffffff);
       this.lines.poly(p.polygon).fill({ color, alpha: .12 }).stroke({ color, width: 1.8, alpha: .85 });

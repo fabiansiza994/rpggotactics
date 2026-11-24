@@ -53,8 +53,8 @@ function planningState(observation: GameState, seed: number): GameState {
     maxMovePoints: 0,
     drawPerTurn: 0,
     maxHandSize: 0,
-    deck: [],
-    hand: [],
+    deck: Array.from({ length: s.pileCounts?.opponentDeck ?? 0 }, (_, n) => ({ uid: `unknown-deck-${n}`, cardId: '__unknown__' })),
+    hand: Array.from({ length: s.pileCounts?.opponentHand ?? 0 }, (_, n) => ({ uid: `unknown-hand-${n}`, cardId: '__unknown__' })),
     discard: [],
     deckRecycles: 0,
   };
@@ -76,6 +76,7 @@ function planningState(observation: GameState, seed: number): GameState {
   return s;
 }
 export function botCandidates(s: GameState, content: GameContent): Command[] {
+  if (s.player.pendingCardChoice) return s.player.pendingCardChoice.options.map(card => ({ type: 'RESOLVE_CARD_CHOICE', choiceUid: card.uid }));
   const ctx = queryContext(s, content),
     hero = getHero(s);
   if (!hero) return [];
@@ -92,8 +93,12 @@ export function botCandidates(s: GameState, content: GameContent): Command[] {
     if (!checkPlayability(ctx, card.uid).ok) continue;
     const def = content.cards[card.cardId];
     if (!def) continue;
+    if (def.discardHandCost) {
+      for (const choice of s.player.hand.filter(copy => copy.uid !== card.uid)) out.push({ type: 'SEARCH_SUMMON', cardUid: card.uid, choiceUid: choice.uid });
+      continue;
+    }
     if (def.discardSearch) {
-      for (const choice of discardSearchChoices(s, content))
+      for (const choice of discardSearchChoices(s, content, def))
         out.push({
           type: "SEARCH_SUMMON",
           cardUid: card.uid,
@@ -115,7 +120,7 @@ export function botCandidates(s: GameState, content: GameContent): Command[] {
         ? [null]
         : getValidTargets(ctx, hero, def.targeting);
     for (const target of targets) {
-      if (target && def.targeting.type === "UNIT" && def.targeting.pairSwap) {
+      if (target && def.targeting.type === "UNIT" && (def.targeting.pairSwap || def.targeting.adjacentStep)) {
         const first = unitAt(s, target);
         if (first)
           for (const secondary of pairSwapPartners(
@@ -331,6 +336,10 @@ export function planBot(
   bot: BotIdentity,
   options: { clock?: () => number; maxNodes?: number; maxCpuMs?: number } = {},
 ): BotPlan {
+  if (observation.player.pendingCardChoice) {
+    const pending = observation.player.pendingCardChoice;
+    return { depths: [], candidates: pending.options.length, invalid: 0, command: { type: 'RESOLVE_CARD_CHOICE', choiceUid: pending.allowKeep ? null : pending.options[0]!.uid }, nodes: 0, cpuMs: 0, cutoff: false, score: 0 };
+  }
   const clock = options.clock ?? (() => performance.now()),
     start = clock(),
     level =

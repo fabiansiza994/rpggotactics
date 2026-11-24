@@ -1,3 +1,4 @@
+import { DARK_LIGHT_EXPANSIONS } from '../data/dark-light';
 import { MARKET_EXPANSIONS } from '../store/market-expansions';
 import type { GameContent, HeroDef } from '../domain/content';
 import { copyLimit, validateDeck, type DeckEntry, type DeckRules } from './deck-rules';
@@ -10,6 +11,7 @@ export function freshStarterDeck(hero: HeroDef, content: GameContent, rules: Dec
   const starterSets = new Set(hero.deck.map(entry => content.cards[entry.cardId]?.expansion).filter(Boolean));
   const starterIds = new Set((hero.starterCollection ?? []).map(entry => entry.cardId));
   const candidates = Object.values(content.cards).filter(card => card.heroId === hero.id
+    && card.expansion !== DARK_LIGHT_EXPANSIONS.dark && card.expansion !== DARK_LIGHT_EXPANSIONS.light
     && (!card.acquisition || (hero.id === 'archer' && commercial.has(card.id) && card.acquisition.source === 'ENCOUNTER_REWARD')) && !card.unique && card.rarity !== 'ULTRA'
     && (!card.expansion || content.releasedExpansions?.includes(card.expansion) || starterSets.has(card.expansion) || starterIds.has(card.id) || commercial.has(card.id))
     )

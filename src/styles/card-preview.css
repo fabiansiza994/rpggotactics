@@ -499,3 +499,13 @@
 .card-preview-zoom .fc-text {font-size:14px;line-height:1.5;}
 .feature-card .fc-art > img {object-fit:contain;}
 .feature-card .fc-rarity {letter-spacing:.06em;font-weight:700;}
+
+/* Full rules remain inside a bounded face; focus, touch and wheel can reach the final line.
+ * Miniatures stay inert so their deck drag/click target is unchanged. */
+.feature-card[data-rules-readable='true'] .fc-text {
+ overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-gutter:stable;
+ overscroll-behavior:contain;touch-action:pan-y;overflow-wrap:anywhere;
+ padding-bottom:8px;scroll-padding-block:8px;pointer-events:auto;
+}
+.feature-card[data-rules-readable='true'] :is(.fc-head,.fc-art,.fc-typeline,.fc-support){flex-shrink:0;}
+.feature-card[data-rules-readable='true'] .fc-text:focus-visible{outline:2px solid #ead193;outline-offset:-2px;}

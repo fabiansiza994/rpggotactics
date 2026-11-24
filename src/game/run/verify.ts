@@ -39,6 +39,12 @@ const isPos = (v: unknown): v is Pos => isRecord(v) && isInt(v.x) && isInt(v.y);
 /** Untrusted JSON → a well-formed command (nothing else reaches the engine). */
 export function parseCommand(raw: unknown): Command | null {
   if (!isRecord(raw)) return null;
+  if (raw.type === 'SILENCE_RESPONSE' && typeof raw.windowId === 'string' && raw.windowId.length > 0 && raw.windowId.length < 80) {
+    if (raw.pass === true) return { type: 'SILENCE_RESPONSE', windowId: raw.windowId, pass: true };
+    if (raw.pass === false && typeof raw.sealUid === 'string' && raw.sealUid.length > 0 && raw.sealUid.length < 100 && typeof raw.discardUid === 'string' && raw.discardUid.length > 0 && raw.discardUid.length < 100) return { type: 'SILENCE_RESPONSE', windowId: raw.windowId, pass: false, sealUid: raw.sealUid, discardUid: raw.discardUid };
+    return null;
+  }
+  if (raw.type === 'RESOLVE_CARD_CHOICE' && (raw.choiceUid === null || (typeof raw.choiceUid === 'string' && raw.choiceUid.length > 0 && raw.choiceUid.length < 100))) return { type: 'RESOLVE_CARD_CHOICE', choiceUid: raw.choiceUid };
   if (raw.type === 'SEARCH_SUMMON' && typeof raw.cardUid === 'string' && typeof raw.choiceUid === 'string' && raw.cardUid.length > 0 && raw.cardUid.length < 100 && raw.choiceUid.length > 0 && raw.choiceUid.length < 100)
     return {type:'SEARCH_SUMMON',cardUid:raw.cardUid,choiceUid:raw.choiceUid};
   if (raw.type === 'END_TURN')

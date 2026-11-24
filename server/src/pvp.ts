@@ -1,4 +1,6 @@
-import {CONTENT_RELEASE,supportsRoomRelease} from '../../src/game/pvp/content-release';
+import { withDarkLightRelease } from '../../src/game/data/dark-light';
+import { SILENCE_RESPONSE_MS } from '../../src/game/domain/cards/silence';
+import {CONTENT_RELEASE,supportsRoomRelease,canRunRoomRules} from '../../src/game/pvp/content-release';
 import { botPause, botActionTiming, pacingCredit } from "./botPacing";
 import { botChampionAvatar } from "./botChampions";
 import { profileAvatar } from "../../src/shared/profileAvatars";
@@ -96,6 +98,8 @@ interface Member {
   badgeId?: string | null;
 }
 export interface Room {
+  /** Immutable engine version; absent means pre-expansion and requires the old Worker. */
+  rulesRelease?: string;
   contentRelease?: string;
   mode?: PvpMode;
   mapId?: string;
@@ -110,6 +114,7 @@ export interface Room {
   members: Member[];
   game: GameState | null;
   deadline: number | null;
+  responseTurnRemainingMs?: number;
   result: {
     winner: number | null;
     loser: number | null;
@@ -415,6 +420,7 @@ export class PvPMatchRoom {
         !!r.game &&
         !r.result &&
         r.game.duel?.active === 1 &&
+        !r.game.pendingCast &&
         r.members[0]?.offlineAt === null;
       if (active && r.bot.turn !== r.game!.duel!.turns) {
         r.bot.turn = r.game!.duel!.turns;
@@ -460,6 +466,7 @@ export class PvPMatchRoom {
     const times = [
       r.expiresAt,
       r.deadline,
+      r.game?.pendingCast?.deadline ?? null,
       r.bot?.nextDecisionAt ?? null,
       ...(r.game
         ? r.members.every((m) => m.offlineAt !== null)
@@ -524,6 +531,10 @@ export class PvPMatchRoom {
     for (const ws of this.ctx.getWebSockets()) {
       const attachment = ws.deserializeAttachment(),
         seat = attachment.seat;
+      if (this.room && !canRunRoomRules(this.room)) {
+        ws.close(1012, "ROOM_RULES_UNAVAILABLE");
+        continue;
+      }
       if (this.room?.bot && attachment.botProtocol !== BOT_POLICY_VERSION) {
         ws.close(1008, "CLIENT_UPDATE_REQUIRED");
         continue;
@@ -722,6 +733,8 @@ export class PvPMatchRoom {
   fetch(request: Request): Promise<Response> {
     return this.serial(async () => {
       const path = new URL(request.url).pathname;
+      if (this.room && !canRunRoomRules(this.room))
+        return response({error:{code:"ROOM_RULES_UNAVAILABLE",message:"La partida necesita su versión original del servidor. Su estado se conserva; no inicies otra para reemplazarla."}},503);
       if (path === "/socket") return this.socket(request);
       if (this.env.CONTENT_RELEASE_DRAIN === "1" && ["/create","/bot-create","/ranked-create","/join","/ready","/rematch"].includes(path))
         return response({error:{code:"CONTENT_DRAINING",message:"Las partidas activas continúan; no se inician nuevas."}},503);
@@ -1073,6 +1086,7 @@ export class PvPMatchRoom {
           }
           if (this.env.RELEASE2_CLIENT_REQUIRED === "1")
             r.contentRelease = CONTENT_RELEASE;
+          r.rulesRelease = CONTENT_RELEASE;
           r.game = createDuel(
             r.members.map((m) => m.loadout) as [Loadout, Loadout],
             crypto.getRandomValues(new Uint32Array(1))[0]!,
@@ -1227,8 +1241,10 @@ export class PvPMatchRoom {
   private async applyRoomCommand(
     seat: number,
     action: { id: string; version: number; command: Command },
+    serverResponse = false,
   ): Promise<boolean> {
     const r = this.room!;
+    if (!canRunRoomRules(r)) throw Error("ROOM_RULES_UNAVAILABLE");
     if (!r.game || r.result) throw Error("BATTLE_OVER");
     if (
       typeof action.id !== "string" ||
@@ -1244,8 +1260,13 @@ export class PvPMatchRoom {
       return true;
     }
     if (action.version !== r.version) throw Error("STALE_VERSION");
-    if (r.game.duel!.active !== seat) throw Error("NOT_YOUR_TURN");
-    if (r.members.some((m) => m.offlineAt !== null))
+    const response = action.command?.type === 'SILENCE_RESPONSE';
+    if (response ? !r.game.pendingCast || r.game.duel!.active === seat || r.game.pendingCast.respondingHeroId !== r.game.duel!.champions[seat] : r.game.duel!.active !== seat) throw Error("NOT_YOUR_TURN");
+    if (response && !serverResponse && r.game.pendingCast!.deadline <= Date.now()) {
+      await this.ctx.storage.setAlarm(Date.now());
+      throw Error('RESPONSE_EXPIRED');
+    }
+    if (!serverResponse && r.members.some((m) => m.offlineAt !== null))
       throw Error("OPPONENT_DISCONNECTED");
     if (r.deadline !== null && r.deadline <= Date.now()) {
       await this.ctx.storage.setAlarm(Date.now());
@@ -1253,6 +1274,8 @@ export class PvPMatchRoom {
     }
     if (!validCommand(action.command)) throw Error("BAD_COMMAND");
     const command = canonicalCommand(action.command);
+    const previousResponse = r.game.pendingCast;
+    const turnDeadline = r.deadline;
     const applied = applyDuel(r.game, command, PVP_CONTENT);
     const botTiming =
       seat === 1 && r.bot
@@ -1267,6 +1290,14 @@ export class PvPMatchRoom {
         : null;
     if (botTiming && r.bot) r.bot.nextDelayMs = botTiming.delayMs;
     r.game = applied.state;
+    if (!previousResponse && r.game.pendingCast) {
+      r.responseTurnRemainingMs = Math.max(0, (turnDeadline ?? Date.now() + 90000) - Date.now());
+      r.deadline = null;
+      r.game.pendingCast.deadline = Date.now() + SILENCE_RESPONSE_MS;
+    } else if (previousResponse && !r.game.pendingCast) {
+      r.deadline = Date.now() + (r.responseTurnRemainingMs ?? 90000);
+      delete r.responseTurnRemainingMs;
+    }
     r.version++;
     r.commandCount++;
     const writes = {
@@ -1299,6 +1330,10 @@ export class PvPMatchRoom {
     return this.serial(async () => {
       const attachment = ws.deserializeAttachment(),
         seat = attachment.seat;
+      if (this.room && !canRunRoomRules(this.room)) {
+        ws.close(1012, "ROOM_RULES_UNAVAILABLE");
+        return;
+      }
       if (
         this.room?.contentRelease &&
         !supportsRoomRelease(attachment.clientRelease, this.room.contentRelease)
@@ -1366,6 +1401,7 @@ export class PvPMatchRoom {
   }
   webSocketClose(ws: Socket): Promise<void> {
     return this.serial(async () => {
+      if (this.room && !canRunRoomRules(this.room)) return;
       const seat = ws.deserializeAttachment().seat;
       if (!this.ctx.getWebSockets(String(seat)).some((s) => s !== ws)) {
         this.room!.members[seat]!.offlineAt = Date.now();
@@ -1383,6 +1419,8 @@ export class PvPMatchRoom {
     return this.serial(async () => {
       const r = this.room;
       if (!r) return;
+      // No timeout, bot action, settlement or reinterpretation of pre-expansion rules.
+      if (!canRunRoomRules(r)) return;
       if (r.result) {
         await this.recordResult();
         await this.ctx.storage.deleteAlarm();
@@ -1390,6 +1428,19 @@ export class PvPMatchRoom {
         return;
       }
       const now = Date.now();
+      if (r.game?.pendingCast && r.game.pendingCast.deadline <= now) {
+        const pending = r.game.pendingCast, seat = r.game.duel!.active === 0 ? 1 : 0;
+        let command: Command = { type: 'SILENCE_RESPONSE', windowId: pending.id, pass: true };
+        if (r.bot && seat === 1) {
+          const bank = r.game.duel!.other;
+          const seal = bank.hand.find(card => card.cardId === 'dark_silence_seal' && !card.unavailableThisTurn);
+          const discard = bank.hand.find(card => card.uid !== seal?.uid);
+          const owner = r.game.units.find(unit => unit.id === bank.heroId);
+          if (seal && discard && owner?.defId === 'mage' && bank.energy >= 2 && !owner.statuses.some(status => PVP_CONTENT.statuses[status.id]?.preventsActions)) command = { type: 'SILENCE_RESPONSE', windowId: pending.id, pass: false, sealUid: seal.uid, discardUid: discard.uid };
+        }
+        await this.applyRoomCommand(seat, { id: `response-timeout:${pending.id}`, version: r.version, command }, true);
+        return;
+      }
       if (
         r.bot &&
         r.bot.nextDecisionAt !== null &&
@@ -1398,6 +1449,7 @@ export class PvPMatchRoom {
         r.game &&
         !r.result &&
         r.game.duel?.active === 1 &&
+        !r.game.pendingCast &&
         r.members[0]!.offlineAt === null
       ) {
         try {
@@ -1409,6 +1461,7 @@ export class PvPMatchRoom {
             r.bot.nodes = 0;
           }
           const fallback = () =>
+            r.game!.player.pendingCardChoice ? { type: 'RESOLVE_CARD_CHOICE' as const, choiceUid: r.game!.player.pendingCardChoice.allowKeep ? null : r.game!.player.pendingCardChoice.options[0]!.uid } :
             fallbackDiscardUid(r.game!)
               ? {
                   type: "END_TURN" as const,
@@ -1504,7 +1557,9 @@ export class PvPMatchRoom {
           // Timer expired: the server ends the turn itself. Over the hand size it discards by the
           // deterministic fallback rule (last card in hand), recorded in the command log.
           const fallback = fallbackDiscardUid(r.game),
-            command: Command = fallback
+            command: Command = r.game.player.pendingCardChoice
+              ? { type: 'RESOLVE_CARD_CHOICE', choiceUid: r.game.player.pendingCardChoice.allowKeep ? null : r.game.player.pendingCardChoice.options[0]!.uid }
+              : fallback
               ? { type: "END_TURN", discardUid: fallback }
               : { type: "END_TURN" },
             seat = r.game.duel!.active,
@@ -1522,7 +1577,7 @@ export class PvPMatchRoom {
               version: r.version,
             },
           };
-          r.deadline = now + 90000;
+          r.deadline = command.type === 'RESOLVE_CARD_CHOICE' ? now : now + 90000;
           if (r.game.outcome)
             await this.finish(
               r.game.duel?.winner ?? r.game.dominion?.winner ??
@@ -1552,6 +1607,9 @@ export function validCommand(c: unknown): c is Command {
     Number.isInteger((p as { y: number }).y) &&
     Math.abs((p as { x: number }).x) < 100 &&
     Math.abs((p as { y: number }).y) < 100;
+  if (v.type === 'REDEMPTION_SUPPORT') return typeof v.unitId === 'string' && v.unitId.length > 0 && v.unitId.length < 100 && typeof v.targetId === 'string' && v.targetId.length > 0 && v.targetId.length < 100 && (v.action === 'HEAL' || v.action === 'PROTECT');
+  if (v.type === 'SILENCE_RESPONSE') return typeof v.windowId === 'string' && v.windowId.length > 0 && v.windowId.length < 80 && (v.pass === true || (v.pass === false && typeof v.sealUid === 'string' && v.sealUid.length > 0 && v.sealUid.length < 100 && typeof v.discardUid === 'string' && v.discardUid.length > 0 && v.discardUid.length < 100));
+  if (v.type === 'RESOLVE_CARD_CHOICE') return v.choiceUid === null || (typeof v.choiceUid === 'string' && v.choiceUid.length > 0 && v.choiceUid.length < 100);
   if(v.type === "LEGENDARY_STEP")return pos(v.to);
   if (v.type === "END_TURN")
     return (
@@ -1591,6 +1649,9 @@ export function validCommand(c: unknown): c is Command {
 }
 
 function canonicalCommand(command: Command): Command {
+  if (command.type === 'REDEMPTION_SUPPORT') return {type:command.type,unitId:command.unitId,targetId:command.targetId,action:command.action};
+  if (command.type === 'SILENCE_RESPONSE') return command.pass ? { type: command.type, windowId: command.windowId, pass: true } : { type: command.type, windowId: command.windowId, pass: false, sealUid: command.sealUid, discardUid: command.discardUid };
+  if (command.type === 'RESOLVE_CARD_CHOICE') return { type: command.type, choiceUid: command.choiceUid };
   if(command.type==='LEGENDARY_STEP')return {type:command.type,to:{x:command.to.x,y:command.to.y}};
   if (command.type === "SEARCH_SUMMON")
     return {
@@ -1642,4 +1703,4 @@ function canonicalCommand(command: Command): Command {
 }
 
 /** Compatible rule catalog for active rooms; championAllowed still gates every new loadout. */
-export const PVP_CONTENT = withShapeshifterRelease(withArcher(DEFAULT_CONTENT));
+export const PVP_CONTENT = withDarkLightRelease(withShapeshifterRelease(withArcher(DEFAULT_CONTENT)));

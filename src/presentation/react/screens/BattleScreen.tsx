@@ -1,3 +1,4 @@
+import {BattlePileBank} from "../../battle/BattlePileZones";
 import { CardActivationLabel } from '../components/CardActivationLabel';
 import { TurnAnnouncement } from '../components/TurnAnnouncement';
 import '../components/BattleStyles';
@@ -121,13 +122,15 @@ export function BattleScreen() {
       <TacticalOverview state={displayed} />
       <main className="battle-main">
         <div className="board-column">
+              <BattlePileBank state={displayed} content={engine.content} opponent/>
           <InteractionPanel/><BoardView focusedEnemyId={focusedEnemyId} menuPaused={menuPaused} />
           {notice && (
             <div className="notice" role="status">
               {notice}
             </div>
           )}
-        </div>
+        <BattlePileBank state={displayed} content={engine.content}/>
+            </div>
       </main>
       <PauseMenu busy={busy} onRestart={restart} onExit={backToMenu} onOpenChange={setMenuPaused} />
       <div className="battle-utilities">

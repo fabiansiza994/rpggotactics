@@ -1,3 +1,4 @@
+import { DarkLightEffects } from './DarkLightEffects';
 import {AvalancheEffects} from './AvalancheEffects';
 import {IceSpellEffects}from './IceSpellEffects';
 import {drawLifeFeather} from '../pixi/LifeFeatherView';
@@ -37,6 +38,8 @@ export interface FxGeometry {
   quad(p: Pos, inset: number): Point[];
   /** Y-sort key for a world point (actors and projectiles share it). */
   depth(point: Point): number;
+  /** Upper playable surface in the same coordinate space; optional for flat tests. */
+  boardTop?(): number;
 }
 
 const TILE = 96;
@@ -86,6 +89,7 @@ export class ElementEffects {
   /** Presentation-only A/B fallback; never persisted or sent to the server. */
   elementalHits = true;
   elementalReadability = true;
+  readonly darkLight: DarkLightEffects;
   readonly catalog: CatalogEffects;
   readonly fireball: FireballEffects;
   readonly mage: MageEffects;
@@ -135,6 +139,7 @@ export class ElementEffects {
   ) {
     this.geometry = typeof geometry === 'function' ? flatGeometry(geometry) : geometry;
     this.ground = ground ?? layer;
+    this.darkLight = new DarkLightEffects(projectiles, this.ground, this.geometry);
     this.catalog = new CatalogEffects(projectiles, this.ground, this.geometry);
     this.fireball = new FireballEffects(projectiles, this.ground, this.geometry);
     this.mage = new MageEffects(projectiles, this.ground, this.geometry);
@@ -1266,6 +1271,7 @@ export class ElementEffects {
   tick(ms: number): void {
     this.avalanche.reduced=this.reduced;this.avalanche.tick(ms);
     this.icePremium.reduced=this.reduced;this.icePremium.tick(ms);
+    this.darkLight.reduced = this.reduced; this.darkLight.tick(ms);
     this.catalog.reduced = this.reduced; this.catalog.tick(ms);
     this.mage.reduced = this.reduced; this.mage.tick(ms);
     this.bastion.reduced = this.pactSummon.reduced = this.reduced;
@@ -1321,6 +1327,7 @@ export class ElementEffects {
   clear(): void {
     for (const cancel of [...this.reactionCancels.values()]) cancel();
     this.reactionCancels.clear();
+    this.darkLight.clear();
     this.catalog.clear();
     this.icePremium.clear();this.avalanche.clear();
     this.mage.clear(); this.fireball.clear(); this.bastion.clear(); this.pactSummon.clear();
@@ -1335,6 +1342,7 @@ export class ElementEffects {
   }
   destroy(): void {
     this.clear();
+    this.darkLight.destroy();
     this.catalog.destroy();
     this.icePremium.destroy();this.avalanche.destroy();
     this.mage.destroy(); this.fireball.destroy(); this.bastion.destroy(); this.pactSummon.destroy();

@@ -1,3 +1,4 @@
+import { MISSING_UNIT_ART } from '../assets/missingUnitArt';
 import { shapeshifterPresentationEnabled } from '../shapeshifterRelease';
 import { verticalAsset, verticalGeometry, isVerticalView, verticalMirror } from '../qa/locomotion/directionalProfiles';
 import { locomotionClip } from './locomotion';
@@ -158,9 +159,9 @@ export class PaintedFigure extends Container {
     if (this.unitId === 'mage' && !directionalAtlas && this.directional && (motion === 'idle' || motion === 'cast'))
       this.scale.x = wizardView(this.directional).mirror ? -1 : 1;
     if (previousTexture !== this.sprite.texture) this.discardIdleMesh();
-    this.sprite.anchor.set(0.5, this.unitId==='snow_soldier'?230/256:0.875);
+    this.sprite.anchor.set(0.5, CHARACTER_ANIMATIONS[this.unitId]?.anchorY ?? (this.unitId==='snow_soldier'?230/256:0.875));
     this.sprite.scale.set(
-      this.unitId === 'mage' ? wizardSpriteScale(this.sprite.texture.height) : (this.unitId==='snow_soldier' || hasDirectionalAtlas(this.unitId) || CHARACTER_ANIMATIONS[this.unitId]?.locomotionOnly || this.unitId.startsWith('qa_form_')) ? spriteScale(characterSpec(this.unitId),this.sprite.texture.height,TILE) : displayScale,
+      this.unitId === 'mage' ? wizardSpriteScale(this.sprite.texture.height) : (CHARACTER_ANIMATIONS[this.unitId]?.contractScale || this.unitId==='snow_soldier' || hasDirectionalAtlas(this.unitId) || CHARACTER_ANIMATIONS[this.unitId]?.locomotionOnly || this.unitId.startsWith('qa_form_')) ? spriteScale(characterSpec(this.unitId),this.sprite.texture.height,TILE) : displayScale,
     );
     const geometry = CHARACTER_ANIMATIONS[this.unitId]?.locomotionOnly
       ? gaitGeometry(this.unitId, characterSpec(this.unitId), TILE, this.sprite.texture.height)
@@ -199,7 +200,7 @@ export class PaintedFigure extends Container {
       view === 'front' ? paintedAnimationFrame('mage', 'idle', 0) : wizardTexture(view);
     if (!texture) return;
     this.sprite.texture = texture;
-    this.sprite.anchor.set(0.5, this.unitId==='snow_soldier'?230/256:0.875);
+    this.sprite.anchor.set(0.5, CHARACTER_ANIMATIONS[this.unitId]?.anchorY ?? (this.unitId==='snow_soldier'?230/256:0.875));
     this.sprite.scale.set(wizardSpriteScale(texture.height));
     this.sprite.position.set(0, FOOT_Y);
     this.scale.x = mirror ? -1 : 1;
@@ -365,6 +366,12 @@ export function unitArt(defId: string): Graphics | PaintedFigure {
   const painting = paintedCharacter(defId) ?? paintedAnimationFrame(defId, 'idle', 0);
   if (painting) return new PaintedFigure(painting, defId);
   const art = new Graphics();
+  if (MISSING_UNIT_ART[defId]) {
+    // Diagnostic footprint only: deliberately not a humanoid or an inherited champion model.
+    art.rect(-21, -38, 42, 54).stroke({color:0xc3a5e1,width:2,alpha:.85});
+    art.moveTo(-15,-30).lineTo(15,8).moveTo(15,-30).lineTo(-15,8).stroke({color:0xc3a5e1,width:2,alpha:.55});
+    return art;
+  }
   for (const shape of characterDefinition(defId).shapes) {
     art.path(new GraphicsPath(shape.d));
     if (shape.fill !== 'none') art.fill(shape.fill);

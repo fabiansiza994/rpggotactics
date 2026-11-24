@@ -258,6 +258,7 @@ export const ERROR_LABEL: Record<RuleError, string> = {
   NOT_ENOUGH_FOCUS: 'Concentración insuficiente',
   NOT_ENOUGH_HP: 'No puede usarse con 1 PV',
   UNIQUE_ALREADY_USED: 'Única: ya usada en este combate',
+  RIVAL_ZONE_UNAVAILABLE: 'El encuentro no tiene la zona rival necesaria',
   INVALID_TARGET: 'Objetivo inválido para esta carta',
   // Champion-neutral: the HUD names the actual champion (cardBlock.ts); PvP reuses this map.
   CASTER_INCAPACITATED: 'Tu campeón no puede actuar',
@@ -292,6 +293,10 @@ export function describeEvent(
       return { text: `— Ronda ${e.round} —`, tone: 'turn' };
     case 'TURN_STARTED':
       return { text: e.faction === 'PLAYER' ? 'Tu turno' : 'Turno enemigo', tone: 'turn' };
+    case 'CARD_CAST_PENDING': return { text: `${cardName(e.cardId)}: respuesta abierta`, tone: 'info' };
+    case 'CARD_NEGATED': return { text: `${cardName(e.cardId)} anulada por Sello del Silencio`, tone: 'bad' };
+    case 'CARD_CURSE_TRIGGERED': return { text: `${cardName(e.cardId)} anulada por Maldición Retorcida`, tone: 'bad' };
+    case 'REAPER_DISPOSITION': return { text: e.disposition === 'REBEL' ? 'La Parca se rebela contra su invocador' : e.disposition === 'LOYAL' ? 'Mundo Oscuro asegura la lealtad de La Parca' : 'La Parca vuelve a ser aliada', tone: e.disposition === 'REBEL' ? 'bad' : 'info' };
     case 'CARD_PLAYED':
       return { text: `Lanzas ${cardName(e.cardId)}${e.empowered ? ' (con Impulso)' : ''}`, tone: 'info' };
     case 'RITUAL_PIECE_COMMITTED':
@@ -360,6 +365,7 @@ export function describeEvent(
       return describeGuardianEvent(e);
     case 'OBJECTIVE_STAGE_CHANGED':
       return describeStageEvent(e);
+    case 'BATTLE_DRAW': return { text: 'Empate', tone: 'info' };
     case 'BATTLE_WON':
       return { text: '¡Victoria!', tone: 'good' };
     case 'BATTLE_LOST':

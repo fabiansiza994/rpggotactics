@@ -1,3 +1,4 @@
+import { DARK_LIGHT_CARD_ART, DARK_LIGHT_UNIT_ART } from './darkLightArt';
 import { TEMPLE_REWARD_ART } from './templeRewards';
 import { archerPresentationEnabled } from '../archerRelease';
 import { SHAPESHIFTER_CARD_ART } from './shapeshifterCards';
@@ -204,3 +205,10 @@ FINAL_CARD_ART.thunder_incarnation = "/art/mage-thunder/thunder_incarnation.jpg"
 
 // Original commercial box artwork; existing paintings are untouched.
 for(const id of ['arcane_balance', 'arcane_confluence', 'arcane_resonance', 'eternal_winter_heart', 'hunter_trail', 'hunters_patience', 'oath_of_steel', 'pack_concord', 'pact_link', 'storm_conduit', 'storm_crown', 'tempest_call', 'warriors_oath', 'winter_call'])FINAL_CARD_ART[id]=`/art/market-boxes/${id}.jpg`;
+
+
+/** Draft artwork registration never publishes offers or changes ownership. */
+Object.assign(FINAL_CARD_ART, DARK_LIGHT_CARD_ART);
+Object.assign(CARD_PAINTINGS, DARK_LIGHT_CARD_ART);
+Object.assign(CHARACTER_PAINTINGS, DARK_LIGHT_UNIT_ART);
+Object.assign(BATTLE_CHARACTER_PAINTINGS, DARK_LIGHT_UNIT_ART);

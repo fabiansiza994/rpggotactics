@@ -1,3 +1,5 @@
+import {hammerEntry,hammerFlight,HAMMER_TIMING} from './thunderHammerRecipe';
+import {ThunderHammerEffects} from './ThunderHammerEffects';
 import { isThunderAddition, thunderAdditionStyle } from './thunderExpansionRecipe';
 import { ParalyzingPulseEffects } from './ParalyzingPulseEffects';
 import { thunderConnection, thunderEnvelope } from './thunderRecipe';
@@ -204,6 +206,13 @@ class RecipeBank extends PaintedEffectPool {
     const style = thunderAdditionStyle(recipe.variant), f = this.geometry.footprint(at),
       scale = f.w / 96, center = this.geometry.center(at), source = this.lifted(from, 0.46),
       life = Math.max(1, duration), soft = this.reduced ? 0.25 : 0.62;
+    if(phase==='charge'&&style==='hammer'){
+      for(const tile of affected.slice(0,5)){
+        const ground=this.geometry.center(tile),footprint=this.geometry.footprint(tile);
+        this.sprite([10,15],ground,footprint.w*.7,life,(t,s)=>{s.height=footprint.h*.9;s.alpha=(this.reduced ? .25 : .55)*Math.sin(Math.PI*(.1+.8*t));s.zIndex=this.geometry.depth(ground)+1;},true);
+      }
+      return;
+    }
     if (phase === 'charge') {
       this.sprite([15], source, 38 * scale, life, (t,s) => {
         s.width=s.height=(22+25*t)*scale; s.alpha=soft*Math.sin(Math.PI*t); s.tint=style==='frenzy'?0xd59bff:0xbcecff;
@@ -212,7 +221,24 @@ class RecipeBank extends PaintedEffectPool {
       return;
     }
     if (phase === 'travel') {
-      if (style === 'orb' || style === 'field') {
+      if(style==='hammer'){
+        if(this.reduced)return;
+        const entry=hammerEntry(center,f.w,this.geometry.boardTop?.()??0);
+        // The same sampled path drives prop, core wake and detached electrical fragments.
+        for(const layer of [0,1])this.sprite([4,5,6,7],center,30*scale,life,(t,s)=>{
+          const a=hammerFlight(entry,center,t),length=(80+125*a.progress)*scale;
+          s.anchor.set(.5,1);s.position.set(a.x-a.ux*12*scale,a.y-a.uy*12*scale);
+          s.rotation=a.angle-Math.PI/2;s.width=(layer?16:38)*scale;s.height=length;
+          s.tint=layer?0xe1f7ff:0x8f70ff;s.alpha=(layer ? .9 : .55)*Math.min(1,t*10);
+          s.zIndex=this.geometry.depth(center)+14;
+        },false,true);
+        for(let i=0;i<(this.mobile?5:8);i++)this.sprite([13,14],center,12*scale,life,(t,s)=>{
+          const a=hammerFlight(entry,center,Math.max(0,t-i*.018)),back=(25+i*15)*scale;
+          const side=Math.sin(t*31+i*2.3)*(8+i*2)*scale;
+          s.position.set(a.x-a.ux*back-a.uy*side,a.y-a.uy*back+a.ux*side);
+          s.width=s.height=(5+5*Math.sin(t*10+i)**2)*scale;s.alpha=.75*Math.min(1,t*9);s.zIndex=this.geometry.depth(center)+14;
+        },false,true);
+      } else if (style === 'orb' || style === 'field') {
         this.thunderBeam(this.lifted(from, style==='orb'?0.25:0.03), this.lifted(at,0.38), at, life, true);
       } else if (style === 'spear') {
         const end = this.lifted(at,0.4), dx=end.x-source.x, dy=end.y-source.y, length=Math.hypot(dx,dy);
@@ -220,17 +246,23 @@ class RecipeBank extends PaintedEffectPool {
           s.anchor.set(1,0.5);s.position.set(source.x+dx*t,source.y+dy*t);s.rotation=Math.atan2(dy,dx);
           s.width=Math.min(length,f.w*1.8);s.height=16*scale;s.alpha=soft;s.zIndex=this.geometry.depth(center)+4;
         });
-      } else if (style === 'hammer') {
-        this.sprite([4,5,6,7], center, 85*scale, life, (t,s)=>{
-          s.anchor.set(0.5,1);s.position.set(center.x,center.y-(1-t)*105*scale);s.height=120*scale;s.alpha=soft*t;
-          s.rotation=this.reduced?0:(1-t)*-0.4;s.zIndex=this.geometry.depth(center)+4;
-        });
       } else if (style === 'step') {
         for (const tile of [from,at]) this.sprite([9],this.lifted(tile,0.35),65*scale,life,(t,s)=>{
           s.alpha=soft*Math.sin(Math.PI*t);s.height=95*scale;s.zIndex=this.geometry.depth(this.geometry.center(tile))+4;
         });
       }
       return;
+    }
+    if(style==='hammer'){
+      this.sprite([15],center,f.w,HAMMER_TIMING.aftermath,(t,s)=>{
+       const radius=.35+2.8*(1-Math.pow(1-t,2));s.width=f.w*radius;s.height=f.h*radius;
+       s.alpha=(this.reduced ? .3 : .85)*Math.pow(1-t,1.8);s.zIndex=this.geometry.depth(center)+1;
+      },true,true);
+      if(!this.reduced)for(let i=0;i<(this.mobile?8:12);i++)this.sprite([13,14],center,18*scale,760,(t,s)=>{
+        const a=i*Math.PI*2/(this.mobile?8:12),r=(18+120*t)*scale;
+        s.position.set(center.x+Math.cos(a)*r,center.y+Math.sin(a)*r*.48-Math.sin(t*Math.PI)*28*scale);
+        s.rotation=a+t*3;s.width=s.height=(10-7*t)*scale;s.alpha=(1-t)*.9;s.zIndex=this.geometry.depth(center)+3;
+      },false,true);
     }
     const body = ['shield','mark','frenzy','avatar'].includes(style);
     const tiles = body || style === 'orb' ? [at] : affected.slice(0, this.mobile ? 6 : 8);
@@ -337,7 +369,7 @@ class RecipeBank extends PaintedEffectPool {
     });
   }
   premiumThunderImpact(recipe: CatalogRecipe, from: Pos, at: Pos, affected: readonly Pos[]) {
-    if (isThunderAddition(recipe.variant)) { this.thunderAddition(recipe, 'impact', from, at, affected, this.reduced ? 180 : 460); return; }
+    if (isThunderAddition(recipe.variant)) { this.thunderAddition(recipe, 'impact', from, at, affected, this.reduced ? 180 : recipe.variant==='thunder_hammer'?HAMMER_TIMING.aftermath:460); return; }
     const c = this.geometry.center(at), f = this.geometry.footprint(at), scale = f.w / 96;
     const tempest = recipe.variant === 'tempest_judgment';
     if (tempest) {
@@ -496,9 +528,11 @@ class RecipeBank extends PaintedEffectPool {
 export class CatalogEffects {
   private readonly banks: Record<AtlasBank, RecipeBank>;
   private readonly paralyzing: ParalyzingPulseEffects;
+  private readonly hammer: ThunderHammerEffects;
   reduced = false;
   constructor(actors: Container, ground: Container, geometry: FxGeometry) {
     this.paralyzing = new ParalyzingPulseEffects(actors, ground, geometry);
+    this.hammer = new ThunderHammerEffects(actors,ground,geometry);
     this.banks = Object.fromEntries(
       (
         [
@@ -518,15 +552,17 @@ export class CatalogEffects {
   }
   get snapshot() {
     const banks=Object.fromEntries(Object.entries(this.banks).map(([id,bank])=>[id,bank.snapshot])) as Record<AtlasBank,RecipeBank['snapshot']>;
-    return {...banks,'paralyzing-pulse':this.paralyzing.snapshot};
+    return {...banks,'paralyzing-pulse':this.paralyzing.snapshot,'thunder-hammer':this.hammer.snapshot};
   }
   beginBatch(): void {
     this.paralyzing.beginBatch();
+    this.hammer.beginBatch();
     for (const bank of Object.values(this.banks)) bank.beginBatch();
   }
   async prepare(recipes: readonly CatalogRecipe[]): Promise<void> {
     await Promise.all(
-      [recipes.some(r=>r.variant==='paralyzing_pulse') ? this.paralyzing.prepare() : Promise.resolve(),
+      [recipes.some(r=>r.variant==='thunder_hammer')?this.hammer.prepare():Promise.resolve(),
+       recipes.some(r=>r.variant==='paralyzing_pulse') ? this.paralyzing.prepare() : Promise.resolve(),
       ...[...new Set(recipes.filter(r=>r.variant!=='paralyzing_pulse').map((r) => r.bank))].map((id) => this.banks[id].prepare())],
     );
   }
@@ -537,6 +573,7 @@ export class CatalogEffects {
   }
   handles(recipe: CatalogRecipe | undefined): recipe is CatalogRecipe {
     if(recipe?.variant==='paralyzing_pulse'){this.paralyzing.reduced=this.reduced;return this.requested&&this.paralyzing.ready;}
+    if(recipe?.variant==='thunder_hammer')return this.requested&&this.hammer.ready&&!!this.bank(recipe);
     return !!recipe && !!this.bank(recipe);
   }
   charge(
@@ -560,10 +597,12 @@ export class CatalogEffects {
     duration: number,
     origin?: { x: number; y: number },
   ): void {
+    if(recipe.variant==='thunder_hammer'){this.hammer.reduced=this.reduced;this.hammer.descend(to,duration);this.bank(recipe)?.travel(recipe,from,to,duration,origin);return;}
     if(recipe.variant==='paralyzing_pulse'){if(this.handles(recipe))this.paralyzing.release(from,duration);return;}
     this.bank(recipe)?.travel(recipe, from, to, duration, origin);
   }
   impact(recipe: CatalogRecipe, from: Pos, at: Pos, affected: readonly Pos[]): void {
+    if(recipe.variant==='thunder_hammer'){this.hammer.reduced=this.reduced;this.hammer.contact(at);}
     if(recipe.variant==='paralyzing_pulse'){if(this.handles(recipe))this.paralyzing.impact(from,affected);return;}
     const bank = this.bank(recipe);
     if (
@@ -624,14 +663,17 @@ export class CatalogEffects {
   }
   tick(ms: number): void {
     this.paralyzing.tick(ms);
+    this.hammer.tick(ms);
     for (const bank of Object.values(this.banks)) bank.tick(ms);
   }
   clear(): void {
     this.paralyzing.clear();
+    this.hammer.clear();
     for (const bank of Object.values(this.banks)) bank.clear();
   }
   destroy(): void {
     this.paralyzing.destroy();
+    this.hammer.destroy();
     for (const bank of Object.values(this.banks)) bank.destroy();
   }
 }

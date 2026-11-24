@@ -312,6 +312,9 @@ interface BattleStore {
   /** Select a hand card or a ritual activation (`ritualSelection(id)`) for targeting. */
   selectCard(cardUid: string | null): void;
   confirmSummonSearch(cardUid: string, choiceUid: string): void;
+  performRedemption(unitId:string, targetId:string, action:'HEAL'|'PROTECT'): void;
+  resolveCardChoice(choiceUid: string | null): void;
+  respondSilence(windowId: string, sealUid?: string, discardUid?: string): void;
   /** Seal a ritual piece from the hand onto the altar (the rules validate it). */
   commitRitualPiece(cardUid: string): void;
   /** Abandon a sealed piece (altar → discard). */
@@ -483,8 +486,8 @@ export const activeRun = (s: {
   s.mode === 'CAMPAIGN' ? s.run : s.mode === 'SKIRMISH' ? (s.skirmish?.run ?? null) : null;
 
 /** Any presentation sequence that must finish before the player acts again. */
-export const inputLocked = (s: { playbackBusy: boolean; introLocked: boolean }): boolean =>
-  s.playbackBusy || s.introLocked;
+export const inputLocked = (s: { playbackBusy: boolean; introLocked: boolean; state?: Readonly<GameState> | null }): boolean =>
+  s.playbackBusy || s.introLocked || !!s.state?.responseWindow;
 let logId = 0;
 
 /**
@@ -1492,6 +1495,13 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       });
     },
 
+    respondSilence(windowId, sealUid, discardUid) {
+      const command: Command = sealUid && discardUid ? { type: 'SILENCE_RESPONSE', windowId, pass: false, sealUid, discardUid } : { type: 'SILENCE_RESPONSE', windowId, pass: true };
+      const { onlineCommand } = get();
+      if (onlineCommand) onlineCommand(command);
+    },
+    performRedemption(unitId,targetId,action){ run({type:'REDEMPTION_SUPPORT',unitId,targetId,action}); },
+    resolveCardChoice(choiceUid) { run({ type: 'RESOLVE_CARD_CHOICE', choiceUid }); },
     confirmSummonSearch(cardUid, choiceUid) {
       if (run({type:'SEARCH_SUMMON',cardUid,choiceUid})) set(s => ({selectedCardUid:null,pairSelection:null,aim:withoutTapAim(s.aim)}));
     },
@@ -1508,7 +1518,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       // Clicking an already-selected SELF card (or ritual) casts it.
       const searchCard = engine.content.cards[engine.state.player.hand.find(c=>c.uid===cardUid)?.cardId ?? ''];
       // Search cards (Rastreo: deck, Eco del Altar: discard) resolve only through their choice dialog.
-      if (engine.selectionTargeting(cardUid)?.type === 'SELF' && !searchCard?.deckSearch && !searchCard?.discardSearch && selectedCardUid === cardUid) {
+      if (engine.selectionTargeting(cardUid)?.type === 'SELF' && !searchCard?.deckSearch && !searchCard?.discardSearch && !searchCard?.discardHandCost && selectedCardUid === cardUid) {
         if (run(engine.selectionCommand(cardUid, null))) set({ selectedCardUid: null, pairSelection: null, aim });
         return;
       }

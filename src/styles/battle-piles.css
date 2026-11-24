@@ -141,3 +141,28 @@
     justify-self: center;
   }
 }
+
+.grave-recovered .db-mini-face{filter:brightness(.5) saturate(.4)}
+.grave-recovered h3{font-size:.9rem;margin:.75rem 0 .3rem}.grave-recovered>p{font-size:.8rem;line-height:1.4}
+
+/* Phase6: dedicated rows outside the canvas, local perspective comes from the private state. */
+.battle .board-column > .battle-pile-bank {width:100%;inset:auto;height:auto;display:grid;grid-template-rows:auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-self:stretch;flex-shrink:0;position:relative;z-index:1;padding:4px 8px;box-sizing:border-box;}
+.battle .board-column > .battle-pile-bank > small {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+.battle .board-column > .battle-pile-bank .battle-pile {width:min(100%,140px);min-height:44px;grid-template-columns:22px 24px auto;gap:5px;}
+.battle .board-column > .battle-pile-bank .battle-pile > span:last-child {grid-column:auto;font-size:11px;}
+.battle-pile-bank.is-own .battle-pile-deck,.battle-pile-bank.is-rival .battle-pile-grave {grid-column:1;grid-row:1;justify-self:start;}
+.battle-pile-bank.is-own .battle-pile-grave,.battle-pile-bank.is-rival .battle-pile-deck {grid-column:2;grid-row:1;justify-self:end;}
+.battle .board-column:has(> .battle-pile-bank) > .board-host {margin-bottom:0;flex:1 1 0;overflow:hidden;}
+@media(min-width:601px),(orientation:landscape){
+  .battle > footer.hand-bar {grid-template-columns:minmax(0,1fr) minmax(100px,140px);}
+  .battle > footer.hand-bar > .hand {grid-column:1;}
+  .battle > footer.hand-bar > .end-turn-box {grid-column:2;}
+}
+@media(min-width:601px),(orientation:landscape){
+  .battle > footer.hand-bar > .hand-scroll-region {grid-column:1;grid-row:1;}
+  .battle > footer.hand-bar > .end-turn-box {grid-column:2;grid-row:1;}
+}
+/* Both rows stay in the clear centre lane, away from portraits, minimap and pause controls. */
+@media(min-width:601px),(orientation:landscape){
+  .battle .board-column > .battle-pile-bank {width:clamp(310px,32vw,680px);max-width:100%;align-self:center;}
+}

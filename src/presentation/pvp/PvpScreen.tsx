@@ -1,7 +1,7 @@
+import {BattlePileBank} from "../battle/BattlePileZones";
 import {roomConnectionRelease} from '../../game/pvp/content-release';
 import { navigatePlay } from "../play/navigation";
 import { PvpVersus } from "./PvpVersus";import {
-  BOT_LEVELS,
   BOT_POLICY_VERSION,
 } from "../../game/ai/ranked-bot-policy";
 import { PvpTerrainInfo } from "./PvpTerrainInfo";
@@ -107,6 +107,7 @@ const REASONS: Record<string, string> = {
 };
 const ERRORS: Record<string, string> = {
   ...ERROR_LABEL,
+  RESPONSE_EXPIRED: 'La ventana de respuesta terminó.',
   NOT_YOUR_TURN: "Es el turno del rival.",
   STALE_VERSION: "La partida cambió. Confirma de nuevo tu acción.",
   OPPONENT_DISCONNECTED: "Esperando la reconexión del rival.",
@@ -308,7 +309,8 @@ export function PvpScreen({
     const s = latest.current;
     if (
       !s?.game ||
-      s.game.phase !== "PLAYER" ||
+      (s.game.phase !== 'PLAYER' && !(command.type === 'SILENCE_RESPONSE' && s.game.responseWindow?.respondingHeroId === s.game.player.heroId)) ||
+      (!!s.game.responseWindow && command.type !== 'SILENCE_RESPONSE') ||
       pending.current ||
       socket.current?.readyState !== WebSocket.OPEN ||
       s.members.some((m) => !m.connected)
@@ -621,16 +623,6 @@ export function PvpScreen({
           data-action={busy ? "resolving" : "normal"}
         >
           <BattleScenery theme="duel" />
-          {snapshot.bot && (
-            <div
-              className="pvp-bot-disclosure"
-              role="note"
-              aria-label="Rival automatizado"
-            >
-              {snapshot.bot.identity.name} ·{" "}
-              {BOT_LEVELS[snapshot.bot.identity.level]?.name}
-            </div>
-          )}
           <PvpTerrainInfo
             name={pvpMap(snapshot.mapId ?? "classic", snapshot.mode).name}
             state={game}
@@ -702,7 +694,7 @@ export function PvpScreen({
               <button onClick={() => setConfirm(true)}>Rendirse</button>
             </div>
             <div className="panel pvp-rival">
-              <strong>{snapshot.members[1 - snapshot.seat]?.name}</strong>
+              <strong>{snapshot.bot ? "Rival" : snapshot.members[1 - snapshot.seat]?.name}</strong>
               {game.units.some(
                 (u) =>
                   u.kind === "HERO" &&
@@ -728,6 +720,7 @@ export function PvpScreen({
           </header>
           <main className="battle-main">
             <div className="board-column">
+              <BattlePileBank state={game} content={engine.content} opponent/>
               <BoardView
                 pvpEntry={entryPending}
                 finished={!!snapshot.result && !playback}
@@ -739,6 +732,7 @@ export function PvpScreen({
                   )[snapshot.seat]
                 }
               />
+            <BattlePileBank state={game} content={engine.content}/>
             </div>
           </main>
           <PauseMenu online onExit={() => void exit()} />
@@ -844,9 +838,8 @@ export function PvpScreen({
                 </h2>
                 <p>{REASONS[snapshot.result.reason] ?? "Partida finalizada"}</p>
                 {snapshot.bot ? (
-                  <section aria-label="Resultado contra IA">
-                    <h3>{snapshot.bot.identity.name}</h3>
-                    <p>{BOT_LEVELS[snapshot.bot.identity.level]?.name}</p>
+                  <section aria-label="Resultado de partida">
+                    <h3>Rival</h3>
                     <p>
                       {snapshot.bot.outcome ? (
                         <>
@@ -1024,7 +1017,6 @@ export function PvpScreen({
                 onSearch={() => {
                   if (deckValid && deckId) void ranked.search(hero, deckId);
                 }}
-                onAcceptBot={() => void ranked.acceptBot()}
                 onCancel={() => void ranked.cancel()}
               />
             ) : undefined

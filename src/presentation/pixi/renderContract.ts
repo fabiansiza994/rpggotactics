@@ -28,6 +28,12 @@ export const TILE = 96;
 export const FOOT_Y = 25;
 
 export const CHARACTER_SPECS: Record<string, SpriteSpec> = {
+ dark_abyssal_minotaur:{anchorX:.5,anchorY:.9,topY:.055,height:1.5,footprint:.4},
+ dark_serpent_king:{anchorX:.5,anchorY:.9,topY:.055,height:1.05,footprint:.34},
+ dark_scorpion_king:{anchorX:.5,anchorY:.9,topY:.055,height:1.1,footprint:.4},
+ light_redemption_spirit:{anchorX:.5,anchorY:.94,topY:.07,height:.85,footprint:.18},
+ light_pact_fairy:{anchorX:.5,anchorY:.94,topY:.055,height:.85,footprint:.18},
+  dark_the_reaper: { anchorX: .5, anchorY: .975, topY: .055, height: 1.3, footprint: .34 },
   pact_golem: { anchorX:.5, anchorY:720/768, topY:168/768, height:1.35, footprint:.4 },
   // Trimmed alpha bounds normalized onto a 512×768 canvas: artwork ends at y=720.
   heart_warden: { anchorX: .5, anchorY: 720/768, topY: 40/768, height: 1.4, footprint: .4 },

@@ -56,6 +56,9 @@ export type TargetingDef =
       casterMustMove?: boolean;
       /** Only a summon that can act this round (ready and not acted yet): Orden del Vinculador. */
       readySummon?: boolean;
+      adjacentStep?: boolean;
+      injuredOnly?: boolean;
+      minorNegativeOnly?: boolean;
       /**
        * Pacto de la Doble Luna: the target (an own summon) swaps with a partner. Without a second
        * target the partner is the caster; with `PLAY_CARD.secondary` it is ANOTHER own summon at
@@ -108,7 +111,7 @@ export type TargetingDef =
    * obstacles or unwalkable terrain; ICE exit costs ignored). Prevented by ROOTED. Pair with
    * STEP_CASTER. No reaction/engagement system exists, so a step never provokes anything.
    */
-  | { type: 'STEP'; range: number;
+  | { type: 'STEP'; range: number; terrainCost?: boolean;
       /**
        * Retreat (Archer, Retirada Táctica): only tiles that leave the caster strictly farther from
        * the nearest hostile non-structure unit than it is now. No hostile on the board = any step.
@@ -222,6 +225,8 @@ export type EffectDef =
   | {
       type: 'APPLY_STATUS';
       status: StatusId;
+      untilCasterTurnEnd?: boolean;
+      untilCasterNextTurnStart?: boolean;
       duration: number;
       to: UnitSelector;
       /**
@@ -233,6 +238,7 @@ export type EffectDef =
       power?: number;
     }
   | { type: 'CLEANSE'; to: UnitSelector }
+  | { type: 'CLEANSE_ONE_MINOR'; to: UnitSelector }
   /** Pushes away from the caster. Collision with unit/obstacle/edge deals `collisionDamage`. */
   | { type: 'PUSH'; distance: number; collisionDamage: number; to: UnitSelector }
   /**
@@ -246,6 +252,7 @@ export type EffectDef =
   | { type: 'CHARGE_CASTER' }
   /** STEP targeting only: the caster walks to the impact tile. Free: no movement points spent. */
   | { type: 'STEP_CASTER' }
+  | { type: 'STEP_TARGET' }
   | { type: 'GAIN_MOMENTUM'; amount: number }
   /** Archer Concentración (caster). Every `when` condition must hold when it resolves. */
   | { type: 'GAIN_FOCUS'; amount: number; when?: readonly EffectCondition[] }
@@ -319,6 +326,18 @@ export type EffectDef =
   | { type: 'SACRIFICE_HP'; percentOfCurrent: number }
   /** The caster's summon capacity grows by `amount` points for the rest of THIS battle (`Unit.summonCapacityBonus`). */
   | { type: 'GAIN_SUMMON_CAPACITY'; amount: number }
+  | { type: 'CHOOSE_TOP_TO_BOTTOM'; count: 1 | 2 }
+  | { type: 'CHOOSE_HAND_TO_DECK' }
+  | { type: 'DISCARD_OPPONENT'; from: 'HAND' | 'DECK'; count: number; requireFullCount?: boolean }
+  | { type: 'SUMMON_SCORPION_SACRIFICE' }
+  | { type: 'RESURRECT_SUMMON' }
+  | { type: 'EXECUTIONER_ROULETTE' }
+  | { type: 'REDRAW_HAND' }
+  | { type: 'CURSE_RANDOM_OPPONENT_DECK' }
+  | { type: 'ALIGNMENT_WORLD'; alignment: 'DARK_WORLD' | 'LIGHT_WORLD'; duration: number }
+  | { type: 'FIXED_HP_SACRIFICE'; amount: number }
+  | { type: 'WARRIOR_BLOOD_PACT' }
+  | { type: 'RECOVER_RANDOM_TO_DECK'; count: number }
   | { type: 'DRAW'; count: number }
   | { type: 'GAIN_ENERGY'; amount: number }
   | { type: 'GAIN_MOVE_POINTS'; amount: number };
@@ -359,7 +378,9 @@ export interface CardDefinition {
    * Eco del Altar: the player picks one ritual piece of their OWN discard pile (sent as the search
    * uid, validated against the real pile); it returns to the hand locked until the next own turn.
    */
-  discardSearch?: 'RITUAL_PIECE';
+  discardSearch?: 'RITUAL_PIECE' | 'ANY_ONCE';
+  discardHandCost?: true;
+  responseOnly?: true;
   worldFrozenUpgrade?: {effects?: EffectDef[];targeting?: TargetingDef;rulesText:string};
   worldFrozenActive?: boolean;
   id: string;
@@ -464,6 +485,8 @@ export const isExclusiveCard = (card: Pick<CardDefinition, 'acquisition'>): bool
 
 /** A concrete copy of a card inside deck/hand/discard. */
 export interface CardInstance {
+  /** Server-only until activation; stripped even from the owner's private PvP hand. */
+  twistedCurse?: true;
   /** Public only while in discard; cleared on entry into a private zone. */
   publicDiscard?: true;
   /** Explicit recovery is once per instance; Story recycling preserves this flag. */

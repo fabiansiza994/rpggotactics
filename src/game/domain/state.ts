@@ -17,6 +17,7 @@ import type { WaveDef } from './scenario';
 export type BattlePhase = 'PLAYER' | 'ENEMY' | 'ENDED';
 
 export interface PlayerState {
+  pendingCardChoice?: import('./cards/card-choice').PendingCardChoice;
   heroId: string;
   searchUsesThisTurn?: Record<string,number>;
   searchBlockedCardIds?: string[];
@@ -55,7 +56,7 @@ export type OutcomeReason =
   'DECK_OUT' | 'OBJECTIVES_COMPLETED' | 'HERO_DEFEATED' | 'PROTECTED_TARGET_DESTROYED' | 'ROUND_LIMIT_REACHED';
 
 export interface BattleOutcome {
-  result: 'WON' | 'LOST';
+  result: 'WON' | 'LOST' | 'DRAW';
   reason: OutcomeReason;
 }
 
@@ -64,6 +65,9 @@ export interface BattleOutcome {
  * no functions, no references to renderer objects.
  */
 export interface GameState {
+  pendingCast?: import('./cards/silence').PendingCast;
+  responseWindow?: Pick<import('./cards/silence').PendingCast, 'id' | 'cardId' | 'casterId' | 'respondingHeroId' | 'deadline'>;
+  deadSummonSources?: { ownerId: string; cardUid: string; summonId: string }[];
   competitiveRules?: '40_DECK_OUT_V1';
   /** Wire-only rival discard identities that were already publicly revealed. */
   opponentDiscard?: CardInstance[];

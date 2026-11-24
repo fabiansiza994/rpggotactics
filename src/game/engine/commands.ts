@@ -1,3 +1,6 @@
+import { redemptionSupport, type RedemptionAction } from '../domain/summons/redemption';
+import { resolveSilence, type SilenceResponse } from '../domain/cards/silence';
+import { resolveCardChoice } from '../domain/cards/card-choice';
 import {legendaryStep} from '../domain/combat/legendary-step';
 import type { RuleContext } from '../domain/context';
 import type { Pos } from '../domain/core/position';
@@ -19,6 +22,9 @@ import { interact } from '../domain/mechanisms/mechanism-rules';
  * only validates and resolves the final PLAY_CARD.
  */
 export type Command =
+  | {type:'REDEMPTION_SUPPORT';unitId:string;targetId:string;action:RedemptionAction}
+  | SilenceResponse
+  | { type: 'RESOLVE_CARD_CHOICE'; choiceUid: string | null }
   | {type:'LEGENDARY_STEP';to:Pos}
   | { type: 'MOVE_UNIT'; unitId: string; to: Pos }
   /** Play a search card with the chosen card uid: Rastreo (deck) or Eco del Altar (own discard). */
@@ -45,7 +51,14 @@ export function executeCommand(ctx: RuleContext, command: Command): RuleResult {
   if (ctx.state.outcome) return fail('BATTLE_OVER', 'The battle is over.');
   if (ctx.state.phase !== 'PLAYER') return fail('NOT_PLAYER_TURN', 'Not the player turn.');
 
+  if (ctx.state.pendingCast && command.type !== 'SILENCE_RESPONSE') return fail('INVALID_TARGET', 'Hay una ventana de respuesta abierta.');
+  if (ctx.state.player.pendingCardChoice && command.type !== 'RESOLVE_CARD_CHOICE')
+    return fail('INVALID_TARGET', 'Completa primero la elección de carta pendiente.');
+
   switch (command.type) {
+    case 'REDEMPTION_SUPPORT': return redemptionSupport(ctx, command.unitId, command.targetId, command.action);
+    case 'SILENCE_RESPONSE': { const result = resolveSilence(ctx, command); if (result.ok) updateObjectives(ctx); return result; }
+    case 'RESOLVE_CARD_CHOICE': return resolveCardChoice(ctx, command.choiceUid);
     case 'LEGENDARY_STEP': {const result=legendaryStep(ctx,command.to);if(result.ok)updateObjectives(ctx);return result;}
     case 'MOVE_UNIT': {
       const result = moveUnit(ctx, command.unitId, command.to);

@@ -233,7 +233,7 @@ export default function ShapeshifterLab() {
           {engine && state && (
             <section aria-label="Combate QA">
               <h2>
-                <img className="qa-active-form-icon" src={formVisual(form).icon} alt="" />
+                {formVisual(form).icon ? <img className="qa-active-form-icon" src={formVisual(form).icon} alt="" /> : <span>Arte pendiente</span>}
                 Forma activa: {form ? engine.content.transformations?.[form]?.name : 'Humanoide'}
               </h2>
               <p>

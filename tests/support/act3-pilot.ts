@@ -213,7 +213,7 @@ export function railReachesGoal(allowed: readonly Pos[], goal: Pos, isFloor: (p:
 // ── Human-like playtest ────────────────────────────────────────────────────
 
 export interface PilotResult {
-  result: 'WON' | 'LOST' | 'TIMEOUT';
+  result: 'WON' | 'LOST' | 'DRAW' | 'TIMEOUT';
   rounds: number;
   heroHpLeft: number;
   heroMaxHp: number;

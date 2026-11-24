@@ -38,9 +38,10 @@ export const DUEL_SCENARIO: ScenarioDef = {
   defaultSeed: 1,
 };
 export interface DuelMeta {
+  darkLightRelease?: true;
   competitiveRules?: '40_DECK_OUT_V1';
   /** Explicit winner: Deck-Out leaves both champions alive. */
-  winner?: 0|1;
+  winner?: -1|0|1;
   /** Absent in pre-release persisted games: preserve their original summon rules. */
   beastsRelease?: true;
   scoutSiegeRelease?: true;
@@ -107,7 +108,7 @@ export function createDuel(
   a.units.push(heroB);
   a.rngState = b.rngState;
   a.nextId = Math.max(a.nextId, b.nextId) + 100;
-  a.duel = { competitiveRules:'40_DECK_OUT_V1', scoutSiegeRelease:true, beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
+  a.duel = { ...(content.darkLightRelease ? { darkLightRelease: true as const } : {}), competitiveRules:'40_DECK_OUT_V1', scoutSiegeRelease:true, beastsRelease: true, ...(ranked && mode === 'DUEL' ? { rankedPactGolem: true as const } : {}), champions: [heroA.id, heroB.id], active: 0, other: b.player, turns: 0 };
   if (randomInt(a, 2) === 1) swapDuelTurn(a);
   a.mapId = map.id;
   if (mode === 'DOMINION') a.dominion = createDominion(map.objectiveNodes);
@@ -188,12 +189,17 @@ export function duelView(
   if (meta.active !== seat)
     for (const u of view.units) u.faction = u.faction === 'PLAYER' ? 'ENEMY' : 'PLAYER';
   view.player = own;
+  view.responseWindow = view.pendingCast ? { id: view.pendingCast.id, cardId: view.pendingCast.cardId, casterId: view.pendingCast.casterId, respondingHeroId: view.pendingCast.respondingHeroId, deadline: view.pendingCast.deadline } : undefined;
+  delete view.pendingCast;
+  view.deadSummonSources = view.deadSummonSources?.filter(source => source.ownerId === own.heroId);
   view.competitiveRules = meta.competitiveRules;
   // Only previously public identities may be disclosed. Hidden end-turn/overflow discards stay hidden.
   view.opponentDiscard = rival.discard.filter(c=>c.publicDiscard===true);
   // Only the owner's active search card authorizes a private unordered candidate list.
   view.searchChoices = own.hand.some(c => content.cards[c.cardId]?.deckSearch)
     ? summonSearchChoices({...state, player: own, pileCounts: undefined}, content) : [];
+  for (const card of [...view.player.hand, ...view.player.discard, ...(view.player.banished ?? []), ...(view.player.altar ?? []), ...(view.searchChoices ?? []), ...(view.opponentDiscard ?? []), ...(view.player.pendingCardChoice?.options.flatMap(option => option.card ? [option.card] : []) ?? [])]) delete card.twistedCurse;
+  for (const unit of view.units) if (unit.summon?.recoveredCard) delete unit.summon.recoveredCard.twistedCurse;
   view.player.deck = [];
   view.scoutSiegeRelease=meta.scoutSiegeRelease===true;
   view.duel = undefined;
@@ -203,7 +209,7 @@ export function duelView(
   view.activeFaction = view.phase === 'PLAYER' ? 'PLAYER' : 'ENEMY';
   if (state.outcome)
     view.outcome = {
-      result: (
+      result: meta.winner === -1 ? 'DRAW' : (
         (meta.winner ?? state.dominion?.winner) !== null && (meta.winner ?? state.dominion?.winner) !== undefined
           ? (meta.winner ?? state.dominion?.winner) === seat
           : state.units.some((u) => u.id === state.duel!.champions[seat])

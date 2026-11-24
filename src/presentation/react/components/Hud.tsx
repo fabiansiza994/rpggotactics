@@ -1,4 +1,5 @@
-import {BattlePileBank} from '../../battle/BattlePileZones';
+import { SilenceResponseDialog } from './SilenceResponseDialog';
+import { PendingCardChoiceDialog } from './PendingCardChoiceDialog';
 import {worldFrozenCard} from '../../../game/domain/cards/world-frozen';
 import {WinterAtmosphere} from './WinterAtmosphere';
 import '../../../styles/legendary-status.css';
@@ -319,6 +320,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   }, [activationBattle]);
   const aim = useBattleStore(s => s.aim);
   const pair = useBattleStore(s => s.pairSelection);
+  const pairRule = pair ? engine.selectionTargeting(pair.cardUid) : null;
+  const steppingAlly = pairRule?.type === 'UNIT' && pairRule.adjacentStep;
   const selectedCardUid = useBattleStore((s) => s.selectedCardUid);
   const selectCard = useBattleStore((s) => s.selectCard);
   useEffect(() => {
@@ -408,6 +411,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       )}
       <DrawRitual state={state} engine={engine} busy={busy} footer={footerRef}/>
       <SummonSearchDialog key={selectedCardUid ?? 'no-search'} state={state} engine={engine} />
+      <SilenceResponseDialog key={state.responseWindow?.id ?? "no-response"} state={state} engine={engine} />
+      <PendingCardChoiceDialog state={state} engine={engine} />
       <RitualEchoDialog key={`echo-${selectedCardUid ?? 'none'}`} state={state} engine={engine} />
       <RitualTransfer heroId={engine.heroId} />
       {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.ritualPiece && <RitualCardActions key={`ritual-choice:${aimedCard.uid}`} uid={aimedCard.uid} state={state} engine={engine} busy={busy}/> }
@@ -420,13 +425,12 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           ✦ Cartas robadas
         </span>
       )}
-      {pair && pair.cardUid === selectedCardUid && <div className="pair-target-controls" role="group" aria-label="Segundo objetivo de Pacto">
-        <span>Elige otra invocación o tu campeón</span>
-        <button type="button" disabled={busy || !engine.getSecondaryTargets(pair.cardUid, pair.first).includes(null)} onClick={() => useBattleStore.getState().confirmPairWithChampion()}>Intercambiar conmigo</button>
+      {pair && pair.cardUid === selectedCardUid && <div className="pair-target-controls" role="group" aria-label="Segundo objetivo">
+        <span>{steppingAlly ? 'Elige una casilla adyacente libre' : 'Elige otra invocación o tu campeón'}</span>
+        {!steppingAlly && <button type="button" disabled={busy || !engine.getSecondaryTargets(pair.cardUid, pair.first).includes(null)} onClick={() => useBattleStore.getState().confirmPairWithChampion()}>Intercambiar conmigo</button>}
         <button type="button" disabled={busy} onClick={() => useBattleStore.getState().cancelPairTarget()}>Cambiar primer objetivo</button>
       </div>}
       {discarding && <HandDiscardBar state={state} />}
-      <BattlePileBank state={state} content={engine.content}/>
       <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''}`}>
         {dealt &&
           state.player.hand.map((card, i) => {
@@ -492,7 +496,6 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           <kbd>E</kbd>
         </button>
       </div>
-      <BattlePileBank state={state} content={engine.content} opponent/>
 
     </footer>
   );
@@ -524,7 +527,7 @@ export function ResultOverlay(props: { state: Readonly<GameState>; masteryFeedba
   const engine = useBattleStore(s => s.engine);
   const busy = useBattleStore(s => s.playbackBusy);
   if (!props.state.outcome || busy || !engine) return null;
-  return <BattleResultPresentation identity={engine} tone={props.state.outcome.result === 'WON' ? 'victory' : 'defeat'}><ResultContent {...props}/></BattleResultPresentation>;
+  return <BattleResultPresentation identity={engine} tone={props.state.outcome.result === 'DRAW' ? 'draw' : props.state.outcome.result === 'WON' ? 'victory' : 'defeat'}><ResultContent {...props}/></BattleResultPresentation>;
 }
 function ResultContent({ state, masteryFeedback }: { state: Readonly<GameState>; masteryFeedback?:ReactNode }) {
   const heroName = useBattleStore((s) =>
@@ -565,7 +568,7 @@ function ResultContent({ state, masteryFeedback }: { state: Readonly<GameState>;
   return (
     <div className="result-overlay" role="dialog" aria-modal="true">
       <div className={`result-card ${won ? 'won' : 'lost'}`}>
-        <h2>{won ? 'Victoria' : 'Derrota'}</h2>
+        <h2>{state.outcome.result === 'DRAW' ? 'Empate' : won ? 'Victoria' : 'Derrota'}</h2>
         {masteryFeedback}
         <p>
           {state.outcome.reason === 'HERO_DEFEATED'

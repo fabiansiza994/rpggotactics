@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {GameEngine,createProfile} from '../src/game';
+import {createDuel,duelView,validateLoadout,DUEL_SCENARIO} from '../src/game/pvp/duel';
+import {PVP_CONTENT} from '../server/src/pvp';
+it.each(['dark_twisted_curse','dark_shadow_hand','dark_profane_burial','dark_executioner_call','dark_crypt_whisper','light_celestial_clarity'])('can preview %s from the real private snapshot without exposing either deck',cardId=>{const profile=createProfile(PVP_CONTENT),load=validateLoadout(profile,'mage',PVP_CONTENT),state=createDuel([load,load],47,'DUEL','classic',PVP_CONTENT);state.player.energy=20;state.player.hand=[{uid:'preview',cardId}];const view=duelView(state,state.duel!.active,PVP_CONTENT);expect(view.duel).toBeUndefined();expect(view.player.deck).toEqual([]);const engine=GameEngine.fromSnapshot(view,PVP_CONTENT,DUEL_SCENARIO);expect(engine.getCardPlayability('preview').playable).toBe(true);expect(view.player.deck).toEqual([]);expect(view.duel).toBeUndefined();});

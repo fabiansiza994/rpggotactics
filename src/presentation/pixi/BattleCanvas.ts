@@ -1,3 +1,6 @@
+import {StormOrbView} from './StormOrbView';
+import {drawStormOrbs} from './glyphOverlay';
+import {unitPresentationId} from '../assets/unitPresentation';
 import {ArcaneRevealView,revealWarmupCards} from './ArcaneRevealView';
 import {readRevealRenderer,selectRevealRenderer} from '../cards/revealRenderer';
 import type {PresentationBatch} from '../events/presentationBus';
@@ -41,7 +44,7 @@ import { gaitGeometry } from '../qa/locomotion/gaitGeometry';
 import { characterSpec } from './renderContract';
 import { verticalAsset, verticalGeometry } from '../qa/locomotion/directionalProfiles';
 import { shapeshifterQaEnabled } from '../qa/shapeshifter/access';
-import { formVisual } from '../qa/shapeshifter/visuals';
+import { formUnitVisualId } from '../qa/shapeshifter/visuals';
 import { CHARACTER_ANIMATIONS, hasDirectionalAtlas, hasDirectionalArt, INFERNAL_ANIMATION_IDS } from './characterAnimations';
 import { resolvedFacingTarget } from './wizardFacing.ts';
 import {
@@ -80,7 +83,7 @@ import { loadClawRig } from './glacierClawTextures';
 import { GridProjection, projectionPreset, type Point } from './GridProjection';
 import { OCCLUDING_OBSTACLES, TILE, obstacleSpec, visualHeight } from './renderContract';
 import { drawOverlay, drawRanges } from './BoardOverlays';
-import { unitVisualId, unitVisualScale, unitVisualTint } from '../assets/visualIdentity';
+import { unitVisualScale, unitVisualTint } from '../assets/visualIdentity';
 import { enemyPhase } from '../../game/domain/ai/ai';
 import { BattleIntroDirector } from '../motion/BattleIntroDirector';
 import { introTimeline, type IntroBeat, type IntroVariant } from '../motion/introTimeline';
@@ -108,6 +111,7 @@ export interface BattleCanvasCallbacks {
   /** Mouse click: acts at once (hover already previewed). */
   onTileClick(pos: Pos): void;
   /** Touch/pen tap: ground tile first, then tiles of unit bodies under the finger (front-most first). */
+  onSelectUnit?(positions: readonly Pos[], inspect: boolean): boolean;
   onInspectUnit?(positions: readonly Pos[]): boolean;
   onTileTap(candidates: Pos[]): void;
   onCancel(): void;
@@ -164,18 +168,22 @@ export class BattleCanvas {
   private readonly terrainLayer = new Container();
   private readonly terrainPulse = new Container();
   private readonly frozenWorldDust = new Graphics();
+  private readonly darkLightBonds = new Graphics();
+  private darkLightBondKey = "";
   private frozenWorldDustKey='';
   private readonly tacticalLayer = new Container();
   private readonly objectiveLayer = new Container();
   private terrainTime = 0;
   private readonly tileLayer = new Container();
   private readonly overlayLayer = new Container();
+  private readonly stormOrbs = Object.assign(new Graphics(), {eventMode:'none' as const});
   private readonly forgePulse = new Graphics();
   private forgePhaseRound = 0;
   private readonly groundFxLayer = new Container();
   private readonly footfalls = new FootfallTracker();
   private readonly groundParticles = new GroundParticles(this.groundFxLayer);
   private readonly actorLayer = new Container({ sortableChildren: true });
+  private readonly orbArt = new StormOrbView(this.actorLayer);
   private readonly templeEnvironment = new Act3Environment(this.actorLayer);
   private templeLoading = false;
   private readonly mechanisms = new MechanismLayer(this.actorLayer, id=>this.units.get(id),(point,reduced)=>{
@@ -237,6 +245,7 @@ export class BattleCanvas {
     footprint: (p) => this.proj.footprint(p),
     quad: (p, inset) => this.proj.getInsetPolygon(p, inset),
     depth: (point) => this.proj.depthAtPoint(point),
+    boardTop: () => this.proj.surfaceBounds.top,
   };
   private readonly targetingPreview = new ElementalTargetingPreview(this.geometry);
   private readonly environment = new EnvironmentEffects(this.actorLayer, this.groundFxLayer, this.geometry);
@@ -264,6 +273,10 @@ export class BattleCanvas {
     // Resume a suspended tab without emitting an entire spell's cues in one stale frame.
     const elapsed = this.clock.advance(performance.now()) * visualSettings.timeScale;
     this.terrainTime += elapsed;
+    this.stormOrbs.clear();
+    if (this.vm) drawStormOrbs(this.stormOrbs,this.proj,this.vm,this.terrainTime,this.effects.reduced);
+    if(this.vm)this.orbArt.sync(this.vm,this.proj,this.terrainTime,this.effects.reduced);
+    this.darkLightBonds.alpha = this.effects.reduced ? .72 : .68 + Math.sin(this.terrainTime / 800) * .12;
     this.templeEnvironment.tick(elapsed, this.effects.reduced);
     this.terrainPulse.alpha = this.effects.reduced
       ? 0.24
@@ -494,7 +507,7 @@ export class BattleCanvas {
   qaPresentationSnapshot() {
     return shapeshifterQaEnabled ? this.director.state : null;
   }
-  qaFeelSnapshot(){if(!this.ready || this.destroyed)return null;return {catalog:this.effects.catalog.snapshot,fps:this.app.ticker.FPS,particles:this.groundParticles.activeCount,reactions:this.effects.reactionSnapshot,actorChildren:this.actorLayer.children.length,groundChildren:this.groundFxLayer.children.length,vfxChildren:this.vfxLayer.children.length,arcane:this.arcaneView?.snapshot,mage:this.effects.mage.snapshot,fireball:this.effects.fireball.snapshot,bastion:this.effects.bastion.snapshot,pactSummon:this.effects.pactSummon.snapshot};}
+  qaFeelSnapshot(){if(!this.ready || this.destroyed)return null;return {orb:this.orbArt.snapshot,darkLight:{smoke:this.effects.darkLight.snapshot,radiance:this.effects.darkLight.radianceResources,cards:this.effects.darkLight.cardResources},catalog:this.effects.catalog.snapshot,fps:this.app.ticker.FPS,particles:this.groundParticles.activeCount,reactions:this.effects.reactionSnapshot,actorChildren:this.actorLayer.children.length,groundChildren:this.groundFxLayer.children.length,vfxChildren:this.vfxLayer.children.length,arcane:this.arcaneView?.snapshot,mage:this.effects.mage.snapshot,fireball:this.effects.fireball.snapshot,bastion:this.effects.bastion.snapshot,pactSummon:this.effects.pactSummon.snapshot};}
   qaAnimationSnapshot(unitId: string) {
     return this.units.get(unitId)?.animationSnapshot() ?? null;
   }
@@ -551,11 +564,13 @@ export class BattleCanvas {
     this.world.addChild(
       this.immersionScenery,
       this.frozenWorldDust,
+      this.darkLightBonds,
       this.targetingPreview.root,
       this.tacticalLayer,
       this.objectiveLayer,
       this.tileLayer,
       this.overlayLayer,
+      this.stormOrbs,
       this.groundFxLayer,
       this.actorLayer,
       this.ambience.foreground,
@@ -599,6 +614,7 @@ export class BattleCanvas {
     // One pointer pipeline; the device only decides how the aimed tile is confirmed.
     this.app.stage.on('pointertap', (e) => {
       if (e.button === 2) return this.callbacks.onCancel();
+      if(this.callbacks.onSelectUnit?.(this.tapCandidates(e,false),e.shiftKey))return;
       const ground = this.tileFromEvent(e);
       // Legal board actions win over secondary body inspection, even under tall artwork.
       const boardFirst = boardActionWins(ground, this.vm?.moveTiles.map(n=>n.pos) ?? [], this.vm?.targetTiles ?? []);
@@ -628,7 +644,7 @@ export class BattleCanvas {
     this.offImmersion();this.haptics.destroy();this.atmosphere.destroy();
     document.removeEventListener('visibilitychange',this.stopHaptics);
     window.removeEventListener('blur',this.stopHaptics);
-    this.destroyed = true;
+    this.destroyed = true;this.orbArt.destroy();
     this.journey.finish();
     this.mechanisms.destroy();
     this.sections.destroy();
@@ -705,6 +721,14 @@ export class BattleCanvas {
     return { x: rect.left + point.x, y: rect.top + point.y };
   }
 
+  /** Actual screen bounds of the HP/status chrome for contextual controls. */
+  unitHudToClient(id:string):{left:number;right:number;top:number;bottom:number}|null {
+    const view=this.units.get(id);if(!this.ready||!view||!this.host)return null;
+    const b=view.chrome.getBounds(),r=this.app.canvas.getBoundingClientRect();
+    const sx=r.width/this.app.screen.width,sy=r.height/this.app.screen.height;
+    return {left:r.left+b.x*sx,right:r.left+(b.x+b.width)*sx,top:r.top+b.y*sy,bottom:r.top+(b.y+b.height)*sy};
+  }
+
   /** Client pixels → logical tile through the same path as pointer input (QA / e2e). */
   clientToTile(clientX: number, clientY: number): Pos | null {
     if (!this.ready) return null;
@@ -768,7 +792,7 @@ export class BattleCanvas {
       left: -half,
       right: half,
       top: -Math.max(HEADROOM, ...(shapeshifterPresentationEnabled ? (this.vm?.state.units ?? []).map(unit=>{
-        const id=unit.defId==='shapeshifter'?`qa_form_${formVisual(unit.activeForm).id}`:unitVisualId(unit.defId);
+        const id=unitPresentationId(unit,shapeshifterPresentationEnabled);
         const spec=characterSpec(id),vertical=verticalAsset(id)?verticalGeometry(id,256):null;
         const gait=gaitGeometry(id,spec,TILE,256);
         return Math.max(visualHeight(spec,TILE),vertical?.topClearance??0,gait?.topClearance??0)*unitVisualScale(unit.defId)+24;
@@ -935,10 +959,12 @@ export class BattleCanvas {
     const ultras=this.callbacks.ultraEnabled?.()===true&&readRevealRenderer()==='pixi'?events.flatMap(e=>e.type==='CARD_PLAYED'&&vm.content.cards[e.cardId]?.rarity==='ULTRA'?[e.cardId]:[]):[];
     const shields=events.flatMap(e=>e.type==='SHIELD_GAINED'?[e.material??'ENERGY' as const]:[]);
     const catalog=this.effects.catalog.requested?catalogEventRecipes(events,id=>vm.content.cards[id]):[];
+    const cursedCards = events.flatMap(event => (event.type === 'CARD_CURSE_TRIGGERED'||event.type === 'CARD_NEGATED') && vm.content.cards[event.cardId] ? [vm.content.cards[event.cardId]!] : []);
+    const themedCards=events.flatMap(e=>e.type==='CARD_PLAYED'&&(e.cardId.startsWith('light_')||e.cardId.startsWith('dark_'))?[e.cardId]:[]);
     const forms=events.filter((e):e is Extract<GameEvent,{type:'FORM_CHANGED'}>=>e.type==='FORM_CHANGED');
-    if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length || shields.length || ultras.length)
+    if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length || shields.length || ultras.length || cursedCards.length || themedCards.length)
       this.assetGate.enqueue(() => Promise.all([this.prepareSceneAssets(vm), ...recipes.map(r => r.effect.prepare()), prepareShieldMaterials(shields),
-        this.effects.catalog.prepare(catalog), this.arcaneView?.prepare(ultras).catch(()=>{selectRevealRenderer('css');console.warn('Ultra texture preparation unavailable; retaining CSS presentation.');}), forms.length?loadPaintedCharacters(forms.map(e=>`qa_form_${formVisual(e.to).id}`)):Promise.resolve(),
+        this.effects.darkLight.prepareCards(cursedCards), this.effects.darkLight.prepareThemes(themedCards), this.effects.catalog.prepare(catalog), this.arcaneView?.prepare(ultras).catch(()=>{selectRevealRenderer('css');console.warn('Ultra texture preparation unavailable; retaining CSS presentation.');}), forms.length?loadPaintedCharacters(forms.map(e=>formUnitVisualId(e.to))):Promise.resolve(),
       ]), () => { if (!this.destroyed) this.playLoadedEvents(events, state, batch); });
     else this.playLoadedEvents(events,state,batch);
   }
@@ -1241,6 +1267,22 @@ export class BattleCanvas {
   }
 
   private drawUnits(vm: BoardViewModel): void {
+    const bonds = vm.state.outcome ? [] : vm.state.units.flatMap(unit => {
+      if (unit.defId !== 'dark_the_reaper' || !unit.summon) return [];
+      const owner = vm.state.units.find(owner => owner.id === unit.summon!.ownerId);
+      return owner?.statuses.some(status => status.id === 'DARK_WORLD' && status.turnsLeft > 0) ? [{ unit, owner }] : [];
+    });
+    const bondKey = bonds.map(({unit, owner}) => `${owner.id}:${owner.pos.x},${owner.pos.y}>${unit.id}:${unit.pos.x},${unit.pos.y}`).join('|') + `:${this.proj.quarterTurn}:${this.app.screen.width}x${this.app.screen.height}`;
+    if (bondKey !== this.darkLightBondKey) {
+      this.darkLightBondKey = bondKey; this.darkLightBonds.clear(); this.darkLightBonds.eventMode = 'none';
+      for (const {unit, owner} of bonds) {
+        const from = this.proj.getUnitAnchor(owner.pos), to = this.proj.getUnitAnchor(unit.pos);
+        const middleX = (from.x + to.x) / 2, middleY = Math.min(from.y, to.y) - 50;
+        for (const [width, color, alpha] of [[7, 0x321142, .3], [2.2, 0x9254c8, .75], [.7, 0xd6a7f0, .7]])
+          this.darkLightBonds.moveTo(from.x, from.y - 15).quadraticCurveTo(middleX, middleY, to.x, to.y - 25).stroke({ width, color, alpha });
+      }
+    }
+
     const frozenWorld=!vm.state.outcome&&vm.state.units.some(u=>u.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0));
     const breathing=new Set(vm.state.units.filter(u=>u.hp>0&&breathesInCold(u.defId)).sort((a,b)=>Number(b.kind==='HERO')-Number(a.kind==='HERO')||a.id.localeCompare(b.id)).slice(0,this.app.screen.width<600?6:16).map(u=>u.id));
     const live = new Set(vm.state.units.map((u) => u.id));
@@ -1254,8 +1296,7 @@ export class BattleCanvas {
     }
     if(vm.state.round === 1)this.forgePhaseRound = 0;
     for (const unit of vm.state.units) {
-      const visualId = unit.kind === 'STRUCTURE' && vm.state.scenarioId.startsWith('hunt_') ? 'veil_relic' : shapeshifterPresentationEnabled && unit.defId === 'shapeshifter'
-        ? `qa_form_${formVisual(unit.activeForm).id}` : unitVisualId(unit.defId);
+      const visualId = unit.kind === 'STRUCTURE' && vm.state.scenarioId.startsWith('hunt_') ? 'veil_relic' : unitPresentationId(unit,shapeshifterPresentationEnabled);
       let view = this.units.get(unit.id);
       if (view && view.defId !== visualId) {
         this.walk.cancel(unit.id); this.dash.cancel(unit.id);
@@ -1295,6 +1336,11 @@ export class BattleCanvas {
       const def = vm.content.enemies[unit.defId];
       const phaseName = unit.defId.startsWith('veil_') && def ? enemyPhase(def,unit)?.name : undefined;
       if(unit.defId==='snow_soldier')view.setSnowClimate(unit.summon?.meltTurnsLeft??5,!!vm.state.units.find(u=>u.id===unit.summon?.ownerId)?.statuses.some(s=>s.id==='ABSOLUTE_ZERO'));
+      if (unit.defId === 'dark_the_reaper') {
+        const owner = vm.state.units.find(owner => owner.id === unit.summon?.ownerId);
+        const loyal = !!owner?.statuses.some(status => status.id === 'DARK_WORLD' && status.turnsLeft > 0);
+        view.setReaperMood(loyal ? 'LOYAL' : unit.summon?.reaperDisposition === 'REBEL' && !!owner && owner.hp * 10 <= owner.maxHp ? 'REBEL' : 'ALLY');
+      }
       view.setFrozenWorld(frozenWorld&&breathing.has(unit.id));
       view.update(unit, intent, vm.focusedEnemyId === unit.id, phaseName);
       if(unit.defId === 'forge_king' && [3,5,6].includes(vm.state.round) && this.forgePhaseRound !== vm.state.round && unit.hp > 0) {

@@ -362,7 +362,7 @@ function CardDetail({
         </span>
         <span>Coste {card.cost}</span>
       </p>
-      <details className="db-effect-access"><summary>Consultar efecto completo</summary><p>{card.rulesText}</p></details>
+      <details className="db-effect-access" open={['allies_of_darkness','path_to_light'].includes(card.expansion ?? '')}><summary>Consultar efecto completo</summary><p>{card.rulesText}</p></details>
       <RitualDetail card={card} />
       <div className="db-detail-target">
         <CardPattern targeting={card.targeting} />
