@@ -1,0 +1,953 @@
+[
+  {
+    "id": "light_redemption_spirit",
+    "name": "Espíritu de la Redención",
+    "rarity": "LEGENDARY",
+    "cost": 3,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "summon",
+      "support"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Invoca un Espíritu inmóvil: 8 HP, armadura 0, mueve 0, daño 0, capacidad 0. Máximo 1 activo. Desde la siguiente ronda, una acción manual por turno: curar hasta 2 HP pagando 1 HP por punto base efectivo, o dar 2 de escudo pagando 2 HP, a otro aliado a distancia 2. No recibe curación ni acumula escudo con esta habilidad. Con tu Mundo de Luz, +1 al beneficio sin aumentar el sacrificio. El escudo expira al inicio del próximo turno propio. Puede sacrificarse hasta morir. Permanece hasta ser destruido o retirado.",
+    "targeting": {
+      "type": "TILE",
+      "range": 2,
+      "tileFilter": "EMPTY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "SUMMON",
+        "summonId": "light_redemption_spirit"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_redemption_spirit",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_grace_call",
+    "name": "Llamado de la Gracia",
+    "heroId": "mage",
+    "rarity": "UNCOMMON",
+    "cost": 2,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "recovery"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Elige una instancia elegible de tu cementerio y devuélvela a tu mano. Cada instancia solo puede recuperarse una vez por partida.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "discardSearch": "ANY_ONCE",
+    "effects": [],
+    "presentation": {
+      "visualKey": "light_grace_call",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_second_chance",
+    "name": "Segunda Oportunidad",
+    "heroId": "mage",
+    "rarity": "RARE",
+    "cost": 2,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "recovery"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Devuelve hasta 3 instancias aleatorias elegibles de tu cementerio al mazo y barájalo. Cada instancia solo puede recuperarse una vez por partida.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "RECOVER_RANDOM_TO_DECK",
+        "count": 3
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_second_chance",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_divine_inspiration",
+    "name": "Inspiración Divina",
+    "rarity": "UNCOMMON",
+    "cost": 1,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "draw"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Roba 2 cartas. En Ranked y Versus, intentar robar sin cartas provoca Deck-Out.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "DRAW",
+        "count": 2
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_divine_inspiration",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_serpent_king",
+    "name": "Rey Serpiente",
+    "heroId": "summoner",
+    "rarity": "LEGENDARY",
+    "cost": 3,
+    "category": "UTILITY",
+    "tags": [
+      "dark",
+      "summon"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Invoca al Rey Serpiente: 9 HP, mueve 3, daño 2. Sus ataques que causan daño aplican veneno de 1 HP durante 3 turnos, sin acumular. +1 daño directo contra enemigos ya envenenados. Actúa desde la siguiente ronda.",
+    "targeting": {
+      "type": "TILE",
+      "range": 2,
+      "tileFilter": "EMPTY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "SUMMON",
+        "summonId": "dark_serpent_king"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_serpent_king",
+      "element": "NATURE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_warrior_pact",
+    "name": "Pacto del Guerrero",
+    "heroId": "warrior",
+    "rarity": "RARE",
+    "cost": 2,
+    "category": "UTILITY",
+    "tags": [
+      "dark",
+      "bleed",
+      "pact"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Sacrifica permanentemente 1 PM máximo durante esta batalla (mínimo 1). Tus ataques directos que causan daño aplican Sangrado: 1 HP durante 2 turnos. No acumula; nuevas aplicaciones renuevan su duración.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "WARRIOR_BLOOD_PACT"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_warrior_pact",
+      "element": "FORCE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_dark_world",
+    "name": "Mundo Oscuro",
+    "rarity": "ULTRA",
+    "commercialUltra": true,
+    "cost": 3,
+    "category": "TERRAIN",
+    "tags": [
+      "dark",
+      "field"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Campo durante 6 turnos propios contando este. Tu Llamado del Verdugo usa 20/60/20; el Minotauro Abisal paga 1 HP por turno; tu Rey Escorpión no se deteriora; tu Parca es leal y tiene alcance 2. Sustituye el Mundo de Luz u Oscuro anterior.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "ALIGNMENT_WORLD",
+        "alignment": "DARK_WORLD",
+        "duration": 6
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_dark_world",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "light_light_world",
+    "name": "Mundo de Luz",
+    "rarity": "ULTRA",
+    "commercialUltra": true,
+    "cost": 3,
+    "category": "TERRAIN",
+    "tags": [
+      "light",
+      "field"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Durante 6 turnos propios contando este, tus efectos explícitos de curación y escudo ganan +1. Sustituye el Mundo de Luz u Oscuro anterior.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "ALIGNMENT_WORLD",
+        "alignment": "LIGHT_WORLD",
+        "duration": 6
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_light_world",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_the_reaper",
+    "name": "La Parca",
+    "rarity": "LEGENDARY",
+    "cost": 4,
+    "minCasterHp": 5,
+    "category": "UTILITY",
+    "tags": [
+      "dark",
+      "summon"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Sacrifica 4 HP sin morir. Invoca La Parca: 12 HP, mueve 2, daño 3, capacidad 0. Con tu Mundo Oscuro es leal y ataca a alcance 2. Sin él, alcance 1 y a 10% o menos de tu HP te persigue y ataca. Actúa desde la siguiente ronda.",
+    "targeting": {
+      "type": "TILE",
+      "range": 2,
+      "tileFilter": "EMPTY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "FIXED_HP_SACRIFICE",
+        "amount": 4
+      },
+      {
+        "type": "SUMMON",
+        "summonId": "dark_the_reaper"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_the_reaper",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_twisted_curse",
+    "name": "Maldición Retorcida",
+    "heroId": "mage",
+    "rarity": "RARE",
+    "cost": 3,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "curse"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Maldice en secreto una instancia aleatoria del mazo rival. Cuando intente activarla, se anula completamente su efecto original y su usuario pierde 5 HP. La maldición se consume y la carta se considera utilizada.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "CURSE_RANDOM_OPPONENT_DECK"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_twisted_curse",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "light_destiny_rebirth",
+    "name": "Renacer del Destino",
+    "heroId": "mage",
+    "rarity": "UNCOMMON",
+    "cost": 1,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "draw"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Devuelve las otras cartas de tu mano al mazo, barájalo y roba la misma cantidad. Esto no consume su recuperación del cementerio.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "REDRAW_HAND"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_destiny_rebirth",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_dawn_shield",
+    "name": "Escudo del Alba",
+    "heroId": "warrior",
+    "rarity": "COMMON",
+    "cost": 0,
+    "category": "DEFENSE",
+    "tags": [
+      "light",
+      "shield"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Un aliado a distancia 3 con visión gana 1 de escudo hasta consumirse o el inicio de su siguiente turno.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ALLY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "SHIELD",
+        "amount": 1,
+        "to": "ALLIES"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_dawn_shield",
+      "element": "SHIELD",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_crypt_whisper",
+    "name": "Susurro de la Cripta",
+    "heroId": "mage",
+    "rarity": "COMMON",
+    "cost": 0,
+    "category": "UTILITY",
+    "tags": [
+      "dark",
+      "scry"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Mira las dos primeras cartas de tu mazo. Elige una y ponla al fondo; la otra permanece arriba. No roba.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "CHOOSE_TOP_TO_BOTTOM",
+        "count": 2
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_crypt_whisper",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_celestial_clarity",
+    "name": "Claridad Celestial",
+    "heroId": "mage",
+    "rarity": "COMMON",
+    "cost": 0,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "scry"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Mira la primera carta de tu mazo. Puedes mantenerla o ponerla al fondo. No roba; solo tú ves la carta.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "CHOOSE_TOP_TO_BOTTOM",
+        "count": 1
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_celestial_clarity",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_restoring_grace",
+    "name": "Gracia Restauradora",
+    "heroId": "mage",
+    "rarity": "RARE",
+    "cost": 2,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "draw"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Roba 3 cartas y después elige una instancia de tu mano para devolverla al mazo y barajarlo. No consume recuperación del cementerio.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "DRAW",
+        "count": 3
+      },
+      {
+        "type": "CHOOSE_HAND_TO_DECK"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_restoring_grace",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_shadow_hand",
+    "name": "Mano de las Sombras",
+    "heroId": "mage",
+    "rarity": "UNCOMMON",
+    "cost": 2,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "discard"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Descarta una instancia aleatoria de la mano rival, sin revelar su identidad. Requiere una mano rival no vacía.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "DISCARD_OPPONENT",
+        "from": "HAND",
+        "count": 1
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_shadow_hand",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_profane_burial",
+    "name": "Sepultura Profana",
+    "heroId": "mage",
+    "rarity": "UNCOMMON",
+    "cost": 2,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "mill"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Envía hasta 3 cartas del principio del mazo rival a su cementerio, sin revelar sus identidades. No roba ni causa Deck-Out. Requiere un mazo rival no vacío.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "DISCARD_OPPONENT",
+        "from": "DECK",
+        "count": 3
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_profane_burial",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "light_minor_blessing",
+    "name": "Bendición Menor",
+    "rarity": "COMMON",
+    "cost": 0,
+    "category": "DEFENSE",
+    "tags": [
+      "light",
+      "heal"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Cura 1 HP a un aliado herido a distancia 3 con visión. No sobrecura.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ALLY",
+      "injuredOnly": true,
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "HEAL",
+        "amount": 1,
+        "to": "ALLIES"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_minor_blessing",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_purifying_flash",
+    "name": "Destello Purificador",
+    "rarity": "COMMON",
+    "cost": 1,
+    "category": "DEFENSE",
+    "tags": [
+      "light",
+      "cleanse"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Elige y elimina un único estado menor de un aliado a distancia 3 con visión: Ardiendo, Veneno, Sangrado, Ralentizado o Entorpecido. No elimina inmovilizaciones, congelación ni maldiciones.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ALLY",
+      "minorNegativeOnly": true,
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "CLEANSE_ONE_MINOR",
+        "to": "ALLIES"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_purifying_flash",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_protective_light",
+    "name": "Luz Protectora",
+    "heroId": "warrior",
+    "rarity": "UNCOMMON",
+    "cost": 1,
+    "category": "DEFENSE",
+    "tags": [
+      "light",
+      "protection"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Un aliado a distancia 3 con visión reduce en 1 su siguiente daño válido hasta el inicio de tu próximo turno. No acumula cargas.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ALLY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "APPLY_STATUS",
+        "status": "LIGHT_PROTECTION",
+        "duration": 1,
+        "to": "ALLIES",
+        "untilCasterNextTurnStart": true
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_protective_light",
+      "element": "SHIELD",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_guardian_vigil",
+    "name": "Vigilia del Guardián",
+    "rarity": "UNCOMMON",
+    "cost": 1,
+    "category": "DEFENSE",
+    "tags": [
+      "light",
+      "protection"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Un aliado a distancia 3 con visión bloquea una única aplicación de estado negativo menor hasta el inicio de tu próximo turno. No bloquea daño, terreno, desplazamientos ni maldiciones de cartas.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ALLY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "APPLY_STATUS",
+        "status": "LIGHT_VIGIL",
+        "duration": 1,
+        "to": "ALLIES",
+        "untilCasterNextTurnStart": true
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_guardian_vigil",
+      "element": "SHIELD",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_ash_mark",
+    "name": "Marca de Ceniza",
+    "heroId": "warrior",
+    "rarity": "COMMON",
+    "cost": 0,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "mark"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Marca un enemigo a distancia 3 con visión. Tu siguiente ataque directo contra él durante este turno gana +1 daño antes de mitigación. No acumula.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ENEMY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "APPLY_STATUS",
+        "status": "ASH_MARK",
+        "duration": 1,
+        "to": "ENEMIES",
+        "untilCasterTurnEnd": true
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_ash_mark",
+      "element": "FORCE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "light_light_step",
+    "name": "Paso de Luz",
+    "heroId": "summoner",
+    "rarity": "COMMON",
+    "cost": 1,
+    "category": "MOVEMENT",
+    "tags": [
+      "light",
+      "step"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Elige un aliado a distancia 3 con visión y una casilla ortogonal adyacente libre para desplazarlo sin gastar PM. Respeta inmovilizaciones, obstáculos y ocupación.",
+    "targeting": {
+      "type": "UNIT",
+      "range": 3,
+      "unitFilter": "ALLY",
+      "adjacentStep": true,
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "STEP_TARGET"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_light_step",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_umbral_step",
+    "name": "Paso Umbrío",
+    "rarity": "COMMON",
+    "cost": 1,
+    "category": "MOVEMENT",
+    "tags": [
+      "dark",
+      "step"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Avanza por una ruta válida de hasta 2 PM sin gastar tus PM actuales. Respeta inmovilizaciones, terreno, obstáculos y ocupación. No es un teletransporte.",
+    "targeting": {
+      "type": "STEP",
+      "range": 2,
+      "terrainCost": true
+    },
+    "effects": [
+      {
+        "type": "STEP_CASTER"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_umbral_step",
+      "element": "ARCANE",
+      "castAnimation": "cast_support"
+    }
+  },
+  {
+    "id": "dark_executioner_call",
+    "name": "Llamado del Verdugo",
+    "rarity": "LEGENDARY",
+    "cost": 3,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "roulette"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Ruleta: pierdes 5 HP, el rival pierde 5 HP o ambos pierden 5 HP. Probabilidades iguales. Con tu Mundo Oscuro: 20%, 60%, 20%. La pérdida de HP no es daño mitigable.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "EXECUTIONER_ROULETTE"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_executioner_call",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "light_pact_fairy",
+    "name": "Hada del Pacto",
+    "heroId": "summoner",
+    "rarity": "RARE",
+    "cost": 2,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "summon"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Invoca un Hada: 4 HP, mueve 2, daño 0, capacidad 0. Mientras vive, concede +1 capacidad. Dura 5 turnos propios contando este. Dos Hadas conceden +2; al desaparecer se pierde su bonificación.",
+    "targeting": {
+      "type": "TILE",
+      "range": 2,
+      "tileFilter": "EMPTY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "SUMMON",
+        "summonId": "light_pact_fairy"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_pact_fairy",
+      "element": "NATURE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "light_beyond_call",
+    "name": "Llamado del Más Allá",
+    "heroId": "summoner",
+    "rarity": "ULTRA",
+    "commercialUltra": true,
+    "cost": 4,
+    "category": "UTILITY",
+    "tags": [
+      "light",
+      "recovery",
+      "summon"
+    ],
+    "maxCopies": 2,
+    "expansion": "path_to_light",
+    "rulesText": "Elige una casilla libre a distancia 2 con visión y recupera una invocación propia muerta: Pollo, Zorro, Tortuga, Cuervo o Lobo. Regresa con toda su vida, ocupa capacidad normal y actúa desde la siguiente ronda. Su instancia consume la recuperación única de la partida.",
+    "targeting": {
+      "type": "TILE",
+      "range": 2,
+      "tileFilter": "EMPTY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "RESURRECT_SUMMON"
+      }
+    ],
+    "presentation": {
+      "visualKey": "light_beyond_call",
+      "element": "NATURE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_abyssal_minotaur",
+    "name": "Minotauro Abisal",
+    "heroId": "shapeshifter",
+    "rarity": "LEGENDARY",
+    "cost": 4,
+    "category": "UTILITY",
+    "tags": [
+      "dark",
+      "transformation"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Adopta la forma de Minotauro Abisal: +1 PM y +1 daño directo respecto al Minotauro, sin armadura adicional. Desde tu siguiente turno, paga 2 HP por turno (1 con tu Mundo Oscuro). Si no puedes pagar dejando 1 HP, vuelves a forma humana.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "TRANSFORM",
+        "formId": "dark_abyssal_minotaur"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_abyssal_minotaur",
+      "element": "FORCE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_scorpion_king",
+    "name": "Rey Escorpión",
+    "heroId": "summoner",
+    "rarity": "ULTRA",
+    "commercialUltra": true,
+    "cost": 4,
+    "minCasterHp": 2,
+    "category": "UTILITY",
+    "tags": [
+      "dark",
+      "summon"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Sacrifica al menos la mitad de tus HP actuales, redondeando arriba, y conserva al menos 1. Invoca al Rey Escorpión con 6 + HP sacrificados de vida, mueve 3, daño 4 y capacidad 2. Aplica veneno 1 durante 5 turnos, sin acumular. Pierde 1 HP al inicio de cada turno propio salvo con tu Mundo Oscuro. Actúa desde la siguiente ronda.",
+    "targeting": {
+      "type": "TILE",
+      "range": 2,
+      "tileFilter": "EMPTY",
+      "requiresLineOfSight": true
+    },
+    "effects": [
+      {
+        "type": "SUMMON_SCORPION_SACRIFICE"
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_scorpion_king",
+      "element": "NATURE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_despair_tribute",
+    "name": "Tributo de la Desesperación",
+    "heroId": "mage",
+    "rarity": "RARE",
+    "cost": 3,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "discard"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "discardHandCost": true,
+    "rulesText": "Elige y descarta otra carta de tu mano; después descarta dos instancias aleatorias de la mano rival. Requiere una carta propia adicional y al menos dos cartas en la mano rival.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [
+      {
+        "type": "DISCARD_OPPONENT",
+        "from": "HAND",
+        "count": 2,
+        "requireFullCount": true
+      }
+    ],
+    "presentation": {
+      "visualKey": "dark_despair_tribute",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  },
+  {
+    "id": "dark_silence_seal",
+    "name": "Sello del Silencio",
+    "heroId": "mage",
+    "rarity": "RARE",
+    "cost": 2,
+    "responseOnly": true,
+    "category": "CONTROL",
+    "tags": [
+      "dark",
+      "response"
+    ],
+    "maxCopies": 2,
+    "expansion": "allies_of_darkness",
+    "rulesText": "Respuesta: paga 2 energía y descarta otra carta propia para negar una activación rival pendiente. Una respuesta por activación; no responde a otro Sello. El rival no recupera su energía.",
+    "targeting": {
+      "type": "SELF"
+    },
+    "effects": [],
+    "presentation": {
+      "visualKey": "dark_silence_seal",
+      "element": "ARCANE",
+      "castAnimation": "cast"
+    }
+  }
+]

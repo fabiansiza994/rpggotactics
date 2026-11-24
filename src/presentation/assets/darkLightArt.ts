@@ -1,4 +1,5 @@
 export const DARK_LIGHT_CARD_ART: Record<string, string> = {
+ ...Object.fromEntries(['dark_rusty_dagger','dark_cursed_fragment','dark_blood_offering','dark_reanimated_bones','dark_dread_mist','dark_shadow_skin','dark_abyss_gaze','dark_minor_drain','dark_goblin_barter'].map(id=>[id,`/art/dark-light/cards/${id}.jpg`])),
  light_redemption_spirit:"/art/dark-light/cards/light_redemption_spirit.jpg",
   "dark_abyssal_minotaur": "/art/dark-light/cards/dark_abyssal_minotaur.jpg",
   "dark_ash_mark": "/art/dark-light/cards/dark_ash_mark.jpg",
@@ -32,6 +33,7 @@ export const DARK_LIGHT_CARD_ART: Record<string, string> = {
   "light_second_chance": "/art/dark-light/cards/light_second_chance.jpg"
 };
 export const DARK_LIGHT_UNIT_ART: Record<string, string> = {
+ dark_skeleton:'/art/dark-light/units/dark_skeleton.png',
  light_redemption_spirit:"/art/dark-light/units/redemption/light_redemption_spirit.png",
  dark_the_reaper: "/art/dark-light/units/dark_the_reaper.png",
  ...Object.fromEntries(['dark_abyssal_minotaur','dark_serpent_king','dark_scorpion_king','light_pact_fairy'].map(id=>[id,`/art/dark-light/units/v7/${id}.png`])),

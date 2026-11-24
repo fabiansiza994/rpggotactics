@@ -1,0 +1,2 @@
+import{readFileSync}from'node:fs';import{it,expect}from'vitest';import{DARK_LIGHT_CARDS}from'../src/game/data/dark-light';
+it('preserves all31 approved released contracts exactly,including16 Light',()=>{const prior=JSON.parse(readFileSync('qa/darkness-expanded-20261124/baseline-contracts.json','utf8')) as {id:string}[];expect(prior).toHaveLength(31);for(const card of prior)expect(DARK_LIGHT_CARDS.find(c=>c.id===card.id),card.id).toEqual(card)});

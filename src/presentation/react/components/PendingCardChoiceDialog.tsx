@@ -11,23 +11,23 @@ export function PendingCardChoiceDialog({ state, engine }: { state: Readonly<Gam
   const busy = useBattleStore(s => s.playbackBusy || s.introLocked);
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    if (pending && state.phase === 'PLAYER') { if (!ref.current?.open) ref.current?.showModal(); }
+    if (pending && state.phase === 'PLAYER' && !(pending.kind === 'INSPECT_TOP' && busy)) { if (!ref.current?.open) ref.current?.showModal(); }
     else ref.current?.close();
-  }, [pending, state.phase]);
+  }, [pending, state.phase, busy]);
   if (!pending) return null;
-  return <dialog ref={ref} className="summon-search" aria-labelledby="pending-choice-title" onCancel={event => event.preventDefault()}>
+  return <dialog ref={ref} className="summon-search" aria-labelledby="pending-choice-title" onCancel={event => {event.preventDefault();if(pending.kind==='INSPECT_TOP'&&!busy)submit(null)}}>
     <h2 id="pending-choice-title">{engine.content.cards[pending.sourceCardId]?.name}</h2>
-    <p>{pending.kind === 'SUMMON_SACRIFICE' ? 'Elige cuántos HP sacrificar. Debes conservar al menos 1 HP.' : pending.kind === 'RESURRECT' ? 'Elige una invocación muerta para devolverla al campo.' : pending.kind === 'CLEANSE_MINOR' ? 'Elige un único estado menor que eliminar.' : pending.kind === 'BOTTOM_TOP_CARD' ? 'Elige qué carta enviar al fondo del mazo.' : 'Elige una carta para devolverla al mazo y barajarlo.'}</p>
+    <p>{pending.kind === 'INSPECT_TOP' ? 'Las dos primeras cartas de tu mazo, en orden. Solo puedes observarlas.' : pending.kind === 'SUMMON_SACRIFICE' ? 'Elige cuántos HP sacrificar. Debes conservar al menos 1 HP.' : pending.kind === 'RESURRECT' ? 'Elige una invocación muerta para devolverla al campo.' : pending.kind === 'CLEANSE_MINOR' ? 'Elige un único estado menor que eliminar.' : pending.kind === 'BOTTOM_TOP_CARD' ? 'Elige qué carta enviar al fondo del mazo.' : 'Elige una carta para devolverla al mazo y barajarlo.'}</p>
     <div className="summon-search-grid">
       {pending.options.map(option => {
         const card = option.card;
         const definition = card ? engine.content.cards[card.cardId] : undefined;
-        return <button key={option.uid} type="button" disabled={busy || state.phase !== 'PLAYER'} onClick={() => submit(option.uid)} data-choice-uid={option.uid}>
+        return <button key={option.uid} type="button" disabled={busy || state.phase !== 'PLAYER' || pending.kind === 'INSPECT_TOP'} onClick={() => submit(option.uid)} data-choice-uid={option.uid}>
           <span className="search-art">{card && <SpellArt cardId={card.cardId} spell={definition?.presentation.visualKey ?? card.cardId}/>}</span>
           <strong>{definition?.name ?? (option.sacrificeHp !== undefined ? `Sacrificar ${option.sacrificeHp} HP · invocación ${6 + option.sacrificeHp} HP` : option.status ? engine.content.statuses[option.status]?.name : option.uid)}</strong><p>{definition?.rulesText}</p>
         </button>;
       })}
     </div>
-    {pending.allowKeep && <button type="button" disabled={busy} onClick={() => submit(null)}>Mantener arriba</button>}
+    {pending.allowKeep && <button type="button" disabled={busy} onClick={() => submit(null)}>{pending.kind === 'INSPECT_TOP' ? 'Cerrar inspección' : 'Mantener arriba'}</button>}
   </dialog>;
 }

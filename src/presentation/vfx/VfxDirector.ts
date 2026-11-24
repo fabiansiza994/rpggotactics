@@ -388,7 +388,7 @@ export class VfxDirector {
       if(e.cardId==='eternal_winter_heart')return;
       if(e.cardId==='avalanche'){fx.icePremium?.avalanche(this.position(e.casterId)??e.impact,e.affectedTiles,850,true);this.host.impulse('MEDIUM',reduced);return;}
       if(e.cardId==='frost_nova'||e.cardId==='frost_comet')return;
-      if(fx.darkLight.theme(e.cardId,e.impact,cue.duration))return;
+      if(fx.darkLight.theme(e.cardId,e.impact,cue.duration,false,this.position(e.casterId)??e.impact))return;
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
         fx.catalog.charge(catalog,from,cue.duration,caster?.castOrigin()??undefined,e.impact,e.affectedTiles);
@@ -520,7 +520,7 @@ export class VfxDirector {
         return;
       }
       const caster = this.host.unit(e.casterId);
-      if(fx.darkLight.theme(e.cardId,e.impact,cue.duration,true))return;
+      if(fx.darkLight.theme(e.cardId,e.impact,cue.duration,true,this.position(e.casterId)??e.impact))return;
       const catalog=this.catalogActions.get(e);
       if(fx.catalog?.handles?.(catalog)) {
         if(cue.key==='magma_fissure')fx.magmaFissure(e.affectedTiles,'impact');
@@ -964,6 +964,7 @@ export class VfxDirector {
         if (e.kind === 'SUMMON') {
           motionCues.emit('summon_arrival');
           const ritualCreature=final.units.find(u=>u.id===e.unitId)?.defId;
+          if(ritualCreature==='dark_skeleton'){this.host.unit(e.unitId)?.playAnimation('arrival',reduced?120:520);fx.darkLight.theme('dark_reanimated_bones',e.pos,reduced?120:520,true);break;}
           if(ritualCreature==='light_redemption_spirit'){this.host.unit(e.unitId)?.playAnimation('arrival',reduced?120:600);fx.catalog?.impact({...familyRecipe('heal','contact'),tint:0xffe7a0},e.pos,e.pos,[e.pos]);break;}
           if(ritualCreature==='primordial_dragon')fx.ritual(e.pos,'LEGENDARY','arrival');
           if(ritualCreature==='ancient_turtle'||ritualCreature==='ancient_wolf')fx.ritual(e.pos,ritualCreature==='ancient_wolf'?'MAJOR':'MINOR','arrival');
@@ -983,6 +984,11 @@ export class VfxDirector {
         fx.primordialBreath(e.from,e.tiles);
         this.host.impulse('LIGHT',reduced);
         break;
+      }
+      case 'CARDS_EXCHANGED': {
+        const from=this.position(e.casterId),to=this.position(e.opponentId);
+        if(from&&to)fx.darkLight.exchange(from,to,cue.duration);
+        this.host.handPulse(1);break;
       }
       case 'CARD_NEGATED': {
         const at=this.position(e.casterId);if(!at)break;

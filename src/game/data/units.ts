@@ -8,6 +8,7 @@ import { WORLD_REWARD_SUMMONS } from './world-rewards';
 import { FREE_CATALOG_SUMMONS } from './free-catalog';
 
 export const SUMMONS: Readonly<Record<string, SummonDef>> = {
+  dark_skeleton: {id:'dark_skeleton',name:'Esqueleto',maxHp:3,armor:0,moveRange:1,damage:1,capacityCost:1,visualKey:'dark_skeleton',behavior:'PRESSURE',attackRange:1},
   light_redemption_spirit: {id:'light_redemption_spirit',name:'Espíritu de la Redención',maxHp:8,armor:0,moveRange:0,damage:0,capacityCost:0,maxPerOwner:1,visualKey:'light_redemption_spirit',behavior:'GUARD'},
   dark_scorpion_king: { id: 'dark_scorpion_king', name: 'Rey Escorpión', maxHp: 6, armor: 0, moveRange: 3, damage: 4, capacityCost: 2, visualKey: 'dark_scorpion_king', behavior: 'PRESSURE', attackRange: 1, onHitStatus: { status: 'POISONED', duration: 5 } },
   light_pact_fairy: { id: 'light_pact_fairy', name: 'Hada del Pacto', maxHp: 4, armor: 0, moveRange: 2, damage: 0, capacityCost: 0, visualKey: 'light_pact_fairy', behavior: 'GUARD', capacityAura: 1, durationTurns: 5 },

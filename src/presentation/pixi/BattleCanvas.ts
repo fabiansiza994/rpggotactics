@@ -507,7 +507,7 @@ export class BattleCanvas {
   qaPresentationSnapshot() {
     return shapeshifterQaEnabled ? this.director.state : null;
   }
-  qaFeelSnapshot(){if(!this.ready || this.destroyed)return null;return {orb:this.orbArt.snapshot,darkLight:{smoke:this.effects.darkLight.snapshot,radiance:this.effects.darkLight.radianceResources,cards:this.effects.darkLight.cardResources},catalog:this.effects.catalog.snapshot,fps:this.app.ticker.FPS,particles:this.groundParticles.activeCount,reactions:this.effects.reactionSnapshot,actorChildren:this.actorLayer.children.length,groundChildren:this.groundFxLayer.children.length,vfxChildren:this.vfxLayer.children.length,arcane:this.arcaneView?.snapshot,mage:this.effects.mage.snapshot,fireball:this.effects.fireball.snapshot,bastion:this.effects.bastion.snapshot,pactSummon:this.effects.pactSummon.snapshot};}
+  qaFeelSnapshot(){if(!this.ready || this.destroyed)return null;return {orb:this.orbArt.snapshot,darkLight:{additions:this.effects.darkLight.additionResources,smoke:this.effects.darkLight.snapshot,radiance:this.effects.darkLight.radianceResources,cards:this.effects.darkLight.cardResources},catalog:this.effects.catalog.snapshot,fps:this.app.ticker.FPS,particles:this.groundParticles.activeCount,reactions:this.effects.reactionSnapshot,actorChildren:this.actorLayer.children.length,groundChildren:this.groundFxLayer.children.length,vfxChildren:this.vfxLayer.children.length,arcane:this.arcaneView?.snapshot,mage:this.effects.mage.snapshot,fireball:this.effects.fireball.snapshot,bastion:this.effects.bastion.snapshot,pactSummon:this.effects.pactSummon.snapshot};}
   qaAnimationSnapshot(unitId: string) {
     return this.units.get(unitId)?.animationSnapshot() ?? null;
   }

@@ -402,7 +402,7 @@ export async function storeRoute(route: string, r: StoreRequest): Promise<Respon
     const total=boxTotal(box.remaining);
     const weights={COMMON:0,UNCOMMON:0,RARE:0,LEGENDARY:0,ULTRA:0};
     for(const [id,count] of Object.entries(box.remaining))if(total&&r.content.cards[id])weights[rarityOf(r.content.cards[id]!)]+=count*100/total;
-    return {...o,booster:{...o.booster!,box,weights}};
+    return {...o,booster:{...o.booster!,revision:box.revision,box,weights}};
   });
   if(route==='GET /api/tactics/store/catalog'||route==='POST /api/tactics/store/purchase'){
     // Receipts recover before touching the new tables, including pre-box historical purchases.

@@ -1,9 +1,11 @@
+import { DARKNESS_ADDITIONAL_CARDS } from './darkness-expansion';
 import type { GameContent } from '../domain/content';
 import type { CardDefinition } from '../domain/cards/card';
 
 export const DARK_LIGHT_EXPANSIONS = { dark: 'allies_of_darkness', light: 'path_to_light' } as const;
 /** Local draft content. These sets are deliberately absent from releasedExpansions and store offers. */
 export const DARK_LIGHT_CARDS: CardDefinition[] = [
+  ...DARKNESS_ADDITIONAL_CARDS,
   {
     id:'light_redemption_spirit',name:'Espíritu de la Redención',rarity:'LEGENDARY',cost:3,
     category:'UTILITY',tags:['light','summon','support'],maxCopies:2,expansion:DARK_LIGHT_EXPANSIONS.light,

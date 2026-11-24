@@ -23,6 +23,11 @@ export function createBoxStock(
     throw Error("Box requires a unique legal pool and at least two Ultras");
   if (!Number.isSafeInteger(target) || target < cards.length || target % 4)
     throw Error("Invalid box size");
+  if(target===80 && cards.some(c=>c.id==='dark_goblin_barter')) {
+    const stock:BoxStock={dark_crypt_whisper:7,dark_ash_mark:7,dark_umbral_step:6,dark_rusty_dagger:4,dark_cursed_fragment:4,dark_blood_offering:4,dark_reanimated_bones:4,dark_dread_mist:4,dark_shadow_skin:4,dark_goblin_barter:4,dark_shadow_hand:5,dark_profane_burial:5,dark_abyss_gaze:4,dark_minor_drain:4,dark_twisted_curse:2,dark_despair_tribute:2,dark_silence_seal:2,dark_warrior_pact:2,dark_serpent_king:1,dark_the_reaper:1,dark_executioner_call:1,dark_abyssal_minotaur:1,dark_dark_world:1,dark_scorpion_king:1};
+    if(cards.length!==24 || cards.some(c=>!stock[c.id]) || boxTotal(stock)!==80)throw Error('Expanded Darkness requires its complete approved 24-card pool');
+    return stock;
+  }
   if (target === 80 && cards.some(c => c.id === 'light_redemption_spirit')) {
     const stock = createBoxStock(cards.filter(c => c.id !== 'light_redemption_spirit'), target);
     stock.light_minor_blessing!--;

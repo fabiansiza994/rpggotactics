@@ -1514,11 +1514,16 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       // Any selection change invalidates a touch preview made for the previous selection.
       const aim = withoutTapAim(get().aim);
       if (!engine || cardUid === null) return set({ selectedCardUid: null, pairSelection: null, aim });
+      const selected=engine.state.player.hand.find(card=>card.uid===selectedCardUid);
+      if(selected && engine.content.cards[selected.cardId]?.handTrade && cardUid!==selectedCardUid){
+        if(run({type:'SEARCH_SUMMON',cardUid:selected.uid,choiceUid:cardUid}))set({selectedCardUid:null,pairSelection:null,aim,notice:null});
+        return;
+      }
       engine.wallOrientation=get().wallOrientation;
       // Clicking an already-selected SELF card (or ritual) casts it.
       const searchCard = engine.content.cards[engine.state.player.hand.find(c=>c.uid===cardUid)?.cardId ?? ''];
       // Search cards (Rastreo: deck, Eco del Altar: discard) resolve only through their choice dialog.
-      if (engine.selectionTargeting(cardUid)?.type === 'SELF' && !searchCard?.deckSearch && !searchCard?.discardSearch && !searchCard?.discardHandCost && selectedCardUid === cardUid) {
+      if (engine.selectionTargeting(cardUid)?.type === 'SELF' && !searchCard?.deckSearch && !searchCard?.discardSearch && !searchCard?.discardHandCost && !searchCard?.handTrade && selectedCardUid === cardUid) {
         if (run(engine.selectionCommand(cardUid, null))) set({ selectedCardUid: null, pairSelection: null, aim });
         return;
       }
@@ -1537,7 +1542,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       set({
         selectedCardUid: selecting ? cardUid : null,
         pairSelection: null,
-        notice: selecting && block?.code === 'NO_VALID_TARGET' ? block.detail : null,
+        notice: selecting && searchCard?.handTrade ? 'Elige otra carta de tu mano para intercambiar. Pulsa la misma carta o Escape para cancelar sin consumir recursos.' : selecting && block?.code === 'NO_VALID_TARGET' ? block.detail : null,
         aim,
       });
     },

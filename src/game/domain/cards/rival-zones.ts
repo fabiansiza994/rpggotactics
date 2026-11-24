@@ -4,9 +4,9 @@ import { allCardEffects } from './form-effects';
 
 /** Requirements follow effects, never a card-name allowlist or the PvP/PvE label. */
 export function requiredRivalZones(def: CardDefinition): ('HAND' | 'DECK')[] {
-  return [...new Set(allCardEffects(def).flatMap(effect =>
+  return [...new Set([...(def.handTrade ? ['HAND' as const] : []), ...allCardEffects(def).flatMap(effect =>
     effect.type === 'DISCARD_OPPONENT' ? [effect.from] :
-    effect.type === 'CURSE_RANDOM_OPPONENT_DECK' ? ['DECK' as const] : []))];
+    effect.type === 'CURSE_RANDOM_OPPONENT_DECK' ? ['DECK' as const] : [])])];
 }
 
 /** Counts are available only in private client views. Authority uses real banks. */

@@ -11,7 +11,7 @@ import { shuffleInPlace } from '../core/rng';
 import { fail, OK, type RuleResult } from '../result';
 
 export interface PendingCardChoice {
-  kind: 'BOTTOM_TOP_CARD' | 'RETURN_HAND_CARD' | 'CLEANSE_MINOR' | 'RESURRECT' | 'SUMMON_SACRIFICE';
+  kind: 'INSPECT_TOP' | 'BOTTOM_TOP_CARD' | 'RETURN_HAND_CARD' | 'CLEANSE_MINOR' | 'RESURRECT' | 'SUMMON_SACRIFICE';
   position?: Pos;
   targetId?: string;
   sourceCardId: string;
@@ -24,6 +24,11 @@ export interface PendingCardChoice {
 export function resolveCardChoice(ctx: RuleContext, choiceUid: string | null): RuleResult {
   const pending = ctx.state.player.pendingCardChoice;
   if (!pending) return fail('INVALID_TARGET', 'No hay una elección pendiente.');
+  if (pending.kind === 'INSPECT_TOP') {
+    if (choiceUid !== null) return fail('INVALID_TARGET', 'Esta inspección no permite mover cartas.');
+    finishChoice(ctx);
+    return OK;
+  }
   if (pending.kind === 'SUMMON_SACRIFICE') {
     const choice = pending.options.find(option => option.uid === choiceUid);
     const owner = ctx.state.units.find(unit => unit.id === ctx.state.player.heroId);

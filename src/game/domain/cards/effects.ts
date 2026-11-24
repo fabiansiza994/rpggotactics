@@ -208,7 +208,9 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
       const amount = base + bonusFor(e, fx.bonus, u) + electricalBonus + consumeElectricalTargetBonus(e, u, fx.electrical);
       if (fx.shieldBreak) breakShield(e.ctx, u, fx.shieldBreak, e.caster.id);
       if (guard > 0) breakShield(e.ctx, e.caster, fx.fromCasterShield!.consumeAll ? e.caster.shield : guard, e.caster.id);
+      const hpBefore = u.hp;
       dealDamage(e.ctx, u, attackDamage(e.ctx, e.caster, u, amount), e.caster.id, fx.damageType, fx.attackKind, fx.attackKind === 'RANGED' && e.directAttack ? 'DIRECT_RANGED' : e.directAttack, e.cardId&&e.ctx.content.cards[e.cardId]?.tags.some(t=>t.toLowerCase()==='fire')?'FIRE':undefined);
+      if (fx.drainHeal && u.hp < hpBefore && e.ctx.state.units.includes(e.caster)) healUnit(e.ctx,e.caster,fx.drainHeal+(e.caster.statuses.some(s=>s.id==='LIGHT_WORLD' && s.turnsLeft>0)?1:0),e.caster.id);
     }
     let from = first?.pos;
     bounces.forEach((u, i) => {
@@ -437,6 +439,9 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
   },
   RECOVER_RANDOM_TO_DECK: (e, fx) => {
     recoverRandomToDeck(e.ctx, fx.count);
+  },
+  INSPECT_TOP: (e, fx) => {
+    e.ctx.state.player.pendingCardChoice = {kind:'INSPECT_TOP',sourceCardId:e.cardId!,options:e.ctx.state.player.deck.slice(0,fx.count).map(card=>({uid:card.uid,card:{...card}})),allowKeep:true};
   },
   DRAW: (e, fx) => {
     drawCards(e.ctx, fx.count);

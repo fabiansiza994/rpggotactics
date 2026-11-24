@@ -178,6 +178,8 @@ export type EffectDef =
       type: 'DAMAGE';
       amount: number;
       damageType: DamageType;
+      /** Heal caster only after this damage primitive actually lowers the recipient HP. */
+      drainHeal?: number;
       to: UnitSelector;
       /** RANGED: COVER reduces it. PIERCING: ignores the target's armor (Rompeguardia). */
       attackKind?: 'RANGED' | 'PIERCING';
@@ -338,6 +340,7 @@ export type EffectDef =
   | { type: 'FIXED_HP_SACRIFICE'; amount: number }
   | { type: 'WARRIOR_BLOOD_PACT' }
   | { type: 'RECOVER_RANDOM_TO_DECK'; count: number }
+  | { type: 'INSPECT_TOP'; count: number }
   | { type: 'DRAW'; count: number }
   | { type: 'GAIN_ENERGY'; amount: number }
   | { type: 'GAIN_MOVE_POINTS'; amount: number };
@@ -379,6 +382,8 @@ export interface CardDefinition {
    * uid, validated against the real pile); it returns to the hand locked until the next own turn.
    */
   discardSearch?: 'RITUAL_PIECE' | 'ANY_ONCE';
+  /** Combat-only atomic exchange; selected own UID uses the existing searchUid command field. */
+  handTrade?: true;
   discardHandCost?: true;
   responseOnly?: true;
   worldFrozenUpgrade?: {effects?: EffectDef[];targeting?: TargetingDef;rulesText:string};
@@ -485,6 +490,10 @@ export const isExclusiveCard = (card: Pick<CardDefinition, 'acquisition'>): bool
 
 /** A concrete copy of a card inside deck/hand/discard. */
 export interface CardInstance {
+  /** Battle hero identities, never account/commercial ownership. Added only by an authoritative exchange. */
+  originalOwnerId?: string;
+  controllerId?: string;
+  traded?: true;
   /** Server-only until activation; stripped even from the owner's private PvP hand. */
   twistedCurse?: true;
   /** Public only while in discard; cleared on entry into a private zone. */

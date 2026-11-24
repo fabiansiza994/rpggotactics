@@ -430,6 +430,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         {!steppingAlly && <button type="button" disabled={busy || !engine.getSecondaryTargets(pair.cardUid, pair.first).includes(null)} onClick={() => useBattleStore.getState().confirmPairWithChampion()}>Intercambiar conmigo</button>}
         <button type="button" disabled={busy} onClick={() => useBattleStore.getState().cancelPairTarget()}>Cambiar primer objetivo</button>
       </div>}
+      {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.handTrade && <div className="pair-target-controls" role="group" aria-label="Trueque del Duende"><span>Elige otra carta de tu mano para intercambiar.</span><button type="button" onClick={()=>selectCard(null)}>Cancelar</button></div>}
       {discarding && <HandDiscardBar state={state} />}
       <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''}`}>
         {dealt &&
@@ -437,7 +438,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
             const source=engine.content.cards[card.cardId];
             const def=source?worldFrozenCard(source,state.units.find(u=>u.id===engine.heroId)):undefined;
             if (!def) return null;
-            const block = discarding ? undefined : blocks.get(card.uid);
+            const block = discarding || (aimedCard && engine.content.cards[aimedCard.cardId]?.handTrade) ? undefined : blocks.get(card.uid);
             return (
               <CardView
                 key={card.uid}

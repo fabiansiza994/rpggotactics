@@ -39,7 +39,8 @@ export function compileTimeline(
   const add = (at: number, kind: CueKind, event: GameEvent, duration = 0, key = spell?.key ?? '') =>
     cues.push({ at, kind, event, duration, key });
   for (const event of events) {
-    if(event.type==='REDEMPTION_SUPPORT'){const start=Math.max(cursor,recoveryUntil);add(start,'event',event,reduced?90:480,'redemption-support');cursor=effectAt=start+(reduced?90:480);}
+    if(event.type==='CARDS_EXCHANGED'){const at=Math.max(effectAt,cursor);add(at,'event',event,reduced?160:800,'goblin-barter');cursor=effectAt=at+(reduced?160:800);}
+    else if(event.type==='REDEMPTION_SUPPORT'){const start=Math.max(cursor,recoveryUntil);add(start,'event',event,reduced?90:480,'redemption-support');cursor=effectAt=start+(reduced?90:480);}
     else if (event.type === 'REAPER_DISPOSITION' && event.disposition === 'REBEL') {
       add(cursor, 'event', event, reduced ? 60 : 580); cursor += reduced ? 60 : 580; effectAt = cursor;
     } else if(event.type==='CARD_NEGATED'){
@@ -103,6 +104,7 @@ export function compileTimeline(
         travel,
         ...(key==='glacial_storm'?{path:event.affectedTiles}:{}),
       };
+      if(event.cardId==='dark_abyss_gaze')spell.end=Math.max(spell.end,spell.impact+(reduced?180:850));
       if(key==='glacial_storm')spell.end=Math.max(spell.end,spell.impact+(reduced?120:event.affectedTiles.length*180));
       effectAt = spell.impact;
       add(cursor, 'cast', event, cast);
@@ -112,7 +114,7 @@ export function compileTimeline(
       if (isThunderAddition(key) && !ownEvents.some(e=>e.type==='PROJECTILE_LAUNCHED')) add(cursor+cast,'projectile',event,travel);
       if (key==='frost_comet') add(cursor+cast,'projectile',event,travel);
       if (key==='paralyzing_pulse') add(cursor+cast,'projectile',event,travel);
-      add(spell.impact, 'spellImpact', event, key === 'magic_missile' || isArrowVisual(key) ? 130 : 220);
+      add(spell.impact, 'spellImpact', event, event.cardId==='dark_abyss_gaze' ? (reduced?180:850) : key === 'magic_missile' || isArrowVisual(key) ? 130 : 220);
     } else if (event.type === 'ARROW_REBOUNDED') {
       // Each authoritative hop flies before its damage is projected. No invented recipients.
       const travel = reduced ? 50 : 180;

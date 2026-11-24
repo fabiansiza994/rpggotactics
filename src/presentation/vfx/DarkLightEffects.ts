@@ -11,10 +11,23 @@ class Radiance extends PaintedEffectPool {
  show(at:Pos,frames:readonly number[],duration:number){const p=this.lifted(at,.38),w=this.geometry.footprint(at).w;
  this.blendedSprite(frames,p,w*1.65,duration,(t,s)=>{s.alpha=Math.min(1,t*7)*Math.min(1,(1-t)*5);s.rotation=this.reduced?0:Math.sin(t*Math.PI)*.08;},false,true);}
 }
+class BarterHands extends PaintedEffectPool {
+ get requested(){return catalogPremiumEnabled();}
+ show(from:Pos,to:Pos,duration:number){
+  const a=this.lifted(from,.7),b=this.lifted(to,.7),width=Math.min(this.geometry.footprint(from).w*3.2,Math.hypot(b.x-a.x,b.y-a.y)+80);
+  this.sprite(Array.from({length:16},(_,i)=>i),{x:(a.x+b.x)/2,y:(a.y+b.y)/2},width,duration,(t,sp)=>{sp.alpha=Math.min(1,t*9,(1-t)*8);sp.rotation=this.reduced?0:Math.atan2(b.y-a.y,b.x-a.x);sp.zIndex=Math.max(this.geometry.depth(this.geometry.center(from)),this.geometry.depth(this.geometry.center(to)))+2;},false,false);
+ }
+}
+class AbyssEye extends PaintedEffectPool {
+ get requested(){return catalogPremiumEnabled();}
+ show(at:Pos,duration:number){const p=this.lifted(at,.65),w=this.geometry.footprint(at).w;this.sprite(Array.from({length:16},(_,i)=>i),p,w*1.15,duration,(t,sp)=>{sp.alpha=Math.min(1,t*7,(1-t)*7);sp.y=p.y-Math.sin(t*Math.PI)*w*.08;sp.zIndex=this.geometry.depth(this.geometry.center(at))+2;},false,false);}
+}
 interface Face { texture: Texture; strips: Texture[] }
 /** One existing illustrated pool and presentation clock; no renderer, ticker or per-frame textures. */
 export class DarkLightEffects extends PaintedEffectPool {
   private readonly radiance: Radiance;
+  private readonly barter: BarterHands;
+  private readonly eye: AbyssEye;
   private readonly cardRoot = new Container({ eventMode: 'none' });
   private readonly cardStrips = Array.from({ length: 8 }, () => new Sprite());
   private readonly faces = new Map<string, Face>();
@@ -23,6 +36,8 @@ export class DarkLightEffects extends PaintedEffectPool {
   private disposedFaces = false;
   constructor(actors: Container, ground: Container, geometry: FxGeometry) {
     super(actors, ground, geometry, 'dark-light-smoke', 24, 'png');
+    this.eye=new AbyssEye(actors,ground,geometry,'dark-abyss-eye',4,'png');
+    this.barter=new BarterHands(actors,ground,geometry,'dark-barter-hands',4,'png');
     this.radiance=new Radiance(actors,ground,geometry,'dark-light-radiance',20,'png');
     this.cardRoot.visible = false;
     for (const sprite of this.cardStrips) { sprite.anchor.set(.5); sprite.eventMode = 'none'; this.cardRoot.addChild(sprite); }
@@ -30,11 +45,32 @@ export class DarkLightEffects extends PaintedEffectPool {
   }
   get requested() { return catalogPremiumEnabled(); }
   async prepareThemes(ids:readonly string[]){
+   if(ids.includes('dark_abyss_gaze'))await this.eye.prepare();
+   if(ids.includes('dark_goblin_barter'))await this.barter.prepare();
    if(ids.some(id=>darkLightTheme(id)==='LIGHT'))await this.radiance.prepare();
    if(ids.some(id=>darkLightTheme(id)==='DARK'))await this.prepare();
   }
-  theme(cardId:string,at:Pos,duration:number,impact=false):boolean{
+  exchange(from:Pos,to:Pos,duration:number){this.barter.reduced=this.reduced;this.barter.show(from,to,duration);}
+  theme(cardId:string,at:Pos,duration:number,impact=false,origin?:Pos):boolean{
    if(!this.requested)return false;
+   const added=['dark_rusty_dagger','dark_cursed_fragment','dark_blood_offering','dark_reanimated_bones','dark_dread_mist','dark_shadow_skin','dark_abyss_gaze','dark_minor_drain','dark_goblin_barter'];
+   if(added.includes(cardId)&&this.ready){
+    if(cardId==='dark_abyss_gaze' && impact){this.eye.reduced=this.reduced;this.eye.show(at,this.reduced?180:850);return true;}
+    if(cardId==='dark_goblin_barter')return true; // only confirmed exchange event shows moving hands
+    const p=this.lifted(at,cardId==='dark_dread_mist'?.1:.55),w=this.geometry.footprint(at).w,from=this.lifted(origin??at,.55);
+    if(!impact){this.blendedSprite([0,1,2,3],from,w*.65,duration,(t,sp)=>{sp.alpha=Math.sin(t*Math.PI)*.45;sp.tint=cardId==='dark_blood_offering'?0xd84b60:0xb78bd9;},false,false);return true;}
+    if(cardId==='dark_cursed_fragment'||cardId==='dark_minor_drain'){
+     const reverse=cardId==='dark_minor_drain',a=reverse?p:from,b=reverse?from:p;
+     for(let n=0;n<(this.reduced?1:3);n++)this.sprite([0,1,2,3,4,5,6,7],a,w*.25,Math.max(240,duration*2),(t,sp)=>{const v=Math.max(0,Math.min(1,t*1.18-n*.06));sp.position.set(a.x+(b.x-a.x)*v,a.y+(b.y-a.y)*v-Math.sin(v*Math.PI)*w*.16);sp.alpha=Math.sin(t*Math.PI)*.85;sp.tint=reverse?0xbc496d:0x9366c4;sp.rotation=t*2+n;},false,true);
+    }else this.blendedSprite(cardId==='dark_rusty_dagger'?[12,13,14,15]:[4,5,6,7,8,9,10,11],p,w*(cardId==='dark_shadow_skin'?1:1.2),Math.max(240,duration*2),(t,sp)=>{
+     sp.alpha=Math.sin(t*Math.PI)*.65;sp.tint=cardId==='dark_rusty_dagger'?0xc7cdd7:cardId==='dark_blood_offering'?0xba3d58:0xa47fc5;
+     if(cardId==='dark_rusty_dagger'){sp.height=w*.16;sp.rotation=-.55+t*.3;}
+     if(cardId==='dark_dread_mist'){sp.height=w*.32;sp.x+=Math.sin(t*7)*w*.07;}
+     if(cardId==='dark_blood_offering')sp.y+=t*w*.5;
+     if(cardId==='dark_shadow_skin'){sp.height=w*1.3;sp.rotation=Math.sin(t*5)*.04;}
+    },cardId==='dark_dread_mist',false);
+    return true;
+   }
    if(darkLightTheme(cardId)==='LIGHT'&&this.radiance.ready){
     const group=lightFrameGroup(cardId);
     this.radiance.show(at,Array.from({length:4},(_,i)=>group+i),duration);return true;
@@ -44,7 +80,7 @@ export class DarkLightEffects extends PaintedEffectPool {
     this.blendedSprite(impact?[8,9,10,11,12,13,14,15]:[0,1,2,3,4,5,6,7],p,w*(impact?1.6:1.25),duration,(t,s)=>{s.alpha=Math.min(1,t*7)*Math.min(1,(1-t)*5)*.85;s.tint=0xb58cdb;},false,false);return true;
    }return false;
   }
-  override beginBatch(){super.beginBatch();this.radiance.beginBatch();}
+  override beginBatch(){super.beginBatch();this.radiance.beginBatch();this.barter.beginBatch();this.eye.beginBatch();}
   async prepareCards(cards: readonly CardDefinition[]): Promise<void> {
     if (!this.requested || this.disposedFaces) return;
     await Promise.all([this.prepare(), ...cards.map(card => {
@@ -107,13 +143,14 @@ export class DarkLightEffects extends PaintedEffectPool {
       sprite.alpha = Math.min(1, t * 7) * (1 - split);
     });
   }
-  override tick(ms: number): void { super.tick(ms); this.radiance.reduced=this.reduced;this.radiance.tick(ms);this.advanceCard(ms); }
-  override clear(): void { super.clear(); this.radiance.clear();this.active = null; this.cardRoot.visible = false; }
+  override tick(ms: number): void { super.tick(ms); this.barter.tick(ms);this.eye.tick(ms);this.radiance.reduced=this.reduced;this.radiance.tick(ms);this.advanceCard(ms); }
+  override clear(): void { super.clear(); this.barter.clear();this.eye.clear();this.radiance.clear();this.active = null; this.cardRoot.visible = false; }
   override destroy(): void {
     this.disposedFaces = true; this.clear(); this.cardRoot.destroy({ children: true });
     for (const id of [...this.faces.keys()]) this.releaseFace(id);
-    this.radiance.destroy();super.destroy();
+    this.barter.destroy();this.eye.destroy();this.radiance.destroy();super.destroy();
   }
+  get additionResources(){return {barter:this.barter.snapshot,eye:this.eye.snapshot};}
   get radianceResources(){return this.radiance.snapshot;}
   get cardResources() { return { faces: this.faces.size, pending: this.jobs.size, active: !!this.active }; }
 }

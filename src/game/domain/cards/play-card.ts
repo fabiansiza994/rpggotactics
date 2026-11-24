@@ -1,3 +1,4 @@
+import { exchangeHandCard } from './hand-trade';
 import { missingRivalZone } from './rival-zones';
 import { resurrectionChoices } from './resurrection';
 import { triggerCardCurse } from './cancellation';
@@ -40,13 +41,14 @@ export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = fa
     return fail('CASTER_INCAPACITATED', 'The hero cannot act.') as Playability;
   }
   if (def.responseOnly) return fail('INVALID_TARGET', 'Esta carta solo se utiliza en una ventana de respuesta.') as Playability;
+  if (def.effects.some(fx=>fx.type==='INSPECT_TOP' && (ctx.state.pileCounts?.deck ?? ctx.state.player.deck.length)<fx.count)) return fail('INVALID_TARGET','Necesitas al menos dos cartas en el mazo.') as Playability;
   const missingZone = missingRivalZone(ctx.state, def);
   if (missingZone) return fail('RIVAL_ZONE_UNAVAILABLE', `Este encuentro no dispone de ${missingZone === 'HAND' ? 'mano' : 'mazo'} rival. Esta carta necesita instancias reales en esa zona.`) as Playability;
   def=worldFrozenCard(def,caster);
   if(def.id==='absolute_zero'&&worldFrozen(caster))return fail('INVALID_TARGET','Mundo Gélido ya está activo: no se renueva ni se consume otra copia.') as Playability;
   if(def.category==='ATTACK'&&caster.statuses.some(s=>s.id==='SNOW_WAR'))return fail('CASTER_INCAPACITATED','Guerra de Nieve impide jugar otras cartas ATTACK; puedes usar las demás categorías.') as Playability;
   if(caster.statuses.some(s=>s.id==='GLACIER_CLAW') && allCardEffects(def).some(fx=>['STEP_CASTER','ICE_WALK','CHARGE_CASTER','TELEPORT_CASTER','SWAP_WITH_TARGET','SWAP_PAIR'].includes(fx.type)))return fail('MOVEMENT_PREVENTED','Garra del Glaciar impide desplazamientos voluntarios; todavía puedes atacar y jugar otras cartas.') as Playability;
-  if (def.heroId && def.heroId !== caster.defId) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as Playability;
+  if (def.heroId && def.heroId !== caster.defId && !(card.traded && card.controllerId === caster.id)) return fail('WRONG_CLASS', 'Esta carta pertenece a otra clase.') as Playability;
   const formRequirement = checkFormRequirement(caster, def.requiredForms, ctx.content);
   if (!formRequirement.ok) return formRequirement as Playability;
   for (const fx of allCardEffects(def)) {
@@ -77,6 +79,7 @@ export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = fa
     return fail('UNIQUE_ALREADY_USED', 'Esta carta Única ya se usó en este combate.') as Playability;
   if (def.focusCost && (caster.focus?.value ?? 0) < def.focusCost)
     return fail('NOT_ENOUGH_FOCUS', `Necesita ${def.focusCost} de Concentración.`) as Playability;
+  if (def.handTrade && (ctx.state.player.hand.length<2 || (ctx.state.duel?.other.hand.length ?? ctx.state.pileCounts?.opponentHand ?? 0)<1)) return fail('INVALID_TARGET','Ambos jugadores necesitan una carta real para intercambiar.') as Playability;
   if (def.discardHandCost && ctx.state.player.hand.length <= 1) return fail('INVALID_TARGET', 'Necesitas otra carta propia para pagar el descarte.') as Playability;
   if (def.effects.some(effect => effect.type === 'SUMMON_SCORPION_SACRIFICE') && (caster.hp < 2 || summonUsage(ctx.state, caster.id) + 2 > summonCapacityOf(ctx.content, caster)))
     return fail('INVALID_TARGET', 'El sacrificio necesita al menos 2 HP y dos puntos de capacidad disponibles.') as Playability;
@@ -135,9 +138,11 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   const { card, def, caster } = check;
   const found = searchUid && def.deckSearch ? ctx.state.player.deck.find(c => c.uid === searchUid) : undefined;
   // Eco del Altar: the chosen uid must be a ritual piece in THIS player's real discard pile now.
+  const tradeCard = searchUid && def.handTrade ? ctx.state.player.hand.find(copy=>copy.uid===searchUid && copy.uid!==cardUid) : undefined;
+  if (def.handTrade && (!tradeCard || !ctx.state.duel?.other.hand.length)) return fail('INVALID_TARGET','Elige otra carta de tu mano; el rival necesita una mano real.');
   const fromHandCost = searchUid && def.discardHandCost ? ctx.state.player.hand.find(copy => copy.uid === searchUid && copy.uid !== cardUid) : undefined;
   const fromDiscard = searchUid && def.discardSearch ? discardSearchChoices(ctx.state, ctx.content, def).find(c => c.uid === searchUid) : undefined;
-  if (def.discardHandCost ? !fromHandCost : def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSearch(found, ctx.content, caster.defId,def) : searchUid !== undefined)
+  if (def.handTrade ? !tradeCard : def.discardHandCost ? !fromHandCost : def.discardSearch ? !fromDiscard : def.deckSearch ? !found || !eligibleSearch(found, ctx.content, caster.defId,def) : searchUid !== undefined)
     return fail('INVALID_TARGET', def.discardSearch ? 'Elige una instancia recuperable de tu cementerio.' : 'Elige una invocación válida del mazo.');
 
   if (wallOrientation !== undefined && (!['ice_wall','glacial_field'].includes(def.id) || !['HORIZONTAL','VERTICAL'].includes(wallOrientation))) return fail('INVALID_TARGET', 'Orientación no permitida.');
@@ -209,6 +214,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     });
   }
 
+  if (tradeCard) exchangeHandCard(ctx,tradeCard.uid);
   if (found) {
     player.deck = player.deck.filter(c => c.uid !== found.uid);
     delete found.publicDiscard;

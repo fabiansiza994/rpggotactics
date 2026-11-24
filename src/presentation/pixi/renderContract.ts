@@ -28,6 +28,7 @@ export const TILE = 96;
 export const FOOT_Y = 25;
 
 export const CHARACTER_SPECS: Record<string, SpriteSpec> = {
+ dark_skeleton:{anchorX:.5,anchorY:.94,topY:.045,height:.92,footprint:.22},
  dark_abyssal_minotaur:{anchorX:.5,anchorY:.9,topY:.055,height:1.5,footprint:.4},
  dark_serpent_king:{anchorX:.5,anchorY:.9,topY:.055,height:1.05,footprint:.34},
  dark_scorpion_king:{anchorX:.5,anchorY:.9,topY:.055,height:1.1,footprint:.4},
