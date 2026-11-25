@@ -1,6 +1,7 @@
 import{StoryStateChanged,publicStoryEncounters,versionedSnapshot,verifyVersionedStory,settleVersionedStory,versionedStoryTransitionPhase,versionedProofDigest,consumedStoryProof}from'./winterCampaign';
 import {loadWinterPlayer,publicLegacyCampaigns,verifyLegacyCampaign,legacySnapshot,legacySettle,legacyProofDigest,consumedLegacyProof,storyTransitionPhase} from './winterCampaign';
 import { contentTransition } from './contentTransition';
+import { maintenanceState, cancelWaitingAdmission } from './maintenance';
 import {profileAvatarRoute} from './profileAvatar';
 import { creditedRewards, victoryCrystalStatements, type CrystalReward } from './economy';
 import { walletView } from './store';
@@ -270,6 +271,11 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   const path = url.pathname.replace(/\/+$/, '');
   if (!path.startsWith('/api/tactics')) return error(404, 'NOT_FOUND', 'Not found');
   if (path === '/api/tactics/health') return json({ ok: true });
+  if (path === '/api/tactics/availability' && request.method === 'GET') {
+    const response = json(maintenanceState(env));
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    return response;
+  }
 
   const content = releasedContent(deps.content, env);
   deps = { ...deps, content };
@@ -282,7 +288,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   if (publicPayment) return publicPayment;
   const caller = await resolveCaller(request, env.DB, now);
   const transition = contentTransition(request, env, caller?.username);
-  if (transition) return transition;
+  if (transition) { if (caller) await cancelWaitingAdmission(request, env, caller.userId); return transition; }
   if (!caller) return error(401, 'UNAUTHENTICATED', 'Sesión inválida o vencida.');
   const paypal = await paypalRoute(request, env, caller.userId, now);
   if (paypal) return paypal;

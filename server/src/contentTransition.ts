@@ -1,9 +1,12 @@
 import {CONTENT_RELEASE,isSupportedContentRelease} from '../../src/game/pvp/content-release';
 import { error } from './http';
 import type { Env } from './db';
+import { maintenanceGate } from './maintenance';
 
 /** Reversible gate; never deletes inventory, downgrades a room or changes a combat rule. */
-export function contentTransition(request: Request, env: Env, username?: string): Response | null {
+export function contentTransition(request: Request, env: Env, _username?: string): Response | null {
+  // Identity is retained for call-site compatibility; no QA identity bypasses admission closures.
+  void _username;
   // Reconnect only: these endpoints validate existing room membership/tickets themselves.
   // They never create/ready a match or grant a Thunder card. Keep active games recoverable.
   const url = new URL(request.url);
@@ -11,12 +14,8 @@ export function contentTransition(request: Request, env: Env, username?: string)
   // Payment orders use their own authenticated/versioned protocol, independent of card rules.
   const independentPayment = path.startsWith('/api/tactics/store/paypal/');
   const activeRoom = ['/api/tactics/pvp/connect','/api/tactics/pvp/socket','/api/tactics/pvp/state','/api/tactics/pvp/active','/api/tactics/pvp/leave'].includes(path);
-  const admission = ['/api/tactics/pvp/create','/api/tactics/pvp/join','/api/tactics/pvp/ready','/api/tactics/pvp/rematch'].includes(path) || /^\/api\/tactics\/ranked\/(queue|bot)/.test(path);
-  if(env.CONTENT_RELEASE_DRAIN === '1' && admission) return error(503,'CONTENT_DRAINING','No se inician partidas nuevas durante esta actualización. Tu partida activa continúa.');
-  const reconnect = ['/api/tactics/pvp/connect', '/api/tactics/pvp/socket'].includes(new URL(request.url).pathname);
-  const qa = !!username && (env.RELEASE2_QA_USERS ?? '').split(',').map(s => s.trim()).filter(Boolean).includes(username);
-  if (env.RELEASE2_MAINTENANCE === '1' && !reconnect && !qa)
-    return error(503, 'CONTENT_MAINTENANCE', 'Actualización breve en curso. Conserva tu sesión y reintenta en unos momentos.');
+  const maintenance = maintenanceGate(request, env);
+  if (maintenance) return maintenance;
   if (env.RELEASE2_CLIENT_REQUIRED === '1' && !independentPayment && url.searchParams.get('clientRelease') !== CONTENT_RELEASE && !(activeRoom && isSupportedContentRelease(url.searchParams.get('clientRelease'))))
     return error(426, 'CLIENT_UPDATE_REQUIRED', 'Actualiza o recarga el juego antes de continuar. Tu cuenta y tus cartas se conservan.');
   return null;

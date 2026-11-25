@@ -33,6 +33,17 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     }
   }, []);
 
+  useEffect(() => {
+    const close = (event: Event) => {
+      if (!(event as CustomEvent<{ admissionsBlocked?: boolean }>).detail?.admissionsBlocked) return;
+      generation.current++; accepting.current = null; setBusy(false); setQueue({ state: 'IDLE' });
+      setError('Actualización en curso. La búsqueda se ha detenido.');
+      void rankedApi.cancel();
+    };
+    window.addEventListener('rpggo-maintenance', close);
+    return () => window.removeEventListener('rpggo-maintenance', close);
+  }, []);
+
   const refresh = useCallback(async () => {
     const epoch = generation.current;
     const r = await rankedApi.me();

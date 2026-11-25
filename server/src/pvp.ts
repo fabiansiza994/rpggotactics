@@ -736,7 +736,7 @@ export class PvPMatchRoom {
       if (this.room && !canRunRoomRules(this.room))
         return response({error:{code:"ROOM_RULES_UNAVAILABLE",message:"La partida necesita su versión original del servidor. Su estado se conserva; no inicies otra para reemplazarla."}},503);
       if (path === "/socket") return this.socket(request);
-      if (this.env.CONTENT_RELEASE_DRAIN === "1" && ["/create","/bot-create","/ranked-create","/join","/ready","/rematch"].includes(path))
+      if ((this.env.CONTENT_RELEASE_DRAIN === "1" || this.env.RELEASE2_MAINTENANCE === "1") && ["/create","/bot-create","/ranked-create","/join","/ready","/rematch"].includes(path))
         return response({error:{code:"CONTENT_DRAINING",message:"Las partidas activas continúan; no se inician nuevas."}},503);
       const id = Number(request.headers.get("X-Pvp-User"));
       if (!Number.isSafeInteger(id) || id <= 0)
