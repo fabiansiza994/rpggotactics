@@ -227,7 +227,8 @@ export const PRIMARY_MARKET_EXPANSION: Readonly<Record<string,string>> = {
   "glacial_storm": "antarctic_magic",
   "glacier_claw": "antarctic_magic",
   "snow_soldier": "antarctic_magic",
-  "snow_war": "antarctic_magic"
+  "snow_war": "antarctic_magic",
+  "winter_onset": "antarctic_magic"
 };
 export const primaryMarketExpansionId = (cardId:string):string|undefined => PRIMARY_MARKET_EXPANSION[cardId];
 export const primaryMarketCardIds = (id:string):string[] => Object.keys(PRIMARY_MARKET_EXPANSION).filter(cardId=>PRIMARY_MARKET_EXPANSION[cardId]===id);

@@ -54,6 +54,8 @@ export function compileTimeline(
       add(start + (reduced ? 40 : 260), 'event', event, reduced ? 100 : 620, 'curse-smoke');
       add(start + (reduced ? 140 : 800), 'event', event, reduced ? 80 : 350, 'curse-beam');
       cursor = effectAt = start + total;
+    } else if(event.type==='WINTER_PULSE'){
+      const start=Math.max(cursor,recoveryUntil);add(start,'event',event,reduced?60:240,'winter-gust');cursor=effectAt=start+(reduced?60:240);
     } else if(event.type==='SNOWBALL_FIRED'){
       const start=Math.max(cursor,recoveryUntil,effectAt),prepare=reduced?40:180,travel=reduced?100:420;
       add(start,'event',event,prepare,'snowball');add(start+prepare,'projectile',event,travel,'snowball');

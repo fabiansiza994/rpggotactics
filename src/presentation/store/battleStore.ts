@@ -1,3 +1,4 @@
+import {legacyBattle} from '../../game/compat/pre-winter-b0e18cc8.js';
 import {storedDeckRules,type DeckFormat} from '../../game/collection/deck-formats';
 import {drawRitual,classifyDraws} from '../cards/drawRitual';
 import { pairTargets, planCardSelection, type PairSelection } from '../input/pairSelection';
@@ -204,6 +205,7 @@ interface BattleStore {
    */
   run: RunState | null;
   /** Every champion's own World 1 («El Ascenso») run: progress never moves between champions. */
+  legacyCampaigns:NonNullable<CloudState['legacyCampaigns']>;
   runs: Record<string, RunState | null>;
   /** Runs of the worlds after World 1: campaign id → champion → run (World 1 stays in `runs`). */
   worldRuns: Record<string, Record<string, RunState | null>>;
@@ -590,6 +592,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     // Older servers only send the Mage run (and no worlds).
     const runs = data.runs ?? { [defaultCampaignHero(ASCENT_CAMPAIGN)]: data.run };
     set({
+      legacyCampaigns:data.legacyCampaigns??{},
       qaSummonerCampaign: data.qaSummonerCampaign === true,
       warriorAvailable: data.warriorAvailable === true,
       world2Available: data.world2Available === true,
@@ -618,7 +621,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
   /** Back to this device's guest progress (signed out, or the account could not be loaded). */
   function restoreGuest(account: AccountState): void {
     const runs = loadCampaigns();
-    set({ account, qaSummonerCampaign: false, warriorAvailable: false, world2Available: false, archerCampaignAvailable: false, cloudWorlds: null, championsAvailable: null, guestGate: false, campaignHeroId: defaultCampaignHero(ASCENT_CAMPAIGN), campaignWorldId: 'world_1', runs, worldRuns: loadWorldRuns(), worldHistory: loadWorldHistory(), run: runs[defaultCampaignHero(ASCENT_CAMPAIGN)] ?? null, skirmish: null, profile: bootProfile(runs), cloud: IDLE });
+    set({ account, legacyCampaigns:{}, qaSummonerCampaign: false, warriorAvailable: false, world2Available: false, archerCampaignAvailable: false, cloudWorlds: null, championsAvailable: null, guestGate: false, campaignHeroId: defaultCampaignHero(ASCENT_CAMPAIGN), campaignWorldId: 'world_1', runs, worldRuns: loadWorldRuns(), worldHistory: loadWorldHistory(), run: runs[defaultCampaignHero(ASCENT_CAMPAIGN)] ?? null, skirmish: null, profile: bootProfile(runs), cloud: IDLE });
     retryAction = null;
     keepCampaignHeroUsable();
   }
@@ -723,6 +726,11 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       if (pending && run?.seed === pending.runSeed) {
         if (run.completedEncounterIds.includes(pending.proof.encounterId)) clearVictory(next.username);
         else if (run.status === 'IN_BATTLE' && run.currentEncounterId === pending.proof.encounterId) {
+          const legacy=get().legacyCampaigns[`${run.campaignId}:${run.heroId}`];
+          if(legacy&&legacy.runSeed===run.seed&&legacy.encounterId===run.currentEncounterId){
+            void cloudStep('Confirmar victoria pendiente',(t)=>tacticsApi.victory(t,pending.proof,run.heroId,run.campaignId),()=>clearVictory(next.username));
+            return;
+          }
           const engine = new GameEngine(currentEncounter(campaignForRun(run), run), campaignBattleContent(DEFAULT_CONTENT, result.data.profile!, run, DECK_RULES), pending.proof.seed);
           const accepted = pending.proof.commands.every((command) => engine.dispatch(command).ok);
           if (accepted && engine.state.outcome?.result === 'WON') {
@@ -928,6 +936,13 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     set({ mode: 'CAMPAIGN' });
     // Fresh shuffle every time. Reward offers stay tied to the run (battleSeed), not to this seed.
     // Same content the server replays a victory with (campaignBattleContent).
+    const legacy=get().account.status==='READY'?get().legacyCampaigns[`${run.campaignId}:${run.heroId}`]:undefined;
+    if(legacy&&legacy.runSeed===run.seed&&legacy.encounterId===run.currentEncounterId){
+      if(!legacy.deckPinned){set({notice:'Encuentro anterior pendiente: selecciona un mazo legal de 40 cartas con las reglas anteriores (Mundo Gélido máximo 2, Llamado del Invierno máximo 1, sin Inicio de la Tormenta). No se han modificado tus mazos.'});return false;}
+      begin(legacyBattle(legacy.profile,run,freshBattleSeed()));
+      set({notice:'Este encuentro pendiente conserva el mazo y las reglas registrados hasta su primera victoria verificada.'});return true;
+
+    }
     const content = campaignBattleContent(DEFAULT_CONTENT, get().profile, run, DECK_RULES);
     if (shapeshifterQaEnabled && run.heroId === 'shapeshifter' && qaOpening() === 'guaranteed' && !content.heroes.shapeshifter!.deck.some(e => e.count > 0 && content.cards[e.cardId]?.effects.some(f => f.type === 'TRANSFORM'))) {
       set({notice:'QA: añade una transformación al mazo o usa apertura normal.'}); return false;
@@ -1037,6 +1052,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     notice: null,
     log: [],
     run: runIn({ runs: bootRuns, worldRuns: bootWorldRuns }, bootHero, campaignOfWorld(bootWorldId).id),
+    legacyCampaigns:{},
     runs: bootRuns,
     worldRuns: bootWorldRuns,
     worldHistory: loadWorldHistory(),

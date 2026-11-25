@@ -1,3 +1,6 @@
+import {readFileSync} from 'node:fs';
+import {handle as oldHandle} from './fixtures/pre-winter-handler.js';
+const storyMigration=readFileSync(new URL('../server/migrations/0035_tactics_story_transition.sql',import.meta.url),'utf8');
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   ASCENT_CAMPAIGN,
@@ -31,6 +34,7 @@ type State = {
 
 let db: ReturnType<typeof memoryD1>;
 let released = true;
+let handler=handle;
 const order = encounterOrder(ASCENT_CAMPAIGN).map((e) => e.id);
 
 async function call(token: string, method: string, path: string, body?: unknown) {
@@ -40,7 +44,7 @@ async function call(token: string, method: string, path: string, body?: unknown)
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const deps = { content: DEFAULT_CONTENT, now: () => 1_000_000, seed: () => 7, summonerCampaign: released };
-  const res = await handle(req, { DB: db }, deps);
+  const res = await handler(req, { DB: db }, deps);
   return { status: res.status, body: (await res.json()) as State };
 }
 
@@ -60,10 +64,12 @@ function winProof(state: State, heroId: string): VictoryProof {
 beforeEach(() => {
   db = memoryD1({ legacyProfiles: true });
   released = true;
+  handler=handle;
 });
 
 describe('server: one run per champion', () => {
-  it('preserves Mage writes by the previous Worker after the migration copy', async () => {
+  it('before sealing preserves previous-Worker Mage writes so the cohort captures the effective encounter', async () => {
+    db=memoryD1({legacyProfiles:true,storyTransition:false});handler=oldHandle;
     const { id, token } = addAccount(db, 'rollout');
     await call(token, 'POST', '/profile', {});
     await call(token, 'POST', '/campaign/start', {});
@@ -73,6 +79,7 @@ describe('server: one run per champion', () => {
     const restored = await call(token, 'GET', '/state');
     expect(restored.body.run).toEqual(newer);
     expect(restored.body.runs!.mage).toEqual(newer);
+    db.sql.exec(storyMigration);db.sql.exec("UPDATE tactics_winter_transition SET phase='ACTIVE'");handler=handle;expect((await call(token,'GET','/state')).body.runs!.mage).toEqual(newer);
   });
   it('Summoner start is refused while the Summoner campaign is locked; the Mage is unaffected', async () => {
     released = false;
@@ -143,6 +150,7 @@ describe('server: one run per champion', () => {
   }, 60000);
 
   it('migration 0011: an existing Mage run is kept as the Mage run and mirrored for rollback', async () => {
+    db=memoryD1({legacyProfiles:true,storyTransition:false});handler=oldHandle;
     const { id, token } = addAccount(db, 'old');
     await call(token, 'POST', '/profile', {});
     const legacy = { ...createRun(ASCENT_CAMPAIGN, DEFAULT_CONTENT, 5), currentEncounterId: order[3]!, completedEncounterIds: order.slice(0, 3) };
@@ -151,6 +159,7 @@ describe('server: one run per champion', () => {
     db.sql.prepare('INSERT INTO tactics_campaign_runs (user_id, campaign_id, run_json, save_version, updated_at) VALUES (?, ?, ?, 1, 0)').run(id, 'ascent', serializeRun(legacy));
     db.sql.exec(`INSERT OR IGNORE INTO tactics_hero_campaign_runs (user_id, campaign_id, hero_id, run_json, save_version, updated_at)
       SELECT user_id, campaign_id, 'mage', run_json, save_version, updated_at FROM tactics_campaign_runs;`);
+    db.sql.exec(storyMigration);db.sql.exec("UPDATE tactics_winter_transition SET phase='ACTIVE'");handler=handle;
     const state = await call(token, 'GET', '/state');
     expect(state.body.runs).toEqual({ mage: legacy, summoner: null, warrior: null });
     // Progress keeps being mirrored into the old table for the Mage.
@@ -160,11 +169,13 @@ describe('server: one run per champion', () => {
   }, 60000);
 
   it('a row stored under the wrong champion is never served as that champion\'s run', async () => {
+    db=memoryD1({legacyProfiles:true,storyTransition:false});handler=oldHandle;
     const { id, token } = addAccount(db, 'ana');
     await call(token, 'POST', '/profile', {});
     db.sql
       .prepare("INSERT INTO tactics_hero_campaign_runs (user_id, campaign_id, hero_id, run_json, save_version, updated_at) VALUES (?, 'ascent', 'summoner', ?, 1, 0)")
       .run(id, serializeRun(createRun(ASCENT_CAMPAIGN, DEFAULT_CONTENT, 2, 'mage')));
+    db.sql.exec(storyMigration);db.sql.exec("UPDATE tactics_winter_transition SET phase='ACTIVE'");handler=handle;
     expect((await call(token, 'GET', '/state')).body.runs!.summoner).toBeNull();
   });
 

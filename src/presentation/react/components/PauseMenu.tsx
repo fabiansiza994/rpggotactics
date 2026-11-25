@@ -6,10 +6,10 @@ import {useBattleStore} from '../../store/battleStore';
 import '../../../styles/pause-menu.css';
 import {readDialogueSettings,writeDialogueSettings} from '../../dialogue/dialogueSession';
 
-export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange}:{busy?:boolean;online?:boolean;onRestart?:()=>void;onExit:()=>void;onOpenChange?:(open:boolean)=>void}) {
+export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange,onSurrender,ranked=false}:{busy?:boolean;online?:boolean;onRestart?:()=>void;onExit:()=>void;onOpenChange?:(open:boolean)=>void;onSurrender?:()=>void;ranked?:boolean}) {
  const dialog=useRef<HTMLDialogElement>(null);
  const trigger=useRef<HTMLButtonElement>(null);
- const [view,setView]=useState<'main'|'controls'|'restart'|'exit'|'game'>('main');
+ const [view,setView]=useState<'main'|'controls'|'restart'|'exit'|'game'|'surrender'>('main');
  const [dialogue,setDialogue]=useState(readDialogueSettings);
  const [drawMode,setDrawMode]=useState(readDrawMode);
  const dialogueKey=online?'pvp':'campaign';
@@ -42,14 +42,15 @@ export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange
     <button onClick={()=>setView('game')}>Configuración · Juego</button>
     <button onClick={()=>{const next=drawMode==='interactive'?'automatic':'interactive';writeDrawMode(next);setDrawMode(next);drawRitual.complete();}}>Robo de cartas: {drawMode==='interactive'?'Tocar o deslizar':'Automático'}</button>
     <button aria-pressed={dialogue[dialogueKey]} onClick={toggleDialogue}>{online?'Diálogos PvP':'Diálogos de campaña'}: {dialogue[dialogueKey]?'Sí':'No'}</button>
+    {onSurrender&&<button className="pause-caution surrender-action" onClick={()=>setView('surrender')}>Rendirse</button>}
     <button className="pause-caution" onClick={()=>setView('exit')}>Volver al menú</button>
    </div>:view==='game'?<div><CombatImmersionSettings/><button onClick={()=>setView('main')}>Volver a pausa</button></div>:view==='controls'?<div className="pause-controls">
     <h3>Controles</h3><p>Clic en casilla azul: mover · Clic en carta (o 1–9) y luego en objetivo · Clic derecho / Esc: cancelar.</p>
     <p>Táctil: toca una carta y una casilla para previsualizar. Toca de nuevo el objetivo para confirmar. Toca una casilla azul para mover.</p>
     <p>E: finalizar turno · Esc sin selección: pausa.</p><button onClick={()=>setView('main')}>Volver a pausa</button>
    </div>:<div className="pause-confirm" role="group" aria-label="Confirmar acción">
-    <p>{view==='restart'?'¿Quieres reiniciar este combate? Perderás el progreso del encuentro actual.':online?'¿Quieres salir? Se aplican las reglas actuales de abandono de la partida online.':'¿Quieres volver al menú? El combate actual se cerrará según las reglas de campaña existentes.'}</p>
-    <button className="pause-caution" onClick={()=>{const action=view==='restart'?onRestart:onExit;close();action?.();}}>{view==='restart'?'Sí, reiniciar':'Sí, volver al menú'}</button>
+    <p>{view==='surrender'?`Rendirte cuenta como derrota. ${ranked?'Se aplicarán las pérdidas y límites Ranked vigentes; no recibirás recompensas de victoria.':'La partida finalizará según las reglas actuales del duelo.'}`:view==='restart'?'¿Quieres reiniciar este combate? Perderás el progreso del encuentro actual.':online?'¿Quieres salir? Se aplican las reglas actuales de abandono de la partida online.':'¿Quieres volver al menú? El combate actual se cerrará según las reglas de campaña existentes.'}</p>
+    <button className="pause-caution" onClick={()=>{const action=view==='surrender'?onSurrender:view==='restart'?onRestart:onExit;close();action?.();}}>{view==='surrender'?'Sí, rendirme':view==='restart'?'Sí, reiniciar':'Sí, volver al menú'}</button>
     <button onClick={()=>setView('main')}>Cancelar</button>
    </div>}
   </dialog>

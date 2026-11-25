@@ -1,3 +1,7 @@
+import {BattleFrame} from '../battle/BattleFrame';
+import {BattleRail} from '../battle/BattleRails';
+import {OpponentChampion} from '../battle/OpponentChampion';
+import {TacticalOverview} from '../react/components/TacticalOverview';
 import {BattlePileBank} from "../battle/BattlePileZones";
 import {roomConnectionRelease} from '../../game/pvp/content-release';
 import { navigatePlay } from "../play/navigation";
@@ -5,11 +9,8 @@ import { PvpVersus } from "./PvpVersus";import {
   BOT_POLICY_VERSION,
 } from "../../game/ai/ranked-bot-policy";
 import { PvpTerrainInfo } from "./PvpTerrainInfo";
-import { altarSlots } from "../../game";
 import { PvpTurnSummary } from "./PvpTurnSummary";
 import { drawRitual, classifyDraws } from "../cards/drawRitual";
-import { isActionableTile } from "../input/aim";
-import { CardActivationLabel } from "../react/components/CardActivationLabel";
 import { contentReleaseUrl } from "../cloud/contentRelease";
 import { AnimatedReward } from "../results/ResultProgress";
 import { BattleResultPresentation } from "../results/BattleResultPresentation";
@@ -35,7 +36,7 @@ import { useBattleStore } from "../store/battleStore";
 import { presentationBus } from "../events/presentationBus";
 import { BoardView } from "../react/components/BoardView";
 import { BattleScenery } from "../react/components/BattleScenery";
-import { HeroPanel, HandBar } from "../react/components/Hud";
+import { HeroPanel, HandBar, CombatLog } from "../react/components/Hud";
 import { describeEvent, rememberUnits, ERROR_LABEL } from "../react/format";
 import "../../styles/pvp.css";
 import { PvpLobby, lobbyDeckId } from "./PvpLobby";
@@ -164,7 +165,6 @@ export function PvpScreen({
     [error, setError] = useState(""),
     [network, setNetwork] = useState("Conectando…"),
     [busy, setBusy] = useState(false),
-    [confirm, setConfirm] = useState(false),
     [history, setHistory] = useState(false),
     [queueKind, setQueueKind] = useState<QueueKind>(() =>
       new URLSearchParams(location.search).get("queue") === "ranked"
@@ -564,7 +564,6 @@ export function PvpScreen({
   function backToRanked() {
     setEntryPending(false);
     setCode("");
-    setConfirm(false);
     setHistory(false);
     setQueueKind(snapshot?.ranked || snapshot?.bot ? "RANKED" : "CASUAL");
     drawRitual.reset();
@@ -593,11 +592,7 @@ export function PvpScreen({
     });
     void ranked.refresh();
   }
-  const game = snapshot?.game,
-    engine = useBattleStore((s) => s.engine),
-    aim = useBattleStore((s) => s.aim);
-  const selectedCardUid = useBattleStore((s) => s.selectedCardUid);
-  const pairSelection = useBattleStore((s) => s.pairSelection);
+  const game = snapshot?.game, engine = useBattleStore((s) => s.engine);
   const playback = useBattleStore((s) => s.playbackBusy || s.introLocked);
   const presented = useMechanismPlayback((s) => s.state);
   const displayGame =
@@ -613,8 +608,8 @@ export function PvpScreen({
       <div
         className={`pvp-match-layout ${matchFriend ? "has-friend-chat" : ""}`}
       >
-        <div
-          className="battle pvp-battle"
+        <BattleFrame
+          className="pvp-battle"
           data-pvp-mode={snapshot.mode}
           data-pvp-map={snapshot.mapId ?? "classic"}
           data-theme="duel"
@@ -623,13 +618,11 @@ export function PvpScreen({
           data-action={busy ? "resolving" : "normal"}
         >
           <BattleScenery theme="duel" />
-          <PvpTerrainInfo
-            name={pvpMap(snapshot.mapId ?? "classic", snapshot.mode).name}
-            state={game}
-          />
+          <BattleRail slot="terrain"><PvpTerrainInfo name={pvpMap(snapshot.mapId ?? "classic", snapshot.mode).name} state={game} content={engine.content}/></BattleRail>
+          <BattleRail slot="map"><TacticalOverview state={displayGame??game}/></BattleRail>
           <header className="top-bar">
-            <HeroPanel state={displayGame ?? game} engine={engine} finished={!!snapshot.result} />
-            <div className="panel pvp-turn">
+            <BattleRail slot="hero"><HeroPanel state={displayGame ?? game} engine={engine} finished={!!snapshot.result} /></BattleRail>
+            <BattleRail slot="header"><div className="panel pvp-turn">
               {game.dominion && (
                 <div
                   className="dominion-score"
@@ -680,7 +673,7 @@ export function PvpScreen({
                     ? "Resolviendo…"
                     : game.phase === "PLAYER"
                       ? "Tu turno"
-                      : "Esperando al rival"
+                      : "Turno rival"
                 }
                 round={displayGame?.round ?? game.round}
                 network={network}
@@ -691,36 +684,12 @@ export function PvpScreen({
                 }
                 validating={busy}
               />
-              <button onClick={() => setConfirm(true)}>Rendirse</button>
-            </div>
-            <div className="panel pvp-rival">
-              <strong>{snapshot.bot ? "Rival" : snapshot.members[1 - snapshot.seat]?.name}</strong>
-              {game.units.some(
-                (u) =>
-                  u.kind === "HERO" &&
-                  u.id !== game.player.heroId &&
-                  altarSlots(DEFAULT_CONTENT, u.defId) > 0,
-              ) && (
-                <small
-                  className="pvp-rival-altar"
-                  aria-label="Información pública del altar rival"
-                >
-                  Altar del rival: {game.pileCounts?.opponentAltar ?? 0}{" "}
-                  selladas · información pública
-                </small>
-              )}
-              <span>
-                {snapshot.members[1 - snapshot.seat]?.heroId} ·{" "}
-                {game.units.find(
-                  (u) => u.kind === "HERO" && u.faction === "ENEMY",
-                )?.hp ?? 0}{" "}
-                HP
-              </span>
-            </div>
+            </div></BattleRail>
+            <BattleRail slot="enemy"><OpponentChampion state={displayGame??game} content={engine.content}/></BattleRail>
           </header>
           <main className="battle-main">
             <div className="board-column">
-              <BattlePileBank state={game} content={engine.content} opponent/>
+              <BattleRail slot="piles"><BattlePileBank state={game} content={engine.content} opponent/></BattleRail>
               <BoardView
                 pvpEntry={entryPending}
                 finished={!!snapshot.result && !playback}
@@ -732,10 +701,11 @@ export function PvpScreen({
                   )[snapshot.seat]
                 }
               />
-            <BattlePileBank state={game} content={engine.content}/>
+            <BattleRail slot="piles"><BattlePileBank state={game} content={engine.content}/></BattleRail>
             </div>
           </main>
-          <PauseMenu online onExit={() => void exit()} />
+          <BattleRail slot="log"><CombatLog/></BattleRail>
+          <BattleRail slot="pause"><PauseMenu online onExit={() => void exit()} onSurrender={!snapshot.result&&network==='Conectado'?()=>socket.current?.send(JSON.stringify({type:'surrender'})):undefined} ranked={!!snapshot.ranked}/></BattleRail>
           <PvpBanter
             content={DEFAULT_CONTENT}
             matchKey={pvpMatchKey(snapshot)}
@@ -777,30 +747,6 @@ export function PvpScreen({
                   </div>
                 ),
             )}
-          {aim?.source === "tap" && (
-            <div className="pvp-confirm">
-              <button
-                disabled={
-                  playback ||
-                  !isActionableTile(
-                    engine,
-                    selectedCardUid,
-                    aim.pos,
-                    pairSelection,
-                  )
-                }
-                onClick={() => useBattleStore.getState().confirmAim()}
-              >
-                <CardActivationLabel card={!!selectedCardUid} />
-              </button>
-              <button
-                className="cancel-action cancel-secondary"
-                onClick={() => useBattleStore.getState().cancelAim()}
-              >
-                Cancelar selección
-              </button>
-            </div>
-          )}
           {(network !== "Conectado" ||
             snapshot.members.some((m) => !m.connected)) &&
             !snapshot.result && (
@@ -934,31 +880,13 @@ export function PvpScreen({
               </div>
             </BattleResultPresentation>
           )}
-          {confirm && (
-            <div
-              className="pvp-overlay"
-              role="dialog"
-              aria-label="Confirmar rendición"
-            >
-              <h2>¿Rendirse?</h2>
-              <button
-                onClick={() => {
-                  socket.current?.send(JSON.stringify({ type: "surrender" }));
-                  setConfirm(false);
-                }}
-              >
-                Sí, rendirme
-              </button>
-              <button onClick={() => setConfirm(false)}>Seguir jugando</button>
-            </div>
-          )}
           {error && (
             <div className="pvp-error" role="alert">
               {error}
               <button onClick={() => setError("")}>Cerrar</button>
             </div>
           )}
-        </div>
+        </BattleFrame>
         {matchFriend && <MatchChat friend={matchFriend} />}
       </div>
     );

@@ -1,0 +1,6 @@
+{
+  "sourceCommit": "b0e18cc85604891e0fdedc44dab7d8447287174c",
+  "sha256": "d02668ab71a7d594f52564c84fbfc53b728bef0a8b886c86d259c7a402374158",
+  "rebuild": "node tools/build-winter-campaign-legacy.mjs --handler-test",
+  "scope": "TEST ONLY, no runtime import"
+}

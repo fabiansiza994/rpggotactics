@@ -1,3 +1,4 @@
+import {freezeSpellGround} from '../cards/ice-terrain';
 import {beastsEnabled} from '../combat/beasts-release';
 import {applyTurtleBite} from '../statuses/turtle-bite';
 import {ravenPursuit,weakenedPrey} from '../combat/raven';
@@ -464,6 +465,7 @@ export function actSummons(ctx: RuleContext, ownerId?: string, onlyUnitId?: stri
         def.damageType ?? (range > 1 ? 'ARCANE' : 'PHYSICAL'),
         snowball?'DIRECT_RANGED':range > 1 ? (depthEnabled(ctx) ? 'DIRECT_RANGED' : 'RANGED') : 'DIRECT_MELEE',
       );
+      if(snowball)freezeSpellGround(ctx,[adjacent.pos],unit.summon.ownerId);
       if(siege){
         drakeScorch(ctx,unit,adjacent.pos);
         if(bite.hpLost>0&&adjacent.kind!=='STRUCTURE'&&ctx.state.units.includes(adjacent))applyStatus(ctx,adjacent,'DRAKE_BURN',1,unit.id);

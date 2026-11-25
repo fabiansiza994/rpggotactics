@@ -142,3 +142,16 @@ export function idleDisplacement(
       total,
   };
 }
+
+/** The displacement is a constant plus sine/cosine terms. Precompute its spatial
+ * coefficients once per mesh; preserve the exact motion without per-vertex trig/weights. */
+export function prepareIdlePose(defId:string,base:Readonly<Float32Array>,width:number,height:number){
+ const coefficients=new Float64Array(base.length*3),out=new Float64Array(base.length);
+ for(let i=0;i<base.length;i+=2){
+  const a=idleDisplacement(defId,base[i]!/width,base[i+1]!/height,0);
+  const b=idleDisplacement(defId,base[i]!/width,base[i+1]!/height,Math.PI/2);
+  const c=idleDisplacement(defId,base[i]!/width,base[i+1]!/height,Math.PI);
+  for(const [j,key]of [[i,'x'],[i+1,'y']] as const){const constant=(a[key]+c[key])/2;coefficients[j*3]=constant;coefficients[j*3+1]=a[key]-constant;coefficients[j*3+2]=b[key]-constant;}
+ }
+ return (phase:number,enabled:boolean)=>{const cos=Math.cos(phase),sin=Math.sin(phase);for(let i=0;i<out.length;i++)out[i]=enabled?coefficients[i*3]!+coefficients[i*3+1]!*cos+coefficients[i*3+2]!*sin:0;return out;};
+}

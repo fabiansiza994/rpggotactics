@@ -1,0 +1,15 @@
+import {parseCommand,MAX_PROOF_COMMANDS} from './legacy-source/src/game/run/verify';
+import {GameEngine,DEFAULT_CONTENT,DECK_RULES,campaignBattleContent,currentEncounter,verifyVictory,settleVictory,CAMPAIGNS_BY_ID} from './legacy-source/src/game';
+import {releasedContent} from './legacy-source/server/src/ritualRelease';
+import flags from './legacy-release-flags.json';
+const LEGACY_CONTENT=releasedContent(DEFAULT_CONTENT,flags);
+export const LEGACY_RULES='pre-winter-b0e18cc8';
+const campaign=(run)=>CAMPAIGNS_BY_ID[run.campaignId];
+export function legacyBattle(profile,run,seed){const c=campaign(run);if(!c)throw Error('Unknown legacy campaign');return new GameEngine(currentEncounter(c,run),campaignBattleContent(LEGACY_CONTENT,profile,run,DECK_RULES),seed);}
+export function legacyVerify(profile,run,proof){const c=campaign(run);return c?verifyVictory(c,LEGACY_CONTENT,profile,run,proof,DECK_RULES):{ok:false,error:'Unknown legacy campaign'};}
+export function legacyDeck(profile,run){return campaignBattleContent(LEGACY_CONTENT,profile,run,DECK_RULES).heroes[run.heroId].deck;}
+
+export function legacySettle(profile,run,encounterId){const c=campaign(run);return c?settleVictory(c,LEGACY_CONTENT,profile,run,encounterId,DECK_RULES):{ok:false,error:'Unknown legacy campaign'};}
+
+export function legacyCanonicalProof(proof){if(!proof||typeof proof!=='object'||typeof proof.encounterId!=='string'||!Number.isInteger(proof.seed)||!Array.isArray(proof.commands)||proof.commands.length>MAX_PROOF_COMMANDS)return null;const commands=proof.commands.map(parseCommand);return commands.some(c=>c===null)?null:JSON.stringify({encounterId:proof.encounterId,seed:proof.seed>>>0,commands});}
+export function legacyRunFingerprint(run){return JSON.stringify({campaignId:run.campaignId,heroId:run.heroId,seed:run.seed,status:run.status,currentEncounterId:run.currentEncounterId,completedEncounterIds:run.completedEncounterIds,rewardOptions:run.rewardOptions,chosenRewards:run.chosenRewards,maxHpBonus:run.maxHpBonus});}

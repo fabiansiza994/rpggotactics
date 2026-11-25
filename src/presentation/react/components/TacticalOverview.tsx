@@ -1,10 +1,16 @@
+import {useEffect,useState} from 'react';
 import { PRESENTATION_CONTENT as DEFAULT_CONTENT } from '../../qa/shapeshifter/runtime';
 import { markedPrey } from '../../cards/tacticalPresentation';
 import { type GameState } from '../../../game';
 
+export function minimapCell(x:number,y:number,cols:number,rows:number,turn:number){return turn===1?{x:y,y:cols-1-x}:turn===2?{x:cols-1-x,y:rows-1-y}:turn===3?{x:rows-1-y,y:x}:{x,y};}
 /** Read-only board overview, derived from the existing scenario state. */
 export function TacticalOverview({ state }: { state: Readonly<GameState> }) {
   const { board, units, obstacles } = state;
+  const [turn,setTurn]=useState(()=>Number(document.querySelector('.board-host')?.getAttribute('data-camera-turn'))||0);
+  useEffect(()=>{const change=(event:Event)=>{const t=(event as CustomEvent<{turn:number}>).detail?.turn;if(typeof t==='number')setTurn(t);};window.addEventListener('battle-camera-change',change);return()=>window.removeEventListener('battle-camera-change',change);},[]);
+  const columns=turn%2?board.height:board.width;
+  const tiles=board.tiles.map((tile,index)=>({tile,index,visual:minimapCell(index%board.width,Math.floor(index/board.width),board.width,board.height,turn)})).sort((a,b)=>a.visual.y-b.visual.y||a.visual.x-b.visual.x);
   const pickupAt = new Map(
     state.collectibles.filter((c) => !c.collected).map((c) => [`${c.pos.x}:${c.pos.y}`, c]),
   );
@@ -26,12 +32,12 @@ export function TacticalOverview({ state }: { state: Readonly<GameState> }) {
 
   return (
     <aside className="tactical-overview" aria-label="Vista táctica del campo de batalla" role="img">
-      <div className="tactical-overview-title">Campo de batalla</div>
+      <div className="tactical-overview-title">Minimapa <small title="Orientación de la cámara; las coordenadas del combate no cambian">{turn*90}°</small></div>
       <div
         className="tactical-map"
-        style={{ gridTemplateColumns: `repeat(${board.width}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
-        {board.tiles.map((tile, index) => {
+        {tiles.map(({tile,index}) => {
           const x = index % board.width;
           const y = Math.floor(index / board.width);
           const unit = unitAt.get(`${x}:${y}`);

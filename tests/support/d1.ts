@@ -14,7 +14,7 @@ CREATE TABLE sessions (token TEXT PRIMARY KEY, username TEXT NOT NULL, created_a
  * unlocks (migration 0012 backfill: open roster) — for suites about other features.
  */
 export function memoryD1(
-  options: { legacyProfiles?: boolean; bots?: boolean } = {},
+  options: { legacyProfiles?: boolean; bots?: boolean; storyTransition?:boolean } = {},
 ): D1Database & { sql: DatabaseSync } {
   const sql = new DatabaseSync(":memory:");
   sql.exec("PRAGMA foreign_keys = ON;");
@@ -44,6 +44,7 @@ export function memoryD1(
         "utf8",
       ),
     );
+  if(options.storyTransition!==false){sql.exec(readFileSync(new URL('../../server/migrations/0035_tactics_story_transition.sql',import.meta.url),'utf8'));sql.exec("UPDATE tactics_winter_transition SET phase='ACTIVE' WHERE id=1");}
   if (options.bots)
     for (const file of [
       "0004_pvp.sql",

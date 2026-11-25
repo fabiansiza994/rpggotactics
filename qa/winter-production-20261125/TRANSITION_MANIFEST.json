@@ -1,0 +1,121 @@
+{
+  "status": "LOCAL_CERTIFIED_PENDING_CONSOLIDATED_AUTHORIZATION",
+  "originalCandidateFiles": 71,
+  "originalPreserved": 71,
+  "additionalOrReconciledFiles": [
+    {
+      "path": "server/migrations/0035_tactics_story_transition.sql",
+      "sha256": "24d1e831b6fc2c2274d1822459b2cd5c81b38d65188d090dd41de05c75f73d1c",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "server/src/winterCampaign.ts",
+      "sha256": "3506fd6d019ec21696cb54f9fe72151c3cd16cad7c638200b59d395cbaadf801",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "server/src/repo.ts",
+      "sha256": "b1376a1a42d9f66b71866dc34df2ad1434f80639a528a245d995823010a20105",
+      "originalCandidateSha256": "3f475ba08bac228168991035e85a992c64a80d50593c21df614a0fc9f80726b7"
+    },
+    {
+      "path": "server/src/index.ts",
+      "sha256": "0180fa385dc290bdcffb4ba17706fd434392347190708d27d436adfc4193ee27",
+      "originalCandidateSha256": "2f770ef1e580c0bd3c7baf97c1b9559a88759bb28d818b72aa827077c172d2f2"
+    },
+    {
+      "path": "src/presentation/cloud/api.ts",
+      "sha256": "823891c04d4958dc55883ad4a62cc1ee6bfd98f8d2186444fcf7f33a31a96a26",
+      "originalCandidateSha256": "050c3e6dc09f98a950777e9eb1034ae869cb28c17780c9d93d14b9ce37e4c214"
+    },
+    {
+      "path": "src/presentation/store/battleStore.ts",
+      "sha256": "83c2adc9b2cad5d418a99bd9b89a01234d7a71bbab55ce23c2e7e3b673cbfdd9",
+      "originalCandidateSha256": "6c28fd096bd3ab547115b8fb9f760c1f413e02a2f1b7ab7957b7f5d26b57dcab"
+    },
+    {
+      "path": "src/game/compat/pre-winter-b0e18cc8.js",
+      "sha256": "0f090de9fd4cce032e66a8ee1995bf8310d7c399625ffbf57b70a7e35658e09f",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "src/game/compat/pre-winter-b0e18cc8.d.ts",
+      "sha256": "0427bd6d95423e09cfbc9024c347db791c3d560100a5053f5917f9c1f400597d",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "src/game/compat/pre-winter-entry.txt",
+      "sha256": "a4ada80c5048c0cfd0918ca613afc1f08aa7ced2cea67b742d93ea8138a7c0c8",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "src/game/compat/pre-winter-release-flags.json",
+      "sha256": "99cbb88be7bc3e1a574b2513cb8341dfd9d661dd2d2d527c7de9b06b3bea07d7",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "src/game/compat/story-preparation-entry.txt",
+      "sha256": "0296de89272e7ee2559af77d8dc3f0c9c7d73e5601c7539412eb018d6f175523",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "src/game/compat/README.md",
+      "sha256": "0393070f0c409071c5e4b789c96d099d47c71de7ae58d227169e8f3596de1e64",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tools/build-winter-campaign-legacy.mjs",
+      "sha256": "a60529ccc5bc2b7f163979bc4bc82ab8edcab546266fe8a0f9e349408dd010e7",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tests/winter-campaign-transition.test.ts",
+      "sha256": "4acc4c68600a0ffa066295125b5d99b91c87d6ccdea7359dbb729463c6cdfa49",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tests/winter-story-fence.test.ts",
+      "sha256": "4791284f349822cec83f97ab4be19b622ddc871580b50db885ff61064faee4a8",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tests/winter-late-admission.test.ts",
+      "sha256": "78cf657d150721e380acfb7fe462ea43c1da8f383f0bf919e1fc899acad70f65",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tests/support/d1.ts",
+      "sha256": "9537662e34533ea5ef02d4f427d1fd006cc519335502b85aff10a79bb247c6ee",
+      "originalCandidateSha256": "36ac91e7a36febc3f404c3c11eb27cff55862a9779d2780192a3170551654b54"
+    },
+    {
+      "path": "tests/campaign-server-champions.test.ts",
+      "sha256": "566b979dd983a93335de83d393695cbf0c08b3201fac5ab5f2580ff10d45af8d",
+      "originalCandidateSha256": "234e50ebad615d4b6b334d5e7b097a10aadd39ac759be9d9764cf857c3f9437c"
+    },
+    {
+      "path": "tests/campaign-worlds-server.test.ts",
+      "sha256": "6b5a0d7a30843518fee5a8490edbd59712ad8e36bbdb791f5c5e479ad5bb4198",
+      "originalCandidateSha256": "a5230469812a5b940b2b88c8fbcb9257043e2470b90e1a14cfceb32389c21937"
+    },
+    {
+      "path": "tests/fixtures/pre-winter-handler.js",
+      "sha256": "d02668ab71a7d594f52564c84fbfc53b728bef0a8b886c86d259c7a402374158",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tests/fixtures/pre-winter-handler.d.ts",
+      "sha256": "882c05e766b269181879352038680f1fe9d70b008d79ac1b505f9f70f9a39d9b",
+      "originalCandidateSha256": null
+    },
+    {
+      "path": "tests/fixtures/pre-winter-handler.provenance.json",
+      "sha256": "33269de88975852321f38cd9e8aa27b0dae5cc386c65bed1463fdddaa937bf0c",
+      "originalCandidateSha256": null
+    }
+  ],
+  "overlapWithOriginal71": [],
+  "migrationSha256": "24d1e831b6fc2c2274d1822459b2cd5c81b38d65188d090dd41de05c75f73d1c",
+  "noProductionMutation": true,
+  "releaseOriginalPreserved": 71
+}

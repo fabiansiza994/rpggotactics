@@ -80,6 +80,10 @@ export function explainCardBlock(
     if (def.ritualPiece && engine.getCommitPlayability(cardUid).playable) return null;
     return { code: 'NO_VALID_TARGET', chip: 'Sin objetivo', icon: 'target', detail: noTargetDetail(def) };
   }
+  if(def.id==='winter_onset'&&check.reason==='INVALID_TARGET'&&check.message){
+    const active=state.units.find(u=>u.id===engine.heroId)?.statuses.some(s=>s.id==='WINTER_ONSET');
+    return {code:check.reason,chip:active?'Tormenta activa':'Falta Mundo Gélido',icon:'frost',detail:check.message};
+  }
   const energyNote =
     energy < cost ? ` Además necesitas ${cost} de energía y tienes ${energy}.` : '';
   switch (check.reason) {

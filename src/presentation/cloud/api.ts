@@ -5,6 +5,7 @@ import { request, type CloudResult } from './http';
 
 /** What the Tactics API returns after every call: the authoritative player state. */
 export interface CloudState {
+  legacyCampaigns?: Record<string,{rules:'pre-winter-b0e18cc8';runSeed:number;encounterId:string;profile:PlayerProfile;deckPinned:boolean}>;
   wallet?: { balance: number };
   crystalRewards?: { transactionId: string; reason: 'DAILY_FIRST_WIN' | 'CAMPAIGN_MILESTONE'; amount: number }[];
   user: { id: number; username: string };

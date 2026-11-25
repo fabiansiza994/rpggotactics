@@ -674,6 +674,7 @@ export class VfxDirector {
         if(e.kind==='STEP')fx.catalog?.impact({...familyRecipe('arcane'),mageElement:'thunder',bank:'mage-elements',tint:0x73dcff},pos,pos,[pos]);
         break;
       }
+      case 'WINTER_PULSE': fx.icePremium?.winterPulse(e.targets.map(t=>t.pos));for(const target of e.targets)this.host.unit(target.unitId)?.pulseLight(0xb8eaff,reduced?90:200);break;
       case 'GLYPH_ACTIVATED': {
         if(e.kind==='eternal_winter_heart'){fx.icePremium?.heartFall(e.origin,[e.origin,...e.targets.map(t=>t.pos)],e.glyphId);break;}
         const recipe=this.catalogActions.get(e);
@@ -937,12 +938,15 @@ export class VfxDirector {
           fx.martialPulse(oldPosition, 'recovery', true);
         break;
       case 'TERRAIN_CREATED':
-        fx.glyph(e.pos, family(e.terrain));
-        fx.burst(e.pos, family(e.terrain));
+        if(e.terrain==='ICE'){
+          // The spell owns its Premium impact; frost formation is a bounded accent,
+          // not another full burst/glyph for every cell of a Nova or an entire board.
+          const at=fx.center(e.pos);fx.sparksAt(at.x,at.y,'ICE',reduced?0:2,10);
+        }else{fx.glyph(e.pos,family(e.terrain));fx.burst(e.pos,family(e.terrain));}
         break;
       case 'TERRAIN_REMOVED':
-        fx.glyph(e.pos, family(e.terrain), 180, 20);
-        fx.sparksAt(fx.center(e.pos).x, fx.center(e.pos).y, family(e.terrain), reduced ? 1 : 5, 15);
+        if(e.terrain==='ICE'){const at=fx.center(e.pos);fx.sparksAt(at.x,at.y,'ICE',reduced?0:1,10);}
+        else{fx.glyph(e.pos,family(e.terrain),180,20);fx.sparksAt(fx.center(e.pos).x,fx.center(e.pos).y,family(e.terrain),reduced?1:5,15);}
         break;
       case 'OBSTACLE_REMOVED':
         fx.burst(e.pos, 'ICE');

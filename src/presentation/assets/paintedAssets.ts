@@ -212,3 +212,5 @@ Object.assign(FINAL_CARD_ART, DARK_LIGHT_CARD_ART);
 Object.assign(CARD_PAINTINGS, DARK_LIGHT_CARD_ART);
 Object.assign(CHARACTER_PAINTINGS, DARK_LIGHT_UNIT_ART);
 Object.assign(BATTLE_CHARACTER_PAINTINGS, DARK_LIGHT_UNIT_ART);
+
+FINAL_CARD_ART.winter_onset='/art/winter-dominion/winter_onset.webp';

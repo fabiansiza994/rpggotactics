@@ -44,11 +44,11 @@ for (const e of MARKET_EXPANSIONS.filter((e) => e.status === "AVAILABLE"))
     expect(() => drawBox(drawn.remaining, 4, () => 0)).toThrow();
     expect(boxTotal(stock)).toBe(80);
   });
-it("only Mundo Gélido is reclassified; its effect and cost remain and two copies are legal", () => {
+it("only Mundo Gélido is reclassified; its effect and cost remain and three approved copies are legal", () => {
   const c = content.cards.absolute_zero!;
   expect(c.cost).toBe(4);
   expect(c.rarity).toBe("ULTRA");
-  expect(copyLimit(c, DECK_RULES)).toBe(2);
+  expect(copyLimit(c, DECK_RULES)).toBe(3);
   expect(c.effects).toEqual([
     {
       type: "APPLY_STATUS",

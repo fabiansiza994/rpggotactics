@@ -8,22 +8,22 @@ type Motion={g:Graphics;age:number;duration:number;step:(t:number,g:Graphics)=>v
 /** Finite faceted ice geometry on the existing scene clock; no filters or per-frame textures. */
 export class IceSpellEffects {
  reduced=false;
- private hearts=new Map<string,{g:Graphics;phase:number;at:Pos;targetId?:string;joining?:Graphics;joinedAt?:number}>();
+ private hearts=new Map<string,{g:Graphics;shadow:Graphics;phase:number;at:Pos;targetId?:string;joining?:Graphics;joinedAt?:number}>();
  private clock=0;
  private skyMinY=-Infinity;
- private followUnit?: (id:string)=>{x:number;y:number}|undefined;
+ private followUnit?: (id:string)=>{x:number;y:number;height?:number}|undefined;
  private fallingHearts=new Set<string>();
  /** Reconstructed from public snapshots, without replaying cast/reveal on reconnect. */
- syncHearts(state:Readonly<GameState>,followUnit?:(id:string)=>{x:number;y:number}|undefined,skyMinY=-Infinity):void{
+ syncHearts(state:Readonly<GameState>,followUnit?:(id:string)=>{x:number;y:number;height?:number}|undefined,skyMinY=-Infinity):void{
   this.skyMinY=skyMinY;
   this.followUnit=followUnit;
   const active=state.outcome?[]:(state.glyphs??[]).filter(g=>g.winterHeart&&!this.fallingHearts.has(g.id));
   const ids=new Set(active.map(g=>g.id));
-  for(const [id,view] of this.hearts)if(!ids.has(id)){view.g.destroy({children:true,context:true});this.hearts.delete(id);}
+  for(const [id,view] of this.hearts)if(!ids.has(id)){view.g.destroy({children:true,context:true});view.shadow.destroy({context:true});this.hearts.delete(id);}
   for(const glyph of active){
    const heart=glyph.winterHeart!,target=state.units.find(u=>u.id===heart.targetId),at=target?.pos??heart.lastKnown;
    let view=this.hearts.get(glyph.id);
-   if(!view){const g=new Graphics();g.eventMode='none';this.actors.addChild(g);view={g,phase:0,at};this.hearts.set(glyph.id,view);}
+   if(!view){const g=new Graphics();g.eventMode='none';this.actors.addChild(g);const shadow=new Graphics();shadow.eventMode='none';this.ground.addChild(shadow);view={g,shadow,phase:0,at};this.hearts.set(glyph.id,view);}
    view.at={...at};view.targetId=target?.id;
    if(view.phase!==heart.phase){view.g.clear();for(const child of view.g.removeChildren())child.destroy();this.heartFragments(view.g,view.phase!==0&&heart.phase===2?1:heart.phase);
     if(view.phase!==0&&heart.phase===2){const joining=new Graphics();this.heartFragments(joining,1,1);view.g.addChild(joining);view.joining=joining;view.joinedAt=this.clock;}
@@ -36,17 +36,20 @@ export class IceSpellEffects {
   const pieces=[[-2,-11,-18,-27,-32,-16,-29,4,-2,5],[2,-11,18,-27,32,-16,29,4,2,5],[-25,7,0,33,25,7,0,-7]];
   for(let i=offset;i<offset+count;i++)g.poly(pieces[i]!).fill({color:[0x57b7e6,0xc0f6ff,0x87dbf2][i]!,alpha:.83}).stroke({color:0xe6fcff,width:1.2,alpha:.9});
  }
- private positionHeart(view:{g:Graphics;at:Pos;targetId?:string;joining?:Graphics;joinedAt?:number}):void{
+ private positionHeart(view:{g:Graphics;shadow:Graphics;at:Pos;targetId?:string;joining?:Graphics;joinedAt?:number}):void{
   if(view.joining){const t=this.reduced?1:Math.min(1,(this.clock-(view.joinedAt??0))/420);view.joining.position.set((1-t)*35,-(1-t)*20);view.joining.alpha=t;if(t>=1){view.joining.destroy({context:true});delete view.joining;this.heartFragments(view.g,1,1);}}
   const c=(view.targetId?this.followUnit?.(view.targetId):undefined)??this.geometry.center(view.at),s=this.geometry.footprint(view.at).w/96;
-  view.g.position.set(c.x,Math.max(this.skyMinY,c.y-200*s)+(this.reduced?0:Math.sin(this.clock/900)*2*s));
+  const height=('height' in c&&typeof c.height==='number'?c.height:100*s);
+  view.g.position.set(c.x,Math.max(this.skyMinY+45*s,c.y-height*2.8)+(this.reduced?0:Math.sin(this.clock/900)*2*s));
+  view.shadow.clear().ellipse(c.x,c.y,28*s,11*s).fill({color:0x214357,alpha:.25}).stroke({color:0xb9f4ff,width:s,alpha:.45});
   view.g.scale.set(s*.85);view.g.zIndex=this.geometry.depth(c)+1000;
  }
  heartFall(at:Pos,tiles:readonly Pos[],id:string):void{
-  this.fallingHearts.add(id);const old=this.hearts.get(id);if(old){old.g.destroy({children:true,context:true});this.hearts.delete(id);}
+  this.fallingHearts.add(id);const old=this.hearts.get(id);const skyY=old?.g.y;const startX=old?.g.x;
+  if(old){old.g.destroy({children:true,context:true});old.shadow.destroy({context:true});this.hearts.delete(id);}
   const c=this.geometry.center(at),s=this.geometry.footprint(at).w/96;let released=false;
   this.spawn(false,this.reduced?180:660,g=>this.heartFragments(g,3),(t,g)=>{
-   const fall=Math.max(0,(t-.3)/.7);g.position.set(c.x,c.y-(c.y-Math.max(this.skyMinY,c.y-200*s))*(1-fall*fall));g.scale.set(s*.85);g.zIndex=this.geometry.depth(c)+1000;
+   const fall=Math.max(0,(t-.3)/.7);const start=skyY??Math.max(this.skyMinY+45*s,c.y-280*s);g.position.set((startX??c.x)+(c.x-(startX??c.x))*fall*fall,c.y-(c.y-start)*(1-fall*fall));g.scale.set(s*.85);g.zIndex=this.geometry.depth(c)+1000;
    if(t>=1&&!released){released=true;this.heartRelease(at,tiles);}
   });
  }
@@ -107,6 +110,11 @@ export class IceSpellEffects {
    g.moveTo(0,-12).lineTo(-5,1).lineTo(5,8).lineTo(0,29).stroke({color:0xf5ffff,width:2.5,alpha:.95});
   },(t,g)=>{g.position.set(c.x,c.y-45*scale);g.scale.set(scale*(.2+.8*Math.min(1,t*3))*(1+Math.sin(t*Math.PI*4)*.04));g.rotation=Math.sin(t*Math.PI)*.09;g.alpha=Math.min(1,t*5)*(1-Math.max(0,t-.85)*4);g.zIndex=this.geometry.depth(c)+6;});
  }
+ winterPulse(tiles:readonly Pos[]):void{
+  if(!tiles.length)return;
+  const points=tiles.map(p=>this.geometry.center(p)),left=Math.min(...points.map(p=>p.x))-70,right=Math.max(...points.map(p=>p.x))+70,y=points.reduce((n,p)=>n+p.y,0)/points.length;
+  this.spawn(false,this.reduced?120:480,g=>{for(let i=0;i<3;i++)g.moveTo(-50,i*8).quadraticCurveTo(0,-15+i*8,50,i*8).stroke({color:0xd6f8ff,width:1.5,alpha:.6});},(t,g)=>{g.position.set(left+(right-left)*t,y-35);g.alpha=Math.sin(t*Math.PI)*.7;g.zIndex=10000;});
+ }
  heartRelease(at:Pos,tiles:readonly Pos[]):void{
   const c=this.geometry.center(at),f=this.geometry.footprint(at);
   for(let i=0;i<(this.reduced?4:12);i++){const a=i*Math.PI/6;this.spawn(false,this.reduced?180:850,g=>this.crystal(g,6,24),(t,g)=>{g.position.set(c.x+Math.cos(a)*f.w*t*.7,c.y-25+Math.sin(a)*f.h*t*.6-t*15);g.scale.set(1-t*.5);g.rotation=a+t;g.alpha=(1-t)**2;g.zIndex=this.geometry.depth(c)+4;});}
@@ -116,6 +124,6 @@ export class IceSpellEffects {
   this.snow?.play(origin,tiles,duration,impact);
  }
  tick(ms:number):void{this.clock+=ms;for(const view of this.hearts.values())this.positionHeart(view);for(let i=this.live.length-1;i>=0;i--){const a=this.live[i]!;a.age+=ms;a.step(Math.min(1,a.age/a.duration),a.g);if(a.age>=a.duration){a.g.removeFromParent();a.g.clear();this.free.push(a.g);this.live.splice(i,1);}}}
- clear():void{this.followUnit=undefined;this.fallingHearts.clear();for(const view of this.hearts.values())view.g.destroy({children:true,context:true});this.hearts.clear();for(const a of this.live){a.g.removeFromParent();a.g.clear();this.free.push(a.g);}this.live.length=0;}
+ clear():void{this.followUnit=undefined;this.fallingHearts.clear();for(const view of this.hearts.values()){view.g.destroy({children:true,context:true});view.shadow.destroy({context:true});}this.hearts.clear();for(const a of this.live){a.g.removeFromParent();a.g.clear();this.free.push(a.g);}this.live.length=0;}
  destroy():void{this.clear();for(const g of this.free)g.destroy({context:true});this.free.length=0;}
 }

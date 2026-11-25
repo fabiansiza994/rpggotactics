@@ -14,6 +14,7 @@ export const STATUSES: Readonly<Record<StatusId, StatusDef>> = {
   LIGHT_WORLD: { id: 'LIGHT_WORLD', name: 'Mundo de Luz', negative: false, tick: 'NEVER', stacking: 'REFRESH' },
   SNOW_WAR:{id:'SNOW_WAR',name:'Guerra de Nieve',negative:false,tick:'NEVER',stacking:'IGNORE'},
   GLACIER_CLAW:{id:'GLACIER_CLAW',name:'Garra del Glaciar',negative:true,tick:'NEVER',stacking:'IGNORE',preventsMovement:true},
+  WINTER_ONSET:{id:'WINTER_ONSET',name:'Inicio de la Tormenta',negative:false,tick:'NEVER',stacking:'IGNORE',permanent:true},
   ABSOLUTE_ZERO: {id:'ABSOLUTE_ZERO',name:'Mundo Gélido',negative:false,tick:'NEVER',stacking:'IGNORE',ownerStartLifetime:true},
   FROZEN: {id:'FROZEN',name:'Congelado: próximo movimiento +1 PM',negative:true,tick:'NEVER',stacking:'IGNORE',permanent:true},
   FROST_MANTLE: {id:'FROST_MANTLE',name:'Manto de Escarcha',negative:false,tick:'NEVER',stacking:'IGNORE'},

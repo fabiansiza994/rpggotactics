@@ -24,6 +24,8 @@ export { STATUS_LABEL } from '../assets/statusLabels';
 export const statusChipText = (s: { id: StatusId; turnsLeft: number }): string =>
   DEFAULT_CONTENT.statuses[s.id]?.permanent ? STATUS_LABEL[s.id] : `${STATUS_LABEL[s.id]} ${s.turnsLeft}`;
 
+export const statusChipTitle=(s:{id:StatusId;turnsLeft:number}):string=>s.id==='WINTER_ONSET'?'Desde tu siguiente turno, los enemigos pierden 1 HP al comienzo de cada turno propio; ignora armadura y escudos. Termina con el Mundo Gélido asociado.':statusChipText(s);
+
 /** Spanish UI strings for domain data. Presentation-only. */
 
 // Defeated units disappear from the state; remember what we have seen for log lines.

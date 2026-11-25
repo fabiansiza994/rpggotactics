@@ -26,12 +26,12 @@ export function LinkedMechanismAction({engine,project,polygon}:{engine:GameEngin
       const corners=[{x:0,y:0},{x:state.board.width-1,y:0},{x:0,y:state.board.height-1},{x:state.board.width-1,y:state.board.height-1}].flatMap(p=>polygon(p)??[]);
       if(!point||!corners.length){setAnchor(null);return;}
       const board={left:Math.min(...corners.map(p=>p.x)),right:Math.max(...corners.map(p=>p.x)),top:Math.min(...corners.map(p=>p.y)),bottom:Math.max(...corners.map(p=>p.y))};
-      const occupied=Array.from(document.querySelectorAll('.top-bar,.hand,.battle-utilities,.mechanism-controls,.pause-trigger')).map(e=>e.getBoundingClientRect());
+      const occupied=Array.from(document.querySelectorAll('.top-bar,.hand,.battle-utilities,.mechanism-controls,.pause-trigger,.battle-side-rail,.battle-camera-controls')).map(e=>e.getBoundingClientRect());
       const pos=linkedPlacement(point,board,{width:innerWidth,height:innerHeight},occupied);
       setAnchor(pos?{...pos,point}:null);
     });};
-    measure();window.addEventListener('resize',measure);window.addEventListener('scroll',measure,true);
-    return()=>{cancelAnimationFrame(frame);window.removeEventListener('resize',measure);window.removeEventListener('scroll',measure,true);};
+    measure();window.addEventListener('battle-camera-change',measure);window.addEventListener('resize',measure);window.addEventListener('scroll',measure,true);
+    return()=>{cancelAnimationFrame(frame);window.removeEventListener('battle-camera-change',measure);window.removeEventListener('resize',measure);window.removeEventListener('scroll',measure,true);};
   },[object,selected,state,busy,card,project,polygon,option]);
   if(!anchor||!object||!option||!ui||busy||card)return null;
   return <><svg className="mechanism-action-leader" aria-hidden="true"><path d={`M${anchor.x+68},${anchor.y+43} L${anchor.point.x},${anchor.point.y}`} stroke="#d0b879" strokeWidth="1.5" strokeDasharray="4 3"/><circle cx={anchor.point.x} cy={anchor.point.y} r="5" stroke="#e9d79e" fill="none"/></svg>

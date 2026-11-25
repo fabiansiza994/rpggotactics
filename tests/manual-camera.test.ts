@@ -1,0 +1,11 @@
+import {describe,it,expect} from 'vitest';
+import {ManualCamera} from '../src/presentation/pixi/ManualCamera';
+import {GridProjection} from '../src/presentation/pixi/GridProjection';
+const bounds={left:-500,right:500,top:-120,bottom:600};
+describe('manual presentation camera',()=>{
+ it('fits full arena at reset and limits zoom',()=>{const c=new ManualCamera();const f=c.frame(900,500,bounds,20);expect(f.x+bounds.left*f.scale).toBeGreaterThanOrEqual(0);expect(f.y+bounds.bottom*f.scale).toBeLessThanOrEqual(500);c.magnify(999);expect(c.zoom).toBe(2.8);c.tick(200,true);expect(c.frame(900,500,bounds,20).scale).toBeGreaterThan(f.scale);c.magnify(.001);expect(c.zoom).toBe(1);});
+ it('clamps panning to keep the arena visible',()=>{const c=new ManualCamera();c.magnify(2.8);c.tick(1,true);for(const sign of [-1,1]){c.pan={x:sign*100000,y:sign*100000};const f=c.frame(900,500,bounds,20);expect(f.x+bounds.right*f.scale).toBeGreaterThanOrEqual(125-1e-9);expect(f.x+bounds.left*f.scale).toBeLessThanOrEqual(775+1e-9);expect(f.y+bounds.bottom*f.scale).toBeGreaterThanOrEqual(125-1e-9);expect(f.y+bounds.top*f.scale).toBeLessThanOrEqual(375+1e-9);}});
+ it('keeps state until explicit reset',()=>{const c=new ManualCamera();c.rotate(-1);c.magnify(1.5);c.tick(100,true);const before=c.frame(900,500,bounds,20);expect(c.frame(900,500,bounds,20)).toEqual(before);expect(c.turn).toBe(3);c.reset();expect(c.turn).toBe(0);expect(c.zoom).toBe(1);expect(c.pan).toEqual({x:0,y:0});});
+ for(const [cols,rows] of [[5,8],[10,6],[12,12]] as const)for(const turn of [0,1,2,3] as const)it(`invertible picking ${cols}x${rows} turn ${turn}`,()=>{const p=new GridProjection({cols,rows,tile:96,perspective:1.18,depth:.66,quarterTurn:turn});for(let y=0;y<rows!;y++)for(let x=0;x<cols!;x++)expect(p.screenToGrid(p.getTileCenter({x,y}))).toEqual({x,y});});
+ it('smoothly reaches requested zoom then stops updating',()=>{const c=new ManualCamera(),initial=c.frame(900,500,bounds,20);c.magnify(2);expect(c.tick(16,false)).toBe(true);const mid=c.frame(900,500,bounds,20);expect(mid.scale).toBeGreaterThan(initial.scale);expect(mid.scale).toBeLessThan(initial.scale*2);for(let i=0;i<100;i++)c.tick(16,false);expect(c.tick(16,false)).toBe(false);});
+});

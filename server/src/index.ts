@@ -1,3 +1,4 @@
+import {loadWinterPlayer,publicLegacyCampaigns,verifyLegacyCampaign,legacySnapshot,legacySettle,legacyProofDigest,consumedLegacyProof,storyTransitionPhase} from './winterCampaign';
 import { contentTransition } from './contentTransition';
 import {profileAvatarRoute} from './profileAvatar';
 import { creditedRewards, victoryCrystalStatements, type CrystalReward } from './economy';
@@ -63,7 +64,6 @@ export { SocialHub } from './social';
 import {
   createPlayer,
   prepareSummonerQa,
-  loadPlayer,
   saveChampionUnlock,
   saveStartingChampion,
   saveCampaignStep,
@@ -154,6 +154,7 @@ function stateBody(caller: Caller, record: PlayerRecord | null, env: Env, deps: 
     hasProfile: record !== null,
     meta: record?.meta ?? null,
     profile: record?.profile ?? null,
+    legacyCampaigns: publicLegacyCampaigns(record),
     run: record?.run ?? null,
     runs: record?.runs ?? null,
     /** Runs of the worlds after World 1 (campaign id → champion → run). World 1 stays in `runs`. */
@@ -309,17 +310,19 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   // Real-money Cristales (account only; sandbox-only in phase 1).
   const realMoney = await realMoneyRoute(request, env, caller.userId, { now, newId, epayco: deps.epayco });
   if (realMoney) return realMoney;
+  if(path.startsWith('/api/tactics/campaign/')&&await storyTransitionPhase(env.DB)!=='ACTIVE')
+    return error(503,'STORY_TRANSITION_PAUSED','Historia está actualizándose. Conserva el resultado y reintenta.');
   const db = env.DB;
   const route = `${request.method} ${path}`;
   // Free catalog: milestone cards (incl. retroactive ones) are granted before any state is read.
   const loadReconciled = async () => {
-    const loaded = await loadPlayer(db, caller.userId, content);
+    const loaded = await loadWinterPlayer(db, caller.userId, content);
     const granted = await reconcileFreeCatalog(db, caller.userId, content, loaded, now, masteryAllowed(env, caller.username));
-    return granted ? loadPlayer(db, caller.userId, content) : loaded;
+    return granted ? loadWinterPlayer(db, caller.userId, content) : loaded;
   };
 
   if (route === 'GET /api/tactics/me') {
-    const record = await loadPlayer(db, caller.userId, content);
+    const record = await loadWinterPlayer(db, caller.userId, content);
     return json({
       user: { id: caller.userId, username: caller.username },
       qaSummonerCampaign: summonerQaAllowed(env, caller.username),
@@ -337,7 +340,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
 
   // ── Player creation: fresh, or one-time import of a device's local progress ──────────
   if (route === 'POST /api/tactics/profile' || route === 'POST /api/tactics/import') {
-    if (await loadPlayer(db, caller.userId, content))
+    if (await loadWinterPlayer(db, caller.userId, content))
       return error(409, 'ALREADY_EXISTS', 'Esta cuenta ya tiene progreso en la nube.');
     const body = await readJson(request);
     if (!body) return error(400, 'BAD_REQUEST', 'Cuerpo inválido.');
@@ -374,7 +377,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     });
   }
 
-  const record = await loadPlayer(db, caller.userId, content);
+  const record = await loadWinterPlayer(db, caller.userId, content);
   if (!record) return error(404, 'NO_PROFILE', 'Esta cuenta todavía no tiene progreso en la nube.');
   const body = request.method === 'GET' ? {} : await readJson(request);
   if (!body) return error(400, 'BAD_REQUEST', 'Cuerpo inválido.');
@@ -431,7 +434,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
         else await saveChampionUnlock(db, caller.userId, result.unlock, now);
       } catch {
         // A concurrent request consumed the same choice/milestone first: its result stands.
-        const fresh = await loadPlayer(db, caller.userId, content);
+        const fresh = await loadWinterPlayer(db, caller.userId, content);
         if (!fresh || !isChampionUnlocked(fresh.profile, heroId))
           return error(409, start ? 'ALREADY_CHOSEN' : 'NO_UNLOCK_PENDING', 'Esa elección ya se registró.');
       }
@@ -464,7 +467,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
           ? error(403, 'CHAMPION_LOCKED', LOCKED_MESSAGE)
           : null,
     respond,
-    reload: async () => (await loadPlayer(db, caller.userId, content))?.profile ?? null,
+    reload: async () => (await loadWinterPlayer(db, caller.userId, content))?.profile ?? null,
   });
   if (decks) return decks;
 
@@ -632,6 +635,8 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     const runs = championRuns(record, heroId);
     const history = record.worldHistory[heroId] ?? {};
     if (route === 'POST /api/tactics/campaign/start') {
+      const existing=runs[campaign.id];
+      if(existing&&legacySnapshot(record,existing))return error(409,'LEGACY_ENCOUNTER_PENDING','Completa el encuentro anterior pendiente antes de iniciar otra campaña.');
       if (battleDeck(record.profile, heroId, content, DECK_RULES).source === 'INVALID')
         return error(422, 'INVALID_DECK', 'El mazo necesita exactamente 40 cartas legales y poseídas.');
       // Unlocks are durable: replaying World 1 never closes World 2 again.
@@ -659,14 +664,16 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
         return respond();
       // The proof must be the run's current encounter of THIS world: an encounter of another
       // world, a locked one or a forged id never replays (verifyVictory).
-      const proof = verifyVictory(campaign, content, record.profile, run, body.proof, DECK_RULES);
+      if(await consumedLegacyProof(record,run,body.proof))return error(422,'LEGACY_PROOF_ALREADY_USED','Este resultado del encuentro anterior ya fue verificado.');
+      const legacy=legacySnapshot(record,run);
+      const proof = verifyLegacyCampaign(record,run,body.proof) ?? verifyVictory(campaign, content, record.profile, run, body.proof, DECK_RULES);
       if (!proof.ok)
         return error(422, 'INVALID_VICTORY', 'La victoria no pudo verificarse.', {
           reason: proof.error,
         });
       // The offer is rolled once, here, from the server's collection + pity, and stored in the
       // run: later reads return it unchanged (no reroll by reloading).
-      const won = settleVictory(campaign, content, record.profile, run, run.currentEncounterId, DECK_RULES);
+      const won = legacySnapshot(record,run) ? legacySettle(record.profile,run,run.currentEncounterId) : settleVictory(campaign, content, record.profile, run, run.currentEncounterId, DECK_RULES);
       if (!won.ok) return error(409, 'INVALID_STEP', won.error);
       const encounter = encounterById(campaign, run.currentEncounterId);
       const noDrop = won.roll.options.length === 0;
@@ -689,6 +696,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       try {
         await saveCampaignStep(db, caller.userId, now, {
           expectedRevision: record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`],
+          ...(legacy?{closedLegacyProofDigest:(await legacyProofDigest(body.proof))!}:{}),
           run: { ...won.run, rewardOptions: won.run.rewardOptions.map(option => ({
             ...option, id: `${option.id}:r${(record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`] ?? 0) + 1}`,
           })) },
@@ -729,7 +737,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
         });
       } catch {
         // A concurrent submission of the same victory won the race: its result stands.
-        const fresh = await loadPlayer(db, caller.userId, content);
+        const fresh = await loadWinterPlayer(db, caller.userId, content);
         const freshRun = fresh ? championRuns(fresh, heroId)[campaign.id] : null;
         if (freshRun?.completedEncounterIds.includes(encounter.id)) return respond();
         return error(409, 'INVALID_STEP', 'Victoria ya registrada.');
@@ -776,7 +784,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
         });
       } catch {
         // A concurrent claim/start changed this run. Never reapply the acquisition.
-        const fresh = await loadPlayer(db, caller.userId, content);
+        const fresh = await loadWinterPlayer(db, caller.userId, content);
         const freshRun = run.campaignId === ASCENT_CAMPAIGN.id ? fresh?.runs[run.heroId] : fresh?.worldRuns[run.campaignId]?.[run.heroId];
         if (freshRun?.seed === run.seed && freshRun.chosenRewards.some(c => c.encounterId === encounter.id && c.reward.id === body.optionId)) return respond();
         return error(409, 'INVALID_STEP', 'La campaña ha cambiado. Actualiza antes de reclamar.');

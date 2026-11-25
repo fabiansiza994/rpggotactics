@@ -1,4 +1,4 @@
-.winter-atmosphere{opacity:0;transition:opacity .5s;background:radial-gradient(ellipse at center,transparent 50%,rgb(120 205 240 / 8%) 100%)}
+.winter-atmosphere{opacity:0;transition:opacity .5s,--winter-storm 1.2s;background:radial-gradient(ellipse at center,transparent 50%,rgb(120 205 240 / 8%) 100%)}
 .winter-atmosphere[data-active=true]{opacity:1}
 .winter-atmosphere *{pointer-events:none!important}
 .winter-atmosphere__frost{position:absolute;inset:0;box-shadow:inset 0 0 38px rgb(180 235 255 / 14%);opacity:calc(.4 + var(--winter-strength)*.6)}
@@ -6,7 +6,7 @@
 .winter-atmosphere__wave{position:absolute;inset:20%;border:2px solid rgb(190 240 255 / 35%);border-radius:50%;transform:scale(.1);opacity:0}
 .winter-atmosphere[data-entering=true] .winter-atmosphere__wave{animation:winter-wave .8s ease-out both}
 .winter-atmosphere[data-active=false] *{animation-play-state:paused!important}
-@keyframes winter-snow{to{transform:translate(var(--drift),calc(var(--screen-fall-distance, 100dvh) + 24px))}}
+@keyframes winter-snow{to{transform:translate(calc(var(--drift) + var(--winter-storm,0)*50vw),calc(var(--screen-fall-distance, 100dvh) + 24px))}}
 @keyframes winter-wave{0%{transform:scale(.1);opacity:.5}100%{transform:scale(3);opacity:0}}
 @media(prefers-reduced-motion:reduce){.winter-atmosphere *{animation:none!important}.winter-atmosphere > i{top:var(--x);opacity:.15}.winter-atmosphere{transition:none}}
 
@@ -23,3 +23,10 @@
 body:has(.combat-atmosphere[data-rooted="true"]) .winter-atmosphere[data-active=true],body:has(.combat-atmosphere[data-heat="true"]) .winter-atmosphere[data-active=true],body:has(.combat-atmosphere[data-mood="critical"]) .winter-atmosphere[data-active=true],body:has(.combat-atmosphere[data-mood="extreme"]) .winter-atmosphere[data-active=true]{opacity:.55;}
 
 .winter-atmosphere__frost{--material-art:url("../presentation/immersion/assets/ice.png");}
+
+/* Wind modifies the existing eighteen flakes, never adds another emitter. */
+@property --winter-storm{syntax:"<number>";inherits:true;initial-value:0}
+.winter-atmosphere{--winter-storm:0}
+.winter-atmosphere[data-storm=true]{--winter-storm:1}
+.winter-atmosphere > i{rotate:calc(var(--winter-storm)*-35deg);width:calc(3px + var(--winter-storm)*2px);height:calc(6px + var(--winter-storm)*8px)}
+.winter-atmosphere__wind{opacity:calc(.12 + var(--winter-strength)*.14 + var(--winter-storm)*.08)}

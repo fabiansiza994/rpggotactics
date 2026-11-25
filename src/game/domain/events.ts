@@ -19,6 +19,7 @@ import type { TerrainType } from './terrain/terrain';
  * `sourceId` conventions: a unit id, `terrain:<TYPE>` or `status:<ID>`.
  */
 export type GameEvent =
+  | {type:'WINTER_PULSE';ownerId:string;targets:{unitId:string;pos:Pos}[]}
   | {type:'CARDS_EXCHANGED';casterId:string;opponentId:string}
   | {type:'REDEMPTION_SUPPORT';unitId:string;targetId:string;action:'HEAL'|'PROTECT';from:Pos;to:Pos;cost:number}
   | { type: 'REAPER_DISPOSITION'; unitId: string; ownerId: string; disposition: 'ALLY' | 'LOYAL' | 'REBEL' }

@@ -1,3 +1,4 @@
+import {freezeSpellGround} from '../cards/ice-terrain';
 import {allPositions} from '../board/board';
 import { areHostile, unitById } from '../board/occupancy';
 import type { RuleContext } from '../context';
@@ -53,6 +54,7 @@ export function resolveGlyphs(ctx: RuleContext, faction: Faction): void {
       const targets=ctx.state.units.filter(u=>areHostile(owner,u)&&
         (manhattan(u.pos,heart.lastKnown)===1||(heart.mode==='UNIT'?u.id===heart.targetId:manhattan(u.pos,heart.lastKnown)===0)));
       ctx.emit({type:'GLYPH_ACTIVATED',glyphId:glyph.id,kind:glyph.glyphId,ownerId:owner.id,origin:{...heart.lastKnown},targets:targets.map(u=>({unitId:u.id,pos:{...u.pos}})),remaining:0});
+      freezeSpellGround(ctx,glyph.tiles,owner.id);
       for(const target of targets)dealDamage(ctx,target,manhattan(target.pos,heart.lastKnown)===0?5:1,owner.id,'ICE');
       continue;
     }

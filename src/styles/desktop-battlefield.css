@@ -1,0 +1,84 @@
+.battle-camera-controls{display:none}
+@media(min-width:900px) and (min-height:600px){
+body .battle{--battle-rail:clamp(144px,13vw,220px);min-height:0;grid-template-rows:28px minmax(0,1fr) 26px clamp(150px,22vh,210px)}
+body .battle .top-bar{height:28px;min-height:0;padding:0;display:block;pointer-events:none}
+body .battle .battle-main{margin:0 calc(var(--battle-rail) + 12px);padding:0;min-width:0}
+body .battle .board-column{display:flex;flex-direction:column;min-height:0;gap:0}
+body .battle .board-host{flex:1 1 0;min-height:0;margin:0;overflow:hidden;--battle-front-frame:40}
+.battle-side-rail{position:absolute;top:8px;bottom:12px;width:var(--battle-rail);z-index:5;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto;scrollbar-width:thin}
+.battle-side-rail.is-left{left:8px}.battle-side-rail.is-right{right:8px}.battle-rail-slot{min-width:0;flex:0 0 auto}
+.battle-side-rail.is-left .slot-preview{height:clamp(170px,30vh,320px);overflow:hidden;flex-shrink:0;position:relative}
+.battle-side-rail .slot-altar:empty{display:none}.battle-side-rail .slot-altar{margin-top:auto}
+body .battle .battle-side-rail .panel,body .battle .battle-side-rail .tactical-overview,body .battle .battle-side-rail .altar-panel{position:relative;inset:auto;transform:none;width:100%;max-width:100%;box-sizing:border-box;margin:0}
+body .battle .slot-preview .card-feature-stage{position:absolute;inset:0;transform:none;width:100%;height:100%;display:flex;justify-content:center;align-items:center;margin:0;pointer-events:auto}
+body .battle .slot-preview .feature-card{width:min(100%,190px);height:100%;max-height:290px;position:relative;inset:auto;transform:none;margin:0}
+body .battle .slot-piles .battle-pile-bank{position:relative;inset:auto;display:flex;gap:8px;justify-content:center;padding:4px;min-height:44px;width:100%}
+body .battle .slot-piles .battle-pile{width:56px;min-width:44px;min-height:44px;display:flex;gap:5px;justify-content:center;align-items:center;padding:4px}
+.slot-opponent{height:44px;position:relative;flex:0 0 44px}.slot-opponent .opponent-hand{--opponent-card-width:26px;position:absolute;top:2px;left:50%;transform:translateX(-50%);width:min(calc(26px + max(0,var(--opponent-count) - 1)*16px),calc(100% - 152px));height:40px;pointer-events:none;user-select:none;z-index:2}
+body .battle .slot-enemy .enemy-panel{max-height:clamp(100px,20vh,200px);overflow:auto}
+  .tactical-overview-title {
+    margin-bottom: 6px;
+    color: #d9c491;
+    font: 11px Georgia, serif;
+    letter-spacing: 0.7px;
+    text-align: center;
+  }
+  .tactical-map {
+    display: grid;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid #82919a55;
+    background: #050a11;
+  }
+  .tactical-map-cell {
+    position: relative;
+    aspect-ratio: 1.65;
+    background: linear-gradient(135deg, #394854, #202d39);
+    border: 1px solid #75818b45;
+  }
+  .tactical-map-cell.terrain-fire { background: #71341f; }
+  .tactical-map-cell.terrain-ice { background: #28627c; }
+  .tactical-map-cell.terrain-blocked { background: #070b10; }
+  .tactical-map-cell.terrain-objective { background: #584a2e; }
+  .tactical-map-cell.has-obstacle { box-shadow: inset 0 0 0 2px #b4b6b4; }
+  .tactical-map-cell i,
+  .tactical-map-legend i {
+    position: absolute;
+    inset: 2px auto auto 50%;
+    width: 6px;
+    height: 6px;
+    transform: translateX(-50%);
+    border: 1px solid #f0e5cc;
+    border-radius: 50%;
+    background: #63c9f6;
+    box-shadow: 0 0 5px currentColor;
+  }
+  .tactical-map-cell.unit-enemy i,
+  .tactical-map-legend .unit-enemy { background: #d95d55; color: #d95d55; }
+  .tactical-map-cell.unit-objective i,
+  .tactical-map-legend .unit-objective { background: #f0ca6d; color: #f0ca6d; }
+  .tactical-map-legend {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 8px;
+  }
+  .tactical-map-legend span { display: inline-flex; align-items: center; gap: 3px; }
+  .tactical-map-legend i { position: static; inset: auto; width: 5px; height: 5px; transform: none; }
+body .battle .slot-map .tactical-overview{display:block;max-height:180px;overflow:auto}body .battle .slot-map .tactical-map{max-height:110px}
+body .battle .slot-turn .turn-panel{font-size:11px}body .battle .slot-turn .turn-title{font-size:18px}body .battle .slot-turn .turn-extra{max-height:100px;overflow:auto}
+body .battle .slot-pause .pause-trigger,body .battle .slot-end .end-turn-box{position:relative;inset:auto;transform:none;width:100%;margin:0}
+body .battle .slot-end .end-turn{width:100%;min-height:44px}.battle-side-rail .slot-end{margin-top:auto;position:sticky;bottom:0;background:#101923}
+body .battle .slot-log .log-panel{width:100%}body .battle .slot-log .log-panel .log{position:relative;inset:auto;max-height:120px;width:100%;box-sizing:border-box}
+body .battle .hand-bar{margin:0 calc(var(--battle-rail) + 12px);padding:0;grid-template-columns:minmax(0,1fr);min-width:0}body .battle .hand-bar .hand{margin-left:0;height:100%}
+body .battle .battle-utilities{margin:0 calc(var(--battle-rail) + 12px);padding:0}
+.battle-camera-controls{display:flex;position:absolute;right:calc(var(--battle-rail) + 20px);top:32px;z-index:6;gap:3px}
+.battle-camera-controls button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #ae956377;background:#0c1724e8;color:#f0d89b;border-radius:8px}
+.battle-camera-controls button:focus-visible{outline:2px solid #f0d89b;outline-offset:2px}
+body .battle .board-host canvas{touch-action:none}
+}
+
+@media(min-width:900px) and (max-width:1100px) and (min-height:600px){
+body .battle .slot-hero .hero-panel{gap:6px}body .battle .slot-hero .hero-portrait{width:48px;height:60px}body .battle .slot-hero .panel-title{font-size:14px;overflow-wrap:anywhere}body .battle .slot-end .end-turn{padding:8px;gap:4px;font-size:11px}
+}

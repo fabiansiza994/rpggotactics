@@ -43,6 +43,13 @@ export function applyStatus(
   // A unit only has hostile champions as possible markers: the latest one owns the mark.
   if (sourced) unit.statuses.find((s) => s.id === statusId)!.sourceId = sourceId;
   if (statusId === 'BLEEDING') { unit.statuses.find(s => s.id === statusId)!.sourceId = sourceId; pruneBloodTrails(ctx.state); }
+  if(statusId==='ABSOLUTE_ZERO')unit.statuses.find(s=>s.id===statusId)!.worldInstanceId??=`world-${ctx.state.nextId++}`;
+  if(statusId==='WINTER_ONSET'){
+    const world=unit.statuses.find(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0);
+    if(!world){removeStatus(ctx,unit,statusId,'CONSUMED');return;}
+    world.worldInstanceId??=`world-${ctx.state.nextId++}`;
+    unit.statuses.find(s=>s.id===statusId)!.linkedWorldInstanceId=world.worldInstanceId;
+  }
   const turnsLeft = unit.statuses.find((s) => s.id === statusId)?.turnsLeft ?? duration;
   ctx.emit({ type: 'STATUS_APPLIED', unitId: unit.id, status: statusId, turnsLeft, sourceId });
 }
@@ -57,7 +64,7 @@ export function removeStatus(
   unit.statuses = unit.statuses.filter((s) => s.id !== statusId);
   if (unit.statuses.length !== before) {
     if(statusId==='BLEEDING')pruneBloodTrails(ctx.state);
-    if(statusId==='ABSOLUTE_ZERO')clearFrozenWorldTerrain(ctx,unit.id);
+    if(statusId==='ABSOLUTE_ZERO'){clearFrozenWorldTerrain(ctx,unit.id);removeStatus(ctx,unit,'WINTER_ONSET','EXPIRED');}
     ctx.emit({ type: 'STATUS_REMOVED', unitId: unit.id, status: statusId, reason });
   }
 }

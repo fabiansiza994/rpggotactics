@@ -1,6 +1,7 @@
 import type { DamageType } from '../combat/damage-types';
 
 export type StatusId =
+  | 'WINTER_ONSET'
   | 'LIGHT_PROTECTION'
   | 'LIGHT_VIGIL'
   | 'ASH_MARK'
@@ -168,6 +169,9 @@ export const isSourcedStatus = (def: Pick<StatusDef, 'preyMark' | 'taunt'>): boo
 
 /** Duration is counted in the owner's turns and decremented at the end of each of them. */
 export interface StatusInstance {
+  /** Opaque battle-local world instance and its dependent storm. */
+  worldInstanceId?: string;
+  linkedWorldInstanceId?: string;
   expiresAfterCasterTurn?: string;
   /** Absolute lifecycle boundary tied to the caster, including when applied to another ally. */
   expiresAtCasterTurnStart?: string;

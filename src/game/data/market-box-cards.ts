@@ -211,6 +211,7 @@ export const MARKET_SEARCHERS: CardDefinition[] = [
   heroId: heroId as string,
   cost: cost as number,
   rarity: "RARE",
+  ...(id === "winter_call" ? {maxCopies:2} : {}),
   category: "UTILITY",
   tags: [
     "commercial-box",

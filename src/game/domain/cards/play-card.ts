@@ -1,3 +1,4 @@
+import {iceSpellGround,freezeSpellGround} from './ice-terrain';
 import {hasLegalSilenceResponse} from './silence-eligibility';
 import { exchangeHandCard, cardClassAllowed } from './hand-trade';
 import { missingRivalZone } from './rival-zones';
@@ -46,6 +47,7 @@ export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = fa
   const missingZone = missingRivalZone(ctx.state, def);
   if (missingZone) return fail('RIVAL_ZONE_UNAVAILABLE', `Este encuentro no dispone de ${missingZone === 'HAND' ? 'mano' : 'mazo'} rival. Esta carta necesita instancias reales en esa zona.`) as Playability;
   def=worldFrozenCard(def,caster);
+  if(def.id==='winter_onset'&&(!worldFrozen(caster)||caster.statuses.some(s=>s.id==='WINTER_ONSET')))return fail('INVALID_TARGET',!worldFrozen(caster)?'Requiere tu propio Mundo Gélido activo.':'Ya tienes Inicio de la Tormenta activo.') as Playability;
   if(def.id==='absolute_zero'&&worldFrozen(caster))return fail('INVALID_TARGET','Mundo Gélido ya está activo: no se renueva ni se consume otra copia.') as Playability;
   if(def.category==='ATTACK'&&caster.statuses.some(s=>s.id==='SNOW_WAR'))return fail('CASTER_INCAPACITATED','Guerra de Nieve impide jugar otras cartas ATTACK; puedes usar las demás categorías.') as Playability;
   if(caster.statuses.some(s=>s.id==='GLACIER_CLAW') && allCardEffects(def).some(fx=>['STEP_CASTER','ICE_WALK','CHARGE_CASTER','TELEPORT_CASTER','SWAP_WITH_TARGET','SWAP_PAIR'].includes(fx.type)))return fail('MOVEMENT_PREVENTED','Garra del Glaciar impide desplazamientos voluntarios; todavía puedes atacar y jugar otras cartas.') as Playability;
@@ -231,7 +233,11 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     recoverToHand(ctx, fromDiscard.uid, def.discardSearch, def.discardSearch === 'RITUAL_PIECE');
   }
   const directAttack = def.targeting.type === 'UNIT' && !def.targeting.area ? (def.targeting.range === 1 ? 'DIRECT_MELEE' as const : depthEnabled(ctx) ? 'DIRECT_RANGED' as const : undefined) : undefined;
+  const ground=iceSpellGround(def,resolved,selectedEffects);
+  const obstaclesBefore=ground.length&&selectedEffects.some(e=>e.type==='CREATE_OBSTACLE')?new Set(ctx.state.obstacles.map(o=>o.id)):null;
   applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id, cardUid: card.uid }, selectedEffects);
+  const actualGround=obstaclesBefore?ctx.state.obstacles.filter(o=>!obstaclesBefore.has(o.id)).map(o=>o.pos):ground;
+  if(ground.length)freezeSpellGround(ctx,actualGround,caster.id);
 
   if (def.unique) {
     // Única: once per battle. Banished, so no recycle, search or second copy can bring it back.

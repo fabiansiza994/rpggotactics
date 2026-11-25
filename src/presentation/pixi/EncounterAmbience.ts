@@ -19,9 +19,13 @@ export class EncounterAmbience {
   readonly foreground = new Container({ eventMode: 'none' });
   private winterActive=false;
   private winterAlpha=0;
+  private stormActive=false;
+  private stormBlend=0;
+  private snowDrift=0;
+  private snowFall=0;
   private winterFlakes:Graphics[]=[];
   private winterGlow:Graphics|null=null;
-  setFrozenWorld(active:boolean):void {this.winterActive=active;}
+  setFrozenWorld(active:boolean,storm=false):void {this.winterActive=active;this.stormActive=active&&storm;}
   private pools: Graphics[] = [];
   private fog: Graphics[] = [];
   private sparks: { art: Graphics; x: number; y: number; phase: number }[] = [];
@@ -77,9 +81,13 @@ export class EncounterAmbience {
   tick(ms: number, reduced: boolean, compact = false) {
     this.clock += ms;
     const target=this.winterActive?1:0;
+    this.stormBlend+=((this.stormActive?1:0)-this.stormBlend)*Math.min(1,ms/1200);
+    const gust=.7+.3*Math.sin(this.clock/1500);
+    this.snowFall+=ms*(.000055+this.stormBlend*.00008);
+    this.snowDrift+=ms*(.000007+this.stormBlend*.00022*gust);
     this.winterAlpha+=(target-this.winterAlpha)*Math.min(1,ms/350);
     if(this.winterGlow)this.winterGlow.alpha=this.winterAlpha;
-    this.winterFlakes.forEach((g,i)=>{g.visible=!reduced&&this.winterAlpha>.01&&(!compact||i<7);if(!g.visible)return;const phase=(i*.173+this.clock*.000055)%1;g.position.set(this.left+((i*.371+phase*.13)%1)*this.width,phase*this.height);g.alpha=Math.sin(phase*Math.PI)*this.winterAlpha*.5;});
+    this.winterFlakes.forEach((g,i)=>{g.visible=!reduced&&this.winterAlpha>.01&&(!compact||i<7);if(!g.visible)return;const phase=(i*.173+this.snowFall)%1;g.position.set(this.left+((i*.371+phase*.13+this.snowDrift)%1)*this.width,phase*this.height);g.rotation=-this.stormBlend*.9;g.scale.set(1+this.stormBlend*(i%4===0?5:7),1);g.alpha=Math.sin(phase*Math.PI)*this.winterAlpha*(.5+this.stormBlend*.12);});
     const { lights, fog: fogWake, motes } = this.wake;
     if (this.environment) this.environment.wake = Math.min(1,lights);
     for (const [i, pool] of this.pools.entries()) {

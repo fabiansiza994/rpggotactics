@@ -17,7 +17,7 @@ import {
   type DirectionalCastView,
 } from './wizardCast.ts';
 import { wizardSpriteScale } from './wizardSpriteScale.ts';
-import { idleDisplacement } from './idleBreathing.ts';
+import { prepareIdlePose } from './idleBreathing.ts';
 import { FOOT_Y, TILE, characterSpec, spriteScale } from './renderContract.ts';
 
 /**
@@ -28,6 +28,7 @@ export class PaintedFigure extends Container {
   private readonly sprite: Sprite;
   private idleMesh: MeshPlane | null = null;
   private idleVertices: Float32Array | null = null;
+  private idlePrepared?:{key:string;base:Float32Array;sample:ReturnType<typeof prepareIdlePose>};
   private idlePose = true;
   private directional: WizardFacing | null = null;
   private motion: CharacterMotion = 'idle';
@@ -276,13 +277,11 @@ export class PaintedFigure extends Container {
     const buffer = mesh.geometry.getAttribute('aPosition').buffer;
     const vertices = buffer.data;
     const base = this.idleVertices!;
+    const poseKey=`${this.animationVariantId}:${mesh.texture.width}:${mesh.texture.height}`;
+    if(this.idlePrepared?.key!==poseKey||this.idlePrepared.base!==base)this.idlePrepared={key:poseKey,base,sample:prepareIdlePose(this.animationVariantId,base,mesh.texture.width,mesh.texture.height)};
+    const displacement=this.idlePrepared.sample(phase,enabled);
     for (let i = 0; i < vertices.length; i += 2) {
-      const delta = idleDisplacement(
-        enabled ? this.animationVariantId : '',
-        base[i]! / mesh.texture.width,
-        base[i + 1]! / mesh.texture.height,
-        phase,
-      );
+      const delta = {x:displacement[i]!,y:displacement[i+1]!};
       const headWeight = Math.max(
         0,
         1 -

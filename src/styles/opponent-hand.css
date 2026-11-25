@@ -1,0 +1,13 @@
+/* Uses the EXISTING rival zone row. Absolute, anonymous, noninteractive: zero layout budget. */
+.battle .battle-pile-bank.is-rival .opponent-hand {--opponent-card-width:26px;position:absolute;top:2px;left:50%;transform:translateX(-50%);width:min(calc(26px + max(0,var(--opponent-count) - 1)*16px),calc(100% - 152px));height:40px;pointer-events:none;user-select:none;-webkit-user-select:none;z-index:2;}
+.battle .opponent-hand-card {position:absolute;top:0;width:var(--opponent-card-width);height:38px;border-radius:3px;transform:translateY(var(--opponent-rise)) rotate(var(--opponent-angle));transform-origin:50% 0;filter:brightness(.8);transition:left 180ms ease-out,transform 180ms ease-out;box-shadow:0 1px 4px #0008;overflow:hidden;}
+.opponent-hand-card img {width:100%;height:100%;display:block;object-fit:fill;-webkit-user-drag:none;pointer-events:none;}
+.opponent-hand-card.is-arriving {animation:opponent-back-arrive 220ms ease-out;}
+.battle .hand.opponent-hand-flight {border:0;background:transparent;box-shadow:none;}
+.battle .hand.opponent-hand-flight .card.card-activation {padding:0;border:0;background:transparent;border-radius:3px;filter:brightness(.85);}
+.opponent-hand-flight .card>img {width:100%;height:100%;display:block;object-fit:fill;}
+@keyframes opponent-back-arrive {from{opacity:.2}to{opacity:1}}
+@media(max-width:600px) and (orientation:portrait){body .battle .board-column>.battle-pile-bank.is-rival{padding-left:calc(6px + env(safe-area-inset-left));}.battle .battle-pile-bank.is-rival .opponent-hand {--opponent-card-width:24px;top:4px;height:36px;}.battle .opponent-hand-card{height:34px;}}
+@media(prefers-reduced-motion:reduce){.battle .opponent-hand-card {transition:none;animation:none;}}
+/* The contextual Seal already names the opposing cast; keep its controls clear. */
+body:has(.silence-context) .battle .mobile-opponent-notices {visibility:hidden;}

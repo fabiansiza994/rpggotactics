@@ -90,6 +90,10 @@ export interface PlayerRecord {
   worldRuns: Record<string, Record<string, RunState | null>>;
   /** Server-only revision keyed by campaign/champion; never accepted from the client. */
   campaignRevisions?: Record<string, number>;
+  /** Raw server-owned provenance; never included in a public state response. */
+  campaignStorage?: Record<string,{json:string;updatedAt:number;revision?:number;heroJson?:string}>;
+  /** Server-only sealed Story cohort. Never accepted from request payloads. */
+  storyCohorts?: Record<string,{runJson:string;closed:boolean;snapshotJson:string|null;proofDigest:string|null}>;
   /** Durable world achievements per champion (stored rows + legacy evidence, see loadWorldHistory). */
   worldHistory: Record<string, WorldHistory>;
   skirmish: StoredSkirmish | null;
@@ -262,6 +266,7 @@ export async function loadPlayer(
 
   // Runs were written by this server; they are still re-validated against the current content,
   // and a row is only accepted as the run of the champion it is stored under.
+  const campaignStorage:NonNullable<PlayerRecord["campaignStorage"]>={};
   const runs: Record<string, RunState | null> = {};
   for (const heroId of ASCENT_CAMPAIGN.heroIds) {
     let stored: { run_json: string; updated_at: number } | undefined = runRows.results.find((r) => r.campaign_id === ASCENT_CAMPAIGN.id && r.hero_id === heroId);
@@ -269,6 +274,8 @@ export async function loadPlayer(
     // row so progress written after the migration copy is never replaced by the stale copy.
     if (heroId === defaultCampaignHero(ASCENT_CAMPAIGN) && legacyRun && (!stored || legacyRun.updated_at > stored.updated_at))
       stored = legacyRun;
+    const heroRow=runRows.results.find(r=>r.campaign_id===ASCENT_CAMPAIGN.id&&r.hero_id===heroId);
+    if(stored)campaignStorage[`${ASCENT_CAMPAIGN.id}:${heroId}`]={json:stored.run_json,updatedAt:stored.updated_at,revision:heroRow?.revision,heroJson:heroRow?.run_json};
     const parsed = stored ? parseRunSave(stored.run_json, ASCENT_CAMPAIGN, content) : null;
     runs[heroId] = parsed?.status === 'OK' && parsed.run.heroId === heroId ? parsed.run : null;
   }
@@ -278,6 +285,7 @@ export async function loadPlayer(
     worldRuns[campaign.id] = {};
     for (const heroId of campaign.heroIds) {
       const stored = runRows.results.find((r) => r.campaign_id === campaign.id && r.hero_id === heroId);
+      if(stored)campaignStorage[`${campaign.id}:${heroId}`]={json:stored.run_json,updatedAt:stored.updated_at,revision:stored.revision,heroJson:stored.run_json};
       const parsed = stored ? parseRunSave(stored.run_json, campaign, content) : null;
       worldRuns[campaign.id]![heroId] = parsed?.status === 'OK' && parsed.run.heroId === heroId ? parsed.run : null;
     }
@@ -321,6 +329,7 @@ export async function loadPlayer(
     runs,
     run: runs[defaultCampaignHero(ASCENT_CAMPAIGN)] ?? null,
     worldRuns,
+    campaignStorage,
     campaignRevisions: Object.fromEntries(runRows.results.map(r => [`${r.campaign_id}:${r.hero_id}`, r.revision])),
     worldHistory: await loadWorldHistory(db, userId),
     skirmish: await loadSkirmish(db, userId, content),
@@ -551,32 +560,18 @@ export function deckCardStatements(
   );
 }
 
-/** The run, in its champion's row. Mage runs are mirrored to the pre-0011 table (rollback safety). */
-function runStatements(
-  db: D1Database,
-  userId: number,
-  run: RunState,
-  now: number,
-): D1PreparedStatement[] {
-  const json = serializeRun(run);
-  const out = [
-    db
-      .prepare(
-        `INSERT INTO tactics_hero_campaign_runs (user_id, campaign_id, hero_id, run_json, save_version, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT (user_id, campaign_id, hero_id) DO UPDATE SET run_json = excluded.run_json, save_version = excluded.save_version, updated_at = excluded.updated_at`,
-      )
-      .bind(userId, run.campaignId, run.heroId, json, SERVER_SAVE_VERSION, now),
-  ];
-  if (run.heroId === defaultCampaignHero(ASCENT_CAMPAIGN) && run.campaignId === ASCENT_CAMPAIGN.id)
-    out.push(
-      db
-        .prepare(
-          `INSERT INTO tactics_campaign_runs (user_id, campaign_id, run_json, save_version, updated_at) VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT (user_id, campaign_id) DO UPDATE SET run_json = excluded.run_json, save_version = excluded.save_version, updated_at = excluded.updated_at`,
-        )
-        .bind(userId, run.campaignId, json, SERVER_SAVE_VERSION, now),
-    );
-  return out;
+/** Every Story write requires a single-transaction ticket; older Workers cannot create it. */
+function runStatements(db:D1Database,userId:number,run:RunState,now:number,closedLegacyProofDigest?:string):D1PreparedStatement[]{
+ const token=crypto.randomUUID(),json=JSON.stringify({...JSON.parse(serializeRun(run)),winterWrite:token});
+ const out:D1PreparedStatement[]=[];
+ if(closedLegacyProofDigest)out.push(db.prepare(`UPDATE tactics_profiles SET save_version=CASE WHEN EXISTS(SELECT 1 FROM tactics_story_legacy_cohort WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0) THEN save_version ELSE NULL END WHERE user_id=?`).bind(userId,run.campaignId,run.heroId,userId));
+ if(closedLegacyProofDigest)out.push(db.prepare(`UPDATE tactics_story_legacy_cohort SET closed=1,proof_digest=? WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0`).bind(closedLegacyProofDigest,userId,run.campaignId,run.heroId));
+ out.push(db.prepare('INSERT INTO tactics_story_write_tickets(token,user_id,campaign_id,hero_id,run_json) VALUES(?,?,?,?,?)').bind(token,userId,run.campaignId,run.heroId,json));
+ out.push(db.prepare(`INSERT INTO tactics_story_admissions(user_id,campaign_id,hero_id,run_seed,encounter_id,engine) VALUES(?,?,?,?,?,CASE WHEN EXISTS(SELECT 1 FROM tactics_story_legacy_cohort WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0) THEN 'pre-winter-b0e18cc8' ELSE 'winter-dominion-1' END) ON CONFLICT(user_id,campaign_id,hero_id) DO UPDATE SET run_seed=excluded.run_seed,encounter_id=excluded.encounter_id,engine=excluded.engine`).bind(userId,run.campaignId,run.heroId,run.seed,run.currentEncounterId,userId,run.campaignId,run.heroId));
+ out.push(db.prepare(`INSERT INTO tactics_hero_campaign_runs(user_id,campaign_id,hero_id,run_json,save_version,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id,campaign_id,hero_id) DO UPDATE SET run_json=excluded.run_json,save_version=excluded.save_version,updated_at=excluded.updated_at`).bind(userId,run.campaignId,run.heroId,json,SERVER_SAVE_VERSION,now));
+ if(run.heroId===defaultCampaignHero(ASCENT_CAMPAIGN)&&run.campaignId===ASCENT_CAMPAIGN.id)out.push(db.prepare(`INSERT INTO tactics_campaign_runs(user_id,campaign_id,run_json,save_version,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(user_id,campaign_id) DO UPDATE SET run_json=excluded.run_json,save_version=excluded.save_version,updated_at=excluded.updated_at`).bind(userId,run.campaignId,json,SERVER_SAVE_VERSION,now));
+ out.push(db.prepare('DELETE FROM tactics_story_write_tickets WHERE token=?').bind(token));
+ return out;
 }
 
 function pityStatement(
@@ -715,6 +710,8 @@ export async function saveCampaignStep(
   step: {
     run: RunState;
     expectedRevision?: number;
+    /** Canonical digest of the one legacy victory; retained across future runs. */
+    closedLegacyProofDigest?: string;
     skirmish?: { id: number; step: 'VICTORY' | 'CLAIM' };
     grant?: {
       /** Collection owner: the champion, or SHARED_POOL_ID for a neutral card (`collectionOwner`). */
@@ -735,6 +732,7 @@ export async function saveCampaignStep(
   },
 ): Promise<void> {
   const { grant } = step;
+  if(step.closedLegacyProofDigest!==undefined&&!/^[a-f0-9]{64}$/.test(step.closedLegacyProofDigest))throw Error('Invalid legacy proof digest');
   if (grant && (!Number.isSafeInteger(grant.copies) || grant.copies < 1)) throw new Error('Invalid card acquisition delta');
   const campaignClaim = step.log?.event === 'CLAIMED' && !step.skirmish;
   if (campaignClaim && !Number.isSafeInteger(step.expectedRevision)) throw new Error('Missing campaign claim revision');
@@ -752,7 +750,7 @@ export async function saveCampaignStep(
             .prepare('UPDATE tactics_skirmishes SET run_json = ? WHERE id = ? AND user_id = ?')
             .bind(serializeRun(step.run), step.skirmish.id, userId),
         ]
-      : runStatements(db, userId, step.run, now)),
+      : runStatements(db, userId, step.run, now,step.closedLegacyProofDigest)),
     ...(grant
       ? [
           db

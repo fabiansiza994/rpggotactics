@@ -1,0 +1,12 @@
+// Build-only entry. Imports the exact pinned production source, never Winter rules.
+import baseline,{corsHeaders} from './legacy-source/server/src/index';
+import type {Env} from './legacy-source/server/src/db';
+export {PvPMatchRoom,SocialHub} from './legacy-source/server/src/index';
+export default {
+ ...baseline,
+ fetch(request:Request,env:Env):Promise<Response>{
+  if(request.method==='POST'&&new URL(request.url).pathname.startsWith('/api/tactics/campaign/'))
+   return Promise.resolve(new Response(JSON.stringify({error:{code:'STORY_TRANSITION_PAUSED',message:'Historia se está actualizando. Conserva el resultado y reintenta.'}}),{status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store',...corsHeaders(request.headers.get('Origin'),env.ALLOWED_ORIGINS)}}));
+  return baseline.fetch(request,env);
+ }
+};

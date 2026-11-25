@@ -22,6 +22,7 @@ interface Props {
   responseRole?: string;
   responseProgress?: number;
   presentationHidden?: boolean;
+  suppressTooltip?: boolean;
   def: CardDefinition;
   hotkey: number;
   selected: boolean;
@@ -58,6 +59,7 @@ export const CATEGORY_ICON: Record<CardDefinition['category'], IconName> = {
 /** Illustrated presentation; all rule text and costs come directly from Core content. */
 export function CardView({
   presentationHidden = false,
+  suppressTooltip = false,
   def,
   hotkey,
   selected,
@@ -140,7 +142,7 @@ export function CardView({
           '--deal-delay': `${staggerDelay(hotkey - 1, handSize, STAGGER.card)}ms`,
         } as CSSProperties
       }
-      title={block ? undefined : def.rulesText}
+      title={block || suppressTooltip ? undefined : def.rulesText}
       onClick={(event) => {
         if (holdRef.current?.consumeClick()) { event.preventDefault(); event.stopPropagation(); return; }
         if (!disabled) onClick();

@@ -1,3 +1,5 @@
+import {BattleRail} from './BattleRails';
+import {OpponentHand} from './OpponentHand';
 import { useEffect, useRef, useState } from "react";
 import type { GameContent, GameState, CardInstance } from "../../game";
 import { EquippedCardBack, STANDARD_CARD_BACK } from "../cosmetics/CardBack";
@@ -55,6 +57,7 @@ export function BattlePileBank({
       className={`battle-pile-bank ${opponent ? "is-rival" : "is-own"}`}
       aria-label={opponent ? "Zonas del rival" : "Tus zonas"}
     >
+      <span className="battle-pile-owner" aria-hidden="true">{opponent?'Rival':'Tú'}</span>
       <button
         className="battle-pile battle-pile-deck"
         title={`${who} mazo`}
@@ -85,6 +88,7 @@ export function BattlePileBank({
         <GameIcon name="discard" />
         <b>{count}</b>
       </button>
+      {opponent && state.pileCounts && <BattleRail slot="opponent"><OpponentHand count={state.pileCounts.opponentHand} opponentId={state.units.find(u=>u.kind==='HERO'&&u.id!==state.player.heroId)?.id??''}/></BattleRail> }
       {opened && (
         <dialog
           ref={dialog}

@@ -149,6 +149,7 @@ export function BattleCardFeature({
             def={card}
             engine={engine}
             className="battle-card-feature"
+            scrollableDescription
             extras={extras}
           />
         )}
@@ -233,7 +234,7 @@ export function FeatureCard({
 }) {
   const def=engine?worldFrozenCard(baseDef,engine.state.units.find(u=>u.id===engine.heroId)):baseDef;
   const premiumRef = useCardPremiumEffect<HTMLElement>(def, 'large', true, interactive ?? !ariaHidden);
-  const readableRules = scrollableDescription ?? (!ariaHidden && ['allies_of_darkness', 'path_to_light'].includes(def.expansion ?? ''));
+  const readableRules = scrollableDescription ?? (!ariaHidden && (def.id==='winter_onset'||['allies_of_darkness', 'path_to_light'].includes(def.expansion ?? '')));
   const premium = def.id === 'summon_war_drake';
   const rarity = def.rarity ?? 'COMMON';
   const cost = engine?.getCardCost(engine.state.player.hand.find(c => c.cardId === def.id)?.uid ?? '')?.cost ?? def.cost;
@@ -292,6 +293,7 @@ export function FeatureCard({
         <p className="fc-text" tabIndex={readableRules ? 0 : undefined} role={readableRules ? 'region' : undefined} aria-label={readableRules ? `Efecto completo de ${def.name}; desplázate para leer` : undefined} data-card-rules-scroll={readableRules || undefined}>{def.rulesText}
          {def.worldFrozenUpgrade&&!def.worldFrozenActive&&<span className="fc-world-upgrade"><b>🌨 Mundo Gélido</b>{def.worldFrozenUpgrade.rulesText}</span>}
          {def.worldFrozenActive&&<span className="fc-world-active">🌨 Potenciada por Mundo Gélido</span>}
+         {className.includes('battle-card-feature')&&<span className="fc-targeting-notes">{targetingNotes(def).map(note=><small key={note}>{note}</small>)}</span>}
         </p>
         <footer className="fc-support">
           <CardPattern targeting={def.targeting} />

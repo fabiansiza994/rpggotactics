@@ -7,6 +7,7 @@ export const STATUS_LABEL: Record<StatusId, string> = {
   DARK_WORLD: 'Mundo Oscuro',
   LIGHT_WORLD: 'Mundo de Luz',
  SNOW_WAR:'Guerra de Nieve',GLACIER_CLAW:'Garra del Glaciar',
+ WINTER_ONSET:'Inicio de la Tormenta',
  ABSOLUTE_ZERO:'Mundo Gélido',
  FROZEN:'Congelado: próximo movimiento +1 PM',
  FROST_MANTLE:'Manto de Escarcha',

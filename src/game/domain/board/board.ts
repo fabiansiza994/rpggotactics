@@ -5,7 +5,7 @@ export interface Tile {
   terrain: TerrainType;
   terrainOwnerId?: string;
   drakeFireHitIds?:string[];
-  /** ICE sustained only while this caster retains Mundo Gélido; never permanent base terrain. */
+  /** Legacy climate provenance; ICE now resumes its remaining duration after the field ends. */
   frozenWorldOwnerId?: string;
   slippery?: boolean;
   slipDistance?:number;

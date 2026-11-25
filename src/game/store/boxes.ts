@@ -35,6 +35,13 @@ export function createBoxStock(
     stock.light_redemption_spirit = 2;
     return stock;
   }
+  if(target===80&&cards.some(c=>c.id==='winter_onset')){
+    const stock=createBoxStock(cards.filter(c=>c.id!=='winter_onset'),target);
+    // Existing terrain enablers/searchers/Ultras retain their slots. Two support commons each lose one.
+    stock.shatter_ice!--;stock.frost_mantle!--;stock.winter_onset=2;
+    if(stock.shatter_ice!<1||stock.frost_mantle!<1||boxTotal(stock)!==80)throw Error('Invalid Antarctic allocation');
+    return stock;
+  }
   const sorted = [...cards].sort((a, b) => a.id.localeCompare(b.id)),
     stock: BoxStock = Object.fromEntries(sorted.map((c) => [c.id, 1]));
   const weight = { COMMON: 8, UNCOMMON: 5, RARE: 2, LEGENDARY: 1, ULTRA: 0 };

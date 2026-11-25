@@ -508,5 +508,5 @@ list.push({
 
 list.push(...MARKET_BOX_ULTRAS,...MARKET_SEARCHERS, ...DARK_LIGHT_CARDS);
 export const CARDS: Readonly<Record<string, CardDefinition>> = Object.fromEntries(
-  list.map((c) => [c.id, withWorldUpgrade(c.id==='absolute_zero'?{...c,rarity:'ULTRA',maxCopies:2,commercialUltra:true}:c)]),
+  list.map((c) => [c.id, withWorldUpgrade(c.id==='absolute_zero'?{...c,rarity:'ULTRA',maxCopies:3,commercialUltra:true}:c)]),
 );

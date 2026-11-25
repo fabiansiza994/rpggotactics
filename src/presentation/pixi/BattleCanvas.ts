@@ -1,3 +1,6 @@
+import {winterOnsetActive} from '../../game/domain/combat/winter-onset';
+import {fitBattlefield} from '../responsive/battleFit';
+import {ManualCamera} from './ManualCamera';
 import {StormOrbView} from './StormOrbView';
 import {drawStormOrbs} from './glyphOverlay';
 import {unitPresentationId} from '../assets/unitPresentation';
@@ -41,7 +44,7 @@ import { MechanismLayer } from './MechanismLayer';
 import { RotatingSections } from './RotatingSections';
 import { shapeshifterPresentationEnabled } from '../shapeshifterRelease';
 import { gaitGeometry } from '../qa/locomotion/gaitGeometry';
-import { characterSpec } from './renderContract';
+import { characterSpec,CHARACTER_SPECS } from './renderContract';
 import { verticalAsset, verticalGeometry } from '../qa/locomotion/directionalProfiles';
 import { shapeshifterQaEnabled } from '../qa/shapeshifter/access';
 import { formUnitVisualId } from '../qa/shapeshifter/visuals';
@@ -90,7 +93,7 @@ import { introTimeline, type IntroBeat, type IntroVariant } from '../motion/intr
 import { INTRO, easing } from '../motion/tokens';
 import { motionCues } from '../motion/motionCues';
 
-import { fitBattlefield } from '../responsive/battleFit';
+
 import { resolveMouseTarget } from '../input/aim';
 
 export { TILE };
@@ -157,6 +160,42 @@ export class BattleCanvas {
   private readonly introRoot = new Container();
   private readonly cameraRoot = new Container();
   private readonly camera = new CameraController(this.cameraRoot);
+  private readonly manualCamera = new ManualCamera();
+  private cameraStartKey:string|undefined;
+  private cameraGesture=false;
+  private cameraGestureUntil=0;
+  private cameraInputCleanup: (()=>void)|null=null;
+  cameraControl(action:'left'|'right'|'reset'|'out'|'in'):void {
+    if(!this.ready || !window.matchMedia('(min-width:900px) and (min-height:600px)').matches)return;
+    if(this.director.busy || this.sections.busy || this.mechanisms.busy)return;
+    if(action==='reset')this.manualCamera.reset();else if(action==='in'||action==='out')this.manualCamera.magnify(action==='in'?1.18:1/1.18);else this.manualCamera.rotate(action==='left'?-1:1);
+    this.layout();
+  }
+  private installCameraInput():void {
+    const canvas=this.app.canvas,points=new Map<number,{x:number;y:number}>();
+    let previousDistance=0,last:{x:number;y:number}|null=null;
+    const enabled=()=>window.matchMedia('(min-width:900px) and (min-height:600px)').matches;
+    const wheel=(e:WheelEvent)=>{if(!enabled())return;e.preventDefault();this.manualCamera.magnify(Math.exp(-Math.max(-100,Math.min(100,e.deltaY))*.0025));this.layout();};
+    const down=(e:PointerEvent)=>{
+      if(!enabled())return;
+      if(e.pointerType==='touch')points.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(e.button===1 || (e.button===0&&e.altKey) || points.size===2){
+        this.cameraGesture=true;this.cameraGestureUntil=performance.now()+200;last=points.size===2?(()=>{const[a,b]=[...points.values()];return{x:(a!.x+b!.x)/2,y:(a!.y+b!.y)/2};})():{x:e.clientX,y:e.clientY};previousDistance=0;
+        canvas.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
+      }
+    };
+    const move=(e:PointerEvent)=>{
+      if(points.has(e.pointerId))points.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(!this.cameraGesture)return;
+      e.preventDefault();e.stopImmediatePropagation();
+      if(points.size===2){const [a,b]=[...points.values()];const distance=Math.hypot(a!.x-b!.x,a!.y-b!.y);const center={x:(a!.x+b!.x)/2,y:(a!.y+b!.y)/2};if(previousDistance)this.manualCamera.magnify(distance/previousDistance);previousDistance=distance;if(last&&this.manualCamera.zoom>1){this.manualCamera.pan.x+=center.x-last.x;this.manualCamera.pan.y+=center.y-last.y;}last=center;
+      }else if(last&&this.manualCamera.zoom>1){this.manualCamera.pan.x+=e.clientX-last.x;this.manualCamera.pan.y+=e.clientY-last.y;last={x:e.clientX,y:e.clientY};}
+      this.layout();
+    };
+    const up=(e:PointerEvent)=>{points.delete(e.pointerId);if(this.cameraGesture){e.preventDefault();e.stopImmediatePropagation();this.cameraGestureUntil=performance.now()+200;if(points.size===0){this.cameraGesture=false;last=null;previousDistance=0;}}};
+    canvas.addEventListener('wheel',wheel,{passive:false});canvas.addEventListener('pointerdown',down,true);canvas.addEventListener('pointermove',move,true);canvas.addEventListener('pointerup',up,true);canvas.addEventListener('pointercancel',up,true);
+    this.cameraInputCleanup=()=>{canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('pointerdown',down,true);canvas.removeEventListener('pointermove',move,true);canvas.removeEventListener('pointerup',up,true);canvas.removeEventListener('pointercancel',up,true);points.clear();};
+  }
   private readonly world = new Container();
   private immersionFinished=false;
   private readonly immersionScenery=new Container();
@@ -295,6 +334,7 @@ export class BattleCanvas {
       this.projectionPending = false;
       this.layout();
     }
+    if(this.manualCamera.tick(elapsed,this.effects.reduced))this.layout();
     this.camera.tick(elapsed);
     const mechanismBusy = this.mechanisms.busy;
     this.mechanisms.tick(elapsed, this.effects.reduced);
@@ -390,6 +430,9 @@ export class BattleCanvas {
   private vm: BoardViewModel | null = null;
   private refreshFacing = false;
   private lastSceneKey = '';
+  private lastTerrainStateKey='';
+  private terrainBuilds=0;
+  qaFrozenTerrain(){return {...this.environment.frostSnapshot,terrainBuilds:this.terrainBuilds};}
   private lastRangesKey = '';
   /** Logical board size of the scene being drawn; read from GameState on every draw. */
   private boardSize = { w: this.proj.cols, h: this.proj.rows };
@@ -600,6 +643,7 @@ export class BattleCanvas {
       this.callbacks.onTileHover(null);
     });
     this.app.stage.on('pointermove', (e) => {
+      if(this.cameraGesture)return;
       if (e.pointerType !== 'touch' && !this.portraitQuery.matches) {
         const tile = this.mouseTarget(e);
         const candidates = this.tapCandidates(e);
@@ -613,6 +657,7 @@ export class BattleCanvas {
     });
     // One pointer pipeline; the device only decides how the aimed tile is confirmed.
     this.app.stage.on('pointertap', (e) => {
+      if(this.cameraGesture || performance.now()<this.cameraGestureUntil || e.button===1 || e.altKey)return;
       if (e.button === 2) return this.callbacks.onCancel();
       if(this.callbacks.onSelectUnit?.(this.tapCandidates(e,false),e.shiftKey))return;
       const ground = this.tileFromEvent(e);
@@ -629,6 +674,7 @@ export class BattleCanvas {
     this.app.renderer.on('resize', () => this.layout());
     this.app.ticker.add(this.animateWorld);
     this.ready = true;
+    this.installCameraInput();
     loadingMark("canvas-ready");
     document.addEventListener('visibilitychange', this.syncVisibility);
     this.portraitQuery.addEventListener('change', this.syncVisibility);
@@ -639,6 +685,7 @@ export class BattleCanvas {
 
   destroy(): void {
     if(this.destroyed)return;
+    this.cameraInputCleanup?.();this.cameraInputCleanup=null;
     for(const view of this.lifeFeathers.values())view.destroy();this.lifeFeathers.clear();
     for(const view of this.scoutResources.values())view.destroy();this.scoutResources.clear();
     this.offImmersion();this.haptics.destroy();this.atmosphere.destroy();
@@ -748,7 +795,8 @@ export class BattleCanvas {
   /** Rebuild the projection when the viewport class or board size changes. Returns true if it did. */
   private ensureProjection(): boolean {
     const { width, height } = this.app.screen;
-    const base = projectionPreset(width, height - this.bleed());
+    const wide=window.matchMedia('(min-width:900px) and (min-height:600px)').matches;
+    const base = wide?projectionPreset(window.innerWidth,window.innerHeight):projectionPreset(width, height - this.bleed());
     // CSS owns the responsive composition; the same projection still draws and picks every tile.
     const depth = this.host
       ? parseFloat(getComputedStyle(this.host).getPropertyValue('--battle-depth'))
@@ -758,7 +806,7 @@ export class BattleCanvas {
       const hero = this.vm.state.units.find(u => u.id === this.vm?.heroId);
       this.portraitCamera = { key, turn: mobileCameraTurn(this.vm.cameraOrigin ?? hero?.pos ?? {x:0,y:0}, this.boardSize.w, this.boardSize.h) };
     }
-    const quarterTurn: 0 | 1 | 2 | 3 = this.portraitQuery.matches ? this.portraitCamera?.turn ?? 1 : 0;
+    const quarterTurn: 0 | 1 | 2 | 3 = this.portraitQuery.matches ? this.portraitCamera?.turn ?? 1 : window.matchMedia('(min-width:900px) and (min-height:600px)').matches ? this.manualCamera.turn : 0;
     const preset = { ...base, quarterTurn, depth: Number.isFinite(depth) ? depth : base.depth, oblique: TEMPLE_PLACES[this.vm?.state.scenarioId ?? ''] ? .58 : 0 };
     const { w, h } = this.boardSize;
     if (
@@ -777,13 +825,16 @@ export class BattleCanvas {
     this.proj = new GridProjection({ cols: w, rows: h, tile: TILE, ...preset });
     this.lastSceneKey = '';
     this.lastRangesKey = '';
+    this.refreshFacing = true;
+    this.frozenWorldDustKey = '';
     return true;
   }
 
   /** World bounds that must stay on screen: rim, front props and back-row headroom. */
+  private stableDesktopHeadroom: number | null = null;
   private framingBounds() {
     const p = this.proj;
-    const half = p.frontWidth / 2 + Math.abs(p.oblique)*p.height/2 + TILE * (p.quarterTurn ? .25 : 1.05);
+    const half = p.frontWidth / 2 + Math.abs(p.oblique)*p.height/2 + TILE * (this.portraitQuery.matches ? .25 : window.matchMedia('(min-width:900px) and (min-height:600px)').matches ? 0 : 1.05);
     const frame = this.host
       ? parseFloat(getComputedStyle(this.host).getPropertyValue('--battle-front-frame'))
       : NaN;
@@ -791,7 +842,12 @@ export class BattleCanvas {
     return {
       left: -half,
       right: half,
-      top: -Math.max(HEADROOM, ...(shapeshifterPresentationEnabled ? (this.vm?.state.units ?? []).map(unit=>{
+      top: !this.portraitQuery.matches && window.matchMedia('(min-width:900px) and (min-height:600px)').matches
+        ? -(this.stableDesktopHeadroom ??= Math.max(HEADROOM,...Object.keys(CHARACTER_SPECS).map(id=>{
+          const spec=characterSpec(id),vertical=verticalAsset(id)?verticalGeometry(id,256):null,gait=gaitGeometry(id,spec,TILE,256);
+          return Math.max(visualHeight(spec,TILE),vertical?.topClearance??0,gait?.topClearance??0)*unitVisualScale(id)+24;
+        })))
+        : -Math.max(HEADROOM, ...(shapeshifterPresentationEnabled ? (this.vm?.state.units ?? []).map(unit=>{
         const id=unitPresentationId(unit,shapeshifterPresentationEnabled);
         const spec=characterSpec(id),vertical=verticalAsset(id)?verticalGeometry(id,256):null;
         const gait=gaitGeometry(id,spec,TILE,256);
@@ -810,18 +866,22 @@ export class BattleCanvas {
     const { width, height } = this.app.screen;
     const bounds = this.framingBounds();
     // Notices use the existing compact zone row; never shrink the arena for an empty overlay.
-    const framedHeight = Math.max(1, height - this.bleed());
-    const fit = fitBattlefield(width, framedHeight, bounds, PADDING);
+    const topInset=this.host?parseFloat(getComputedStyle(this.host).getPropertyValue('--battle-top-inset'))||0:0;
+    const framedHeight = Math.max(1, height - this.bleed()-topInset);
+    const fit = window.matchMedia('(min-width:900px) and (min-height:600px)').matches ? this.manualCamera.frame(width, framedHeight, bounds, PADDING) : fitBattlefield(width,framedHeight,bounds,PADDING);
     // DOM controls retain their own sizes. Only the shared projected world fits this viewport.
     this.world.scale.set(fit.scale);
     for (const view of this.units.values()) view.setStatusScale(1 / fit.scale);
     this.mechanisms.setLabelScale(1 / fit.scale);
+    fit.y+=topInset;
     this.world.position.set(fit.x, fit.y);
+    if(this.host)this.host.dataset.cameraTurn=String(this.proj.quarterTurn);
+    this.host?.dispatchEvent(new CustomEvent('battle-camera-change',{bubbles:true,detail:{turn:this.proj.quarterTurn,zoom:this.manualCamera.zoom}}));
     if(this.host && this.portraitQuery.matches){
       const rect=this.app.canvas.getBoundingClientRect();
       const edge=[{x:0,y:0},{x:this.boardSize.w-1,y:0},{x:0,y:this.boardSize.h-1},{x:this.boardSize.w-1,y:this.boardSize.h-1}];
       const bottom=Math.max(...edge.flatMap(p=>this.proj.getTilePolygon(p).map(v=>rect.top + (fit.y + v.y * fit.scale) * rect.height / height)));
-      const bank=this.host.parentElement?.querySelector('.battle-pile-bank.is-rival') ?? this.host.parentElement?.querySelector('.battle-pile-bank.is-own');
+      const bank=this.host.parentElement?.querySelector('.battle-pile-bank.is-own');
       const buttons=bank?.querySelectorAll('button.battle-pile');
       const a=buttons?.[0]?.getBoundingClientRect(),b=buttons?.[1]?.getBoundingClientRect();
       const left=a&&b?Math.min(a.right,b.right)+6:0,right=a&&b?Math.max(a.left,b.left)-6:0;
@@ -871,7 +931,7 @@ export class BattleCanvas {
         } catch { /* Rendering failure must never block continuing the run. */ }
       }
     }
-    if (previous && previous.scenarioId !== vm.state.scenarioId) { this.environment.clear(); this.opponentNotices.reset(); }
+    if (previous && (previous.scenarioId !== vm.state.scenarioId || previous.player.heroId!==vm.state.player.heroId)) { this.manualCamera.reset(); this.environment.clear(); this.opponentNotices.reset(); }
     this.vm = vm;
     if (!this.ready || this.assetGate.busy) return;
     if(!this.preparedScenes.has(sceneAssetKey(vm.state))){
@@ -904,10 +964,11 @@ export class BattleCanvas {
       };
     this.boardSize = { w: vm.state.board.width, h: vm.state.board.height };
     this.ensureProjection();
-    const sceneKey = JSON.stringify([vm.state.scenarioId, vm.state.board, vm.state.obstacles]);
+    const baseBoard={...vm.state.board,tiles:vm.state.board.tiles.map(t=>({terrain:t.terrain==='ICE'?t.baseTerrain:t.terrain,baseTerrain:t.baseTerrain,terrainTurnsLeft:t.terrain==='ICE'?null:t.terrainTurnsLeft}))};
+    const sceneKey = JSON.stringify([vm.state.scenarioId, baseBoard, vm.state.obstacles,this.proj.quarterTurn]);
     if (sceneKey !== this.lastSceneKey) {
-      this.drawTerrain(vm);
-      this.environment.syncTerrain(vm.state, this.proj);
+      this.drawTerrain({...vm,state:{...vm.state,board:baseBoard}});
+      this.lastTerrainStateKey='';
       this.drawObstacles(vm);
       this.lastSceneKey = sceneKey;
       this.ambience.configure(
@@ -919,8 +980,10 @@ export class BattleCanvas {
       );
       this.layout();
     }
+    const terrainKey=JSON.stringify([vm.state.board.tiles,this.proj.quarterTurn,this.proj.frontWidth,this.proj.height]);
+    if(terrainKey!==this.lastTerrainStateKey){this.lastTerrainStateKey=terrainKey;this.environment.syncTerrain(vm.state,this.proj);}
     const frozen= !vm.state.outcome&&vm.state.units.some(u=>u.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0));
-    this.ambience.setFrozenWorld(frozen);
+    this.ambience.setFrozenWorld(frozen,vm.state.units.some(winterOnsetActive));
     const dustKey=JSON.stringify([frozen,this.lastSceneKey,this.proj.frontWidth,this.proj.height]);
     if(dustKey!==this.frozenWorldDustKey){
       this.frozenWorldDustKey=dustKey;this.frozenWorldDust.clear();this.frozenWorldDust.eventMode='none';this.frozenWorldDust.visible=frozen;
@@ -939,7 +1002,7 @@ export class BattleCanvas {
     }
     this.mechanisms.update(vm, this.proj);
     this.sections.update(vm, this.proj);
-    this.effects.icePremium.syncHearts(vm.state,id=>{const view=this.units.get(id);return view?{x:view.root.x,y:view.root.y}:undefined;},this.actorLayer.toLocal({x:0,y:32}).y);
+    this.effects.icePremium.syncHearts(vm.state,id=>{const view=this.units.get(id);return view?{x:view.root.x,y:view.root.y,height:view.root.y-view.headPoint().y}:undefined;},this.actorLayer.toLocal({x:0,y:32}).y);
     this.targetingPreview.sync(vm, this.proj);
     this.drawOverlay(vm);
   }
@@ -947,7 +1010,10 @@ export class BattleCanvas {
   playEvents(events: readonly GameEvent[], state: Readonly<GameState>, batch?: PresentationBatch): void {
     this.targetingPreview.reset();
     if (!this.ready || !this.vm) return;
-    if(events.some(e=>e.type==='BATTLE_STARTED'))this.resetPlayback();
+    if(events.some(e=>e.type==='BATTLE_STARTED')){
+      if(batch?.live!==false&&(!batch||batch.key!==this.cameraStartKey)){this.cameraStartKey=batch?.key;this.manualCamera.reset();}
+      this.resetPlayback();
+    }
     if(!this.immersionFinished)this.haptics.register(events);
     this.opponentNotices.register(events,state,this.vm.content,this.vm.heroId,this.director.state ?? this.vm.state);
     const vm={...this.vm,state,mechanisms:mechanismView(state)};
@@ -1081,6 +1147,7 @@ export class BattleCanvas {
   // ── Layers ───────────────────────────────────────────────────────────────
 
   private drawTerrain(vm: BoardViewModel): void {
+    this.terrainBuilds++;
     this.terrainPulse.removeFromParent();
     clearLayer(this.terrainPulse);
     clearLayer(this.terrainLayer);
@@ -1375,17 +1442,18 @@ export class BattleCanvas {
 
   /** Screen-horizontal target direction from already-resolved unit intents or nearest opponents. */
   private facingDelta(unit: GameState['units'][number], state: Readonly<GameState>): number | null {
+    const horizontal=(target:Pos)=>this.manualCamera.turn&&window.matchMedia('(min-width:900px) and (min-height:600px)').matches?this.tileCenter(target).x-this.tileCenter(unit.pos).x:target.x-unit.pos.x;
     if (unit.combatFacing) return null;
     if (unit.kind === 'STRUCTURE') return null;
     const intent = state.intents.find((candidate) => candidate.enemyId === unit.id);
     if (intent && 'targetUnitId' in intent) {
       const target = state.units.find((candidate) => candidate.id === intent.targetUnitId);
-      if (target) return target.pos.x - unit.pos.x;
+      if (target) return horizontal(target.pos);
     }
-    if (intent && 'center' in intent) return intent.center.x - unit.pos.x;
+    if (intent && 'center' in intent) return horizontal(intent.center);
     if (intent && 'direction' in intent) {
-      if (intent.direction === 'RIGHT') return 1;
-      if (intent.direction === 'LEFT') return -1;
+      if (intent.direction === 'RIGHT') return horizontal({x:unit.pos.x+1,y:unit.pos.y});
+      if (intent.direction === 'LEFT') return horizontal({x:unit.pos.x-1,y:unit.pos.y});
     }
     const target = state.units
       .filter((candidate) => candidate.faction !== unit.faction)
@@ -1395,7 +1463,7 @@ export class BattleCanvas {
           Math.abs(a.pos.y - unit.pos.y) -
           (Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y)),
       )[0];
-    return target ? target.pos.x - unit.pos.x : null;
+    return target ? horizontal(target.pos) : null;
   }
 
   /** Local terrain light is a low-opacity presentation cue, never a rule or a sprite tint. */

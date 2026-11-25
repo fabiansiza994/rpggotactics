@@ -1,0 +1,290 @@
+{
+  "checked": 71,
+  "matched": 71,
+  "files": [
+    {
+      "path": "public/art/winter-dominion/winter_onset.webp",
+      "match": true
+    },
+    {
+      "path": "src/game/data/antarctic-magic.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/data/antarctic-upgrades.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/data/cards.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/data/market-box-cards.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/data/rules.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/board/board.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/cards/ice-terrain.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/cards/play-card.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/combat/glyphs.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/combat/snow.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/combat/winter-onset.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/events.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/statuses/status-rules.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/statuses/status.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/summons/summons.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/terrain/terrain-rules.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/domain/turn/turn-flow.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/pvp/content-release.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/store/boxes.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/store/market-expansions.ts",
+      "match": true
+    },
+    {
+      "path": "src/game/store/market-primary.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/assets/paintedAssets.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/assets/statusLabels.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/BattleFrame.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/BattlePileZones.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/BattleRails.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/OpponentChampion.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/OpponentHand.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/championLabel.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/battle/opponentHandMotion.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/mechanisms/LinkedAction.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pixi/BattleCanvas.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pixi/EncounterAmbience.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pixi/ManualCamera.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pixi/idleBreathing.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pixi/unitArt.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pvp/PvpScreen.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pvp/PvpTerrainInfo.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/pvp/PvpTurnSummary.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/App.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/cardBlock.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/BattleCardFeature.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/BoardView.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/CardView.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/Hud.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/PauseMenu.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/RedemptionControls.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/TacticalOverview.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/components/WinterAtmosphere.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/format.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/react/screens/BattleScreen.tsx",
+      "match": true
+    },
+    {
+      "path": "src/presentation/vfx/EnvironmentEffects.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/vfx/IceSpellEffects.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/vfx/VfxDirector.ts",
+      "match": true
+    },
+    {
+      "path": "src/presentation/vfx/spellTimeline.ts",
+      "match": true
+    },
+    {
+      "path": "src/styles/desktop-battlefield.css",
+      "match": true
+    },
+    {
+      "path": "src/styles/opponent-hand.css",
+      "match": true
+    },
+    {
+      "path": "src/styles/premium-battle-interface.css",
+      "match": true
+    },
+    {
+      "path": "src/styles/winter-atmosphere.css",
+      "match": true
+    },
+    {
+      "path": "tests/antarctic-magic.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/ice-terrain-render.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/ice-terrain-synergy.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/manual-camera.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/market-boxes.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/mobile-battlefield-stability.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/mobile-pile-hud.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/opponent-hand.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/premium-battle-interface.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/winter-dominion.test.ts",
+      "match": true
+    },
+    {
+      "path": "tests/winter-idle-cache.test.ts",
+      "match": true
+    }
+  ]
+}

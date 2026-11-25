@@ -15,7 +15,7 @@ export function RedemptionControls({selection,content,project,onClose}:{selectio
   useEffect(()=>{
     if(!targetId||busy||card)return;
     let frame=0;
-    const measure=()=>{const hp=project(targetId);const occupied:ContextRect[]=Array.from(document.querySelectorAll('.top-bar,.hand,.battle-utilities,.pause-trigger,.pvp-header,dialog[open]')).map(e=>e.getBoundingClientRect());occupied.push(...(units??[]).filter(u=>u.id!==targetId).flatMap(u=>{const r=project(u.id);return r?[r]:[]}));const next=hp?redemptionPlacement(hp,{width:innerWidth,height:innerHeight},occupied):null;A(old=>old?.x===next?.x&&old?.y===next?.y?old:next);frame=requestAnimationFrame(measure);};
+    const measure=()=>{const hp=project(targetId);const occupied:ContextRect[]=Array.from(document.querySelectorAll('.top-bar,.hand,.battle-utilities,.pause-trigger,.pvp-header,.battle-side-rail,.battle-camera-controls,dialog[open]')).map(e=>e.getBoundingClientRect());occupied.push(...(units??[]).filter(u=>u.id!==targetId).flatMap(u=>{const r=project(u.id);return r?[r]:[]}));const next=hp?redemptionPlacement(hp,{width:innerWidth,height:innerHeight},occupied):null;A(old=>old?.x===next?.x&&old?.y===next?.y?old:next);frame=requestAnimationFrame(measure);};
     frame=requestAnimationFrame(measure);return()=>cancelAnimationFrame(frame);
   },[targetId,busy,card,project,units]);
   if(!view||busy||card||!anchor)return null;

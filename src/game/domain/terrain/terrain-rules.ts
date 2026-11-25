@@ -21,6 +21,13 @@ export function createTerrain(
   if (!ctx.content.terrain[tile.terrain].canBeOverwritten) return false;
 
   const previous = tile.terrain;
+  if(previous==='ICE' && terrain==='ICE'){
+    // One instance, never shorten permanent/longer ice or stack movement modifiers.
+    tile.terrainTurnsLeft=tile.terrainTurnsLeft===null||turnsLeft===null?null:Math.max(tile.terrainTurnsLeft,turnsLeft);
+    tile.terrainOwnerId=sourceId;
+    ctx.emit({type:'TERRAIN_CREATED',pos:p,terrain,previous,turnsLeft:tile.terrainTurnsLeft,sourceId});
+    return true;
+  }
   delete tile.drakeFireHitIds;
   delete tile.frozenWorldOwnerId;
   tile.terrainOwnerId=sourceId;
@@ -49,9 +56,13 @@ function revertTerrain(ctx: RuleContext, p: Pos, reason: 'EXPIRED' | 'CLEANSED')
   ctx.emit({ type: 'TERRAIN_REMOVED', pos: p, terrain: removed, revertedTo: tile.terrain, reason });
 }
 
-/** Climate-owned terrain never rewrites baseTerrain. Expiration, dispel and owner death remove it. */
+/** Legacy provenance cleanup: field removal releases the clock, not the terrain. */
 export function clearFrozenWorldTerrain(ctx:RuleContext,ownerId:string):void {
- for(const p of allPositions(ctx.state.board))if(tileAt(ctx.state.board,p)?.frozenWorldOwnerId===ownerId)revertTerrain(ctx,p,'EXPIRED');
+ for(const tile of ctx.state.board.tiles)if(tile.frozenWorldOwnerId===ownerId)delete tile.frozenWorldOwnerId;
+}
+/** Global climate persists either player's ICE; unit status clocks are independent. */
+export function iceClockPaused(ctx:Pick<RuleContext,'state'>):boolean{
+ return ctx.state.units.some(u=>u.hp>0&&u.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0));
 }
 
 /** Removes hazard terrain (temporary or permanent) from a tile. Permanent hazards become NORMAL. */
@@ -113,14 +124,12 @@ export function createObstacle(
 /** End of round: temporary terrain, obstacles and traps lose one round and may expire. */
 export function tickBoardDurations(ctx: RuleContext): void {
   tickTraps(ctx);
+  const paused=iceClockPaused(ctx);
   for (const p of allPositions(ctx.state.board)) {
     const tile = tileAt(ctx.state.board, p);
     if (!tile) continue;
-    if(tile.frozenWorldOwnerId){
-      const owner=ctx.state.units.find(u=>u.id===tile.frozenWorldOwnerId);
-      if(owner?.statuses.some(s=>s.id==='ABSOLUTE_ZERO'&&s.turnsLeft>0))continue;
-      revertTerrain(ctx,p,'EXPIRED');continue;
-    }
+    if(tile.terrain==='ICE' && paused)continue;
+    if(tile.frozenWorldOwnerId)delete tile.frozenWorldOwnerId;
     if(tile.terrainTurnsLeft===null)continue;
     tile.terrainTurnsLeft -= 1;
     if (tile.terrainTurnsLeft <= 0) revertTerrain(ctx, p, 'EXPIRED');

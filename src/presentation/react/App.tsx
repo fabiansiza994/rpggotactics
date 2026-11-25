@@ -133,7 +133,7 @@ export function App() {
       {RealQaControls && shapeshifterQaEnabled && screen !== 'BATTLE' && <Suspense fallback={null}><RealQaControls /></Suspense>}
       {ArcherReleaseControls && screen === 'BATTLE' && <Suspense fallback={null}><ArcherReleaseControls /></Suspense>}
       {ArcherCampaignVisualLab && <Suspense fallback={null}><ArcherCampaignVisualLab /></Suspense>}
-      {(!homeVisible||mobile)&&<BugReportButton placement={mobile&&!battle?'hidden':'floating'}
+      {(!homeVisible||mobile)&&<BugReportButton placement={battle||mobile?'hidden':'floating'}
         route={shop ? 'STORE' : pvp ? 'PVP' : socialOpen ? 'SOCIAL' : screen === 'BATTLE' ? 'BATTLE' : screen === 'DECK' ? 'DECK' : screen === 'CHAMPIONS' ? 'CHAMPIONS' : 'MENU'}
       />}
       <PaymentResult />

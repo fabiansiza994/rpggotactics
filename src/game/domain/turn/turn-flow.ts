@@ -1,3 +1,4 @@
+import {pulseWinterOnset} from '../combat/winter-onset';
 import { loseHpTogether } from '../cards/hp-loss';
 import { payFormUpkeep } from '../transformations/transformations';
 import {snowTurnEnd} from '../combat/snow';
@@ -44,6 +45,7 @@ export function startFactionTurn(ctx: RuleContext, faction: Faction): void {
     if (!ctx.state.units.includes(unit)) continue;
     tickStatuses(ctx, unit, 'TURN_START');
   }
+  pulseWinterOnset(ctx,faction);
   resolveGlyphs(ctx, faction);
 }
 

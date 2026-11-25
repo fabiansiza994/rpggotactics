@@ -1,3 +1,5 @@
+import {championLabel} from '../../battle/championLabel';
+import {BattleRail,BattleRailContext} from '../../battle/BattleRails';
 import { SilenceResponseContext, useSilenceContext } from './SilenceResponseDialog';
 import { PendingCardChoiceDialog } from './PendingCardChoiceDialog';
 import {worldFrozenCard} from '../../../game/domain/cards/world-frozen';
@@ -27,7 +29,7 @@ import { RitualTransfer } from './RitualTransfer';
 import { RitualGlyph } from './RitualGlyph';
 import { FINAL_CARD_ART } from '../../assets/paintedAssets';
 import { attachCardActivation } from '../../cards/cardActivation';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useContext, type ReactNode } from 'react';
 import {
   altarOf,
   altarSlots,
@@ -37,7 +39,7 @@ import {
   type IntentPlan,
 } from '../../../game';
 import { activeRun, cloudActive, inputLocked, useBattleStore } from '../../store/battleStore';
-import { ERROR_LABEL, intentLabel, objectiveLabel, OUTCOME_LABEL, statusChipText } from '../format';
+import { ERROR_LABEL, intentLabel, objectiveLabel, OUTCOME_LABEL, statusChipTitle, statusChipText } from '../format';
 import { CardView } from './CardView';
 import { SummonCapacityMeter } from './SummonCapacityMeter';
 import { explainCardBlock, type CardBlock } from '../cardBlock';
@@ -73,7 +75,7 @@ export function HeroPanel({ state, engine, finished=false }: { state: Readonly<G
       </div>
       <div className="hero-vitals">
         <div className="panel-title">
-          {hero?.name ?? heroDef?.name ?? 'Héroe'}
+          {championLabel(engine.content,hero?.defId??engine.scenario.hero.heroId)}
           {shapeshifterPresentationEnabled && hero?.defId === 'shapeshifter' && <small> · {formVisual(hero.activeForm).label}</small>}
           <SummonCapacityMeter state={state} engine={engine} />
         </div>
@@ -91,7 +93,7 @@ export function HeroPanel({ state, engine, finished=false }: { state: Readonly<G
         {hero && hero.statuses.length > 0 && (
           <div className="statuses">
             {hero.statuses.map((s) => (
-              <span key={s.id} className="status-chip">
+              <span key={s.id} className="status-chip" title={statusChipTitle(s)}>
                 {statusChipText(s)}
               </span>
             ))}
@@ -141,7 +143,7 @@ function MomentumMeter({ value, max }: { value: number; max: number }) {
   );
 }
 
-function Bar({
+export function Bar({
   label,
   value,
   max,
@@ -185,7 +187,8 @@ export function TurnPanel({
   children?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const primary = state.objectives[0];
+  const objectives=state.pileCounts?[]:state.objectives;
+  const primary = objectives[0];
   return (
     <section className={`panel turn-panel ${expanded ? 'is-expanded' : ''}`}>
       <div className="turn-title">
@@ -222,7 +225,7 @@ export function TurnPanel({
       </button>
       <div className="turn-extra">
         {children}
-        {state.objectives.map((o, i) => {
+        {objectives.map((o, i) => {
           const label = objectiveLabel(o, state);
           return (
             <div
@@ -294,7 +297,7 @@ export function EnemyPanel({
             {e.statuses.some((s) => s.id !== 'PREY') && (
               <div className="statuses">
                 {e.statuses.filter((s) => s.id !== 'PREY').map((s) => (
-                  <span key={s.id} className="status-chip">
+                  <span key={s.id} className="status-chip" title={statusChipTitle(s)}>
                     {statusChipText(s)}
                   </span>
                 ))}
@@ -308,6 +311,7 @@ export function EnemyPanel({
 }
 
 export function HandBar({ state, engine }: { state: Readonly<GameState>; engine: GameEngine }) {
+  const rails=useContext(BattleRailContext);
   const footerRef = useRef<HTMLElement>(null);
   const drawVisual=useDrawVisual();
   const silence=useSilenceContext(state,engine);
@@ -383,11 +387,11 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         <div className="mobile-enemies">{state.units.filter(u => u.faction !== hero?.faction && u.hp > 0).map(u => <span key={u.id} title={engine.content.enemies[u.defId]?.name ?? u.defId} aria-label={`${engine.content.enemies[u.defId]?.name ?? u.defId}: ${u.hp} HP`}><b>{(engine.content.enemies[u.defId]?.name ?? u.defId).slice(0, 2)}</b><small>{u.hp}</small></span>)}</div>
         <div><small>RONDA {state.round}</small><strong>{busy ? 'Resolviendo…' : state.phase === 'PLAYER' ? 'Tu turno' : 'Turno rival'}</strong></div>
       </div>
-      {!state.responseWindow && !discarding && (selectedCardUid || aim?.source === 'tap') && <div className="mobile-aim-controls" role="group" aria-label="Objetivo de carta">
+      {!state.responseWindow && !discarding && (selectedCardUid || aim?.source === 'tap') && <BattleRail slot="aim"><div className="mobile-aim-controls" data-can-confirm={canActivateAim||undefined} role="group" aria-label="Objetivo de carta">
         <span><small>{selectedCardUid ? canActivateAim ? 'Activa la carta' : 'Selecciona un objetivo válido' : 'Confirma el destino'}</small>{selectedCardUid && <strong>{aimedName ?? 'Carta seleccionada'}</strong>}</span>
-        <button type="button" disabled={!canActivateAim} onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>
-        <button type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}>×</button>
-      </div>}
+        {canActivateAim&&<button type="button" onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>}
+        <button className="aim-cancel" type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div></BattleRail>}
       <section className="mobile-player-status" aria-label="Tu campeón">
         <div className="mobile-player-health">
           <strong>{engine.content.heroes[hero?.defId ?? '']?.name ?? 'Campeón'}</strong>
@@ -401,7 +405,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
             <span className="mobile-shield" aria-label={`${engine.content.heroes[hero?.defId ?? '']?.momentum ? 'Guardia' : 'Escudo'} ${hero?.shield ?? 0}`}>◇ {hero?.shield ?? 0}</span>
           </div>
           <div className="mobile-status-chips" aria-label="Estados activos">
-            {hero?.statuses.length ? hero.statuses.map(status => <span key={status.id} title={statusChipText(status)}>{statusChipText(status)}</span>) : <span className="mobile-no-status">Sin estados</span>}
+            {hero?.statuses.length ? hero.statuses.map(status => <span key={status.id} title={statusChipTitle(status)}>{statusChipText(status)}</span>) : <span className="mobile-no-status">Sin estados</span>}
           </div>
         </div>
       </section>
@@ -418,9 +422,9 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       <RitualTransfer heroId={engine.heroId} />
       {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.ritualPiece && <RitualCardActions key={`ritual-choice:${aimedCard.uid}`} uid={aimedCard.uid} state={state} engine={engine} busy={busy}/> }
       {!state.responseWindow && <ResolvingCardPreview engine={engine} />}
-      <BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected}
-        inspectedCardUid={discarding || state.responseWindow ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} />
-      <AltarPanel key={`${state.player.heroId}:${hero?.defId}`} state={state} engine={engine} busy={busy} />
+      <BattleRail slot="preview"><BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected}
+        inspectedCardUid={discarding || state.responseWindow ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} /></BattleRail>
+      <BattleRail slot="altar"><AltarPanel key={`${state.player.heroId}:${hero?.defId}`} state={state} engine={engine} busy={busy} /></BattleRail>
       {handPulse > 0 && (
         <span key={handPulse} className="draw-feedback" aria-live="polite">
           ✦ Cartas robadas
@@ -431,7 +435,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         {!steppingAlly && <button type="button" disabled={busy || !engine.getSecondaryTargets(pair.cardUid, pair.first).includes(null)} onClick={() => useBattleStore.getState().confirmPairWithChampion()}>Intercambiar conmigo</button>}
         <button type="button" disabled={busy} onClick={() => useBattleStore.getState().cancelPairTarget()}>Cambiar primer objetivo</button>
       </div>}
-      {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.handTrade && <div className="pair-target-controls" role="group" aria-label="Trueque del Duende"><span>Elige otra carta de tu mano para intercambiar.</span><button type="button" onClick={()=>selectCard(null)}>Cancelar</button></div>}
+      {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.handTrade && <div className="pair-target-controls" role="group" aria-label="Trueque del Duende"><span>Elige otra carta de tu mano para intercambiar.</span></div>}
       {discarding && <HandDiscardBar state={state} />}
       <HandScrollRegion className={`hand ${discarding ? 'is-discarding' : ''} ${silence.active ? 'is-silence-response' : ''}`}>
         {dealt &&
@@ -445,6 +449,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 key={card.uid}
                 presentationHidden={!silence.active && drawVisual.queue.some(t=>t.uid===card.uid)}
                 uid={card.uid}
+                suppressTooltip={!!rails.preview}
                 def={def}
                 effectiveCost={engine.getCardCost(card.uid)?.cost ?? def.cost}
                 hotkey={i + 1}
@@ -457,7 +462,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 block={silence.active ? undefined : block}
                 onInspect={(on) => setInspected((cur) => (on ? card.uid : cur === card.uid ? null : cur))}
                 onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); setDetailUid(card.uid); }}
-                onCancel={silence.active || discarding ? undefined : () => useBattleStore.getState().cancelAim()}
+                onCancel={undefined}
                 onClick={() => {
                   if(silence.active){silence.choose(card.uid);return;}
                   if(state.responseWindow)return;
@@ -473,18 +478,9 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
             );
           })}
       </HandScrollRegion>
-      <div className="end-turn-box">
+      <BattleRail slot="end"><div className="end-turn-box">
         <IceWallRotation/>
         {engine.getCardPlayability(LEGENDARY_STEP_SELECTION).playable && (!selectedCardUid || selectedCardUid===LEGENDARY_STEP_SELECTION) && <button type="button" className="legendary-step-control" disabled={busy} onClick={()=>useBattleStore.getState().selectCard(LEGENDARY_STEP_SELECTION)}>⚡ Desplazamiento eléctrico</button>}
-        <HandCounter state={state} />
-        <div
-          className="energy-pips"
-          aria-label={`Energía ${state.player.energy} de ${state.player.maxEnergy}`}
-        >
-          {Array.from({ length: state.player.maxEnergy }, (_, i) => (
-            <span key={i} className={`pip ${i < state.player.energy ? 'on' : ''}`} />
-          ))}
-        </div>
         <button
           type="button"
           className="end-turn"
@@ -501,7 +497,17 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
           </span>{' '}
           <kbd>E</kbd>
         </button>
-      </div>
+        <HandCounter state={state} />
+        <div
+          className="energy-pips"
+          aria-label={`Energía ${state.player.energy} de ${state.player.maxEnergy}`}
+        >
+          {Array.from({ length: state.player.maxEnergy }, (_, i) => (
+            <span key={i} className={`pip ${i < state.player.energy ? 'on' : ''}`} />
+          ))}
+        </div>
+
+      </div></BattleRail>
 
     </footer>
   );
@@ -516,7 +522,7 @@ export function CombatLog() {
   return (
     <details className="panel log-panel">
       <summary>
-        Registro <span aria-hidden="true">◇</span>
+        <GameIcon name="discard"/> Registro de combate <span aria-hidden="true">›</span>
       </summary>
       <div className="log" ref={ref}>
         {log.map((l) => (
@@ -744,7 +750,8 @@ export function AltarPanel({
       }
     >
       <summary>
-        <RitualGlyph /> Altar {slots > 0 && `${altar.length}/${slots}`}
+        <RitualGlyph /> <span className="altar-heading">Altar {slots > 0 && `${altar.length}/${slots}`}</span>
+        <span className="altar-progress" aria-label={`${altar.length} sellos de ${slots}`}>{Array.from({length:slots},(_,i)=><i key={i} data-filled={i<altar.length||undefined}/>)}</span>
         <RitualReadyLabel ready={!!status?.rituals.some((r) => r.ready) && myTurn} />
         {feedback === 'activating' && <b> · ACTIVANDO {activatedName}</b>}
         {slots > 0 && myTurn && status && (
@@ -860,7 +867,7 @@ export function AltarPanel({
     </details>
     {aimingRitual && <div className="altar-aim-controls" role="region" aria-label="Objetivo del ritual">
       <span>Elige una casilla válida</span>
-      <button type="button" onClick={() => selectCard(null)}>Cancelar ritual</button>
+      <span className="muted">Selecciona el objetivo · X para cancelar</span>
     </div>}
     </>
   );

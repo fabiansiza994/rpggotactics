@@ -1,3 +1,4 @@
+import {saveCampaignStep} from '../server/src/repo';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   ASCENT_CAMPAIGN,
@@ -9,7 +10,6 @@ import {
   encounterOrder,
   GameEngine,
   INFERNAL_CAMPAIGN,
-  serializeRun,
   type GameContent,
   type PlayerProfile,
   type RunState,
@@ -63,13 +63,9 @@ const completedRun = (heroId: string): RunState => ({
   completedEncounterIds: [...ascent],
 });
 
-function putRun(userId: number, run: RunState) {
-  db.sql
-    .prepare(
-      `INSERT INTO tactics_hero_campaign_runs (user_id, campaign_id, hero_id, run_json, save_version, updated_at) VALUES (?, ?, ?, ?, 1, 1)
-       ON CONFLICT (user_id, campaign_id, hero_id) DO UPDATE SET run_json = excluded.run_json`,
-    )
-    .run(userId, run.campaignId, run.heroId, serializeRun(run));
+async function putRun(userId:number,run:RunState){
+  // Seed through the same fenced writer as production; no unsigned SQL after 0035.
+  await saveCampaignStep(db,userId,1,{run});
 }
 
 /** A greedy-bot win of the run's current encounter (any world), as a client proof. */
@@ -121,7 +117,7 @@ describe('server: campaign worlds', () => {
     world2 = false;
     const { id, token } = addAccount(db, 'ana');
     await call(token, 'POST', '/profile', {});
-    putRun(id, completedRun('summoner'));
+    await putRun(id, completedRun('summoner'));
     const state = await call(token, 'GET', '/state');
     expect(state.body.world2Available).toBe(false);
     expect(state.body.worlds!.summoner!.worlds.map((w) => w.id)).toEqual(['world_1']);
@@ -133,7 +129,7 @@ describe('server: campaign worlds', () => {
   it('legacy account with Invocador 10/10: World 1 COMPLETADO, World 2 DESBLOQUEADO 0/10, playable — per champion', async () => {
     const { id, token } = addAccount(db, 'legacy');
     await call(token, 'POST', '/profile', {});
-    putRun(id, completedRun('summoner'));
+    await putRun(id, completedRun('summoner'));
     const state = await call(token, 'GET', '/state');
     expect(view(state.body, 'summoner', 'world_1')).toMatchObject({ status: 'COMPLETED', completed: true, bossDefeated: true, completedEncounters: 10 });
     expect(view(state.body, 'summoner', 'world_2')).toMatchObject({ status: 'UNLOCKED', unlocked: true, completedEncounters: 0, totalEncounters: 10, currentEncounter: 'w2_e01', currentEncounterAlias: 'w2_e01', run: null });
@@ -164,7 +160,7 @@ describe('server: campaign worlds', () => {
   it('replaying World 1 ("Nueva campaña") never relocks World 2 nor touches its run', async () => {
     const { id, token } = addAccount(db, 'legacy');
     await call(token, 'POST', '/profile', {});
-    putRun(id, completedRun('summoner'));
+    await putRun(id, completedRun('summoner'));
     const w2 = await call(token, 'POST', '/campaign/start', { heroId: 'summoner', campaignId: 'infernal' });
     const replay = await call(token, 'POST', '/campaign/start', { heroId: 'summoner' });
     expect(replay.body.runs!.summoner).toMatchObject({ currentEncounterId: ascent[0], completedEncounterIds: [] });
@@ -179,7 +175,7 @@ describe('server: campaign worlds', () => {
   it('rejects forged ids: another encounter, another world, unknown campaigns', async () => {
     const { id, token } = addAccount(db, 'legacy');
     await call(token, 'POST', '/profile', {});
-    putRun(id, completedRun('mage'));
+    await putRun(id, completedRun('mage'));
     content = weakInfernal();
     const started = await call(token, 'POST', '/campaign/start', { heroId: 'mage', campaignId: 'infernal' });
     const run = started.body.worldRuns!.infernal!.mage!;
@@ -202,7 +198,7 @@ describe('server: campaign worlds', () => {
   it('defeating the Forge King completes World 2 once: reward paid once, replays and retries pay nothing', async () => {
     const { id, token } = addAccount(db, 'hero');
     await call(token, 'POST', '/profile', {});
-    putRun(id, completedRun('summoner'));
+    await putRun(id, completedRun('summoner'));
     content = weakInfernal();
     // Play the world through to the boss with real, replay-verified wins.
     let state = (await call(token, 'POST', '/campaign/start', { heroId: 'summoner', campaignId: 'infernal' })).body;
@@ -242,11 +238,11 @@ describe('server: campaign worlds', () => {
   it('the completion reward is per champion and the ledger key makes a duplicate payment impossible', async () => {
     const { id, token } = addAccount(db, 'hero');
     await call(token, 'POST', '/profile', {});
-    putRun(id, completedRun('mage'));
+    await putRun(id, completedRun('mage'));
     content = weakInfernal();
     await call(token, 'POST', '/campaign/start', { heroId: 'mage', campaignId: 'infernal' });
     // Jump the stored run to the boss (QA-style), then win it.
-    putRun(id, { ...createRun(INFERNAL_CAMPAIGN, content, 11, 'mage'), currentEncounterId: 'w2_e10', completedEncounterIds: infernal.slice(0, 9) });
+    await putRun(id, { ...createRun(INFERNAL_CAMPAIGN, content, 11, 'mage'), currentEncounterId: 'w2_e10', completedEncounterIds: infernal.slice(0, 9) });
     const state = (await call(token, 'GET', '/state')).body;
     const proof = winProof(state, state.worldRuns!.infernal!.mage!);
     // Simulate a payment that already happened (e.g. a concurrent request) without its row.

@@ -12,7 +12,7 @@ it('only icons and live counts render, retaining accessible zone names and priva
  const html=renderToStaticMarkup(createElement(BattlePileBank,{state:s,content:DEFAULT_CONTENT,opponent}));
  expect(html).toContain(opponent?'Rival mazo: 35 cartas':'Tu mazo: 37 cartas');
  expect(html).toContain(opponent?'Rival cementerio: 3 cartas':'Tu cementerio: 2 cartas');
- expect(html.replace(/<[^>]*>/g,'')).toBe(opponent?'353':'372');
+ expect(html.replace(/<span class="battle-pile-owner" aria-hidden="true">[^<]*<\/span>/,'').replace(/<[^>]*>/g,'')).toBe(opponent?'353':'372');
  expect(html).not.toContain('<dialog');expect(html).not.toContain('fireball');
  }
  const css=readFileSync('src/styles/battle-piles.css','utf8');
