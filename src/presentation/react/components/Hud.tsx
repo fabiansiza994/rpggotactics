@@ -378,6 +378,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   const hero = state.units.find(u => u.id === engine.heroId);
   const aimedCard = state.player.hand.find(c => c.uid === selectedCardUid);
   const aimedName = selectedCardUid===LEGENDARY_STEP_SELECTION?'Desplazamiento eléctrico':aimedCard ? engine.content.cards[aimedCard.cardId]?.name : null;
+  const contextualCancel = !!aimedCard && !state.responseWindow && !discarding && !busy;
   const canActivateAim = !busy && aim?.source === 'tap' && isActionableTile(engine, selectedCardUid, aim.pos, pair);
   const hint = !state.responseWindow && !discarding && inspected ? blocks.get(inspected) : undefined;
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
@@ -387,10 +388,10 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
         <div className="mobile-enemies">{state.units.filter(u => u.faction !== hero?.faction && u.hp > 0).map(u => <span key={u.id} title={engine.content.enemies[u.defId]?.name ?? u.defId} aria-label={`${engine.content.enemies[u.defId]?.name ?? u.defId}: ${u.hp} HP`}><b>{(engine.content.enemies[u.defId]?.name ?? u.defId).slice(0, 2)}</b><small>{u.hp}</small></span>)}</div>
         <div><small>RONDA {state.round}</small><strong>{busy ? 'Resolviendo…' : state.phase === 'PLAYER' ? 'Tu turno' : 'Turno rival'}</strong></div>
       </div>
-      {!state.responseWindow && !discarding && (selectedCardUid || aim?.source === 'tap') && <BattleRail slot="aim"><div className="mobile-aim-controls" data-can-confirm={canActivateAim||undefined} role="group" aria-label="Objetivo de carta">
+      {!state.responseWindow && !discarding && (selectedCardUid || aim?.source === 'tap') && <BattleRail slot="aim"><div className="mobile-aim-controls" data-contextual-cancel={contextualCancel || undefined} data-can-confirm={canActivateAim||undefined} role="group" aria-label="Objetivo de carta">
         <span><small>{selectedCardUid ? canActivateAim ? 'Activa la carta' : 'Selecciona un objetivo válido' : 'Confirma el destino'}</small>{selectedCardUid && <strong>{aimedName ?? 'Carta seleccionada'}</strong>}</span>
         {canActivateAim&&<button type="button" onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>}
-        <button className="aim-cancel" type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        {!contextualCancel && <button className="aim-cancel" type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>}
       </div></BattleRail>}
       <section className="mobile-player-status" aria-label="Tu campeón">
         <div className="mobile-player-health">
@@ -462,7 +463,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 block={silence.active ? undefined : block}
                 onInspect={(on) => setInspected((cur) => (on ? card.uid : cur === card.uid ? null : cur))}
                 onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); setDetailUid(card.uid); }}
-                onCancel={undefined}
+                onCancel={contextualCancel ? () => useBattleStore.getState().cancelAim() : undefined}
                 onClick={() => {
                   if(silence.active){silence.choose(card.uid);return;}
                   if(state.responseWindow)return;

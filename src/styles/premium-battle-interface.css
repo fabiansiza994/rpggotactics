@@ -200,3 +200,28 @@ body .battle.premium-battle .summon-meter-value{margin-left:auto}
 }
 /* Existing minimap terrain class: retain the Premium layout and expose authoritative ICE. */
 body .battle.premium-battle .tactical-map-cell.terrain-ice{background:#376e86;border-color:#91cede}
+
+/* Portrait proportions use the fixed hand row; selecting never resizes the board. */
+@media (min-width:900px) and (min-height:600px) {
+ body .battle.premium-battle .hand-bar .hand .card {height:calc(var(--premium-hand) - 24px);width:auto;aspect-ratio:8 / 11;flex:0 0 auto;}
+ body .battle.premium-battle .hand-scroll-region > .hand:not(.card-activation-layer) {height:calc(100% + 72px);margin-top:-72px;padding:84px 28px 4px;max-height:none;pointer-events:none;}
+ body .battle.premium-battle .hand-scroll-region > .hand > .card {pointer-events:auto;}
+ body .battle.premium-battle .hand-bar .hand .card:is(:hover,:focus-within,.is-selected) {transform:translateY(-9px);z-index:10;}
+ body .battle.premium-battle .slot-preview {height:auto;flex:1 1 0;min-height:230px;max-height:clamp(300px,58vh,500px);}
+ body .battle.premium-battle .slot-preview .fc-art {height:auto;flex:0 0 40%;min-height:80px;}
+ body .battle.premium-battle .slot-altar {margin-top:0;flex:0 0 auto;}
+}
+.battle.premium-battle .hand .card-selection-cancel {display:grid;top:-52px;width:44px;height:44px;min-width:44px;min-height:44px;}
+@media (min-width:900px) and (min-height:600px) {
+ body .battle.premium-battle {--premium-hand:clamp(164px,22.2222vh,232px);}
+ body .battle.premium-battle .hand .card-art {min-height:34%;flex:1 1 auto;}
+ body .battle.premium-battle .hand .card-name {font-size:12px;}
+}
+@media (min-width:900px) and (max-width:1100px) and (min-height:600px) {
+ body .battle.premium-battle {--premium-hand:168px;}
+}
+@media (max-width:899px), (max-height:599px) {
+ .battle.premium-battle .mobile-aim-controls[data-contextual-cancel='true'] {
+  bottom:calc(var(--mobile-hand-space) + var(--mobile-hud-space) + env(safe-area-inset-bottom) + 64px);
+ }
+}
