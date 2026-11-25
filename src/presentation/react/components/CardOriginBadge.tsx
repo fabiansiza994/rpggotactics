@@ -11,37 +11,8 @@ export function CardOriginBadge({ card }: { card: CardDefinition }) {
     </span>
   ) : null;
 }
-export function NeutralCounter({
-  count,
-  limit,
-  compact = false,
-}: {
-  count: number;
-  limit: number | undefined;
-  compact?: boolean;
-}) {
-  if (limit === undefined) return null;
-  return (
-    <span
-      className={`db-neutral-counter${compact ? ' is-compact' : ''}`}
-      data-limit-state={count > limit ? 'over' : count === limit ? 'full' : 'available'}
-      role="status"
-      aria-label={`${count} de ${limit} cartas neutrales. Máximo ${limit} cartas neutrales por mazo.`}
-    >
-      <GameIcon name="neutral" />
-      <span>
-        Neutrales{' '}
-        <strong>
-          {count}/{limit}
-        </strong>
-      </span>
-      {!compact && (
-        <span className="db-neutral-meter" aria-hidden="true">
-          {Array.from({ length: limit }, (_, i) => (
-            <i key={i} data-filled={i < count} />
-          ))}
-        </span>
-      )}
-    </span>
-  );
+export function NeutralCounter({count,compact=false}:{count:number;compact?:boolean}) {
+  return <span className={`db-neutral-counter${compact ? ' is-compact' : ''}`} role="status" aria-label={`${count} cartas neutrales`}>
+    <GameIcon name="neutral" /><span>Neutrales: <strong>{count}</strong></span>
+  </span>;
 }

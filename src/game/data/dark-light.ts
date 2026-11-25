@@ -71,7 +71,7 @@ export const DARK_LIGHT_CARDS: CardDefinition[] = [
     presentation: { visualKey: 'dark_the_reaper', element: 'ARCANE', castAnimation: 'cast' },
   },
   {
-    id: 'dark_twisted_curse', name: 'Maldición Retorcida', heroId: 'mage', rarity: 'RARE', cost: 3,
+    id: 'dark_twisted_curse', name: 'Maldición Retorcida', rarity: 'RARE', cost: 3,
     category: 'CONTROL', tags: ['dark', 'curse'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark,
     rulesText: 'Maldice en secreto una instancia aleatoria del mazo rival. Cuando intente activarla, se anula completamente su efecto original y su usuario pierde 5 HP. La maldición se consume y la carta se considera utilizada.',
     targeting: { type: 'SELF' }, effects: [{ type: 'CURSE_RANDOM_OPPONENT_DECK' }],
@@ -92,7 +92,7 @@ export const DARK_LIGHT_CARDS: CardDefinition[] = [
     presentation: { visualKey: 'light_dawn_shield', element: 'SHIELD', castAnimation: 'cast_support' },
   },
   {
-    id: 'dark_crypt_whisper', name: 'Susurro de la Cripta', heroId: 'mage', rarity: 'COMMON', cost: 0,
+    id: 'dark_crypt_whisper', name: 'Susurro de la Cripta', rarity: 'COMMON', cost: 0,
     category: 'UTILITY', tags: ['dark', 'scry'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark,
     rulesText: 'Mira las dos primeras cartas de tu mazo. Elige una y ponla al fondo; la otra permanece arriba. No roba.',
     targeting: { type: 'SELF' }, effects: [{ type: 'CHOOSE_TOP_TO_BOTTOM', count: 2 }],
@@ -113,14 +113,14 @@ export const DARK_LIGHT_CARDS: CardDefinition[] = [
     presentation: { visualKey: 'light_restoring_grace', element: 'ARCANE', castAnimation: 'cast_support' },
   },
   {
-    id: 'dark_shadow_hand', name: 'Mano de las Sombras', heroId: 'mage', rarity: 'UNCOMMON', cost: 2,
+    id: 'dark_shadow_hand', name: 'Mano de las Sombras', rarity: 'UNCOMMON', cost: 2,
     category: 'CONTROL', tags: ['dark', 'discard'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark,
     rulesText: 'Descarta una instancia aleatoria de la mano rival, sin revelar su identidad. Requiere una mano rival no vacía.',
     targeting: { type: 'SELF' }, effects: [{ type: 'DISCARD_OPPONENT', from: 'HAND', count: 1 }],
     presentation: { visualKey: 'dark_shadow_hand', element: 'ARCANE', castAnimation: 'cast' },
   },
   {
-    id: 'dark_profane_burial', name: 'Sepultura Profana', heroId: 'mage', rarity: 'UNCOMMON', cost: 2,
+    id: 'dark_profane_burial', name: 'Sepultura Profana', rarity: 'UNCOMMON', cost: 2,
     category: 'CONTROL', tags: ['dark', 'mill'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark,
     rulesText: 'Envía hasta 3 cartas del principio del mazo rival a su cementerio, sin revelar sus identidades. No roba ni causa Deck-Out. Requiere un mazo rival no vacío.',
     targeting: { type: 'SELF' }, effects: [{ type: 'DISCARD_OPPONENT', from: 'DECK', count: 3 }],
@@ -206,19 +206,19 @@ export const DARK_LIGHT_CARDS: CardDefinition[] = [
   {
     id: 'dark_scorpion_king', name: 'Rey Escorpión', heroId: 'summoner', rarity: 'ULTRA', commercialUltra: true, cost: 4, minCasterHp: 2,
     category: 'UTILITY', tags: ['dark', 'summon'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark,
-    rulesText: 'Sacrifica al menos la mitad de tus HP actuales, redondeando arriba, y conserva al menos 1. Invoca al Rey Escorpión con 6 + HP sacrificados de vida, mueve 3, daño 4 y capacidad 2. Aplica veneno 1 durante 5 turnos, sin acumular. Pierde 1 HP al inicio de cada turno propio salvo con tu Mundo Oscuro. Actúa desde la siguiente ronda.',
+    rulesText: 'Invocación especial. Elige los HP sacrificados: mínimo la mitad de tus HP actuales redondeada hacia arriba; máximo tus HP menos 1. Requiere al menos 2 HP. Invoca al Rey Escorpión con 6 + HP sacrificados de vida, mueve 3, daño 4 y capacidad 0. Aplica veneno 1 durante 5 turnos, sin acumular. Pierde 1 HP al inicio de cada turno propio salvo con tu Mundo Oscuro. Actúa desde la siguiente ronda.',
     targeting: { type: 'TILE', range: 2, tileFilter: 'EMPTY', requiresLineOfSight: true }, effects: [{ type: 'SUMMON_SCORPION_SACRIFICE' }],
     presentation: { visualKey: 'dark_scorpion_king', element: 'NATURE', castAnimation: 'cast' },
   },
   {
-    id: 'dark_despair_tribute', name: 'Tributo de la Desesperación', heroId: 'mage', rarity: 'RARE', cost: 3,
+    id: 'dark_despair_tribute', name: 'Tributo de la Desesperación', rarity: 'RARE', cost: 3,
     category: 'CONTROL', tags: ['dark', 'discard'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark, discardHandCost: true,
     rulesText: 'Elige y descarta otra carta de tu mano; después descarta dos instancias aleatorias de la mano rival. Requiere una carta propia adicional y al menos dos cartas en la mano rival.',
     targeting: { type: 'SELF' }, effects: [{ type: 'DISCARD_OPPONENT', from: 'HAND', count: 2, requireFullCount: true }],
     presentation: { visualKey: 'dark_despair_tribute', element: 'ARCANE', castAnimation: 'cast' },
   },
   {
-    id: 'dark_silence_seal', name: 'Sello del Silencio', heroId: 'mage', rarity: 'RARE', cost: 2, responseOnly: true,
+    id: 'dark_silence_seal', name: 'Sello del Silencio', rarity: 'RARE', cost: 2, responseOnly: true,
     category: 'CONTROL', tags: ['dark', 'response'], maxCopies: 2, expansion: DARK_LIGHT_EXPANSIONS.dark,
     rulesText: 'Respuesta: paga 2 energía y descarta otra carta propia para negar una activación rival pendiente. Una respuesta por activación; no responde a otro Sello. El rival no recupera su energía.',
     targeting: { type: 'SELF' }, effects: [],

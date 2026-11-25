@@ -15,6 +15,7 @@ import { GameIcon } from './GameIcon';
 import { RitualGlyph } from './RitualGlyph';
 import { SpellArt } from './SpellArt';
 import '../../../styles/card-preview.css';
+import '../../../styles/card-inspection.css';
 import { explainCardBlock } from '../cardBlock';
 
 /** How long the previous card lingers while the next one is presented (matches the CSS exit). */
@@ -45,6 +46,7 @@ export function BattleCardFeature({
   engine,
   selectedCardUid,
   hoveredCardUid = null,
+  lastInspectedCardUid = null,
   inspectedCardUid = null,
   onCloseInspection,
   onChooseInspection,
@@ -53,12 +55,14 @@ export function BattleCardFeature({
   engine: GameEngine;
   selectedCardUid: string | null;
   hoveredCardUid?: string | null;
+  lastInspectedCardUid?: string | null;
   inspectedCardUid?: string | null;
   onCloseInspection?(): void;
   onChooseInspection?(uid: string): void;
 }) {
   const inspection = state.player.hand.some((c) => c.uid === inspectedCardUid) ? inspectedCardUid : null;
-  const previewUid = inspection ?? hoveredCardUid ?? selectedCardUid;
+  const playing=state.player.hand.some(c=>c.uid===selectedCardUid)?selectedCardUid:null;
+  const previewUid = playing ?? inspection ?? lastInspectedCardUid ?? hoveredCardUid;
   const stageRef = useRef<HTMLDivElement>(null);
   const zoomButtonRef = useRef<HTMLButtonElement>(null);
   useLayoutEffect(() => {
@@ -179,7 +183,7 @@ export function BattleCardFeature({
           }}
           aria-label={`Detalle: ${card.name}`}
         >
-          <FeatureCard def={card} engine={engine} className="is-zoomed" extras={extras} />
+          <FeatureCard def={card} engine={engine} className="is-zoomed" extras={extras} scrollableDescription />
           <div className="zoom-support">
             {onChooseInspection && selected && <button className="mobile-inspection-play" type="button" disabled={!extras.playable} onClick={() => { closeDetail(); onChooseInspection(selected.uid); }}>Elegir carta</button>}
             <button className="card-zoom-close" type="button" onClick={closeDetail} autoFocus>
@@ -187,15 +191,7 @@ export function BattleCardFeature({
             </button>
             <CardPattern targeting={card.targeting} />
             <strong>{rangeText(card)}</strong>
-            <ul>
-              {targetingNotes(card).map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-            {extras.reason && <section className="zoom-reason" role="status">
-              <strong>NO DISPONIBLE AHORA</strong>
-              <p>{extras.reason}</p>
-            </section>}
+
           </div>
         </dialog>
       )}
@@ -293,7 +289,8 @@ export function FeatureCard({
         <p className="fc-text" tabIndex={readableRules ? 0 : undefined} role={readableRules ? 'region' : undefined} aria-label={readableRules ? `Efecto completo de ${def.name}; desplázate para leer` : undefined} data-card-rules-scroll={readableRules || undefined}>{def.rulesText}
          {def.worldFrozenUpgrade&&!def.worldFrozenActive&&<span className="fc-world-upgrade"><b>🌨 Mundo Gélido</b>{def.worldFrozenUpgrade.rulesText}</span>}
          {def.worldFrozenActive&&<span className="fc-world-active">🌨 Potenciada por Mundo Gélido</span>}
-         {className.includes('battle-card-feature')&&<span className="fc-targeting-notes">{targetingNotes(def).map(note=><small key={note}>{note}</small>)}</span>}
+         {(className.includes('battle-card-feature')||className.includes('is-zoomed'))&&<span className="fc-targeting-notes">{targetingNotes(def).map(note=><small key={note}>{note}</small>)}</span>}
+         {className.includes('is-zoomed')&&!playable&&reason&&<span className="zoom-inline-reason" role="status"><strong>NO DISPONIBLE AHORA</strong><span>{reason}</span></span>}
         </p>
         <footer className="fc-support">
           <CardPattern targeting={def.targeting} />
@@ -307,7 +304,7 @@ export function FeatureCard({
           )}
         </footer>
       </div>
-      {!playable && reason && <span className="fc-status">{reason}</span>}
+      {!className.includes('is-zoomed') && !playable && reason && <span className="fc-status">{reason}</span>}
     </aside>
   );
 }

@@ -1,0 +1,4273 @@
+{
+  "inputs": {
+    "qa/story-versioning-20261125/universal-source/src/game/data/darkness-expansion.ts": {
+      "bytes": 4777,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts": {
+      "bytes": 21035,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/darkness-expansion.ts",
+          "kind": "import-statement",
+          "original": "./darkness-expansion"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/unleashed-hunt.ts": {
+      "bytes": 1476,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/market-box-cards.ts": {
+      "bytes": 6966,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-upgrades.ts": {
+      "bytes": 5236,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-magic.ts": {
+      "bytes": 6286,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/market-legendaries.ts": {
+      "bytes": 1446,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-expansion.ts": {
+      "bytes": 5345,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-core.ts": {
+      "bytes": 3105,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/ranked-cards.ts": {
+      "bytes": 9364,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/ranked-premium-cards.ts": {
+      "bytes": 8852,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/forbidden-bond.ts": {
+      "bytes": 1615,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/warrior.ts": {
+      "bytes": 11250,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/world-rewards.ts": {
+      "bytes": 4919,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/temple-rewards.ts": {
+      "bytes": 9412,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts": {
+      "bytes": 11082,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/primordial-dragon.ts": {
+      "bytes": 5740,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts",
+          "kind": "import-statement",
+          "original": "./summoner-rituals"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/tactical-cards.ts": {
+      "bytes": 6452,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/arsenal-cards.ts": {
+      "bytes": 11925,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/showcase-store-cards.ts": {
+      "bytes": 4111,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts": {
+      "bytes": 12374,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-upgrades.ts",
+          "kind": "import-statement",
+          "original": "./antarctic-upgrades"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts": {
+      "bytes": 17318,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/cards.ts": {
+      "bytes": 20116,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts",
+          "kind": "import-statement",
+          "original": "./dark-light"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/market-box-cards.ts",
+          "kind": "import-statement",
+          "original": "./market-box-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-upgrades.ts",
+          "kind": "import-statement",
+          "original": "./antarctic-upgrades"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-magic.ts",
+          "kind": "import-statement",
+          "original": "./antarctic-magic"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/market-legendaries.ts",
+          "kind": "import-statement",
+          "original": "./market-legendaries"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-expansion.ts",
+          "kind": "import-statement",
+          "original": "./mage-thunder-expansion"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-core.ts",
+          "kind": "import-statement",
+          "original": "./mage-thunder-core"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/unleashed-hunt.ts",
+          "kind": "import-statement",
+          "original": "./unleashed-hunt"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-premium-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-premium-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/forbidden-bond.ts",
+          "kind": "import-statement",
+          "original": "./forbidden-bond"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/warrior.ts",
+          "kind": "import-statement",
+          "original": "./warrior"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/world-rewards.ts",
+          "kind": "import-statement",
+          "original": "./world-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple-rewards.ts",
+          "kind": "import-statement",
+          "original": "./temple-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts",
+          "kind": "import-statement",
+          "original": "./summoner-rituals"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/primordial-dragon.ts",
+          "kind": "import-statement",
+          "original": "./primordial-dragon"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/tactical-cards.ts",
+          "kind": "import-statement",
+          "original": "./tactical-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/arsenal-cards.ts",
+          "kind": "import-statement",
+          "original": "./arsenal-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/showcase-store-cards.ts",
+          "kind": "import-statement",
+          "original": "./showcase-store-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "./free-catalog"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts": {
+      "bytes": 14981,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "./free-catalog"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-premium-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-premium-cards"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/infernal.ts": {
+      "bytes": 4609,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/temple.ts": {
+      "bytes": 3162,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/units.ts": {
+      "bytes": 10481,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/infernal.ts",
+          "kind": "import-statement",
+          "original": "./infernal"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple.ts",
+          "kind": "import-statement",
+          "original": "./temple"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts",
+          "kind": "import-statement",
+          "original": "./rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts",
+          "kind": "import-statement",
+          "original": "./summoner-rituals"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/primordial-dragon.ts",
+          "kind": "import-statement",
+          "original": "./primordial-dragon"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/world-rewards.ts",
+          "kind": "import-statement",
+          "original": "./world-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "./free-catalog"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts": {
+      "bytes": 3269,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts": {
+      "bytes": 1462,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/encounters.ts": {
+      "bytes": 12298,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "./scenarios"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/infernal-encounters.ts": {
+      "bytes": 13787,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "./scenarios"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts": {
+      "bytes": 2073,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts": {
+      "bytes": 1693,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts": {
+      "bytes": 8011,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism.ts": {
+      "bytes": 17378,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts": {
+      "bytes": 5139,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism.ts",
+          "kind": "import-statement",
+          "original": "./mechanism"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts": {
+      "bytes": 3814,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "./board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "../mechanisms/mechanism-board"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-transform.ts": {
+      "bytes": 10609,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-board"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-validation.ts": {
+      "bytes": 14883,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-transform.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-transform"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/scenario-validation.ts": {
+      "bytes": 8006,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "./board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "./core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-validation.ts",
+          "kind": "import-statement",
+          "original": "./mechanisms/mechanism-validation"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts": {
+      "bytes": 7258,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/scenario-validation.ts",
+          "kind": "import-statement",
+          "original": "../domain/scenario-validation"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/skirmish.ts": {
+      "bytes": 1619,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "../data/scenarios"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt-encounters.ts": {
+      "bytes": 11762,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "./scenarios"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/temple-phase3-encounters.ts": {
+      "bytes": 16358,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "./scenarios"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/temple-encounters.ts": {
+      "bytes": 20811,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "./scenarios"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple-phase3-encounters.ts",
+          "kind": "import-statement",
+          "original": "./temple-phase3-encounters"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/worlds.ts": {
+      "bytes": 12097,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "../run/encounter"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/skirmish.ts",
+          "kind": "import-statement",
+          "original": "../run/skirmish"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/encounters.ts",
+          "kind": "import-statement",
+          "original": "./encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/infernal-encounters.ts",
+          "kind": "import-statement",
+          "original": "./infernal-encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt-encounters.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt-encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/world-rewards.ts",
+          "kind": "import-statement",
+          "original": "./world-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple-encounters.ts",
+          "kind": "import-statement",
+          "original": "./temple-encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple-rewards.ts",
+          "kind": "import-statement",
+          "original": "./temple-rewards"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/index.ts": {
+      "bytes": 2592,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts",
+          "kind": "import-statement",
+          "original": "./dark-light"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/unleashed-hunt.ts",
+          "kind": "import-statement",
+          "original": "./unleashed-hunt"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/cards.ts",
+          "kind": "import-statement",
+          "original": "./cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts",
+          "kind": "import-statement",
+          "original": "./rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/units.ts",
+          "kind": "import-statement",
+          "original": "./units"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts",
+          "kind": "import-statement",
+          "original": "./summoner-rituals"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/primordial-dragon.ts",
+          "kind": "import-statement",
+          "original": "./primordial-dragon"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple.ts",
+          "kind": "import-statement",
+          "original": "./temple"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts",
+          "kind": "import-statement",
+          "original": "./summoner-rituals"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/primordial-dragon.ts",
+          "kind": "import-statement",
+          "original": "./primordial-dragon"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts",
+          "kind": "import-statement",
+          "original": "./scenarios"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/encounters.ts",
+          "kind": "import-statement",
+          "original": "./encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/infernal-encounters.ts",
+          "kind": "import-statement",
+          "original": "./infernal-encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/infernal.ts",
+          "kind": "import-statement",
+          "original": "./infernal"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/tactical-cards.ts",
+          "kind": "import-statement",
+          "original": "./tactical-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/arsenal-cards.ts",
+          "kind": "import-statement",
+          "original": "./arsenal-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/world-rewards.ts",
+          "kind": "import-statement",
+          "original": "./world-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/worlds.ts",
+          "kind": "import-statement",
+          "original": "./worlds"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt-encounters.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt-encounters"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/worlds.ts",
+          "kind": "import-statement",
+          "original": "./worlds"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/showcase-store-cards.ts",
+          "kind": "import-statement",
+          "original": "./showcase-store-cards"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts": {
+      "bytes": 1029,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "./occupancy"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts": {
+      "bytes": 976,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/minor-statuses.ts": {
+      "bytes": 289,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/beasts-release.ts": {
+      "bytes": 246,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts": {
+      "bytes": 1215,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/ice-movement.ts": {
+      "bytes": 978,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts": {
+      "bytes": 4573,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "./board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts",
+          "kind": "import-statement",
+          "original": "../cards/world-frozen"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/ice-movement.ts",
+          "kind": "import-statement",
+          "original": "../combat/ice-movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "./occupancy"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts": {
+      "bytes": 4467,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/beasts-release.ts",
+          "kind": "import-statement",
+          "original": "./beasts-release"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts",
+          "kind": "import-statement",
+          "original": "../board/line-of-sight"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts": {
+      "bytes": 3539,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/beasts-release.ts",
+          "kind": "import-statement",
+          "original": "./beasts-release"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/archery.ts": {
+      "bytes": 3675,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts",
+          "kind": "import-statement",
+          "original": "../board/line-of-sight"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts": {
+      "bytes": 5856,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/archery.ts",
+          "kind": "import-statement",
+          "original": "./archery"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts": {
+      "bytes": 5653,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts",
+          "kind": "import-statement",
+          "original": "../combat/traps"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status.ts": {
+      "bytes": 7522,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts": {
+      "bytes": 5866,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/minor-statuses.ts",
+          "kind": "import-statement",
+          "original": "./minor-statuses"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts",
+          "kind": "import-statement",
+          "original": "../combat/scout-siege"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts",
+          "kind": "import-statement",
+          "original": "../combat/raven"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts",
+          "kind": "import-statement",
+          "original": "../combat/blood-trail"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status.ts",
+          "kind": "import-statement",
+          "original": "./status"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/turtle-bite.ts": {
+      "bytes": 993,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "./status-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts": {
+      "bytes": 1648,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts": {
+      "bytes": 6573,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hp-loss.ts": {
+      "bytes": 771,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/winter-onset.ts": {
+      "bytes": 1200,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hp-loss.ts",
+          "kind": "import-statement",
+          "original": "../cards/hp-loss"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/ice-terrain.ts": {
+      "bytes": 1444,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts": {
+      "bytes": 3939,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts",
+          "kind": "import-statement",
+          "original": "./scout-siege"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts": {
+      "bytes": 1177,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts": {
+      "bytes": 5373,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts",
+          "kind": "import-statement",
+          "original": "./qa-depth"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts",
+          "kind": "import-statement",
+          "original": "./attack-modifiers"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/snow.ts": {
+      "bytes": 1541,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/ice-terrain.ts",
+          "kind": "import-statement",
+          "original": "../cards/ice-terrain"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts",
+          "kind": "import-statement",
+          "original": "../cards/world-frozen"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts",
+          "kind": "import-statement",
+          "original": "../board/line-of-sight"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts",
+          "kind": "import-statement",
+          "original": "./attack-modifiers"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts",
+          "kind": "import-statement",
+          "original": "./momentum"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts": {
+      "bytes": 17875,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/minor-statuses.ts",
+          "kind": "import-statement",
+          "original": "../statuses/minor-statuses"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts",
+          "kind": "import-statement",
+          "original": "../board/line-of-sight"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/archery.ts",
+          "kind": "import-statement",
+          "original": "../combat/archery"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/collect-rules.ts": {
+      "bytes": 858,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts": {
+      "bytes": 6975,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts",
+          "kind": "import-statement",
+          "original": "./scout-siege"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts",
+          "kind": "import-statement",
+          "original": "./raven"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts",
+          "kind": "import-statement",
+          "original": "./blood-trail"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/ice-movement.ts",
+          "kind": "import-statement",
+          "original": "./ice-movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts",
+          "kind": "import-statement",
+          "original": "./qa-depth"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/collect-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/collect-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts",
+          "kind": "import-statement",
+          "original": "./momentum"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts",
+          "kind": "import-statement",
+          "original": "./traps"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "../mechanisms/mechanism-board"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ai.ts": {
+      "bytes": 14259,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts",
+          "kind": "import-statement",
+          "original": "../combat/traps"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts",
+          "kind": "import-statement",
+          "original": "../cards/targeting"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts",
+          "kind": "import-statement",
+          "original": "../combat/attack-modifiers"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts",
+          "kind": "import-statement",
+          "original": "../combat/movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts": {
+      "bytes": 26282,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/ice-terrain.ts",
+          "kind": "import-statement",
+          "original": "../cards/ice-terrain"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/beasts-release.ts",
+          "kind": "import-statement",
+          "original": "../combat/beasts-release"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/turtle-bite.ts",
+          "kind": "import-statement",
+          "original": "../statuses/turtle-bite"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts",
+          "kind": "import-statement",
+          "original": "../combat/raven"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts",
+          "kind": "import-statement",
+          "original": "../combat/blood-trail"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts",
+          "kind": "import-statement",
+          "original": "../cards/world-frozen"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts",
+          "kind": "import-statement",
+          "original": "../combat/qa-depth"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts",
+          "kind": "import-statement",
+          "original": "../board/line-of-sight"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts",
+          "kind": "import-statement",
+          "original": "../combat/scout-siege"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ai.ts",
+          "kind": "import-statement",
+          "original": "../ai/ai"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts",
+          "kind": "import-statement",
+          "original": "../combat/attack-modifiers"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts",
+          "kind": "import-statement",
+          "original": "../combat/movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/collect-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/collect-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "../mechanisms/mechanism-board"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/glyphs.ts": {
+      "bytes": 4314,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/ice-terrain.ts",
+          "kind": "import-statement",
+          "original": "../cards/ice-terrain"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts": {
+      "bytes": 8488,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/winter-onset.ts",
+          "kind": "import-statement",
+          "original": "../combat/winter-onset"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hp-loss.ts",
+          "kind": "import-statement",
+          "original": "../cards/hp-loss"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../transformations/transformations"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/snow.ts",
+          "kind": "import-statement",
+          "original": "../combat/snow"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ai.ts",
+          "kind": "import-statement",
+          "original": "../ai/ai"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/glyphs.ts",
+          "kind": "import-statement",
+          "original": "../combat/glyphs"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "../mechanisms/mechanism-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-platforms.ts": {
+      "bytes": 4259,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-transform.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-transform"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts": {
+      "bytes": 42601,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts",
+          "kind": "import-statement",
+          "original": "../turn/turn-flow"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism.ts",
+          "kind": "import-statement",
+          "original": "./mechanism"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-platforms.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-platforms"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-transform.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-transform"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-objectives.ts": {
+      "bytes": 3582,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts": {
+      "bytes": 5820,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts",
+          "kind": "import-statement",
+          "original": "../combat/scout-siege"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/turtle-bite.ts",
+          "kind": "import-statement",
+          "original": "../statuses/turtle-bite"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts",
+          "kind": "import-statement",
+          "original": "../combat/raven"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts",
+          "kind": "import-statement",
+          "original": "../combat/blood-trail"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../transformations/transformations"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-objectives.ts",
+          "kind": "import-statement",
+          "original": "../mechanisms/mechanism-objectives"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "../mechanisms/mechanism-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts": {
+      "bytes": 4137,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts": {
+      "bytes": 4403,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "./damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts": {
+      "bytes": 11498,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts",
+          "kind": "import-statement",
+          "original": "./scout-siege"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts",
+          "kind": "import-statement",
+          "original": "./raven"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts",
+          "kind": "import-statement",
+          "original": "./blood-trail"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts",
+          "kind": "import-statement",
+          "original": "./qa-depth"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts",
+          "kind": "import-statement",
+          "original": "./momentum"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/summons/redemption.ts": {
+      "bytes": 2951,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts",
+          "kind": "import-statement",
+          "original": "../board/line-of-sight"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/legendary-step.ts": {
+      "bytes": 1328,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts",
+          "kind": "import-statement",
+          "original": "./movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/recovery.ts": {
+      "bytes": 3066,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/resurrection.ts": {
+      "bytes": 2060,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/recovery.ts",
+          "kind": "import-statement",
+          "original": "./recovery"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-choice.ts": {
+      "bytes": 6385,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/resurrection.ts",
+          "kind": "import-statement",
+          "original": "./resurrection"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/minor-statuses.ts",
+          "kind": "import-statement",
+          "original": "../statuses/minor-statuses"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-family.ts": {
+      "bytes": 227,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/form-effects.ts": {
+      "bytes": 2930,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts",
+          "kind": "import-statement",
+          "original": "./world-frozen"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-family.ts",
+          "kind": "import-statement",
+          "original": "./card-family"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../transformations/transformations"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-trade.ts": {
+      "bytes": 1370,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence-eligibility.ts": {
+      "bytes": 1960,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/form-effects.ts",
+          "kind": "import-statement",
+          "original": "./form-effects"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-trade.ts",
+          "kind": "import-statement",
+          "original": "./hand-trade"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/rival-zones.ts": {
+      "bytes": 1084,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/form-effects.ts",
+          "kind": "import-statement",
+          "original": "./form-effects"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/cancellation.ts": {
+      "bytes": 1423,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hp-loss.ts",
+          "kind": "import-statement",
+          "original": "./hp-loss"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/combat/rebound.ts": {
+      "bytes": 1428,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/effects.ts": {
+      "bytes": 26383,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/resurrection.ts",
+          "kind": "import-statement",
+          "original": "./resurrection"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hp-loss.ts",
+          "kind": "import-statement",
+          "original": "./hp-loss"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-choice.ts",
+          "kind": "import-statement",
+          "original": "./card-choice"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../core/rng"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/recovery.ts",
+          "kind": "import-statement",
+          "original": "./recovery"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../transformations/transformations"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts",
+          "kind": "import-statement",
+          "original": "../combat/attack-modifiers"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ai.ts",
+          "kind": "import-statement",
+          "original": "../ai/ai"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts",
+          "kind": "import-statement",
+          "original": "../combat/movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/glyphs.ts",
+          "kind": "import-statement",
+          "original": "../combat/glyphs"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts",
+          "kind": "import-statement",
+          "original": "../combat/momentum"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/archery.ts",
+          "kind": "import-statement",
+          "original": "../combat/archery"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts",
+          "kind": "import-statement",
+          "original": "../combat/traps"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/rebound.ts",
+          "kind": "import-statement",
+          "original": "../combat/rebound"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts",
+          "kind": "import-statement",
+          "original": "../statuses/status-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../terrain/terrain-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "./deck"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/play-card.ts": {
+      "bytes": 21750,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-choice.ts",
+          "kind": "import-statement",
+          "original": "./card-choice"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/ice-terrain.ts",
+          "kind": "import-statement",
+          "original": "./ice-terrain"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence-eligibility.ts",
+          "kind": "import-statement",
+          "original": "./silence-eligibility"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-trade.ts",
+          "kind": "import-statement",
+          "original": "./hand-trade"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/rival-zones.ts",
+          "kind": "import-statement",
+          "original": "./rival-zones"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/resurrection.ts",
+          "kind": "import-statement",
+          "original": "./resurrection"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/cancellation.ts",
+          "kind": "import-statement",
+          "original": "./cancellation"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/recovery.ts",
+          "kind": "import-statement",
+          "original": "./recovery"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts",
+          "kind": "import-statement",
+          "original": "./world-frozen"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-family.ts",
+          "kind": "import-statement",
+          "original": "./card-family"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/form-effects.ts",
+          "kind": "import-statement",
+          "original": "./form-effects"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../transformations/transformations"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "./deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "./deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts",
+          "kind": "import-statement",
+          "original": "../combat/qa-depth"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/effects.ts",
+          "kind": "import-statement",
+          "original": "./effects"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts",
+          "kind": "import-statement",
+          "original": "./targeting"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts",
+          "kind": "import-statement",
+          "original": "../combat/momentum"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/archery.ts",
+          "kind": "import-statement",
+          "original": "../combat/archery"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/context.ts": {
+      "bytes": 634,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/turn/player-actions.ts": {
+      "bytes": 1872,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts",
+          "kind": "import-statement",
+          "original": "../combat/traps"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/ice-movement.ts",
+          "kind": "import-statement",
+          "original": "../combat/ice-movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts",
+          "kind": "import-statement",
+          "original": "../board/pathfinding"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts",
+          "kind": "import-statement",
+          "original": "../combat/movement"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence.ts": {
+      "bytes": 3803,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/play-card.ts",
+          "kind": "import-statement",
+          "original": "./play-card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence-eligibility.ts",
+          "kind": "import-statement",
+          "original": "./silence-eligibility"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/cancellation.ts",
+          "kind": "import-statement",
+          "original": "./cancellation"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/pvp/dominion.ts": {
+      "bytes": 4094,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../domain/transformations/transformations"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/pvp/maps.ts": {
+      "bytes": 2996,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/pvp/dominion.ts",
+          "kind": "import-statement",
+          "original": "./dominion"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/deck-formats.ts": {
+      "bytes": 684,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts",
+          "kind": "import-statement",
+          "original": "../data/rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/market-primary.ts": {
+      "bytes": 9647,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts",
+          "kind": "import-statement",
+          "original": "../data/dark-light"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/market-box-cards.ts",
+          "kind": "import-statement",
+          "original": "../data/market-box-cards"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/boosters.ts": {
+      "bytes": 838,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/market-expansions.ts": {
+      "bytes": 7975,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts",
+          "kind": "import-statement",
+          "original": "../data/dark-light"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/market-primary.ts",
+          "kind": "import-statement",
+          "original": "./market-primary"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/boosters.ts",
+          "kind": "import-statement",
+          "original": "./boosters"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts": {
+      "bytes": 12071,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/fresh-starter.ts": {
+      "bytes": 2695,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts",
+          "kind": "import-statement",
+          "original": "../data/dark-light"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/market-expansions.ts",
+          "kind": "import-statement",
+          "original": "../store/market-expansions"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "./deck-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts": {
+      "bytes": 13238,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts",
+          "kind": "import-statement",
+          "original": "../data/rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/fresh-starter.ts",
+          "kind": "import-statement",
+          "original": "./fresh-starter"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../domain/content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "./deck-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/engine/setup.ts": {
+      "bytes": 6387,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../domain/content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts",
+          "kind": "import-statement",
+          "original": "../domain/turn/turn-flow"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/scenario-validation.ts",
+          "kind": "import-statement",
+          "original": "../domain/scenario-validation"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "../domain/mechanisms/mechanism-board"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/pvp/duel.ts": {
+      "bytes": 11206,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/turtle-bite.ts",
+          "kind": "import-statement",
+          "original": "../domain/statuses/turtle-bite"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts",
+          "kind": "import-statement",
+          "original": "../domain/combat/raven"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts",
+          "kind": "import-statement",
+          "original": "../domain/combat/blood-trail"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/play-card.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/play-card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/pvp/dominion.ts",
+          "kind": "import-statement",
+          "original": "./dominion"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/pvp/maps.ts",
+          "kind": "import-statement",
+          "original": "./maps"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-formats.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-formats"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "../data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "../collection/profile"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "../collection/profile"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/setup.ts",
+          "kind": "import-statement",
+          "original": "../engine/setup"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/commands.ts",
+          "kind": "import-statement",
+          "original": "../engine/commands"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../domain/core/rng"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../domain/summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts",
+          "kind": "import-statement",
+          "original": "../domain/turn/turn-flow"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/terrain/terrain-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/objectives/objective-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual-rules.ts": {
+      "bytes": 14741,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "../transformations/transformations"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts",
+          "kind": "import-statement",
+          "original": "../cards/deck"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/effects.ts",
+          "kind": "import-statement",
+          "original": "../cards/effects"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts",
+          "kind": "import-statement",
+          "original": "../cards/targeting"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts",
+          "kind": "import-statement",
+          "original": "../combat/damage"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "../summons/summons"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-limit.ts": {
+      "bytes": 2726,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../result"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/engine/commands.ts": {
+      "bytes": 5355,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/redemption.ts",
+          "kind": "import-statement",
+          "original": "../domain/summons/redemption"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/silence"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-choice.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/card-choice"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/legendary-step.ts",
+          "kind": "import-statement",
+          "original": "../domain/combat/legendary-step"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/play-card.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/play-card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/objectives/objective-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts",
+          "kind": "import-statement",
+          "original": "../domain/result"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/player-actions.ts",
+          "kind": "import-statement",
+          "original": "../domain/turn/player-actions"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts",
+          "kind": "import-statement",
+          "original": "../domain/turn/turn-flow"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/pvp/duel.ts",
+          "kind": "import-statement",
+          "original": "../pvp/duel"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/rituals/ritual-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-limit.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/hand-limit"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/mechanisms/mechanism-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-view.ts": {
+      "bytes": 7844,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism.ts",
+          "kind": "import-statement",
+          "original": "./mechanism"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-board"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-transform.ts",
+          "kind": "import-statement",
+          "original": "./mechanism-transform"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/engine/GameEngine.ts": {
+      "bytes": 16774,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/redemption.ts",
+          "kind": "import-statement",
+          "original": "../domain/summons/redemption"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/world-frozen"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/combat/legendary-step.ts",
+          "kind": "import-statement",
+          "original": "../domain/combat/legendary-step"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/play-card.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/play-card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/targeting"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/form-effects.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/form-effects"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/context.ts",
+          "kind": "import-statement",
+          "original": "../domain/context"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/player-actions.ts",
+          "kind": "import-statement",
+          "original": "../domain/turn/player-actions"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts",
+          "kind": "import-statement",
+          "original": "../domain/turn/turn-flow"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/commands.ts",
+          "kind": "import-statement",
+          "original": "./commands"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../domain/board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/rituals/ritual-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/setup.ts",
+          "kind": "import-statement",
+          "original": "./setup"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts",
+          "kind": "import-statement",
+          "original": "../domain/mechanisms/mechanism-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-view.ts",
+          "kind": "import-statement",
+          "original": "../domain/mechanisms/mechanism-view"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/engine/replay.ts": {
+      "bytes": 1244,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/commands.ts",
+          "kind": "import-statement",
+          "original": "./commands"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/setup.ts",
+          "kind": "import-statement",
+          "original": "./setup"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card.ts": {
+      "bytes": 24936,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/worlds.ts": {
+      "bytes": 17836,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "./encounter"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual.ts": {
+      "bytes": 2286,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ritual-policy.ts": {
+      "bytes": 4119,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts",
+          "kind": "import-statement",
+          "original": "../cards/targeting"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "../core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual-rules.ts",
+          "kind": "import-statement",
+          "original": "../rituals/ritual-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts",
+          "kind": "import-statement",
+          "original": "../board/occupancy"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/card-family.ts": {
+      "bytes": 1081,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/rewards.ts": {
+      "bytes": 7470,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts",
+          "kind": "import-statement",
+          "original": "../domain/core/rng"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/run.ts": {
+      "bytes": 9552,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "../collection/profile"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../domain/content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "./encounter"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/rewards.ts",
+          "kind": "import-statement",
+          "original": "./rewards"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/loadout.ts": {
+      "bytes": 2578,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts",
+          "kind": "import-statement",
+          "original": "../domain/content"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "./profile"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/verify.ts": {
+      "bytes": 6374,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/loadout.ts",
+          "kind": "import-statement",
+          "original": "../collection/loadout"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "../collection/profile"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/replay.ts",
+          "kind": "import-statement",
+          "original": "../engine/replay"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/run.ts",
+          "kind": "import-statement",
+          "original": "./run"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/route.ts": {
+      "bytes": 1490,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "./encounter"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/save.ts": {
+      "bytes": 6238,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "./encounter"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/decks.ts": {
+      "bytes": 10226,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-formats.ts",
+          "kind": "import-statement",
+          "original": "./deck-formats"
+        },
+        {
+          "path": "../domain/content",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "./deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "./profile"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "./profile"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/deck-builder-view.ts": {
+      "bytes": 1257,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "./deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "./profile"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/champion-unlocks.ts": {
+      "bytes": 12084,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/run/guest-gate.ts": {
+      "bytes": 1397,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "./encounter"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/collection/profile-save.ts": {
+      "bytes": 9447,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "./deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "./profile"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/commercial-acquisition.ts": {
+      "bytes": 1815,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "../data/free-catalog"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/market-expansions.ts",
+          "kind": "import-statement",
+          "original": "./market-expansions"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/market-primary.ts",
+          "kind": "import-statement",
+          "original": "./market-primary"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/store.ts": {
+      "bytes": 23288,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/commercial-acquisition.ts",
+          "kind": "import-statement",
+          "original": "./commercial-acquisition"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/market-primary.ts",
+          "kind": "import-statement",
+          "original": "./market-primary"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "../data/free-catalog"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-rules"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/store-catalog.ts": {
+      "bytes": 16597,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-core.ts",
+          "kind": "import-statement",
+          "original": "./mage-thunder-core"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-expansion.ts",
+          "kind": "import-statement",
+          "original": "./mage-thunder-expansion"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/store.ts",
+          "kind": "import-statement",
+          "original": "../store/store"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/store.ts",
+          "kind": "import-statement",
+          "original": "../store/store"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/gifts.ts": {
+      "bytes": 6898,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/store.ts",
+          "kind": "import-statement",
+          "original": "./store"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/store/promo.ts": {
+      "bytes": 9955,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card.ts",
+          "kind": "import-statement",
+          "original": "../domain/cards/card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "../collection/deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/store.ts",
+          "kind": "import-statement",
+          "original": "./store"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/domain/ai/hand-discard.ts": {
+      "bytes": 1342,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-limit.ts",
+          "kind": "import-statement",
+          "original": "../cards/hand-limit"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/index.ts": {
+      "bytes": 11051,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/GameEngine.ts",
+          "kind": "import-statement",
+          "original": "./engine/GameEngine"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/GameEngine.ts",
+          "kind": "import-statement",
+          "original": "./engine/GameEngine"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/engine/replay.ts",
+          "kind": "import-statement",
+          "original": "./engine/replay"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts",
+          "kind": "import-statement",
+          "original": "./domain/core/position"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card.ts",
+          "kind": "import-statement",
+          "original": "./domain/cards/card"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/worlds.ts",
+          "kind": "import-statement",
+          "original": "./run/worlds"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual.ts",
+          "kind": "import-statement",
+          "original": "./domain/rituals/ritual"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual-rules.ts",
+          "kind": "import-statement",
+          "original": "./domain/rituals/ritual-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ritual-policy.ts",
+          "kind": "import-statement",
+          "original": "./domain/ai/ritual-policy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/card-family.ts",
+          "kind": "import-statement",
+          "original": "./collection/card-family"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts",
+          "kind": "import-statement",
+          "original": "./domain/board/board-size"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/scenario-validation.ts",
+          "kind": "import-statement",
+          "original": "./domain/scenario-validation"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts",
+          "kind": "import-statement",
+          "original": "./run/encounter"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/rewards.ts",
+          "kind": "import-statement",
+          "original": "./run/rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/run.ts",
+          "kind": "import-statement",
+          "original": "./run/run"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/verify.ts",
+          "kind": "import-statement",
+          "original": "./run/verify"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/route.ts",
+          "kind": "import-statement",
+          "original": "./run/route"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/save.ts",
+          "kind": "import-statement",
+          "original": "./run/save"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts",
+          "kind": "import-statement",
+          "original": "./collection/deck-rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts",
+          "kind": "import-statement",
+          "original": "./collection/profile"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/decks.ts",
+          "kind": "import-statement",
+          "original": "./collection/decks"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-builder-view.ts",
+          "kind": "import-statement",
+          "original": "./collection/deck-builder-view"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/loadout.ts",
+          "kind": "import-statement",
+          "original": "./collection/loadout"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/champion-unlocks.ts",
+          "kind": "import-statement",
+          "original": "./collection/champion-unlocks"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/guest-gate.ts",
+          "kind": "import-statement",
+          "original": "./run/guest-gate"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/profile-save.ts",
+          "kind": "import-statement",
+          "original": "./collection/profile-save"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts",
+          "kind": "import-statement",
+          "original": "./domain/summons/summons"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/skirmish.ts",
+          "kind": "import-statement",
+          "original": "./run/skirmish"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/store.ts",
+          "kind": "import-statement",
+          "original": "./store/store"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/store-catalog.ts",
+          "kind": "import-statement",
+          "original": "./data/store-catalog"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/gifts.ts",
+          "kind": "import-statement",
+          "original": "./store/gifts"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/store/promo.ts",
+          "kind": "import-statement",
+          "original": "./store/promo"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-limit.ts",
+          "kind": "import-statement",
+          "original": "./domain/cards/hand-limit"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/ai/hand-discard.ts",
+          "kind": "import-statement",
+          "original": "./domain/ai/hand-discard"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/index.ts",
+          "kind": "import-statement",
+          "original": "./data"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts",
+          "kind": "import-statement",
+          "original": "./domain/transformations/transformations"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-view.ts",
+          "kind": "import-statement",
+          "original": "./domain/mechanisms/mechanism-view"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/deck-formats.ts",
+          "kind": "import-statement",
+          "original": "./collection/deck-formats"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/collection/decks.ts",
+          "kind": "import-statement",
+          "original": "./collection/decks"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/archer.ts": {
+      "bytes": 9668,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts",
+          "kind": "import-statement",
+          "original": "./rules"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts",
+          "kind": "import-statement",
+          "original": "./archer-hunt"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-premium-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-premium-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple-rewards.ts",
+          "kind": "import-statement",
+          "original": "./temple-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "./free-catalog"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/primordial-legacy.ts": {
+      "bytes": 6743,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/transformation-prototypes.ts": {
+      "bytes": 462,
+      "imports": [],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-qa.ts": {
+      "bytes": 5346,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/transformation-prototypes.ts",
+          "kind": "import-statement",
+          "original": "./transformation-prototypes"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-2d-qa.ts": {
+      "bytes": 1446,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-qa.ts",
+          "kind": "import-statement",
+          "original": "./shapeshifter-qa"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-catalog.ts": {
+      "bytes": 9819,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/primordial-legacy.ts",
+          "kind": "import-statement",
+          "original": "./primordial-legacy"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-2d-qa.ts",
+          "kind": "import-statement",
+          "original": "./shapeshifter-2d-qa"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-release.ts": {
+      "bytes": 1316,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts",
+          "kind": "import-statement",
+          "original": "./dark-light"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-catalog.ts",
+          "kind": "import-statement",
+          "original": "./shapeshifter-catalog"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/ranked-premium-cards.ts",
+          "kind": "import-statement",
+          "original": "./ranked-premium-cards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/temple-rewards.ts",
+          "kind": "import-statement",
+          "original": "./temple-rewards"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "./free-catalog"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-source/server/src/ritualRelease.ts": {
+      "bytes": 2515,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/archer.ts",
+          "kind": "import-statement",
+          "original": "../../src/game/data/archer"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-release.ts",
+          "kind": "import-statement",
+          "original": "../../src/game/data/shapeshifter-release"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/index.ts",
+          "kind": "import-statement",
+          "original": "../../src/game"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts",
+          "kind": "import-statement",
+          "original": "../../src/game/data/free-catalog"
+        }
+      ],
+      "format": "esm"
+    },
+    "qa/story-versioning-20261125/universal-entry.ts": {
+      "bytes": 2095,
+      "imports": [
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/index.ts",
+          "kind": "import-statement",
+          "original": "./universal-source/src/game"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/src/game/run/verify.ts",
+          "kind": "import-statement",
+          "original": "./universal-source/src/game/run/verify"
+        },
+        {
+          "path": "qa/story-versioning-20261125/universal-source/server/src/ritualRelease.ts",
+          "kind": "import-statement",
+          "original": "./universal-source/server/src/ritualRelease"
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "outputs": {
+    "src/game/compat/universal-20261125.js": {
+      "imports": [],
+      "exports": [
+        "UNIVERSAL_RULES",
+        "universalBattle",
+        "universalCanonicalProof",
+        "universalDeck",
+        "universalSettle",
+        "universalVerify"
+      ],
+      "entryPoint": "qa/story-versioning-20261125/universal-entry.ts",
+      "inputs": {
+        "qa/story-versioning-20261125/universal-source/src/game/data/darkness-expansion.ts": {
+          "bytesInOutput": 4586
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/dark-light.ts": {
+          "bytesInOutput": 17608
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/unleashed-hunt.ts": {
+          "bytesInOutput": 645
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/market-box-cards.ts": {
+          "bytesInOutput": 4803
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-upgrades.ts": {
+          "bytesInOutput": 4979
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/antarctic-magic.ts": {
+          "bytesInOutput": 5931
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/market-legendaries.ts": {
+          "bytesInOutput": 1356
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-expansion.ts": {
+          "bytesInOutput": 4212
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/mage-thunder-core.ts": {
+          "bytesInOutput": 1935
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/ranked-cards.ts": {
+          "bytesInOutput": 6022
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/ranked-premium-cards.ts": {
+          "bytesInOutput": 4777
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/forbidden-bond.ts": {
+          "bytesInOutput": 611
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/warrior.ts": {
+          "bytesInOutput": 7607
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/world-rewards.ts": {
+          "bytesInOutput": 2412
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/temple-rewards.ts": {
+          "bytesInOutput": 4757
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/summoner-rituals.ts": {
+          "bytesInOutput": 4889
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/primordial-dragon.ts": {
+          "bytesInOutput": 2468
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/tactical-cards.ts": {
+          "bytesInOutput": 3399
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/arsenal-cards.ts": {
+          "bytesInOutput": 6412
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/showcase-store-cards.ts": {
+          "bytesInOutput": 2094
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt.ts": {
+          "bytesInOutput": 6789
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/free-catalog.ts": {
+          "bytesInOutput": 9725
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/cards.ts": {
+          "bytesInOutput": 13674
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/rules.ts": {
+          "bytesInOutput": 8082
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/infernal.ts": {
+          "bytesInOutput": 1758
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/temple.ts": {
+          "bytesInOutput": 1069
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/units.ts": {
+          "bytesInOutput": 5496
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/index.ts": {
+          "bytesInOutput": 193
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/scenarios.ts": {
+          "bytesInOutput": 1972
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/board/board-size.ts": {
+          "bytesInOutput": 467
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/encounters.ts": {
+          "bytesInOutput": 8013
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/infernal-encounters.ts": {
+          "bytesInOutput": 8919
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/core/position.ts": {
+          "bytesInOutput": 617
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/board/board.ts": {
+          "bytesInOutput": 419
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/content.ts": {
+          "bytesInOutput": 95
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism.ts": {
+          "bytesInOutput": 395
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-board.ts": {
+          "bytesInOutput": 1734
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/board/occupancy.ts": {
+          "bytesInOutput": 1135
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-transform.ts": {
+          "bytesInOutput": 3470
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-validation.ts": {
+          "bytesInOutput": 8510
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/scenario-validation.ts": {
+          "bytesInOutput": 3326
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/run/encounter.ts": {
+          "bytesInOutput": 618
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/archer-hunt-encounters.ts": {
+          "bytesInOutput": 7645
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/temple-phase3-encounters.ts": {
+          "bytesInOutput": 7673
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/temple-encounters.ts": {
+          "bytesInOutput": 10229
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/worlds.ts": {
+          "bytesInOutput": 5472
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/board/line-of-sight.ts": {
+          "bytesInOutput": 293
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/core/rng.ts": {
+          "bytesInOutput": 299
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/minor-statuses.ts": {
+          "bytesInOutput": 107
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/beasts-release.ts": {
+          "bytesInOutput": 45
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/world-frozen.ts": {
+          "bytesInOutput": 461
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/ice-movement.ts": {
+          "bytesInOutput": 383
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/board/pathfinding.ts": {
+          "bytesInOutput": 1545
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/raven.ts": {
+          "bytesInOutput": 2165
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/blood-trail.ts": {
+          "bytesInOutput": 1510
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/archery.ts": {
+          "bytesInOutput": 938
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/traps.ts": {
+          "bytesInOutput": 2086
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/terrain/terrain-rules.ts": {
+          "bytesInOutput": 2729
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status.ts": {
+          "bytesInOutput": 34
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/status-rules.ts": {
+          "bytesInOutput": 2561
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/statuses/turtle-bite.ts": {
+          "bytesInOutput": 464
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/result.ts": {
+          "bytesInOutput": 51
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/transformations/transformations.ts": {
+          "bytesInOutput": 2682
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hp-loss.ts": {
+          "bytesInOutput": 283
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/winter-onset.ts": {
+          "bytesInOutput": 586
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/ice-terrain.ts": {
+          "bytesInOutput": 505
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/attack-modifiers.ts": {
+          "bytesInOutput": 1374
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/qa-depth.ts": {
+          "bytesInOutput": 278
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/momentum.ts": {
+          "bytesInOutput": 1828
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/snow.ts": {
+          "bytesInOutput": 663
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/targeting.ts": {
+          "bytesInOutput": 6319
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/collect-rules.ts": {
+          "bytesInOutput": 274
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/movement.ts": {
+          "bytesInOutput": 2339
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/ai/ai.ts": {
+          "bytesInOutput": 5129
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/summons/summons.ts": {
+          "bytesInOutput": 10342
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/glyphs.ts": {
+          "bytesInOutput": 1959
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/turn/turn-flow.ts": {
+          "bytesInOutput": 3027
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-platforms.ts": {
+          "bytesInOutput": 1382
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-rules.ts": {
+          "bytesInOutput": 17528
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-objectives.ts": {
+          "bytesInOutput": 1114
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/objectives/objective-rules.ts": {
+          "bytesInOutput": 2511
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/deck.ts": {
+          "bytesInOutput": 1703
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/scout-siege.ts": {
+          "bytesInOutput": 2386
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/damage.ts": {
+          "bytesInOutput": 5731
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/summons/redemption.ts": {
+          "bytesInOutput": 1348
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/legendary-step.ts": {
+          "bytesInOutput": 679
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/recovery.ts": {
+          "bytesInOutput": 1217
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/resurrection.ts": {
+          "bytesInOutput": 968
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-choice.ts": {
+          "bytesInOutput": 2762
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card-family.ts": {
+          "bytesInOutput": 37
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/form-effects.ts": {
+          "bytesInOutput": 1014
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-trade.ts": {
+          "bytesInOutput": 475
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence-eligibility.ts": {
+          "bytesInOutput": 780
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/rival-zones.ts": {
+          "bytesInOutput": 385
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/cancellation.ts": {
+          "bytesInOutput": 565
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/combat/rebound.ts": {
+          "bytesInOutput": 270
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/effects.ts": {
+          "bytesInOutput": 13797
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/play-card.ts": {
+          "bytesInOutput": 12259
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/context.ts": {
+          "bytesInOutput": 55
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/turn/player-actions.ts": {
+          "bytesInOutput": 662
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/silence.ts": {
+          "bytesInOutput": 1673
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/pvp/dominion.ts": {
+          "bytesInOutput": 1649
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/pvp/maps.ts": {
+          "bytesInOutput": 854
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/collection/deck-formats.ts": {
+          "bytesInOutput": 49
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/store/market-primary.ts": {
+          "bytesInOutput": 7755
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/store/boosters.ts": {
+          "bytesInOutput": 145
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/store/market-expansions.ts": {
+          "bytesInOutput": 3054
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/collection/deck-rules.ts": {
+          "bytesInOutput": 1436
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/collection/profile.ts": {
+          "bytesInOutput": 1773
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/engine/setup.ts": {
+          "bytesInOutput": 2951
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/pvp/duel.ts": {
+          "bytesInOutput": 844
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/rituals/ritual-rules.ts": {
+          "bytesInOutput": 5351
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/hand-limit.ts": {
+          "bytesInOutput": 695
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/engine/commands.ts": {
+          "bytesInOutput": 1365
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/mechanisms/mechanism-view.ts": {
+          "bytesInOutput": 2462
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/engine/GameEngine.ts": {
+          "bytesInOutput": 6425
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/index.ts": {
+          "bytesInOutput": 0
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/engine/replay.ts": {
+          "bytesInOutput": 210
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/domain/cards/card.ts": {
+          "bytesInOutput": 33
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/run/rewards.ts": {
+          "bytesInOutput": 2075
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/run/run.ts": {
+          "bytesInOutput": 1303
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/collection/loadout.ts": {
+          "bytesInOutput": 524
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/run/verify.ts": {
+          "bytesInOutput": 3048
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/collection/decks.ts": {
+          "bytesInOutput": 0
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/collection/champion-unlocks.ts": {
+          "bytesInOutput": 88
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/store/store.ts": {
+          "bytesInOutput": 290
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/store-catalog.ts": {
+          "bytesInOutput": 9343
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/archer.ts": {
+          "bytesInOutput": 5408
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/primordial-legacy.ts": {
+          "bytesInOutput": 5338
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/transformation-prototypes.ts": {
+          "bytesInOutput": 165
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-qa.ts": {
+          "bytesInOutput": 2770
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-2d-qa.ts": {
+          "bytesInOutput": 587
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-catalog.ts": {
+          "bytesInOutput": 5899
+        },
+        "qa/story-versioning-20261125/universal-source/src/game/data/shapeshifter-release.ts": {
+          "bytesInOutput": 376
+        },
+        "qa/story-versioning-20261125/universal-source/server/src/ritualRelease.ts": {
+          "bytesInOutput": 566
+        },
+        "qa/story-versioning-20261125/universal-entry.ts": {
+          "bytesInOutput": 956
+        }
+      },
+      "bytes": 409492
+    }
+  }
+}

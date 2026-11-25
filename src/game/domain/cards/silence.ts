@@ -16,6 +16,7 @@ export interface PendingCast {
   respondingHeroId: string;
   target: Pos | null;
   searchUid?: string;
+  sacrificeHp?:number;
   secondary?: Pos | null;
   wallOrientation?: WallOrientation;
   paidEnergy: number;
@@ -61,5 +62,7 @@ export function resolveSilence(ctx: RuleContext, response: SilenceResponse): Rul
     ctx.emit({ type: 'CARD_RESOLVED', cardUid: card.uid, cardId: card.cardId });
     return OK;
   }
-  return playCard(ctx, pending.cardUid, pending.target, pending.searchUid, pending.secondary, pending.wallOrientation, 'PREPAID');
+  const result=playCard(ctx,pending.cardUid,pending.target,pending.searchUid,pending.secondary,pending.wallOrientation,'PREPAID',pending.sacrificeHp);
+  if(!result.ok&&definition.effects.some(fx=>fx.type==='SUMMON_SCORPION_SACRIFICE')){consumeCanceledCard(ctx,ctx.state.player,card,definition);ctx.emit({type:'CARD_RESOLVED',cardUid:card.uid,cardId:card.cardId});return OK;}
+  return result;
 }

@@ -1,5 +1,5 @@
 import {expect,it,vi} from 'vitest';
-import {writeFileSync,readFileSync} from 'node:fs';
+import {writeFileSync,readFileSync,mkdirSync} from 'node:fs';
 import {DEFAULT_CONTENT,copyLimit,validateDeck,DECK_RULES} from '../src/game';
 import {PVP_CONTENT} from '../server/src/pvp';
 import {rankedBotCatalog} from '../server/src/rankedBotCatalog';
@@ -15,7 +15,7 @@ it('proves the deployed 30-card gate hides all bots while their actual 40-card d
  expect(BOT_CHAMPION_SUPPORT.filter(id=>!validateDeck(c.heroes[id]!.deck,id,k=>c.cards[k]?copyLimit(c.cards[k]!,DECK_RULES):0,c,{...DECK_RULES,requiredSize:30,legacySize:20}).length)).toEqual(['mage','summoner','shapeshifter']);expect(before).toEqual([]);expect(playableBotChampions(env,PVP_CONTENT)).toEqual(['mage','summoner','shapeshifter']);
  for(const id of BOT_CHAMPION_SUPPORT){expect(c.heroes[id]!.deck.reduce((n,e)=>n+e.count,0)).toBe(30);const d=botStarterDeck(c,id);expect(d.reduce((n,e)=>n+e.count,0)).toBe(40);expect(validateDeck(d,id,k=>c.cards[k]?copyLimit(c.cards[k]!,DECK_RULES):0,c,DECK_RULES)).toEqual([]);}
  const mageIds=new Set(c.heroes.mage!.deck.map(e=>e.cardId));const limited={...PVP_CONTENT,cards:Object.fromEntries(Object.entries(PVP_CONTENT.cards).filter(([id,card])=>card.heroId!=='mage'||mageIds.has(id)))};
- expect(playableBotChampions(env,limited)).not.toContain('mage');
+ expect(playableBotChampions(env,limited)).toContain('mage'); // Neutral copies can now fill the legal40 deck.
 });
 it('prepares fictitious local accounts and isolated SQLite schema for real local WebSocket QA',async()=>{
  const db=memoryD1();for(const f of ['0004_pvp.sql','0005_pvp_dominion.sql','0006_pvp_maps.sql','0009_tactics_social.sql','0010_pvp_room_started.sql','0019_tactics_pvp_history.sql','0030_tactics_ranked_bots.sql'])db.sql.exec(readFileSync(new URL('../server/migrations/'+f,import.meta.url),'utf8'));
@@ -23,7 +23,7 @@ it('prepares fictitious local accounts and isolated SQLite schema for real local
  const quote=(v:unknown)=>v===null?'NULL':typeof v==='number'?String(v):"'"+String(v).replaceAll("'","''")+"'";
  const objects=db.sql.prepare("SELECT type,name,sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY CASE type WHEN 'table' THEN 0 WHEN 'index' THEN 1 ELSE 2 END").all();let dump='PRAGMA foreign_keys=OFF;\n';for(const o of objects)dump+=o.sql+';\n';
  for(const o of objects.filter(o=>o.type==='table')){const rows=db.sql.prepare('SELECT * FROM "'+o.name+'"').all();for(const row of rows)dump+='INSERT INTO "'+o.name+'" VALUES('+Object.values(row).map(quote).join(',')+');\n';}
- writeFileSync('qa/ranked-bots-hotfix-20261123/local-fixture.sql',dump);writeFileSync('qa/ranked-bots-hotfix-20261123/local-accounts.json',JSON.stringify(accounts));db.sql.close();
+ mkdirSync('qa/ranked-bots-hotfix-20261123',{recursive:true});writeFileSync('qa/ranked-bots-hotfix-20261123/local-fixture.sql',dump);writeFileSync('qa/ranked-bots-hotfix-20261123/local-accounts.json',JSON.stringify(accounts));db.sql.close();
 });
 
 import {createElement} from 'react';

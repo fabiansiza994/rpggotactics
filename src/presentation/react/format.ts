@@ -112,8 +112,6 @@ export function deckIssueText(issue: DeckIssue, heroName: string): string {
       return `Solo tienes ${copies(issue.owned)} de ${name}.`;
     case 'COPY_LIMIT':
       return `Máximo ${copies(issue.limit)} de ${name} por mazo.`;
-    case 'NEUTRAL_LIMIT':
-      return `Máximo ${issue.limit} cartas neutrales por mazo.`;
     case 'ULTRA_LIMIT':
       return `Máximo ${issue.limit} Ultra Única de recompensa por mazo. Las comerciales usan su límite individual.`;
     case 'MALFORMED_ENTRY':

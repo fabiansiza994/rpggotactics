@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   formatDeckSummaries as deckSummaries,
-  neutralCount,
   heroProfile,
   DECK_RULES,
   DEFAULT_DECK_SLOTS_PER_CHAMPION,
@@ -214,9 +213,6 @@ export function MyDecks({ onEdit }: { onEdit: (id: string) => void }) {
                 <h2>{d.name}</h2>
               </div>
               <div className="md-card-info">
-                {saved && DECK_RULES.maxNeutralCards !== undefined && neutralCount(saved.cards, CONTENT) > DECK_RULES.maxNeutralCards && (
-                  <p role="alert">Excede el máximo de {DECK_RULES.maxNeutralCards} cartas neutrales ({neutralCount(saved.cards, CONTENT)}). Edita el mazo para poder jugar.</p>
-                )}
                 <p data-valid={d.valid}>
                   <span className="md-valid-dot" aria-hidden="true" />
                   {d.cardCount}/{d.maxCards} ·{' '}

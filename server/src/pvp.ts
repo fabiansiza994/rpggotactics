@@ -1631,6 +1631,7 @@ export function validCommand(c: unknown): c is Command {
       v.cardUid.length < 100 &&
       (v.target === null || pos(v.target)) &&
       (v.secondary === undefined || pos(v.secondary)) &&
+      (v.sacrificeHp===undefined||(typeof v.sacrificeHp==='number'&&Number.isSafeInteger(v.sacrificeHp)&&v.sacrificeHp>0&&v.sacrificeHp<100000)) &&
       (v.wallOrientation === undefined ||
         v.wallOrientation === "HORIZONTAL" ||
         v.wallOrientation === "VERTICAL")
@@ -1692,6 +1693,7 @@ function canonicalCommand(command: Command): Command {
     target: command.target
       ? { x: command.target.x, y: command.target.y }
       : null,
+    ...(command.sacrificeHp!==undefined?{sacrificeHp:command.sacrificeHp}:{}),
     // Only present when sent: older logs replay byte for byte.
     ...(command.secondary
       ? { secondary: { x: command.secondary.x, y: command.secondary.y } }

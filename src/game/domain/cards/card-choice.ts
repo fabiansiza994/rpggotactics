@@ -100,3 +100,14 @@ export function beginScorpionSacrifice(ctx: RuleContext, position: Pos): void {
   });
   ctx.state.player.pendingCardChoice = { kind: 'SUMMON_SACRIFICE', position: { ...position }, sourceCardId: 'dark_scorpion_king', options, allowKeep: false };
 }
+
+/** Atomic confirmed ritual; validation happens before spending any cast resource. */
+export function validScorpionSacrifice(hp:number,amount:unknown):amount is number {
+ return hp>=2&&typeof amount==='number'&&Number.isSafeInteger(amount)&&amount>=Math.ceil(hp/2)&&amount<hp;
+}
+export function resolveScorpionSacrifice(ctx:RuleContext,owner:Unit,position:Pos,amount:number,sourceUid?:string):void {
+ const summon=spawnSummon(ctx,owner,'dark_scorpion_king',position,sourceUid);
+ if(!summon)throw Error('Validated Scorpion position became invalid within an atomic command');
+ owner.hp-=amount;summon.hp=summon.maxHp=6+amount;
+ ctx.emit({type:'HP_SACRIFICED',unitId:owner.id,cardId:'dark_scorpion_king',amount,hpAfter:owner.hp});
+}

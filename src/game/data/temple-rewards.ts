@@ -18,7 +18,7 @@ export const TEMPLE_WORLD_ID = 'world_3';
 const ENCOUNTER = { source: 'ENCOUNTER_REWARD', worldId: TEMPLE_WORLD_ID } as const;
 const COMPLETION = { source: 'WORLD_COMPLETION', worldId: TEMPLE_WORLD_ID } as const;
 
-/** Neutral: every champion can earn and equip them (shared account pool, max 4 neutrals per deck). */
+/** Neutral: every champion can earn and equip them (shared account pool, individual card copy limits). */
 export const TEMPLE_NEUTRAL_CARDS: CardDefinition[] = [
   {
     // XXIV. Mage Paso de Fase / Summoner Paso Ligero give 2 for 0; the neutral version gives 1.

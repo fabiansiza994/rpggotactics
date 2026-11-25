@@ -1,0 +1,22 @@
+[
+  {
+    "engine": "winter-dominion-1",
+    "module": "src/game/compat/winter-a18c1d67.js",
+    "sha256": "cf0f1f28ab88791d706a5a29995c94de43b660fb02ce9ef21cb87506b7e4fb4d",
+    "sourceManifest": "WINTER_SOURCE.json",
+    "externalImports": []
+  },
+  {
+    "engine": "universal-cards-1",
+    "module": "src/game/compat/universal-20261125.js",
+    "sha256": "588ec3585d10d81748e5c4fb06a452ce278785bcd1041f9918b7920239719671",
+    "sourceManifest": "UNIVERSAL_SOURCE.json",
+    "externalImports": []
+  },
+  {
+    "engine": "pre-winter-b0e18cc8",
+    "module": "src/game/compat/pre-winter-b0e18cc8.js",
+    "sha256": "0f090de9fd4cce032e66a8ee1995bf8310d7c399625ffbf57b70a7e35658e09f",
+    "source": "existing sealed Winter transition, unchanged"
+  }
+]

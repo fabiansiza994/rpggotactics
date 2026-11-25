@@ -1,4 +1,4 @@
-import {legacyBattle} from '../../game/compat/pre-winter-b0e18cc8.js';
+import {storyBattle,STORY_RULES_CURRENT,type StoryRules} from '../../game/run/story-rules';
 import {storedDeckRules,type DeckFormat} from '../../game/collection/deck-formats';
 import {drawRitual,classifyDraws} from '../cards/drawRitual';
 import { pairTargets, planCardSelection, type PairSelection } from '../input/pairSelection';
@@ -157,6 +157,7 @@ export interface LogEntry {
  */
 interface BattleStore {
   onlineCommand: ((command: Command) => void) | null;
+  storyRules:StoryRules|null;
   screen: 'MENU' | 'BATTLE' | 'DECK' | 'CHAMPIONS';
   playbackBusy: boolean;
   handPulse: number;
@@ -333,6 +334,9 @@ interface BattleStore {
   /** Act on the armed touch preview (Confirm button), same as tapping it again. */
   confirmAim(): void;
   /** Leave targeting/preview entirely: deselect the card and drop any armed preview. */
+  scorpionDraft:{cardUid:string;position:Pos}|null;
+  confirmScorpion(sacrificeHp:number):void;
+  clearScorpionDraft():void;
   cancelAim(): void;
   endTurn(): void;
 }
@@ -592,7 +596,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     // Older servers only send the Mage run (and no worlds).
     const runs = data.runs ?? { [defaultCampaignHero(ASCENT_CAMPAIGN)]: data.run };
     set({
-      legacyCampaigns:data.legacyCampaigns??{},
+      legacyCampaigns:{...data.storyEncounters,...data.legacyCampaigns},
       qaSummonerCampaign: data.qaSummonerCampaign === true,
       warriorAvailable: data.warriorAvailable === true,
       world2Available: data.world2Available === true,
@@ -892,6 +896,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     attach(engine);
     set({
       screen: 'BATTLE',
+      storyRules:null,
       playbackBusy: false,
       handPulse: 0,
       introLocked: true,
@@ -916,7 +921,6 @@ export const useBattleStore = create<BattleStore>((set, get) => {
    * free ones — whatever the run, route or UI state says. The invitation opens instead.
    */
   function beginEncounter(run: RunState): boolean {
-    if (neutralDeckBlocked(run.heroId)) return false;
     if (!campaignChampionsIn(get()).includes(run.heroId)) {
       set({ notice: 'Todavía no has desbloqueado este campeón.' });
       return false;
@@ -938,11 +942,12 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     // Same content the server replays a victory with (campaignBattleContent).
     const legacy=get().account.status==='READY'?get().legacyCampaigns[`${run.campaignId}:${run.heroId}`]:undefined;
     if(legacy&&legacy.runSeed===run.seed&&legacy.encounterId===run.currentEncounterId){
-      if(!legacy.deckPinned){set({notice:'Encuentro anterior pendiente: selecciona un mazo legal de 40 cartas con las reglas anteriores (Mundo Gélido máximo 2, Llamado del Invierno máximo 1, sin Inicio de la Tormenta). No se han modificado tus mazos.'});return false;}
-      begin(legacyBattle(legacy.profile,run,freshBattleSeed()));
-      set({notice:'Este encuentro pendiente conserva el mazo y las reglas registrados hasta su primera victoria verificada.'});return true;
+      if(!legacy.deckPinned){set({notice:'Este encuentro conserva sus reglas registradas. Selecciona un mazo legal y poseído de 40 cartas compatible con esa versión para reintentarlo. Tus mazos no se han modificado.'});return false;}
+      begin(storyBattle(legacy.rules,legacy.profile,run,freshBattleSeed()));
+      set({storyRules:legacy.rules,notice:'Este encuentro pendiente conserva el mazo y las reglas registrados hasta su primera victoria verificada.'});return true;
 
     }
+    if (neutralDeckBlocked(run.heroId)) return false;
     const content = campaignBattleContent(DEFAULT_CONTENT, get().profile, run, DECK_RULES);
     if (shapeshifterQaEnabled && run.heroId === 'shapeshifter' && qaOpening() === 'guaranteed' && !content.heroes.shapeshifter!.deck.some(e => e.count > 0 && content.cards[e.cardId]?.effects.some(f => f.type === 'TRANSFORM'))) {
       set({notice:'QA: añade una transformación al mazo o usa apertura normal.'}); return false;
@@ -994,6 +999,8 @@ export const useBattleStore = create<BattleStore>((set, get) => {
   }
 
   function run(command: Command): boolean {
+    if(!get().engine||inputLocked(get()))return false;
+    if((get().onlineCommand||!get().storyRules||get().storyRules===STORY_RULES_CURRENT)&&command.type==='PLAY_CARD'&&command.sacrificeHp===undefined&&get().engine?.state.player.hand.some(c=>c.uid===command.cardUid&&c.cardId==='dark_scorpion_king')){if(command.target)set({scorpionDraft:{cardUid:command.cardUid,position:command.target}});return false;}
     drawRitual.complete();
     const { engine } = get();
     if (!engine || inputLocked(get())) return false;
@@ -1022,6 +1029,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     selectMechanism: (id) => set({ selectedMechanismId:id, selectedCardUid:null,pairSelection:null, aim:null }),
     interactMechanism: (id) => { if(get().engine?.getMechanismView() && !get().selectedCardUid) run({type:"INTERACT",mechanismId:id}); },
     onlineCommand: null,
+    storyRules:null,
     screen: 'MENU',
     playbackBusy: false,
     handPulse: 0,
@@ -1403,7 +1411,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       const { run, screen, state, cloud } = get();
       if (cloud.busy || run?.status !== 'IN_BATTLE') return;
       if (screen === 'BATTLE' && (!state?.outcome || !run.completedEncounterIds.includes(state.scenarioId) || run.currentEncounterId === state.scenarioId)) return;
-      if (run.heroId === 'shapeshifter') {
+      if (run.heroId === 'shapeshifter' && !(get().account.status==='READY'&&get().legacyCampaigns[`${run.campaignId}:${run.heroId}`])) {
         const saved = loadRealQaBattle();
         if (saved && qaBattleMatches(saved, run) && !saved.state.outcome) {
           set({mode: 'CAMPAIGN'}); begin(saved); return;
@@ -1618,7 +1626,11 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       const hero = engine?.state.units.find(u => u.id === engine.heroId);
       if (hero && !inputLocked(get())) actOnTile(hero.pos);
     },
+    scorpionDraft:null,
+    clearScorpionDraft(){set({scorpionDraft:null});},
+    confirmScorpion(sacrificeHp){const draft=get().scorpionDraft;if(!draft)return;if(run({type:'PLAY_CARD',cardUid:draft.cardUid,target:draft.position,sacrificeHp}))set({scorpionDraft:null,selectedCardUid:null,pairSelection:null,aim:null});},
     cancelAim() {
+      set({scorpionDraft:null});
       set({ selectedMechanismId:null, selectedCardUid: null, pairSelection: null, aim: withoutTapAim(get().aim), notice: null });
     },
 

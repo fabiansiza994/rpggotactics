@@ -34,6 +34,7 @@ interface Props {
   onInspect?(on: boolean): void;
   onClick(): void;
   onLongInspect?(): void;
+  inspected?: boolean;
   onCancel?(): void;
   handSize?: number;
   uid?: string;
@@ -70,6 +71,7 @@ export function CardView({
   responseProgress,
   onInspect,
   onClick,
+  inspected=false,
   onCancel,
   onLongInspect,
   handSize = 5,
@@ -118,7 +120,7 @@ export function CardView({
       data-disabled={disabled || undefined}
       data-draw-hidden={presentationHidden||undefined}
       aria-hidden={presentationHidden||undefined}
-      className={`card ${selected ? 'is-selected' : ''} ${playable ? '' : 'is-unplayable'}`}
+      className={`card${inspected ? ' is-inspected' : ''} ${selected ? 'is-selected' : ''} ${playable ? '' : 'is-unplayable'}`}
       data-ritual-piece={def.ritualPiece || undefined}
       data-premium={def.id === 'summon_war_drake' || undefined}
       data-origin-world={origin?.worldId}

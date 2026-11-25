@@ -20,11 +20,6 @@ export interface DeckRules {
   legacySize?: number;
   /** Most copies of one card a deck may hold, by card rarity (missing rarity = COMMON). */
   maxCopiesByRarity: Readonly<Record<CardRarity, number>>;
-  /**
-   * Most neutral cards (no `heroId`, every copy counts) one deck may hold, so a champion's deck
-   * stays mostly its own. Absent = no limit.
-   */
-  maxNeutralCards?: number;
   /** Most ULTRA copies one deck may hold, all Ultras together (free catalog). Absent = no limit. */
   maxUltraCards?: number;
 }
@@ -41,7 +36,6 @@ export type DeckIssue =
   | { code: 'LOCKED'; cardId: string }
   | { code: 'NOT_ENOUGH_COPIES'; cardId: string; count: number; owned: number }
   | { code: 'COPY_LIMIT'; cardId: string; count: number; limit: number }
-  | { code: 'NEUTRAL_LIMIT'; count: number; limit: number }
   | { code: 'ULTRA_LIMIT'; count: number; limit: number }
   | { code: 'MALFORMED_ENTRY'; cardId: string };
 
@@ -71,12 +65,6 @@ export const ultraCount = (deck: readonly DeckEntry[], content: GameContent): nu
 
 const ultraIssue = (count: number, rules: DeckRules): DeckIssue | null =>
   rules.maxUltraCards !== undefined && count > rules.maxUltraCards ? { code: 'ULTRA_LIMIT', count, limit: rules.maxUltraCards } : null;
-
-/** The neutral-limit issue for a deck holding `count` neutral copies, if any. */
-const neutralIssue = (count: number, rules: DeckRules): DeckIssue | null =>
-  rules.maxNeutralCards !== undefined && count > rules.maxNeutralCards
-    ? { code: 'NEUTRAL_LIMIT', count, limit: rules.maxNeutralCards }
-    : null;
 
 /** Neutral cards (no `heroId`) belong to every hero's collection. */
 export const isCardForHero = (card: CardDefinition, heroId: string): boolean =>
@@ -136,8 +124,6 @@ export function validateDeck(
   }
   for (const [cardId, count] of counts) issues.push(...entryIssues(cardId, count, heroId, owned, content, rules));
   const entries = [...counts].map(([cardId, count]) => ({ cardId, count }));
-  const neutral = neutralIssue(neutralCount(entries, content), rules);
-  if (neutral) issues.push(neutral);
   const ultra = ultraIssue(ultraCount(entries, content), rules);
   if (ultra) issues.push(ultra);
   const current = [...counts.values()].reduce((n, c) => n + c, 0);
@@ -160,8 +146,6 @@ export function addCardIssue(
 ): DeckIssue | null {
   const issue = entryIssues(cardId, countInDeck(deck, cardId) + 1, heroId, owned, content, rules)[0];
   if (issue) return issue;
-  const neutral = content.cards[cardId]!.heroId === undefined && neutralIssue(neutralCount(deck, content) + 1, rules);
-  if (neutral) return neutral;
   const ultra = content.cards[cardId]!.rarity === 'ULTRA' && !content.cards[cardId]!.commercialUltra && ultraIssue(ultraCount(deck, content) + 1, rules);
   if (ultra) return ultra;
   const current = deckSize(deck) + 1;
@@ -233,9 +217,8 @@ export interface DeckStatus {
   excessCount: number;
   /** A deck saved under the old size that only lacks cards (see `DeckRules.legacySize`). */
   legacy: boolean;
-  /** Neutral copies in the deck, and the most allowed (null = no limit). */
+  /** Informational neutral-copy count; no global cap. */
   neutralCards: number;
-  maxNeutralCards: number | null;
   issues: DeckIssue[];
 }
 
@@ -263,7 +246,6 @@ export function deckStatus(
     excessCount: Math.max(0, totalCards - rules.requiredSize),
     legacy: isLegacyDeck(deck, issues, rules),
     neutralCards: neutralCount(deck, content),
-    maxNeutralCards: rules.maxNeutralCards ?? null,
     issues,
   };
 }
@@ -277,7 +259,7 @@ export interface CollectionCardStatus {
   availableCopies: number;
   /** Most copies one deck may hold (rarity limit). */
   maxCopies: number;
-  /** Neutral card (any champion; counts toward `DeckRules.maxNeutralCards`). */
+  /** Neutral card (available to any champion). */
   neutral: boolean;
   /** Whether ADD_CARD would succeed right now, and why not otherwise. */
   canAdd: boolean;

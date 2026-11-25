@@ -401,6 +401,4 @@ export const DECK_RULES: DeckRules = {
   legacySize: 30,
   maxCopiesByRarity: { COMMON: 3, UNCOMMON: 2, RARE: 1, LEGENDARY: 1, ULTRA: 1 },
   maxUltraCards: 1,
-  // Neutral cards are filler, not a shared core: at most 4 of 40 (probe: qa/neutral-summoner-pass).
-  maxNeutralCards: 4,
 };

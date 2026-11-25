@@ -52,7 +52,7 @@ export function parseCommand(raw: unknown): Command | null {
   if (raw.type === 'MOVE_UNIT' && typeof raw.unitId === 'string' && isPos(raw.to))
     return { type: 'MOVE_UNIT', unitId: raw.unitId, to: { x: raw.to.x, y: raw.to.y } };
   if (raw.type === 'PLAY_CARD' && typeof raw.cardUid === 'string' && (raw.target === null || isPos(raw.target)))
-    return raw.wallOrientation !== undefined && raw.wallOrientation !== 'HORIZONTAL' && raw.wallOrientation !== 'VERTICAL' ? null : { type: 'PLAY_CARD', cardUid: raw.cardUid, target: raw.target === null ? null : { x: raw.target.x, y: raw.target.y }, ...(raw.wallOrientation ? {wallOrientation:raw.wallOrientation} : {}) };
+    return raw.sacrificeHp !== undefined && (typeof raw.sacrificeHp!=='number'||!Number.isSafeInteger(raw.sacrificeHp)||raw.sacrificeHp<1) ? null : raw.wallOrientation !== undefined && raw.wallOrientation !== 'HORIZONTAL' && raw.wallOrientation !== 'VERTICAL' ? null : { type: 'PLAY_CARD', cardUid: raw.cardUid, target: raw.target === null ? null : { x: raw.target.x, y: raw.target.y }, ...(raw.wallOrientation ? {wallOrientation:raw.wallOrientation} : {}),...(raw.sacrificeHp!==undefined?{sacrificeHp:raw.sacrificeHp as number}:{}) };
   if ((raw.type === 'COMMIT_RITUAL_PIECE' || raw.type === 'RELEASE_RITUAL_PIECE') && typeof raw.cardUid === 'string')
     return { type: raw.type, cardUid: raw.cardUid };
   if (raw.type === 'INTERACT' && typeof raw.mechanismId === 'string' && raw.mechanismId.length > 0 && raw.mechanismId.length < 100)

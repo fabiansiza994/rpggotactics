@@ -1,0 +1,11 @@
+.scorpion-ritual{box-sizing:border-box;width:min(480px,calc(100dvw - 24px));max-height:calc(100dvh - 24px);padding:20px;border:1px solid #b49a60;border-radius:12px;background:linear-gradient(145deg,#172331,#090f1b);color:#f0dfbd;overflow-y:auto;overflow-x:clip;}
+.scorpion-ritual::backdrop{background:#020813a8;}
+.scorpion-ritual h2{font:700 clamp(22px,3vw,30px) Georgia,serif;margin:5px 0 12px;overflow-wrap:anywhere;}
+.scorpion-ritual small{color:#cead63;letter-spacing:.1em;font-size:10px;}
+.scorpion-ritual dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+.scorpion-ritual dl div{padding:10px;border:1px solid #65583c;border-radius:6px;min-width:0;}
+.scorpion-ritual dt{font-size:12px;color:#bdcbd4;}.scorpion-ritual dd{margin:5px 0 0;font-size:23px;}
+.scorpion-slider{display:flex;gap:10px;align-items:center;margin:12px 0;}.scorpion-slider input{min-width:0;flex:1;accent-color:#e3c77d;touch-action:pan-x;}
+.scorpion-ritual button{min-width:44px;min-height:44px;padding:8px 14px;border:1px solid #b49a60;border-radius:7px;color:#f4e7cb;background:#142637;touch-action:manipulation;}
+.scorpion-ritual button:disabled{opacity:.45;}.scorpion-ritual footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;}
+.scorpion-ritual footer button:last-child{background:#66502b;}.scorpion-ritual p{font-size:13px;line-height:1.4;overflow-wrap:anywhere;}

@@ -31,12 +31,12 @@ body .battle.premium-battle .summon-meter{font-size:10px;max-width:100%;margin:5
 body .battle.premium-battle .summon-meter-name{font-size:9px}
 body .battle.premium-battle .slot-preview{height:clamp(250px,38vh,380px);position:relative;overflow:hidden;flex:0 0 auto}
 body .battle.premium-battle .slot-preview .card-feature-stage{position:absolute;inset:0;display:flex;align-items:stretch;justify-content:center;width:100%;height:100%;transform:none;margin:0}
-body .battle.premium-battle .slot-preview .feature-card{position:relative;inset:auto;transform:none;max-width:100%;width:100%;height:100%;max-height:none;margin:0;--card-tilt-x:0deg;--card-tilt-y:0deg}
-body .battle.premium-battle .slot-preview .fc-frame{height:100%;display:flex;flex-direction:column;min-height:0}
-body .battle.premium-battle .slot-preview .fc-name{font-size:clamp(14px,1.5vw,22px)}
-body .battle.premium-battle .slot-preview .fc-art{height:42%;min-height:80px;flex:0 0 42%}
-body .battle.premium-battle .slot-preview .fc-text{display:block;flex:1 1 auto;min-height:0;overflow:auto;font:clamp(12px,1vw,15px)/1.4 system-ui;line-clamp:unset;-webkit-line-clamp:unset;scrollbar-width:thin;overscroll-behavior:contain;touch-action:pan-y}
-body .battle.premium-battle .slot-preview .fc-support{flex:0 0 auto;font-size:11px}
+body .battle.premium-battle .slot-preview .card-feature-stage .feature-card{position:relative;inset:auto;transform:none;max-width:100%;width:100%;height:100%;max-height:none;margin:0;--card-tilt-x:0deg;--card-tilt-y:0deg}
+body .battle.premium-battle .slot-preview .card-feature-stage .fc-frame{height:100%;display:flex;flex-direction:column;min-height:0}
+body .battle.premium-battle .slot-preview .card-feature-stage .fc-name{font-size:clamp(14px,1.5vw,22px)}
+body .battle.premium-battle .slot-preview .card-feature-stage .fc-art{height:42%;min-height:80px;flex:0 0 42%}
+body .battle.premium-battle .slot-preview .card-feature-stage .fc-text{display:block;flex:1 1 auto;min-height:0;overflow:auto;font:clamp(12px,1vw,15px)/1.4 system-ui;line-clamp:unset;-webkit-line-clamp:unset;scrollbar-width:thin;overscroll-behavior:contain;touch-action:pan-y}
+body .battle.premium-battle .slot-preview .card-feature-stage .fc-support{flex:0 0 auto;font-size:11px}
 body .battle.premium-battle .slot-piles{border:1px solid #a78a4e;border-radius:8px;background:#07131feb;overflow:hidden}
 body .battle.premium-battle .slot-piles .battle-pile-bank{display:grid;grid-template-columns:minmax(40px,1fr) auto auto;align-items:center;gap:6px;width:100%;min-height:44px;padding:3px 8px;border:0;border-radius:0;inset:auto;position:relative;box-sizing:border-box;background:transparent}
 body .battle.premium-battle .slot-piles .battle-pile-bank.is-rival{border-left:3px solid #8f4d55;background:linear-gradient(90deg,#5e233c33,transparent)}
@@ -117,7 +117,7 @@ body .battle.premium-battle .hero-vitals .panel-title{font-size:16px}
 body .battle.premium-battle .bar{grid-template-columns:25px minmax(6px,1fr) max-content;gap:3px}
 body .battle.premium-battle .bar-value{font-size:11px}
 body .battle.premium-battle .slot-preview{height:clamp(230px,35vh,285px)}
-body .battle.premium-battle .slot-preview .fc-name{font-size:14px}
+body .battle.premium-battle .slot-preview .card-feature-stage .fc-name{font-size:14px}
 body .battle.premium-battle .rival-portrait{width:38px;min-width:38px;height:58px;flex-basis:38px}
 body .battle.premium-battle .premium-rival{padding:6px;gap:6px}
 body .battle.premium-battle .rival-vitals h2{font-size:15px;overflow-wrap:normal;word-break:normal}
@@ -208,7 +208,7 @@ body .battle.premium-battle .tactical-map-cell.terrain-ice{background:#376e86;bo
  body .battle.premium-battle .hand-scroll-region > .hand > .card {pointer-events:auto;}
  body .battle.premium-battle .hand-bar .hand .card:is(:hover,:focus-within,.is-selected) {transform:translateY(-9px);z-index:10;}
  body .battle.premium-battle .slot-preview {height:auto;flex:1 1 0;min-height:230px;max-height:clamp(300px,58vh,500px);}
- body .battle.premium-battle .slot-preview .fc-art {height:auto;flex:0 0 40%;min-height:80px;}
+ body .battle.premium-battle .slot-preview .card-feature-stage .fc-art {height:auto;flex:0 0 40%;min-height:80px;}
  body .battle.premium-battle .slot-altar {margin-top:0;flex:0 0 auto;}
 }
 .battle.premium-battle .hand .card-selection-cancel {display:grid;top:-52px;width:44px;height:44px;min-width:44px;min-height:44px;}

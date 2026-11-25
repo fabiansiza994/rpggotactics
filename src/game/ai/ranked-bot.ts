@@ -152,7 +152,7 @@ export function botCandidates(s: GameState, content: GameContent): Command[] {
           target,
           wallOrientation: "VERTICAL",
         });
-      } else out.push({ type: "PLAY_CARD", cardUid: card.uid, target });
+      } else out.push({ type: "PLAY_CARD", cardUid: card.uid, target,...(def.effects.some(fx=>fx.type==='SUMMON_SCORPION_SACRIFICE')?{sacrificeHp:Math.ceil(hero.hp/2)}:{}) });
     }
   }
   for (const n of legalHeroMoves(ctx))

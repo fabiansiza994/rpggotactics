@@ -926,7 +926,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
 
       {mobile&&<section className="m2-collection-purpose"><p>{tab==='COLLECTION'&&collectionScope==='owned'?'Tus copias poseídas; edita desde el detalle de cada carta.':`Editando ${saved.name} · los cambios se guardan solo al confirmar.`}</p>{tab==='COLLECTION'&&<div role="group" aria-label="Vista de colección"><button aria-pressed={collectionScope==='owned'} onClick={()=>setCollectionScope('owned')}>Todas mis cartas</button><button aria-pressed={collectionScope==='available'} onClick={()=>setCollectionScope('available')}>Disponibles para añadir</button></div>}</section>}
       <nav className="db-tabs" aria-label="Secciones">
-        <NeutralCounter count={status.neutralCards} limit={rules.maxNeutralCards} compact />
+        <NeutralCounter count={status.neutralCards} compact />
         <button type="button" aria-pressed={tab === 'DECK'} onClick={() => setTab('DECK')}>
           Mi mazo{' '}
           <span className={`db-count-inline size-${sizeState}`}>
@@ -972,7 +972,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             </div>
           </div>
           <p className="db-format-note">Exactamente 40 cartas en todos los modos. Historia recicla el descarte; Ranked y Versus aplican Deck-Out al no poder robar.</p>
-          <NeutralCounter count={status.neutralCards} limit={rules.maxNeutralCards} />
+          <NeutralCounter count={status.neutralCards} />
           <div
             className={`db-meter size-${sizeState}`}
             role="meter"

@@ -1,3 +1,4 @@
+import {validScorpionSacrifice} from './card-choice';
 import {iceSpellGround,freezeSpellGround} from './ice-terrain';
 import {hasLegalSilenceResponse} from './silence-eligibility';
 import { exchangeHandCard, cardClassAllowed } from './hand-trade';
@@ -84,8 +85,8 @@ export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = fa
     return fail('NOT_ENOUGH_FOCUS', `Necesita ${def.focusCost} de Concentración.`) as Playability;
   if (def.handTrade && (ctx.state.player.hand.length<2 || (ctx.state.duel?.other.hand.length ?? ctx.state.pileCounts?.opponentHand ?? 0)<1)) return fail('INVALID_TARGET','Ambos jugadores necesitan una carta real para intercambiar.') as Playability;
   if (def.discardHandCost && ctx.state.player.hand.length <= 1) return fail('INVALID_TARGET', 'Necesitas otra carta propia para pagar el descarte.') as Playability;
-  if (def.effects.some(effect => effect.type === 'SUMMON_SCORPION_SACRIFICE') && (caster.hp < 2 || summonUsage(ctx.state, caster.id) + 2 > summonCapacityOf(ctx.content, caster)))
-    return fail('INVALID_TARGET', 'El sacrificio necesita al menos 2 HP y dos puntos de capacidad disponibles.') as Playability;
+  if (def.effects.some(effect => effect.type === 'SUMMON_SCORPION_SACRIFICE') && caster.hp < 2)
+    return fail('INVALID_TARGET', 'El sacrificio necesita al menos 2 HP.') as Playability;
   if (def.effects.some(effect => effect.type === 'RESURRECT_SUMMON') && !resurrectionChoices(ctx).length)
     return fail('INVALID_TARGET', 'No hay una invocación muerta, propia y recuperable con capacidad disponible.') as Playability;
   // Private client snapshots expose counts and public champions, never either deck or rival hand.
@@ -133,12 +134,14 @@ export function checkPlayability(ctx: RuleContext, cardUid: string, prepaid = fa
  * Validate → pay → resolve effects → discard. Emits CARD_PLAYED before any effect event so
  * the presentation can play a cast animation first.
  */
-export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, searchUid?: string, secondary?: Pos | null, wallOrientation?: import('./targeting').WallOrientation, resolution?: 'PREPAID'): RuleResult {
+export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, searchUid?: string, secondary?: Pos | null, wallOrientation?: import('./targeting').WallOrientation, resolution?: 'PREPAID', sacrificeHp?:number): RuleResult {
   const prepaid = resolution === 'PREPAID';
   const check = checkPlayability(ctx, cardUid, prepaid);
   if (!check.ok) return check;
   if (missingRivalZone(ctx.state, check.def, true)) return fail('RIVAL_ZONE_UNAVAILABLE', 'Este encuentro no dispone de las instancias rivales necesarias.');
   const { card, def, caster } = check;
+  const scorpion=def.effects.some(fx=>fx.type==='SUMMON_SCORPION_SACRIFICE');
+  if(scorpion?!validScorpionSacrifice(caster.hp,sacrificeHp):sacrificeHp!==undefined)return fail('INVALID_TARGET','Elige una cantidad entera válida de HP para sacrificar.');
   const found = searchUid && def.deckSearch ? ctx.state.player.deck.find(c => c.uid === searchUid) : undefined;
   // Eco del Altar: the chosen uid must be a ritual piece in THIS player's real discard pile now.
   const tradeCard = searchUid && def.handTrade ? ctx.state.player.hand.find(copy=>copy.uid===searchUid && copy.uid!==cardUid) : undefined;
@@ -154,7 +157,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
 
   if (def.id==='ice_wall' && wallOrientation && !iceWallFits(ctx,resolved.affectedTiles)) return fail('INVALID_TARGET', 'La barrera necesita tres casillas libres y transitables.');
   const selectedEffects = effectsForCard(ctx.content, caster, def);
-  if (selectedEffects.some((fx) => fx.type === 'SUMMON') && !isEmptyTile(ctx, resolved.impact))
+  if (selectedEffects.some((fx) => fx.type === 'SUMMON'||fx.type==='SUMMON_SCORPION_SACRIFICE') && !isEmptyTile(ctx, resolved.impact))
     return fail('INVALID_TARGET', 'La invocación necesita una casilla vacía y transitable.');
   const { player } = ctx.state;
   // Momentum payoff is decided now, from the authoritative state (never from the client).
@@ -174,7 +177,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     ctx.state.stats.cardsPlayed += 1;
     if (ctx.state.duel?.darkLightRelease && !card.twistedCurse && hasLegalSilenceResponse(ctx)) {
       const id = `cast-${ctx.state.nextId++}`;
-      ctx.state.pendingCast = { id, cardUid, cardId: def.id, casterId: caster.id, respondingHeroId: ctx.state.duel.other.heroId, target: target ? { ...target } : null, searchUid, secondary: secondary ? { ...secondary } : secondary, wallOrientation, paidEnergy: price.cost, deadline: 0 };
+      ctx.state.pendingCast = { id, cardUid, cardId: def.id, casterId: caster.id, respondingHeroId: ctx.state.duel.other.heroId, target: target ? { ...target } : null, searchUid, secondary: secondary ? { ...secondary } : secondary, wallOrientation, sacrificeHp, paidEnergy: price.cost, deadline: 0 };
       ctx.emit({ type: 'CARD_CAST_PENDING', cardUid, cardId: def.id, casterId: caster.id, windowId: id });
       return OK;
     }
@@ -235,7 +238,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
   const directAttack = def.targeting.type === 'UNIT' && !def.targeting.area ? (def.targeting.range === 1 ? 'DIRECT_MELEE' as const : depthEnabled(ctx) ? 'DIRECT_RANGED' as const : undefined) : undefined;
   const ground=iceSpellGround(def,resolved,selectedEffects);
   const obstaclesBefore=ground.length&&selectedEffects.some(e=>e.type==='CREATE_OBSTACLE')?new Set(ctx.state.obstacles.map(o=>o.id)):null;
-  applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id, cardUid: card.uid }, selectedEffects);
+  applyEffects({ ctx, caster, resolved, directAttack, cardId: def.id, cardUid: card.uid, sacrificeHp }, selectedEffects);
   const actualGround=obstaclesBefore?ctx.state.obstacles.filter(o=>!obstaclesBefore.has(o.id)).map(o=>o.pos):ground;
   if(ground.length)freezeSpellGround(ctx,actualGround,caster.id);
 

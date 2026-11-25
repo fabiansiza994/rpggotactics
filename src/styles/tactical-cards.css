@@ -80,29 +80,6 @@
   color: #eee2c7;
   font-variant-numeric: tabular-nums;
 }
-.db-neutral-meter {
-  display: flex;
-  gap: 3px;
-  margin-left: auto;
-}
-.db-neutral-meter i {
-  width: 18px;
-  height: 5px;
-  border: 1px solid #687161;
-  border-radius: 1px;
-}
-.db-neutral-meter i[data-filled='true'] {
-  background: #c1b591;
-  border-color: #c1b591;
-}
-.db-neutral-counter[data-limit-state='full'] {
-  border-color: #c3ac72;
-  background: #30281b;
-}
-.db-neutral-counter[data-limit-state='over'] {
-  border-color: #cb8875;
-  background: #382221;
-}
 .db-neutral-counter.is-compact {
   font-size: 10px;
   gap: 4px;
@@ -138,9 +115,6 @@
   .db-neutral-counter {
     font-size: 10px;
     padding: 3px 6px;
-  }
-  .db-neutral-meter i {
-    width: 12px;
   }
   .fc-typeline .card-origin-badge {
     font-size: 8px;

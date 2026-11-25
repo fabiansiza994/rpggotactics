@@ -11,7 +11,7 @@ body .battle .board-host{flex:1 1 0;min-height:0;margin:0;overflow:hidden;--batt
 .battle-side-rail .slot-altar:empty{display:none}.battle-side-rail .slot-altar{margin-top:auto}
 body .battle .battle-side-rail .panel,body .battle .battle-side-rail .tactical-overview,body .battle .battle-side-rail .altar-panel{position:relative;inset:auto;transform:none;width:100%;max-width:100%;box-sizing:border-box;margin:0}
 body .battle .slot-preview .card-feature-stage{position:absolute;inset:0;transform:none;width:100%;height:100%;display:flex;justify-content:center;align-items:center;margin:0;pointer-events:auto}
-body .battle .slot-preview .feature-card{width:min(100%,190px);height:100%;max-height:290px;position:relative;inset:auto;transform:none;margin:0}
+body .battle .slot-preview .card-feature-stage .feature-card{width:min(100%,190px);height:100%;max-height:290px;position:relative;inset:auto;transform:none;margin:0}
 body .battle .slot-piles .battle-pile-bank{position:relative;inset:auto;display:flex;gap:8px;justify-content:center;padding:4px;min-height:44px;width:100%}
 body .battle .slot-piles .battle-pile{width:56px;min-width:44px;min-height:44px;display:flex;gap:5px;justify-content:center;align-items:center;padding:4px}
 .slot-opponent{height:44px;position:relative;flex:0 0 44px}.slot-opponent .opponent-hand{--opponent-card-width:26px;position:absolute;top:2px;left:50%;transform:translateX(-50%);width:min(calc(26px + max(0,var(--opponent-count) - 1)*16px),calc(100% - 152px));height:40px;pointer-events:none;user-select:none;z-index:2}

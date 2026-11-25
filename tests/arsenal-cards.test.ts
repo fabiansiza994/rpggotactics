@@ -137,13 +137,11 @@ describe('Arsenal I: acquisition (normal reward pools, QA-gated until release)',
 });
 
 describe('Arsenal I: Deck Builder', () => {
-  it('Arsenal neutrals count toward the max-4 neutral rule', () => {
-    let deck = starterDeck(DEFAULT_CONTENT.heroes.warrior!);
+  it('Arsenal neutrals have no global quota; individual copy and size rules still apply', () => {
+    let deck = createProfile(DEFAULT_CONTENT).heroes.warrior!.decks[0]!.cards.map(e=>({...e}));
     for (const id of ['smoke_bomb', 'grappling_hook', 'grappling_hook', 'field_ration', 'take_cover'])
       deck = addCard(removeCard(deck, deck[0]!.cardId), id);
-    expect(validateDeck(deck, 'warrior', () => 3, DEFAULT_CONTENT, DECK_RULES)).toContainEqual(
-      expect.objectContaining({ code: 'NEUTRAL_LIMIT', limit: 4 }),
-    );
+    expect(validateDeck(deck, 'warrior', () => 3, DEFAULT_CONTENT, DECK_RULES)).toEqual([]);
   });
 
   it('every champion pool shows its 3 new cards + the 3 neutrals; the origin filter splits them', () => {

@@ -30,7 +30,7 @@ export interface ChampionDeckSummary {
   championId: string;
   cardCount: number;
   maxCards: number;
-  /** Legal right now (size, ownership, Única/Ultra/neutral limits). PvP and Ranked require it. */
+  /** Legal right now (size, ownership, Única/Ultra limits). PvP and Ranked require it. */
   valid: boolean;
   storyValid?: boolean;
   competitiveValid?: boolean;

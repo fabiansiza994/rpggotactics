@@ -1,24 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   addCard,
-  addCardIssue,
   createProfile,
   DECK_RULES,
-  deckStatus,
   DEFAULT_CONTENT,
   GameEngine,
-  grantCard,
   NEUTRAL_CARDS,
   neutralCount,
   removeCard,
   rollReward,
-  saveActiveDeck,
-  starterDeck,
   TACTICAL_EXPANSION,
   validateDeck,
   type DeckEntry,
   type GameContent,
-  type PlayerProfile,
 } from '../src/game';
 import { applyDuel, createDuel, duelView, DUEL_SCENARIO, validateLoadout } from '../src/game/pvp/duel';
 import { browseCollection, EMPTY_QUERY, facets } from '../src/presentation/react/deckbuilder/collectionView';
@@ -33,7 +27,7 @@ const all = () => 3;
 
 /** The champion's starter with its first `n` card copies swapped for neutral cards (round-robin). */
 function withNeutrals(heroId: string, n: number, ids: readonly string[] = NEUTRAL_IDS): DeckEntry[] {
-  let deck = starterDeck(DEFAULT_CONTENT.heroes[heroId]!);
+  let deck = createProfile(DEFAULT_CONTENT).heroes[heroId]!.decks[0]!.cards.map(e=>({...e}));
   for (let i = 0; i < n; i++) {
     deck = removeCard(deck, deck[0]!.cardId);
     deck = addCard(deck, ids[i % ids.length]!);
@@ -67,50 +61,9 @@ describe('neutral card set', () => {
     });
 });
 
-describe('neutral deck limit', () => {
-  const limit = DECK_RULES.maxNeutralCards!;
-
-  it(`at most ${limit} neutral cards per 30-card deck`, () => {
-    expect(limit).toBe(4);
-    for (const heroId of HEROES) {
-      expect(validateDeck(withNeutrals(heroId, limit), heroId, all, DEFAULT_CONTENT, DECK_RULES)).toEqual([]);
-      const over = withNeutrals(heroId, limit + 1);
-      expect(neutralCount(over, DEFAULT_CONTENT)).toBe(limit + 1);
-      expect(validateDeck(over, heroId, all, DEFAULT_CONTENT, DECK_RULES)).toEqual([{ code: 'NEUTRAL_LIMIT', count: limit + 1, limit }]);
-    }
-  });
-
-  it('the Deck Builder refuses the extra neutral copy, but champion cards still go in', () => {
-    const full = removeCard(withNeutrals('summoner', limit), 'nurture');
-    expect(addCardIssue(full, 'shove', 'summoner', all, DEFAULT_CONTENT, DECK_RULES)).toEqual({ code: 'NEUTRAL_LIMIT', count: limit + 1, limit });
-    expect(addCardIssue(full, 'nurture', 'summoner', all, DEFAULT_CONTENT, DECK_RULES)).toBeNull();
-    const status = deckStatus(full, 'summoner', all, DEFAULT_CONTENT, DECK_RULES);
-    expect(status).toMatchObject({ neutralCards: limit, maxNeutralCards: limit });
-  });
-
-  it('without a limit in the rules any number is legal (the rule is data, not hard-coded)', () => {
-    const rules = { ...DECK_RULES, maxNeutralCards: undefined };
-    expect(validateDeck(withNeutrals('mage', 9), 'mage', all, DEFAULT_CONTENT, rules)).toEqual([]);
-  });
-
-  it('saving and PvP use the same rule: an over-limit deck is refused', () => {
-    let profile: PlayerProfile = createProfile(DEFAULT_CONTENT);
-    for (const id of NEUTRAL_IDS)
-      for (let i = 0; i < 3; i++) {
-        const r = grantCard(profile, 'warrior', id, DEFAULT_CONTENT);
-        if (!r.ok) throw new Error(r.error);
-        profile = r.profile;
-      }
-    // Copies are shared: granted through the Warrior, usable by the Mage.
-    expect(ownedCard(profile, 'mage', 'shove', DEFAULT_CONTENT)?.copies).toBe(3);
-    const ok = saveActiveDeck(profile, 'mage', withNeutrals('mage', limit), DEFAULT_CONTENT, DECK_RULES);
-    if (!ok.ok) throw new Error(JSON.stringify(ok.issues));
-    expect(validateLoadout(ok.profile, 'mage').cards).toEqual(withNeutrals('mage', limit));
-    expect(saveActiveDeck(profile, 'mage', withNeutrals('mage', limit + 1), DEFAULT_CONTENT, DECK_RULES).ok).toBe(false);
-    // A tampered stored deck is still refused by PvP.
-    const tampered = structuredClone(ok.profile);
-    tampered.heroes.mage!.decks[0]!.cards = withNeutrals('mage', limit + 1);
-    expect(() => validateLoadout(tampered, 'mage')).toThrow('INVALID_DECK');
+describe('neutral totals are informational', () => {
+  it('the current rules do not expose a global neutral cap', () => {
+    expect(DECK_RULES).not.toHaveProperty('maxNeutralCards');
   });
 });
 

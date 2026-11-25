@@ -1,3 +1,5 @@
+import {ScorpionRitualDialog} from './ScorpionRitualDialog';
+import {useHandInspection} from '../../cards/handInspection';
 import {championLabel} from '../../battle/championLabel';
 import {BattleRail,BattleRailContext} from '../../battle/BattleRails';
 import { SilenceResponseContext, useSilenceContext } from './SilenceResponseDialog';
@@ -318,6 +320,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   // PvP rebuilds its read-only engine on every authoritative snapshot, not a new battle.
   const online = useBattleStore((s) => s.onlineCommand !== null);
   const activationBattle = online ? null : engine;
+  useEffect(()=>()=>useBattleStore.getState().clearScorpionDraft(),[activationBattle]);
   useEffect(() => {
     const footer = footerRef.current;
     if (!footer) return;
@@ -372,7 +375,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
     return out;
   }, [engine, state]);
   // Desktop hint for the hovered / focused blocked card (touch uses the tap notice instead).
-  const [inspected, setInspected] = useState<string | null>(null);
+  const inspection=useHandInspection(activationBattle??state.player.heroId,state.player.hand.map(c=>c.uid),selectedCardUid,!!state.outcome,!!state.responseWindow||discarding||busy);
+  const inspected=inspection.hovered;
   // Reading a blocked card never becomes a gameplay selection.
   const [detailUid, setDetailUid] = useState<string | null>(null);
   const hero = state.units.find(u => u.id === engine.heroId);
@@ -384,6 +388,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
   return (
     <footer ref={footerRef} className="hand-bar" aria-busy={busy}>
+      <ScorpionRitualDialog state={state} engine={engine}/>
       <div className="mobile-combat-header" aria-label="Estado del combate">
         <div className="mobile-enemies">{state.units.filter(u => u.faction !== hero?.faction && u.hp > 0).map(u => <span key={u.id} title={engine.content.enemies[u.defId]?.name ?? u.defId} aria-label={`${engine.content.enemies[u.defId]?.name ?? u.defId}: ${u.hp} HP`}><b>{(engine.content.enemies[u.defId]?.name ?? u.defId).slice(0, 2)}</b><small>{u.hp}</small></span>)}</div>
         <div><small>RONDA {state.round}</small><strong>{busy ? 'Resolviendo…' : state.phase === 'PLAYER' ? 'Tu turno' : 'Turno rival'}</strong></div>
@@ -423,7 +428,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       <RitualTransfer heroId={engine.heroId} />
       {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.ritualPiece && <RitualCardActions key={`ritual-choice:${aimedCard.uid}`} uid={aimedCard.uid} state={state} engine={engine} busy={busy}/> }
       {!state.responseWindow && <ResolvingCardPreview engine={engine} />}
-      <BattleRail slot="preview"><BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected}
+      <BattleRail slot="preview"><BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected} lastInspectedCardUid={discarding || state.responseWindow ? null : inspection.uid}
         inspectedCardUid={discarding || state.responseWindow ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} /></BattleRail>
       <BattleRail slot="altar"><AltarPanel key={`${state.player.heroId}:${hero?.defId}`} state={state} engine={engine} busy={busy} /></BattleRail>
       {handPulse > 0 && (
@@ -458,11 +463,11 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 disabled={silence.active ? false : busy}
                 responseRole={silence.role(card.uid)}
                 responseProgress={silence.active && card.uid===silence.sealUid ? silence.remaining/5000 : undefined}
-                selected={silence.active ? false : discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
+                inspected={!discarding&&!state.responseWindow&&card.uid===inspection.uid} selected={silence.active ? false : discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
                 playable={silence.active || !block}
                 block={silence.active ? undefined : block}
-                onInspect={(on) => setInspected((cur) => (on ? card.uid : cur === card.uid ? null : cur))}
-                onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); setDetailUid(card.uid); }}
+                onInspect={on=>inspection.inspect(card.uid,on)}
+                onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); inspection.remember(card.uid);setDetailUid(card.uid); }}
                 onCancel={contextualCancel ? () => useBattleStore.getState().cancelAim() : undefined}
                 onClick={() => {
                   if(silence.active){silence.choose(card.uid);return;}
@@ -471,7 +476,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                   const canSeal = def.ritualPiece && engine.getCommitPlayability(card.uid).playable;
                   activateHandCard(card.uid, canSeal ? undefined : block, {
                     cancel: () => useBattleStore.getState().cancelAim(),
-                    inspect: setDetailUid,
+                    inspect: uid=>{inspection.remember(uid);setDetailUid(uid);},
                     select: selectCard,
                   });
                 }}

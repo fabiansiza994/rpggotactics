@@ -1,7 +1,7 @@
 import { beginResurrection } from './resurrection';
 import { loseHpTogether } from './hp-loss';
 import { computeReachable } from '../board/pathfinding';
-import { beginCardChoice, beginMinorCleanse, beginScorpionSacrifice } from './card-choice';
+import { beginCardChoice, beginMinorCleanse, resolveScorpionSacrifice } from './card-choice';
 import { randomInt, nextRandom, shuffleInPlace } from '../core/rng';
 import { recoverRandomToDeck } from './recovery';
 import { transform } from '../transformations/transformations';
@@ -56,6 +56,7 @@ export interface EffectContext {
   /** Card being resolved (absent for rituals): provenance of a granted cost discount. */
   cardId?: string;
   cardUid?: string;
+  sacrificeHp?: number;
 }
 
 /** Units currently standing inside the resolved area that match the selector. */
@@ -398,7 +399,7 @@ const HANDLERS: { [K in EffectType]: Handler<K> } = {
       e.ctx.emit({ type: 'CARD_DISCARDED', cardUid: card!.uid, cardId: card!.cardId, reason: 'EFFECT' });
     }
   },
-  SUMMON_SCORPION_SACRIFICE: (e) => { beginScorpionSacrifice(e.ctx, e.resolved.impact); },
+  SUMMON_SCORPION_SACRIFICE: (e) => { resolveScorpionSacrifice(e.ctx,e.caster,e.resolved.impact,e.sacrificeHp!,e.cardUid); },
   RESURRECT_SUMMON: (e) => { beginResurrection(e.ctx, e.resolved.impact, e.cardId ?? ''); },
   EXECUTIONER_ROULETTE: (e) => {
     const rival = e.ctx.state.units.find(unit => unit.id === e.ctx.state.duel?.other.heroId);

@@ -93,6 +93,7 @@ export interface PlayerRecord {
   /** Raw server-owned provenance; never included in a public state response. */
   campaignStorage?: Record<string,{json:string;updatedAt:number;revision?:number;heroJson?:string}>;
   /** Server-only sealed Story cohort. Never accepted from request payloads. */
+  storyVersions?: Record<string,{engine:import('../../src/game/run/story-rules').StoryRules;runJson:string;snapshotJson:string|null;closed:boolean}>;
   storyCohorts?: Record<string,{runJson:string;closed:boolean;snapshotJson:string|null;proofDigest:string|null}>;
   /** Durable world achievements per champion (stored rows + legacy evidence, see loadWorldHistory). */
   worldHistory: Record<string, WorldHistory>;
@@ -560,14 +561,17 @@ export function deckCardStatements(
   );
 }
 
+export async function hasStoryRuleRegistry(db:D1Database):Promise<boolean>{return !!await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='tactics_story_versioned_encounters'").first();}
+
 /** Every Story write requires a single-transaction ticket; older Workers cannot create it. */
-function runStatements(db:D1Database,userId:number,run:RunState,now:number,closedLegacyProofDigest?:string):D1PreparedStatement[]{
- const token=crypto.randomUUID(),json=JSON.stringify({...JSON.parse(serializeRun(run)),winterWrite:token});
+function runStatements(db:D1Database,userId:number,run:RunState,now:number,closedLegacyProofDigest?:string,versioned=false):D1PreparedStatement[]{
+ const token=crypto.randomUUID(),json=JSON.stringify({...JSON.parse(serializeRun(run)),winterWrite:token,storyWriter:'universal-cards-1'});
  const out:D1PreparedStatement[]=[];
  if(closedLegacyProofDigest)out.push(db.prepare(`UPDATE tactics_profiles SET save_version=CASE WHEN EXISTS(SELECT 1 FROM tactics_story_legacy_cohort WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0) THEN save_version ELSE NULL END WHERE user_id=?`).bind(userId,run.campaignId,run.heroId,userId));
  if(closedLegacyProofDigest)out.push(db.prepare(`UPDATE tactics_story_legacy_cohort SET closed=1,proof_digest=? WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0`).bind(closedLegacyProofDigest,userId,run.campaignId,run.heroId));
  out.push(db.prepare('INSERT INTO tactics_story_write_tickets(token,user_id,campaign_id,hero_id,run_json) VALUES(?,?,?,?,?)').bind(token,userId,run.campaignId,run.heroId,json));
  out.push(db.prepare(`INSERT INTO tactics_story_admissions(user_id,campaign_id,hero_id,run_seed,encounter_id,engine) VALUES(?,?,?,?,?,CASE WHEN EXISTS(SELECT 1 FROM tactics_story_legacy_cohort WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0) THEN 'pre-winter-b0e18cc8' ELSE 'winter-dominion-1' END) ON CONFLICT(user_id,campaign_id,hero_id) DO UPDATE SET run_seed=excluded.run_seed,encounter_id=excluded.encounter_id,engine=excluded.engine`).bind(userId,run.campaignId,run.heroId,run.seed,run.currentEncounterId,userId,run.campaignId,run.heroId));
+ if(versioned)out.push(db.prepare(`INSERT INTO tactics_story_versioned_encounters(user_id,campaign_id,hero_id,run_seed,encounter_id,engine,run_json,closed) VALUES(?,?,?,?,?,COALESCE((SELECT engine FROM tactics_story_versioned_encounters WHERE user_id=? AND campaign_id=? AND hero_id=? AND run_seed=? AND encounter_id=?),CASE WHEN EXISTS(SELECT 1 FROM tactics_story_legacy_cohort WHERE user_id=? AND campaign_id=? AND hero_id=? AND closed=0) THEN 'pre-winter-b0e18cc8' ELSE (SELECT engine FROM tactics_story_rule_transition WHERE id=1) END),?,?) ON CONFLICT(user_id,campaign_id,hero_id) DO UPDATE SET run_seed=excluded.run_seed,encounter_id=excluded.encounter_id,engine=excluded.engine,run_json=excluded.run_json,closed=excluded.closed,snapshot_json=CASE WHEN tactics_story_versioned_encounters.run_seed=excluded.run_seed AND tactics_story_versioned_encounters.encounter_id=excluded.encounter_id THEN tactics_story_versioned_encounters.snapshot_json ELSE NULL END`).bind(userId,run.campaignId,run.heroId,run.seed,run.currentEncounterId,userId,run.campaignId,run.heroId,run.seed,run.currentEncounterId,userId,run.campaignId,run.heroId,json,run.status==='IN_BATTLE'?0:1));
  out.push(db.prepare(`INSERT INTO tactics_hero_campaign_runs(user_id,campaign_id,hero_id,run_json,save_version,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id,campaign_id,hero_id) DO UPDATE SET run_json=excluded.run_json,save_version=excluded.save_version,updated_at=excluded.updated_at`).bind(userId,run.campaignId,run.heroId,json,SERVER_SAVE_VERSION,now));
  if(run.heroId===defaultCampaignHero(ASCENT_CAMPAIGN)&&run.campaignId===ASCENT_CAMPAIGN.id)out.push(db.prepare(`INSERT INTO tactics_campaign_runs(user_id,campaign_id,run_json,save_version,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(user_id,campaign_id) DO UPDATE SET run_json=excluded.run_json,save_version=excluded.save_version,updated_at=excluded.updated_at`).bind(userId,run.campaignId,json,SERVER_SAVE_VERSION,now));
  out.push(db.prepare('DELETE FROM tactics_story_write_tickets WHERE token=?').bind(token));
@@ -629,6 +633,7 @@ export async function createPlayer(
   options: { source: CardSource; importedAt: number | null; now: number },
 ): Promise<void> {
   const { now } = options;
+  const versioned=await hasStoryRuleRegistry(db);
   await db.batch([
     db
       .prepare(
@@ -655,7 +660,7 @@ export async function createPlayer(
     ...Object.values(profile.heroes).map((h) =>
       pityStatement(db, userId, h.heroId, h.rewardPity, now),
     ),
-    ...runs.flatMap((run) => runStatements(db, userId, run, now)),
+    ...runs.flatMap((run) => runStatements(db, userId, run, now,undefined,versioned)),
   ]);
 }
 
@@ -712,6 +717,7 @@ export async function saveCampaignStep(
     expectedRevision?: number;
     /** Canonical digest of the one legacy victory; retained across future runs. */
     closedLegacyProofDigest?: string;
+    storyProof?:{digest:string;engine:import('../../src/game/run/story-rules').StoryRules;runSeed:number;encounterId:string};
     skirmish?: { id: number; step: 'VICTORY' | 'CLAIM' };
     grant?: {
       /** Collection owner: the champion, or SHARED_POOL_ID for a neutral card (`collectionOwner`). */
@@ -731,6 +737,7 @@ export async function saveCampaignStep(
     beforeLog?: D1PreparedStatement[];
   },
 ): Promise<void> {
+  const versioned=await hasStoryRuleRegistry(db);
   const { grant } = step;
   if(step.closedLegacyProofDigest!==undefined&&!/^[a-f0-9]{64}$/.test(step.closedLegacyProofDigest))throw Error('Invalid legacy proof digest');
   if (grant && (!Number.isSafeInteger(grant.copies) || grant.copies < 1)) throw new Error('Invalid card acquisition delta');
@@ -741,6 +748,8 @@ export async function saveCampaignStep(
       SELECT 1 FROM tactics_hero_campaign_runs WHERE revision = ? AND user_id = ? AND campaign_id = ? AND hero_id = ?
       ) THEN save_version ELSE NULL END WHERE user_id = ?`)
       .bind(step.expectedRevision, userId, step.run.campaignId, step.run.heroId, userId)] : []),
+    ...(step.storyProof?[db.prepare('INSERT INTO tactics_story_verified_proofs(user_id,digest,engine,campaign_id,hero_id,run_seed,encounter_id) VALUES(?,?,?,?,?,?,?)').bind(userId,step.storyProof.digest,step.storyProof.engine,step.run.campaignId,step.run.heroId,step.storyProof.runSeed,step.storyProof.encounterId)]:[]),
+    ...(step.storyProof?[db.prepare('UPDATE tactics_story_versioned_encounters SET closed=1 WHERE user_id=? AND campaign_id=? AND hero_id=? AND run_seed=? AND encounter_id=? AND engine=? AND closed=0').bind(userId,step.run.campaignId,step.run.heroId,step.storyProof.runSeed,step.storyProof.encounterId,step.storyProof.engine)]:[]),
     ...(step.skirmish
       ? [
           db
@@ -750,7 +759,7 @@ export async function saveCampaignStep(
             .prepare('UPDATE tactics_skirmishes SET run_json = ? WHERE id = ? AND user_id = ?')
             .bind(serializeRun(step.run), step.skirmish.id, userId),
         ]
-      : runStatements(db, userId, step.run, now,step.closedLegacyProofDigest)),
+      : runStatements(db, userId, step.run, now,step.closedLegacyProofDigest,versioned)),
     ...(grant
       ? [
           db
@@ -783,11 +792,12 @@ export async function saveCampaignStep(
 /** QA-only caller authorization is enforced before this atomic Summoner setup. Mage, wallet,
  * cosmetics and other players are untouched. Existing owned copies are never reduced. */
 export async function prepareSummonerQa(db: D1Database, userId: number, run: RunState, deckId: string, cards: readonly DeckEntry[], now: number): Promise<void> {
+  const versioned=await hasStoryRuleRegistry(db);
   await db.batch([
     ...cards.map(e=>db.prepare(`INSERT INTO tactics_player_cards (user_id,hero_id,card_id,copies,acquired,source,unlocked_at) VALUES (?,'summoner',?,?,0,'QA_BALANCE',?) ON CONFLICT(user_id,hero_id,card_id) DO UPDATE SET copies=MAX(copies,excluded.copies)`).bind(userId,e.cardId,e.count,now)),
     db.prepare('DELETE FROM tactics_deck_cards WHERE user_id=? AND hero_id=? AND deck_id=?').bind(userId,'summoner',deckId),
     ...deckCardStatements(db,userId,'summoner',deckId,cards),
-    ...runStatements(db,userId,run,now),
+    ...runStatements(db,userId,run,now,undefined,versioned),
     pityStatement(db,userId,'summoner',0,now),
     touch(db,userId,now),
   ]);

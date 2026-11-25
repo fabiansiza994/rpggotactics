@@ -1,3 +1,4 @@
+import{StoryStateChanged,publicStoryEncounters,versionedSnapshot,verifyVersionedStory,settleVersionedStory,versionedStoryTransitionPhase,versionedProofDigest,consumedStoryProof}from'./winterCampaign';
 import {loadWinterPlayer,publicLegacyCampaigns,verifyLegacyCampaign,legacySnapshot,legacySettle,legacyProofDigest,consumedLegacyProof,storyTransitionPhase} from './winterCampaign';
 import { contentTransition } from './contentTransition';
 import {profileAvatarRoute} from './profileAvatar';
@@ -155,6 +156,7 @@ function stateBody(caller: Caller, record: PlayerRecord | null, env: Env, deps: 
     meta: record?.meta ?? null,
     profile: record?.profile ?? null,
     legacyCampaigns: publicLegacyCampaigns(record),
+    storyEncounters: publicStoryEncounters(record),
     run: record?.run ?? null,
     runs: record?.runs ?? null,
     /** Runs of the worlds after World 1 (campaign id → champion → run). World 1 stays in `runs`. */
@@ -254,8 +256,8 @@ export async function handle(
   let res: Response;
   try {
     res = await route(request, env, deps);
-  } catch {
-    res = error(500, 'SERVER_ERROR', 'Error interno.');
+  } catch (cause) {
+    res = cause instanceof StoryStateChanged?error(503,'STORY_STATE_CHANGED','Historia cambió mientras se consultaba. Conserva el resultado y reintenta.'):error(500, 'SERVER_ERROR', 'Error interno.');
   }
   const headers = new Headers(res.headers);
   if (socketUrl.pathname.startsWith('/api/tactics/store/paypal/')) headers.set('Cache-Control', 'no-store');
@@ -310,7 +312,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   // Real-money Cristales (account only; sandbox-only in phase 1).
   const realMoney = await realMoneyRoute(request, env, caller.userId, { now, newId, epayco: deps.epayco });
   if (realMoney) return realMoney;
-  if(path.startsWith('/api/tactics/campaign/')&&await storyTransitionPhase(env.DB)!=='ACTIVE')
+  if(path.startsWith('/api/tactics/campaign/')&&(await storyTransitionPhase(env.DB)!=='ACTIVE'||await versionedStoryTransitionPhase(env.DB)!=='ACTIVE'))
     return error(503,'STORY_TRANSITION_PAUSED','Historia está actualizándose. Conserva el resultado y reintenta.');
   const db = env.DB;
   const route = `${request.method} ${path}`;
@@ -636,7 +638,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     const history = record.worldHistory[heroId] ?? {};
     if (route === 'POST /api/tactics/campaign/start') {
       const existing=runs[campaign.id];
-      if(existing&&legacySnapshot(record,existing))return error(409,'LEGACY_ENCOUNTER_PENDING','Completa el encuentro anterior pendiente antes de iniciar otra campaña.');
+      if(existing&&(legacySnapshot(record,existing)||versionedSnapshot(record,existing)?.rules!==undefined&&versionedSnapshot(record,existing)?.rules!=='universal-cards-1'))return error(409,'LEGACY_ENCOUNTER_PENDING','Completa el encuentro anterior pendiente antes de iniciar otra campaña.');
       if (battleDeck(record.profile, heroId, content, DECK_RULES).source === 'INVALID')
         return error(422, 'INVALID_DECK', 'El mazo necesita exactamente 40 cartas legales y poseídas.');
       // Unlocks are durable: replaying World 1 never closes World 2 again.
@@ -666,14 +668,17 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       // world, a locked one or a forged id never replays (verifyVictory).
       if(await consumedLegacyProof(record,run,body.proof))return error(422,'LEGACY_PROOF_ALREADY_USED','Este resultado del encuentro anterior ya fue verificado.');
       const legacy=legacySnapshot(record,run);
-      const proof = verifyLegacyCampaign(record,run,body.proof) ?? verifyVictory(campaign, content, record.profile, run, body.proof, DECK_RULES);
+      const versioned=versionedSnapshot(record,run);
+      const rules=versioned?.rules??legacy?.rules;
+      if(rules&&await consumedStoryProof(db,caller.userId,rules,body.proof))return error(422,'STORY_PROOF_ALREADY_USED','Este resultado ya fue verificado.');
+      const proof = legacy?verifyLegacyCampaign(record,run,body.proof)!:versioned?verifyVersionedStory(record,run,body.proof)!:{ok:false as const,error:'Missing authoritative Story rules'};
       if (!proof.ok)
         return error(422, 'INVALID_VICTORY', 'La victoria no pudo verificarse.', {
           reason: proof.error,
         });
       // The offer is rolled once, here, from the server's collection + pity, and stored in the
       // run: later reads return it unchanged (no reroll by reloading).
-      const won = legacySnapshot(record,run) ? legacySettle(record.profile,run,run.currentEncounterId) : settleVictory(campaign, content, record.profile, run, run.currentEncounterId, DECK_RULES);
+      const won = legacy ? legacySettle(record.profile,run,run.currentEncounterId) : settleVersionedStory(record,run,content)!;
       if (!won.ok) return error(409, 'INVALID_STEP', won.error);
       const encounter = encounterById(campaign, run.currentEncounterId);
       const noDrop = won.roll.options.length === 0;
@@ -696,6 +701,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       try {
         await saveCampaignStep(db, caller.userId, now, {
           expectedRevision: record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`],
+          ...(rules?{storyProof:{digest:(await versionedProofDigest(rules,body.proof))!,engine:rules,runSeed:run.seed,encounterId:run.currentEncounterId}}:{}),
           ...(legacy?{closedLegacyProofDigest:(await legacyProofDigest(body.proof))!}:{}),
           run: { ...won.run, rewardOptions: won.run.rewardOptions.map(option => ({
             ...option, id: `${option.id}:r${(record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`] ?? 0) + 1}`,
