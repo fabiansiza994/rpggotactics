@@ -1112,6 +1112,7 @@ function DeckEditor({deckId,onBack,initialTab='DECK',mobile=false}:{deckId:strin
             <button
               type="button"
               className="db-btn db-btn-primary db-save"
+              data-audio-cue="confirm"
               disabled={issues.length > 0 || saving}
               onClick={() => void save()}
             >

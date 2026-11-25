@@ -1,3 +1,4 @@
+import{AudioSettings}from'../../audio/AudioRuntime';
 import {CombatImmersionSettings} from './CombatImmersionSettings';
 import {drawRitual} from '../../cards/drawRitual';
 import {readDrawMode,writeDrawMode} from '../../cards/drawRitualSettings';
@@ -44,7 +45,7 @@ export function PauseMenu({busy=false,online=false,onRestart,onExit,onOpenChange
     <button aria-pressed={dialogue[dialogueKey]} onClick={toggleDialogue}>{online?'Diálogos PvP':'Diálogos de campaña'}: {dialogue[dialogueKey]?'Sí':'No'}</button>
     {onSurrender&&<button className="pause-caution surrender-action" onClick={()=>setView('surrender')}>Rendirse</button>}
     <button className="pause-caution" onClick={()=>setView('exit')}>Volver al menú</button>
-   </div>:view==='game'?<div><CombatImmersionSettings/><button onClick={()=>setView('main')}>Volver a pausa</button></div>:view==='controls'?<div className="pause-controls">
+   </div>:view==='game'?<div><CombatImmersionSettings/><AudioSettings/><button onClick={()=>setView('main')}>Volver a pausa</button></div>:view==='controls'?<div className="pause-controls">
     <h3>Controles</h3><p>Clic en casilla azul: mover · Clic en carta (o 1–9) y luego en objetivo · Clic derecho / Esc: cancelar.</p>
     <p>Táctil: toca una carta y una casilla para previsualizar. Toca de nuevo el objetivo para confirmar. Toca una casilla azul para mover.</p>
     <p>E: finalizar turno · Esc sin selección: pausa.</p><button onClick={()=>setView('main')}>Volver a pausa</button>

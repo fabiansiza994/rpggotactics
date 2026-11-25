@@ -1,3 +1,4 @@
+import{RankedAudioSession}from'../audio/audio';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RANKED_RULES } from "../../game/ranked/ranked";
 import {
@@ -12,6 +13,8 @@ import {
  * drops the ticket on its own. MATCHED hands the room code to `onMatched` exactly once.
  */
 export function useRankedQueue(onMatched: (code: string) => void) {
+  const [audio]=useState(()=>new RankedAudioSession());
+  useEffect(()=>()=>audio.dispose(),[audio]);
   const [profile, setProfile] = useState<RankedProfile | null>(null);
   const [queue, setQueue] = useState<RankedQueueState>({ state: "IDLE" });
   const [busy, setBusy] = useState(false);
@@ -26,23 +29,24 @@ export function useRankedQueue(onMatched: (code: string) => void) {
   });
 
   const apply = useCallback((next: RankedQueueState) => {
+    audio.update(next);
     setQueue(next);
     if (next.state === "MATCHED" && handed.current !== next.code) {
       handed.current = next.code;
       matched.current(next.code);
     }
-  }, []);
+  }, [audio]);
 
   useEffect(() => {
     const close = (event: Event) => {
       if (!(event as CustomEvent<{ admissionsBlocked?: boolean }>).detail?.admissionsBlocked) return;
-      generation.current++; accepting.current = null; setBusy(false); setQueue({ state: 'IDLE' });
+      audio.terminal(); generation.current++; accepting.current = null; setBusy(false); setQueue({ state: 'IDLE' });
       setError('Actualización en curso. La búsqueda se ha detenido.');
       void rankedApi.cancel();
     };
     window.addEventListener('rpggo-maintenance', close);
     return () => window.removeEventListener('rpggo-maintenance', close);
-  }, []);
+  }, [audio]);
 
   const refresh = useCallback(async () => {
     const epoch = generation.current;
@@ -75,7 +79,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
       polling.current = true;
       const epoch = generation.current;
       void rankedApi.poll().then((r) => {
-        if (epoch === generation.current &&r?.ok) apply(r.data.queue);
+        if (epoch === generation.current){if(r?.ok)apply(r.data.queue);else if(r)audio.rejected(r.error.status);}
         })
         .catch(() => {})
         .finally(() => {
@@ -83,7 +87,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
       });
     }, RANKED_RULES.queuePollMs);
     return () => clearInterval(timer);
-  }, [queue.state, apply]);
+  }, [queue.state, apply, audio]);
 
   // Explicit consent only. The server still gives human pairing the final opportunity.
   async function acceptBot() {
@@ -96,7 +100,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
       const r = await rankedApi.acceptBot(ticket);
       if (epoch !== generation.current) return;
       if (r?.ok) apply(r.data.queue);
-      else setError(r ? r.error.message : "No se pudo preparar el rival.");
+      else {if(r)audio.rejected(r.error.status);else audio.terminal();setError(r ? r.error.message : "No se pudo preparar el rival.");}
     } catch {
       if (epoch === generation.current) setError("No se pudo preparar el rival. Puedes seguir buscando.");
     } finally {
@@ -115,9 +119,9 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     try {
     const r = await call();
       if(epoch !== generation.current) return;
-    if (!r) setError("Inicia sesión para jugar clasificatoria.");
+    if (!r) {audio.terminal();setError("Inicia sesión para jugar clasificatoria.");}
     else if (r.ok) apply(r.data.queue);
-    else setError(r.error.message);
+    else {audio.rejected(r.error.status);setError(r.error.message);}
     } catch {
       if (epoch === generation.current)
         setError("No se pudo actualizar la búsqueda.");
@@ -134,10 +138,11 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     refresh,
     acceptBot,
     search: (heroId: string, deckId?: string) =>
-      run(() => rankedApi.join(heroId, deckId)),
+      {audio.begin();return run(() => rankedApi.join(heroId, deckId));},
     cancel: () => run(() => rankedApi.cancel()),
     /** After a ranked room closes: forget the handed code so a new match can be handed. */
     reset: () => {
+      audio.terminal();
       generation.current++;
       accepting.current = null;
       handed.current = null;

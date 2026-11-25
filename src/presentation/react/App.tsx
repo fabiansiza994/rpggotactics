@@ -1,4 +1,5 @@
 import { PremiumMaintenance } from '../maintenance/PremiumMaintenance';
+import {AudioRuntime} from '../audio/AudioRuntime';
 import {ProfileAvatarButton} from '../profile/ProfileAvatarButton';
 import {RankedAccess} from '../mobile/RankedAccess';
 import {MobileProfile} from '../mobile/MobileProfile';
@@ -123,6 +124,7 @@ export function App() {
   if (import.meta.env.DEV && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && location.pathname === '/dialogue-qa' && DialogueVisualQa) return <DialogueVisualQa />;
   return (
     <>
+      <AudioRuntime/>
       <PremiumMaintenance/>
       {VisualQaPanel && <Suspense fallback={null}><VisualQaPanel /></Suspense>}
       {interfaceSettings&&<InterfaceSettings showHelp={mobile&&!battle} preference={interfaceMode.preference} pending={interfaceMode.pending} onClose={()=>setInterfaceSettings(false)}/>}

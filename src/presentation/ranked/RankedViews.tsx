@@ -153,7 +153,7 @@ export function RankedPanel({
               <strong>Buscando rival…</strong>
               <b aria-label="Tiempo de búsqueda">{elapsed}</b>
             </div>
-            <button disabled={busy} onClick={onCancel}>
+            <button data-audio-cue="cancel" disabled={busy} onClick={onCancel}>
               Cancelar búsqueda
             </button>
           </>

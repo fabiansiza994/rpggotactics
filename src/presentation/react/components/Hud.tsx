@@ -1,3 +1,4 @@
+import{audioHover}from'../../audio/audio';
 import {ScorpionRitualDialog} from './ScorpionRitualDialog';
 import {useHandInspection} from '../../cards/handInspection';
 import {championLabel} from '../../battle/championLabel';
@@ -395,7 +396,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
       </div>
       {!state.responseWindow && !discarding && (selectedCardUid || aim?.source === 'tap') && <BattleRail slot="aim"><div className="mobile-aim-controls" data-contextual-cancel={contextualCancel || undefined} data-can-confirm={canActivateAim||undefined} role="group" aria-label="Objetivo de carta">
         <span><small>{selectedCardUid ? canActivateAim ? 'Activa la carta' : 'Selecciona un objetivo válido' : 'Confirma el destino'}</small>{selectedCardUid && <strong>{aimedName ?? 'Carta seleccionada'}</strong>}</span>
-        {canActivateAim&&<button type="button" onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>}
+        {canActivateAim&&<button className="aim-activate" type="button" onClick={() => useBattleStore.getState().confirmAim()}><CardActivationLabel card={!!selectedCardUid}/></button>}
         {!contextualCancel && <button className="aim-cancel" type="button" disabled={busy} aria-label="Cancelar objetivo" onClick={() => useBattleStore.getState().cancelAim()}><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>}
       </div></BattleRail>}
       <section className="mobile-player-status" aria-label="Tu campeón">
@@ -466,7 +467,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 inspected={!discarding&&!state.responseWindow&&card.uid===inspection.uid} selected={silence.active ? false : discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
                 playable={silence.active || !block}
                 block={silence.active ? undefined : block}
-                onInspect={on=>inspection.inspect(card.uid,on)}
+                onInspect={on=>{inspection.inspect(card.uid,on);if(on&&!busy&&!state.responseWindow&&!discarding&&!selectedCardUid)audioHover(activationBattle??engine,card.uid);}}
                 onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); inspection.remember(card.uid);setDetailUid(card.uid); }}
                 onCancel={contextualCancel ? () => useBattleStore.getState().cancelAim() : undefined}
                 onClick={() => {

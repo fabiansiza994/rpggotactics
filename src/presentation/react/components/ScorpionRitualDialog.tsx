@@ -26,6 +26,6 @@ function Ritual({state,engine}:{state:Readonly<GameState>;engine:GameEngine}){
  <label htmlFor="scorpion-sacrifice">Elige entre {min} y {max} HP</label>
  <div className="scorpion-slider"><button type="button" aria-label="Reducir sacrificio" disabled={busy||hp<2} onClick={()=>setAmount(n=>n===null?min:Math.max(min,n-1))}>−</button><input id="scorpion-sacrifice" aria-label="HP a sacrificar" type="range" min={min} max={Math.max(min,max)} step="1" value={amount??min} disabled={busy||hp<2} onChange={e=>setAmount(Number(e.target.value))}/><button type="button" aria-label="Aumentar sacrificio" disabled={busy||hp<2} onClick={()=>setAmount(n=>n===null?min:Math.min(max,n+1))}>+</button></div>
  <p role="status">{amount===null?'Selecciona explícitamente el sacrificio antes de confirmar.':!choice?'La vida cambió: selecciona un sacrificio válido.':hp-amount<=2?'Riesgo alto: quedarás con muy poca vida.':`Sacrificarás ${amount} HP sin mitigación de armadura o escudo.`}</p>
- <footer><button type="button" onClick={cancel}>Cancelar</button><button type="button" disabled={!ready} onClick={()=>{if(choice)confirm(amount);}}>Confirmar invocación</button></footer>
+ <footer><button data-audio-cue="cancel" type="button" onClick={cancel}>Cancelar</button><button data-audio-cue="confirm" data-audio-activation="true" type="button" disabled={!ready} onClick={()=>{if(choice)confirm(amount);}}>Confirmar invocación</button></footer>
  </dialog>;
 }

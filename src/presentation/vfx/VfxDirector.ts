@@ -1,3 +1,4 @@
+import{audioExperimentEnabled,confirmedAudio}from'../audio/audio';
 import {revealLedger,readRevealMode,presentReveal,worldRevealPending,type RevealPlan} from '../cards/arcaneReveal';
 import type {PresentationBatch} from '../events/presentationBus';
 import {resolutionTiming} from './resolutionProfiles';
@@ -112,6 +113,7 @@ export class VfxDirector {
     );
   }
   enqueue(events: readonly GameEvent[], final: Readonly<GameState>, reduced: boolean, batch?: PresentationBatch): void {
+    if(audioExperimentEnabled)confirmedAudio.capture(events,batch);
     if (!this.visual || events.some((e) => e.type === 'BATTLE_STARTED')) {
       this.clear();
       const spawned = new Set(
@@ -354,6 +356,7 @@ export class VfxDirector {
       return;
     }
     if (cue.kind === 'cast' && e.type === 'CARD_PLAYED') {
+      if(audioExperimentEnabled)confirmedAudio.cast(e);
       this.endReveal(true);
       if(fx.icePremium)fx.icePremium.reduced=reduced;
       if(e.cardId==='eternal_winter_heart')fx.icePremium?.charge(e.impact,cue.duration);
