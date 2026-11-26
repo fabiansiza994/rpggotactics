@@ -7,7 +7,7 @@ export const AUDIO_CUES = {
  card_activate:{category:'combat',duration:.72,gain:.64,limit:3,priority:2},
 } as const;
 export type AudioCue=keyof typeof AUDIO_CUES;
-export type AudioCategory='master'|'ui'|'cards'|'matchmaking'|'combat'|'music';
+export type AudioCategory='master'|'ui'|'cards'|'matchmaking'|'combat'|'music'|'effects';
 export type AudioVariant='A'|'B'|'C';
 export const AUDIO_DIRECTIONS={A:'Arcana ancestral',B:'Fantasía heroica cinematográfica',C:'Fantasía oscura profunda'};
 export function audioFiles(cue:AudioCue,variant:AudioVariant){const root=`/audio/arcane-v1/${cue}_${variant}`;return cue==='ranked_search_loop'?[root+'.wav']:[root+'.m4a',root+'.wav'];}
