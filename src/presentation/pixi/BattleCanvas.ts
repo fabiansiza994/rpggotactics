@@ -1037,7 +1037,7 @@ export class BattleCanvas {
     const ultras=this.callbacks.ultraEnabled?.()===true&&readRevealRenderer()==='pixi'?events.flatMap(e=>e.type==='CARD_PLAYED'&&vm.content.cards[e.cardId]?.rarity==='ULTRA'?[e.cardId]:[]):[];
     const shields=events.flatMap(e=>e.type==='SHIELD_GAINED'?[e.material??'ENERGY' as const]:[]);
     const catalog=this.effects.catalog.requested?catalogEventRecipes(events,id=>vm.content.cards[id]):[];
-    const cursedCards = events.flatMap(event => (event.type === 'CARD_CURSE_TRIGGERED'||event.type === 'CARD_NEGATED') && vm.content.cards[event.cardId] ? [vm.content.cards[event.cardId]!] : []);
+    const cursedCards = events.flatMap(event => event.type === 'CARD_CURSE_TRIGGERED' && vm.content.cards[event.cardId] ? [vm.content.cards[event.cardId]!] : []);
     const themedCards=events.flatMap(e=>e.type==='CARD_PLAYED'&&(e.cardId.startsWith('light_')||e.cardId.startsWith('dark_'))?[e.cardId]:[]);
     const forms=events.filter((e):e is Extract<GameEvent,{type:'FORM_CHANGED'}>=>e.type==='FORM_CHANGED');
     if (this.assetGate.busy || !this.preparedScenes.has(sceneAssetKey(state)) || recipes.length || catalog.length || forms.length || shields.length || ultras.length || cursedCards.length || themedCards.length)

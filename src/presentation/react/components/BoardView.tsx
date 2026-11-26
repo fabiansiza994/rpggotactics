@@ -1,3 +1,4 @@
+import {CardNegationResolution} from './CardNegationResolution';
 import {useScenePreparation} from '../../loading/scenePreparation';
 import {BattleRail} from '../../battle/BattleRails';
 import {RedemptionControls,type RedemptionSelection} from './RedemptionControls';
@@ -137,7 +138,7 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
   }, [vm,archerPreview,cameraX,cameraY]);
 
   return (
-    <><ArcaneReveal content={engine?.content} />
+    <><ArcaneReveal content={engine?.content} /><CardNegationResolution content={engine?.content}/>
     <BattleRail slot="camera"><div className="battle-camera-controls" role="group" aria-label="Cámara del tablero">
       {(['left','right','reset','out','in'] as const).map((action,index)=><button key={action} type="button" disabled={cameraBusy} title={['Rotar a la izquierda 90°','Rotar a la derecha 90°','Restablecer cámara · Alt + arrastrar para desplazar','Alejar · rueda hacia atrás','Acercar · rueda hacia adelante'][index]} aria-label={['Rotar a la izquierda','Rotar a la derecha','Restablecer cámara','Alejar cámara','Acercar cámara'][index]} onClick={()=>canvasRef.current?.cameraControl(action)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">{action==='in'||action==='out'?<><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6M6 10h8"/>{action==='in'&&<path d="M10 6v8"/>}</>:action==='reset'?<><path d="M5 9V5h4M15 5h4v4M19 15v4h-4M9 19H5v-4"/><circle cx="12" cy="12" r="3"/></>:<g transform={action==='right'?'translate(24 0) scale(-1 1)':undefined}><path d="M7 8H3V4M3 8a9 9 0 1 1 0 8"/></g>}</svg></button>)}
     </div></BattleRail><div

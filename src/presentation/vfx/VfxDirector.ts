@@ -1,4 +1,5 @@
-import{audioExperimentEnabled,confirmedAudio}from'../audio/audio';
+import {negationLedger,NegationLane,type NegationResolution} from '../cards/negationResolution';
+import{audioExperimentEnabled,confirmedAudio,audioCue}from'../audio/audio';
 import {revealLedger,readRevealMode,presentReveal,worldRevealPending,type RevealPlan} from '../cards/arcaneReveal';
 import type {PresentationBatch} from '../events/presentationBus';
 import {resolutionTiming} from './resolutionProfiles';
@@ -72,6 +73,7 @@ function lightColor(element: Family): number {
 /** Orchestrates already-resolved events; owns no command dispatch or gameplay query. */
 export class VfxDirector {
   readonly queue = new VisualQueue();
+  private readonly negation = new NegationLane(()=>audioCue('ui_cancel'));
   private visual: Readonly<GameState> | null = null;
   private accepted: Readonly<GameState> | null = null;
   private reportedBusy = false;
@@ -114,6 +116,7 @@ export class VfxDirector {
   }
   enqueue(events: readonly GameEvent[], final: Readonly<GameState>, reduced: boolean, batch?: PresentationBatch): void {
     if(audioExperimentEnabled)confirmedAudio.capture(events,batch);
+    const negations = negationLedger.claim(events,batch,id=>this.host.card(id));
     if (!this.visual || events.some((e) => e.type === 'BATTLE_STARTED')) {
       this.clear();
       const spawned = new Set(
@@ -177,7 +180,7 @@ export class VfxDirector {
       },
       update: (elapsed) => {
         while (nextCue < plan.cues.length && plan.cues[nextCue]!.at <= elapsed)
-          this.play(plan.cues[nextCue++]!, final, reduced, reveals);
+          this.play(plan.cues[nextCue++]!, final, reduced, reveals, negations);
         const reveal=this.activeReveal;
         if(reveal)presentReveal({...reveal.plan,cardId:reveal.event.cardId,casterId:reveal.event.casterId,progress:Math.min(1,(elapsed-reveal.start)/reveal.plan.duration),skip:()=>this.skipReveal()});
       },
@@ -196,6 +199,7 @@ export class VfxDirector {
   tick(ms: number): void {
     // Advance existing effects first so a newly emitted cue starts at its own t=0.
     this.effects.tick(ms);
+    this.negation.tick(ms);
     this.queue.tick(ms);
     if (this.reportedBusy && !this.busy) {
       this.reportedBusy = false;
@@ -278,6 +282,7 @@ export class VfxDirector {
     this.catalogActions = new WeakMap();
     this.attackFamilies = new WeakMap();
     this.queue.clear();
+    this.negation.clear();
     this.effects.clear();
     for (const unit of this.visual?.units ?? []) this.host.unit(unit.id)?.snapHealth?.();
     this.moving.clear();
@@ -303,7 +308,7 @@ export class VfxDirector {
     this.updateAmbient();
   }
 
-  private play(cue: VisualCue, final: Readonly<GameState>, reduced: boolean, reveals:Map<GameEvent,RevealPlan> = new Map()): void {
+  private play(cue: VisualCue, final: Readonly<GameState>, reduced: boolean, reveals:Map<GameEvent,RevealPlan> = new Map(), negations:Map<GameEvent,NegationResolution> = new Map()): void {
     const e = cue.event,
       fx = this.effects,
       f = family(cue.key);
@@ -998,9 +1003,11 @@ export class VfxDirector {
         this.host.handPulse(1);break;
       }
       case 'CARD_NEGATED': {
+        const plan=negations.get(e);if(!plan)break;
+        if(cue.key==='negate-card')this.negation.show(plan,reduced);
         const at=this.position(e.casterId);if(!at)break;
-        if(cue.key==='negate-card')fx.darkLight.cursedCard(e.cardId,at,cue.duration);
-        else fx.darkLight.curseSmoke(at,cue.duration);
+        if(cue.key==='negate-card')fx.glyph(at,'ARCANE',cue.duration,24);
+        else fx.burst(at,'ARCANE',false,reduced?80:220);
         break;
       }
       case 'CARD_CURSE_TRIGGERED':
