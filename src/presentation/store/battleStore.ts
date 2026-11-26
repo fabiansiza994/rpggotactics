@@ -1,3 +1,4 @@
+import {rankedOccupied,rankedDeckLocked,RANKED_BUSY_NOTICE,RANKED_DECK_NOTICE} from '../ranked/rankedPresence';
 import {storyBattle,STORY_RULES_CURRENT,type StoryRules} from '../../game/run/story-rules';
 import {storedDeckRules,type DeckFormat} from '../../game/collection/deck-formats';
 import {drawRitual,classifyDraws} from '../cards/drawRitual';
@@ -893,6 +894,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
 
   /** Fresh engine for an encounter (or scenario), wired to the store and the canvas. */
   function begin(engine: GameEngine): void {
+    if(rankedOccupied()){set({notice:RANKED_BUSY_NOTICE});return;}
     persistRealQaBattle(engine);
     attach(engine);
     set({
@@ -922,6 +924,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
    * free ones — whatever the run, route or UI state says. The invitation opens instead.
    */
   function beginEncounter(run: RunState): boolean {
+      if(rankedOccupied()){set({notice:RANKED_BUSY_NOTICE});return false;}
     if (!campaignChampionsIn(get()).includes(run.heroId)) {
       set({ notice: 'Todavía no has desbloqueado este campeón.' });
       return false;
@@ -1001,7 +1004,17 @@ export const useBattleStore = create<BattleStore>((set, get) => {
 
   function run(command: Command): boolean {
     if(!get().engine||inputLocked(get()))return false;
-    if((get().onlineCommand||!get().storyRules||get().storyRules===STORY_RULES_CURRENT)&&command.type==='PLAY_CARD'&&command.sacrificeHp===undefined&&get().engine?.state.player.hand.some(c=>c.uid===command.cardUid&&c.cardId==='dark_scorpion_king')){if(command.target)set({scorpionDraft:{cardUid:command.cardUid,position:command.target}});return false;}
+    if ((get().onlineCommand || !get().storyRules || get().storyRules === STORY_RULES_CURRENT)
+      && command.type === 'PLAY_CARD' && command.sacrificeHp === undefined
+      && get().engine?.state.player.hand.some(c => c.uid === command.cardUid && c.cardId === 'dark_scorpion_king')) {
+      const target = command.target;
+      if (!target || !get().engine!.getValidTargets(command.cardUid).some(p => samePos(p, target))) {
+        set({ notice: ERROR_LABEL.INVALID_TARGET });
+        return false;
+      }
+      set({ scorpionDraft: { cardUid: command.cardUid, position: { ...target } }, notice: null });
+      return false;
+    }
     drawRitual.complete();
     const { engine } = get();
     if (!engine || inputLocked(get())) return false;
@@ -1247,6 +1260,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       const issues = localDeckIssues(heroId, cards,format);
       if (issues.length) return { ok: false, issues };
       const deckId = chosenDeckId ?? activeDeck(heroProfile(get().profile, heroId, DEFAULT_CONTENT)).id;
+      if(rankedDeckLocked(heroId,deckId))return {ok:false,issues:[],error:RANKED_DECK_NOTICE};
       if (!cloudActive(get())) {
         const result = updateDeck(get().profile, heroId, deckId, cards, DEFAULT_CONTENT, storedDeckRules(cards,format), Date.now());
         if (!result.ok) return { ok: false, issues: result.issues ?? [], error: result.error === 'UNKNOWN_DECK' ? 'Ese mazo no existe.' : undefined };
@@ -1288,7 +1302,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       );
     },
     deleteDeck: (heroId, deckId) =>
-      deckAction(
+      rankedDeckLocked(heroId,deckId)?Promise.resolve<DeckActionResult>({ok:false,error:'CLOUD',message:RANKED_DECK_NOTICE}):deckAction(
         heroId,
         'Eliminar mazo',
         () => deleteDeckOp(get().profile, heroId, deckId, DEFAULT_CONTENT),
@@ -1303,6 +1317,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       ),
 
     async startScenario(scenarioId, seed, heroId, deckId) {
+      if(rankedOccupied()){set({notice:RANKED_BUSY_NOTICE});return false;}
       const base = SCENARIOS_BY_ID[scenarioId];
       if (!base) throw new Error(`Unknown scenario "${scenarioId}"`);
       const { profile } = get();
@@ -1365,6 +1380,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     },
 
     async startRun(seed = 1, startAt) {
+      if(rankedOccupied()){set({notice:RANKED_BUSY_NOTICE});return false;}
       const heroId = get().campaignHeroId;
       if (neutralDeckBlocked(heroId)) return false;
       if (!campaignChampionsIn(get()).includes(heroId)) {
@@ -1410,6 +1426,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     },
 
     continueRun() {
+      if(rankedOccupied()){set({notice:RANKED_BUSY_NOTICE});return;}
       const { run, screen, state, cloud } = get();
       if (cloud.busy || run?.status !== 'IN_BATTLE') return;
       if (screen === 'BATTLE' && (!state?.outcome || !run.completedEncounterIds.includes(state.scenarioId) || run.currentEncounterId === state.scenarioId)) return;
@@ -1605,6 +1622,10 @@ export const useBattleStore = create<BattleStore>((set, get) => {
         ? pairTargets(engine, selectedCardUid, get().pairSelection).some(t => samePos(t,p))
         : isActionableTile(engine, selectedCardUid, p);
       const pos = resolveTapTarget(candidates, actionable);
+      // The sacrifice dialog is the confirmation step for this card. Open it on
+      // the first legal tap, while other cards retain their two-tap preview flow.
+      const card = engine.state.player.hand.find(c=>c.uid===selectedCardUid);
+      if(pos && actionable(pos) && card && engine.content.cards[card.cardId]?.effects.some(fx=>fx.type==='SUMMON_SCORPION_SACRIFICE')) return actOnTile(pos);
       const decision = decideTap(aim, pos);
       if (decision.kind === 'clear') return set({ aim: withoutTapAim(aim), notice: null });
       if (decision.kind === 'confirm' && actionable(decision.pos)) return actOnTile(decision.pos);

@@ -14,10 +14,12 @@ export class ConfirmedAudioPolicy{
 }
 export const confirmedAudio=new ConfirmedAudioPolicy(()=>audioCue('card_activate'));
 export class RankedAudioSession{
+ private audible=true;
  private intent=false;private searching:string|null=null;private seen=new Set<string>();private generation=0;
- constructor(private audio:Pick<AudioManager,'startSearch'|'stopSearch'|'play'>=arcaneAudio,private enabled=audioExperimentEnabled){}
+ constructor(private audio:Pick<AudioManager,'startSearch'|'stopSearch'|'play'>&Partial<Pick<AudioManager,'pauseSearch'|'setSearchAudible'>>=arcaneAudio,private enabled=audioExperimentEnabled){}
+ setAudible(value:boolean){this.audible=value;if(this.enabled&&this.audio.setSearchAudible){this.audio.setSearchAudible(value);return;}if(!value&&this.enabled){if(this.audio.pauseSearch)this.audio.pauseSearch();else this.audio.stopSearch();}}
  begin(){this.intent=true;this.generation++;}
- update(queue:{state:string;since?:number;code?:string}){if(!this.enabled)return;if(queue.state==='SEARCHING'){this.searching=String(queue.since??this.generation);void this.audio.startSearch(this.searching);return;}this.audio.stopSearch();if(queue.state==='MATCHED'&&(this.intent||this.searching)){const key=queue.code;if(key&&!this.seen.has(key)){this.seen.add(key);if(this.seen.size>128)this.seen.delete(this.seen.values().next().value!);this.audio.play('ranked_match_found');}}this.searching=null;this.intent=false;}
+ update(queue:{state:string;since?:number;code?:string}){if(!this.enabled||!this.audible)return;if(queue.state==='SEARCHING'){this.searching=String(queue.since??this.generation);void this.audio.startSearch(this.searching);return;}this.audio.stopSearch();if(queue.state==='MATCHED'&&(this.intent||this.searching)){const key=queue.code;if(key&&!this.seen.has(key)){this.seen.add(key);if(this.seen.size>128)this.seen.delete(this.seen.values().next().value!);this.audio.play('ranked_match_found');}}this.searching=null;this.intent=false;}
  rejected(status:number){if([401,403,404,410,426,429,503].includes(status))this.terminal();}
  terminal(){this.searching=null;this.intent=false;if(this.enabled)this.audio.stopSearch();}
  dispose(){this.terminal();}

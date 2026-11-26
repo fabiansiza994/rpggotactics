@@ -1,3 +1,5 @@
+import {RankedSearchIndicator} from '../ranked/GlobalRanked';
+import {rankedOccupied,useRankedPresence} from '../ranked/rankedPresence';
 import { PremiumMaintenance } from '../maintenance/PremiumMaintenance';
 import {AudioRuntime} from '../audio/AudioRuntime';
 import {ProfileAvatarButton} from '../profile/ProfileAvatarButton';
@@ -61,10 +63,12 @@ export function App() {
   const setSocial=(open:boolean)=>navigatePlay(open?'friends':'hub');
   const account = useBattleStore((s) => s.account);
   const screen = useBattleStore((s) => s.screen);
+  const rankedActive=useRankedPresence(s=>s.busy||s.queue.state!=='IDLE');
   const inMatch = useBattleStore((s) => s.onlineCommand !== null);
   const battle=screen==='BATTLE'||inMatch;
   const interfaceMode=useInterfaceMode(battle);
   const mobile=interfaceMode.applied==='mobile';
+  const rankedEntryBlocked=rankedAccessRequired(mobile,pvp&&new URLSearchParams(location.search).get('queue')==='ranked',battle,account.status);
   const [interfaceSettings,setInterfaceSettings]=useState(false);
   const mobileBalance=useMobileBalance(mobile&&!battle,playMode);
   const navigateMobile=(tab:MobileTab)=>{
@@ -101,6 +105,7 @@ export function App() {
     () =>
       useSocialStore.subscribe((s, prev) => {
         if (!s.roomReady || s.roomReady === prev.roomReady) return;
+        if(rankedOccupied()){s.toast('Cancela la búsqueda Ranked antes de abrir otra sala.');return;}
         const { code } = s.roomReady;
         s.consumeRoom();
         // Never yank a player out of a campaign battle: the room waits behind the PvP button.
@@ -148,11 +153,13 @@ export function App() {
       <GiftRuntime />
       <GiftNotifications quiet={inMatch || (!pvp && screen === 'BATTLE')} />
       <SocialNotifications
-        suppressInvites={inMatch || socialOpen || socialDrawer}
+        suppressInvites={inMatch || socialOpen || socialDrawer || rankedActive}
         quiet={inMatch || (!pvp && screen === 'BATTLE')}
       />
       <MobileShell enabled={mobile&&!battle} active={activeMobileTab(playMode,screen)} balance={mobileBalance} onSettings={()=>setInterfaceSettings(true)} onNavigate={navigateMobile}>
 
+      <RankedSearchIndicator/>
+      {((pvp&&!rankedEntryBlocked)||account.status==='READY')&&<div hidden={!pvp||rankedEntryBlocked}><Suspense fallback={pvp?<p role="status">Cargando arena…</p>:null}><PvpScreen mobile={mobile} key={pvpKey} active={pvp} onExit={()=>{if(pvp)setPvp(false);}} onOpponentHistory={username=>navigatePlay('friends',{friend:username})}/></Suspense></div>}
       <Suspense fallback={<p className="mode-loading" role="status">Cargando modo…</p>}>
       {account.status === 'CONNECTING' && !pvp && !shop ? (
         <AccountBootstrap />
@@ -161,8 +168,8 @@ export function App() {
           key={'username' in account ? account.username : 'guest'}
           onExit={() => setShop(false)}
         />
-      ) : rankedAccessRequired(mobile,pvp&&new URLSearchParams(location.search).get('queue')==='ranked',battle,account.status) ? <RankedAccess connecting={account.status==='CONNECTING'}/> : pvp ? (
-        <PvpScreen mobile={mobile} key={pvpKey} onExit={() => setPvp(false)} onOpponentHistory={username=>navigatePlay('friends',{friend:username})}/>
+      ) : rankedEntryBlocked ? <RankedAccess connecting={account.status==='CONNECTING'}/> : pvp ? (
+        null
       ) : socialOpen ? (
         <SocialScreen onOpenChat={username=>{setChatFriend(username);setSocialDrawer(true);}} key={new URLSearchParams(location.search).get('friend')??'friends'} initialFriend={new URLSearchParams(location.search).get('friend')??undefined} onExit={() => setSocial(false)} />
       ) : screen === 'BATTLE' ? (

@@ -133,15 +133,35 @@ function insertDeck(ctx: DeckRouteContext, heroId: string, deckId: string, name:
     .bind(userId, heroId, deckId, name, now, SLOTS);
 }
 
+/** Freeze only the registered deck while its authoritative queue/room is unresolved.
+ * The same predicate lives inside mutations, so another tab cannot race the UI guard. */
+const rankedDeckAvailable=(user:string,hero:string,deck:string,now:string,exempt:string)=>`NOT EXISTS (
+ SELECT 1 FROM tactics_ranked_queue q
+ WHERE q.user_id=${user} AND q.hero_id=${hero} AND (q.deck_id=${deck} OR q.deck_id IS NULL)
+ AND ((q.room_code IS NULL AND q.expires_at>${now}) OR
+      (q.room_code IS NOT NULL AND (${exempt} IS NULL OR q.room_code<>${exempt}))))`;
+async function rankedDeckStatus(ctx:DeckRouteContext,heroId:string,deckId:string){
+ const ticket=await ctx.db.prepare('SELECT room_code,expires_at FROM tactics_ranked_queue WHERE user_id=? AND hero_id=? AND (deck_id=? OR deck_id IS NULL)').bind(ctx.userId,heroId,deckId).first<{room_code:string|null;expires_at:number}>();
+ if(!ticket)return {busy:false,exempt:null};
+ if(!ticket.room_code)return {busy:ticket.expires_at>ctx.now,exempt:null};
+ const room=await ctx.db.prepare('SELECT expires_at,finished_at FROM tactics_pvp_rooms WHERE code=?').bind(ticket.room_code).first<{expires_at:number;finished_at:number|null}>();
+ // Missing room may be a claim in flight: never treat it as a finished reservation.
+ if(!room)return {busy:true,exempt:null};
+ const busy=room.finished_at===null&&room.expires_at>ctx.now;
+ return {busy,exempt:busy?null:ticket.room_code};
+}
+const rankedDeckBusy=async(ctx:DeckRouteContext,heroId:string,deckId:string)=>(await rankedDeckStatus(ctx,heroId,deckId)).busy;
+const registeredDeck=()=>error(409,'RANKED_DECK_REGISTERED','Este mazo está registrado en Ranked. Cancela la búsqueda antes de guardar o eliminarlo.');
+
 /** Card rows of `deckId`, written only if that deck row exists (it may have lost a race). */
-const insertCardsIfDeck = (ctx: DeckRouteContext, heroId: string, deckId: string, cards: readonly DeckEntry[]) =>
+const insertCardsIfDeck = (ctx: DeckRouteContext, heroId: string, deckId: string, cards: readonly DeckEntry[], registeredSafe=false,exempt:string|null=null) =>
   cards.map((e) =>
     ctx.db
       .prepare(
         `INSERT OR IGNORE INTO tactics_deck_cards (user_id, hero_id, deck_id, card_id, count)
-         SELECT ?1, ?2, ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM tactics_decks WHERE user_id = ?1 AND hero_id = ?2 AND deck_id = ?3)`,
+         SELECT ?1, ?2, ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM tactics_decks WHERE user_id = ?1 AND hero_id = ?2 AND deck_id = ?3) ${registeredSafe?`AND ${rankedDeckAvailable('?1','?2','?3','?6','?7')}`:''}`,
       )
-      .bind(ctx.userId, heroId, deckId, e.cardId, e.count),
+      .bind(...(registeredSafe?[ctx.userId,heroId,deckId,e.cardId,e.count,ctx.now,exempt]:[ctx.userId,heroId,deckId,e.cardId,e.count])),
   );
 
 export async function deckRoute(method: string, path: string, ctx: DeckRouteContext): Promise<Response | null> {
@@ -234,6 +254,8 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
 
   // ── Edit cards (+ optional name) ─────────────────────────────────────────────────────
   if (method === 'PUT') {
+    const registered=await rankedDeckStatus(ctx,heroId,deckId);
+    if(registered.busy)return registeredDeck();
     const cards = parseDeckCards(body.cards);
     if (!cards) return error(400, 'BAD_REQUEST', 'Lista de cartas inválida.');
     const name = body.name === undefined ? source.name : normalizeDeckName(body.name);
@@ -242,23 +264,26 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
     const issues = validateDeck(cards, heroId, ownedFor(ctx.profile, heroId, content), content, storedDeckRules(cards,body.format as 'STORY'|'COMPETITIVE'|undefined));
     if (issues.length) return error(422, 'INVALID_DECK', 'El mazo no es válido.', { issues });
     await write(ctx, heroId, () => [
-      db.prepare(`DELETE FROM tactics_deck_cards WHERE ${where}`).bind(userId, heroId, deckId),
-      ...insertCardsIfDeck(ctx, heroId, deckId, cards),
-      db.prepare(`UPDATE tactics_decks SET name = ?, updated_at = ? WHERE ${where}`).bind(name, ctx.now, userId, heroId, deckId),
+      db.prepare(`DELETE FROM tactics_deck_cards WHERE user_id=?1 AND hero_id=?2 AND deck_id=?3 AND ${rankedDeckAvailable('?1','?2','?3','?4','?5')}`).bind(userId,heroId,deckId,ctx.now,registered.exempt),
+      ...insertCardsIfDeck(ctx, heroId, deckId, cards,true,registered.exempt),
+      db.prepare(`UPDATE tactics_decks SET name=?1,updated_at=?2 WHERE user_id=?3 AND hero_id=?4 AND deck_id=?5 AND ${rankedDeckAvailable('?3','?4','?5','?2','?6')}`).bind(name,ctx.now,userId,heroId,deckId,registered.exempt),
     ]);
+    if(await rankedDeckBusy(ctx,heroId,deckId))return registeredDeck();
     if (!(await deckExists(db, userId, heroId, deckId))) return unknownDeck();
     return done(deckId);
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────────────────
   if (method === 'DELETE') {
+    const registered=await rankedDeckStatus(ctx,heroId,deckId);
+    if(registered.busy)return registeredDeck();
     if (hero.decks.length <= 1) return lastDeck();
     await write(ctx, heroId, () => [
       // Never the last deck, even if two deletes race (the count is read inside the statement).
       db
         .prepare(`DELETE FROM tactics_decks WHERE user_id = ?1 AND hero_id = ?2 AND deck_id = ?3
-                  AND (SELECT count(*) FROM tactics_decks WHERE user_id = ?1 AND hero_id = ?2) > 1`)
-        .bind(userId, heroId, deckId),
+                  AND (SELECT count(*) FROM tactics_decks WHERE user_id = ?1 AND hero_id = ?2) > 1 AND ${rankedDeckAvailable('?1','?2','?3','?4','?5')}`)
+        .bind(userId, heroId, deckId,ctx.now,registered.exempt),
       // Deleting the default promotes the oldest remaining deck (same order as the summaries).
       db
         .prepare(`UPDATE tactics_decks SET is_active = 1 WHERE user_id = ?1 AND hero_id = ?2
@@ -266,6 +291,7 @@ export async function deckRoute(method: string, path: string, ctx: DeckRouteCont
                   AND NOT EXISTS (SELECT 1 FROM tactics_decks WHERE user_id = ?1 AND hero_id = ?2 AND is_active = 1)`)
         .bind(userId, heroId),
     ]);
+    if(await rankedDeckBusy(ctx,heroId,deckId))return registeredDeck();
     if (await deckExists(db, userId, heroId, deckId)) return lastDeck();
     const fresh = await ctx.reload();
     return done(fresh ? heroProfile(fresh, heroId, content).activeDeckId : deckId);

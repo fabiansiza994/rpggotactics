@@ -255,6 +255,12 @@ export class GameEngine {
       }
       return none;
     }
+    // Target collection precedes the explicit HP choice. A dry-run cast without
+    // sacrificeHp is deliberately rejected by the rules, but that must not make
+    // an otherwise legal destination untappable. Do not predict a chosen amount.
+    const card = this.current.player.hand.find(c => c.uid === cardUid);
+    if (card && this.content.cards[card.cardId]?.effects.some(fx => fx.type === 'SUMMON_SCORPION_SACRIFICE'))
+      return { valid: true, resolved, predictedEvents: [] };
     const predictedEvents: GameEvent[] = [];
     const dryRun: RuleContext = {
       state: structuredClone(this.current),

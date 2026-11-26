@@ -1,3 +1,5 @@
+import {RankedChallenge} from '../ranked/GlobalRanked';
+import {rankedOccupied,useRankedPresence} from '../ranked/rankedPresence';
 import {READINESS_PROTOCOL,type BattlePreparation}from'../../protocol/battleReadiness';
 import {useScenePreparation}from'../loading/scenePreparation';
 import {battleAudioSession}from'../audio/BattleAudioScene';
@@ -159,7 +161,9 @@ export function PvpScreen({
   onExit,
   onOpponentHistory,
   mobile = false,
+  active = true,
 }: {
+  active?: boolean;
   mobile?: boolean;
   onExit: () => void;
   onOpponentHistory?: (username: string) => void;
@@ -222,6 +226,7 @@ export function PvpScreen({
   },[snapshot,boardPrepared,initialDialogues,initialDraw.phase,network,clock]);
   // Ranked queue: a MATCHED ticket opens its server-created room like a joined code.
   const ranked = useRankedQueue((room) => {
+    alive.current=true;
     setQueueKind("RANKED");
     socket.current?.close();
     lastRevision.current = -1;
@@ -275,7 +280,10 @@ export function PvpScreen({
     });
     if (fresh) pending.current = null;
     setBusy(false);
+    if(next.ranked&&next.members[next.seat]?.ready&&!active)navigatePlay('pvp',{queue:'ranked'});
+    if (next.ranked) useRankedPresence.setState({heroId:next.members[next.seat]?.heroId??null,deckId:next.members[next.seat]?.deckId??null});
     if (next.game) {
+      if(!active)navigatePlay("pvp",{queue:next.ranked?"ranked":undefined});
       if (!liveDraw) drawRitual.complete();
 
       if (next.game.outcome) drawRitual.complete();
@@ -423,7 +431,13 @@ export function PvpScreen({
       if (alive.current && latest.current?.code === data.code)
         renderSnapshot(data);
       return data as Snapshot;
-    } catch {
+    } catch (e) {
+      const status=(e as {status?:number}).status;
+      if((status===404||status===410)&&latest.current?.code===room&&!latest.current.game){
+        if(localStorage.getItem(LAST_ROOM)===room)localStorage.removeItem(LAST_ROOM);
+        connectionGeneration.current++;if(retry.current)clearTimeout(retry.current);retry.current=null;
+        const old=socket.current;socket.current=null;old?.close();latest.current=null;setSnapshot(null);ranked.reset();void ranked.refresh();
+      }
       return null;
     }
   }
@@ -440,6 +454,11 @@ export function PvpScreen({
       (!!snapshot.ranked &&
         !snapshot.ranked.outcome &&
         !snapshot.bot?.outcome));
+  useEffect(()=>{
+    if(ranked.queue.state==='IDLE'&&ranked.profile?.enabled&&!ranked.busy&&snapshot?.ranked&&!snapshot.game&&!snapshot.result)void readState(snapshot.code);
+    // A cross-tab cancellation is confirmed against the existing authoritative room.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[ranked.queue.state,ranked.profile?.enabled,ranked.busy,snapshot?.code]);
   // Liveness while the room is unresolved: the terminal state (abandon, timeout, result) is pushed
   // once by the server; a half-open socket or a frozen tab must not keep a stale live view.
   useEffect(() => {
@@ -510,12 +529,32 @@ export function PvpScreen({
     setVersus(false);
     finish?.(proceed);
   }
-  async function action(path: string) {
-    if (versusWaiter.current) return;
+  const roomAction=useRef(false),leaving=useRef(false);
+  async function action(path:string){
+    if(roomAction.current||leaving.current)return;
+    roomAction.current=true;
+    try{
+      const perform=async()=>{
+        if(path==='ready'&&snapshot?.ranked){
+          const current:Snapshot=await api('state?code='+encodeURIComponent(snapshot.code));
+          renderSnapshot(current);
+          if(current.game||current.result||current.members[current.seat]?.ready||current.expiresAt<=Date.now())return;
+        }
+        await performAction(path);
+      };
+      if(path==='ready'&&snapshot?.ranked&&typeof navigator!=='undefined'&&navigator.locks)
+        await navigator.locks.request('rpggo-ranked-ready:'+snapshot.code,perform);
+      else await perform();
+    }catch(e){setError(e instanceof Error?e.message:'No se pudo confirmar el desafío.');}
+    finally{roomAction.current=false;}
+  }
+  async function performAction(path: string) {
+    if (versusWaiter.current || busy) return;
+    if (["create","join","rematch"].includes(path)&&rankedOccupied()){setError("Cancela la búsqueda Ranked antes de abrir otro combate.");return;}
 
     if (
       ["create", "join", "ready", "rematch"].includes(path) &&
-      (!deckId || !deckValid)
+      (!deckId || (!snapshot?.ranked && !deckValid))
     ) {
       setError("Corrige el mazo seleccionado antes de entrar a la arena.");
       return;
@@ -557,11 +596,16 @@ export function PvpScreen({
       } else renderSnapshot(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
+      if(path==='ready')setEntryPending(false);
     } finally {
       setBusy(false);
     }
   }
   async function exit() {
+    if(leaving.current||roomAction.current)return;
+    leaving.current=true;setBusy(true);
+    try {
+    if(!snapshot&&ranked.queue.state!=="IDLE"){onExit();return;}
     if (snapshot && !snapshot.result) {
       try {
         await api("leave", { code: snapshot.code });
@@ -576,7 +620,7 @@ export function PvpScreen({
       }
     }
     localStorage.removeItem(LAST_ROOM);
-    alive.current = false;
+    setSnapshot(null);setCode("");setEntryPending(false);ranked.reset();void ranked.refresh();
     connectionGeneration.current++;
     if (retry.current) clearTimeout(retry.current);
     retry.current = null;
@@ -587,6 +631,7 @@ export function PvpScreen({
     drawRitual.reset();
     oldSocket?.close();
     onExit();
+    } finally {leaving.current=false;setBusy(false);}
   }
   /** Ranked result → back to the ranked panel (the room is finished; nothing to leave). */
   function backToRanked() {
@@ -620,6 +665,20 @@ export function PvpScreen({
     });
     void ranked.refresh();
   }
+  const challengePending=!!snapshot?.ranked&&!snapshot.game&&!snapshot.result&&!snapshot.members[snapshot.seat]?.ready&&!versus&&!entryPending&&snapshot.expiresAt>clock;
+  const expiryChecked=useRef<string|null>(null);
+  useEffect(()=>{
+    if(!snapshot?.ranked||snapshot.game||snapshot.result||snapshot.expiresAt>clock||expiryChecked.current===snapshot.code)return;
+    expiryChecked.current=snapshot.code;
+    void api('state?code='+encodeURIComponent(snapshot.code)).then(data=>renderSnapshot(data)).catch(e=>{
+      if(latest.current?.code!==snapshot.code)return;
+      if(e.status!==404&&e.status!==410){expiryChecked.current=null;return;}
+      if(retry.current)clearTimeout(retry.current);retry.current=null;
+      localStorage.removeItem(LAST_ROOM);connectionGeneration.current++;socket.current?.close();socket.current=null;latest.current=null;setSnapshot(null);ranked.reset();void ranked.refresh();
+    });
+    // The server confirms expiration; no synthetic leave or competitive cancellation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[snapshot,clock]);
   const game = snapshot?.game, engine = useBattleStore((s) => s.engine);
   const playback = useBattleStore((s) => s.playbackBusy || s.introLocked);
   const presented = useMechanismPlayback((s) => s.state);
@@ -927,6 +986,7 @@ export function PvpScreen({
     return <PvpHistory onBack={() => setHistory(false)} />;
   return (
     <>
+      {challengePending&&snapshot&&<RankedChallenge key={snapshot.code} code={snapshot.code} expiresAt={snapshot.expiresAt} ready={snapshot.members[snapshot.seat]?.ready??false} busy={busy||versus} connected={network==='Conectado'&&snapshot.members.length===2&&snapshot.members.every(m=>m.connected)} error={error} onAccept={()=>{if(navigatePlay('pvp',{queue:'ranked'})){useBattleStore.getState().backToMenu();void action('ready');}}} onReject={()=>void exit()}/>}
       {versus && snapshot && (
         <PvpVersus
           room={snapshot}
@@ -934,7 +994,7 @@ export function PvpScreen({
           onCancel={() => finishVersus(false)}
         />
       )}
-      <div inert={versus} aria-hidden={versus}>
+      <div hidden={challengePending} inert={versus||challengePending} aria-hidden={versus||challengePending}>
         <PvpLobby
           mobile={mobile}
           room={snapshot}
