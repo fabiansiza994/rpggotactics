@@ -1,4 +1,46 @@
+# Dependencies and generated builds
 node_modules/
 dist/
-.wrangler/
+dist-*/
 *.tsbuildinfo
+.wrangler/
+.cache/
+.vite/
+coverage/
+playwright-report/
+test-results*/
+apk/
+*.apk
+*.aab
+.DS_Store
+
+# Local environment, credentials and machine settings
+.env
+.env.*
+!.env.example
+!.env.*.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.codex/
+.claude/
+.repository-consolidation-private/
+server/wrangler.support-qa.local.toml
+
+# Private evidence, candidate trees, audit reports, backups and listening labs.
+# Existing reviewed/versioned QA fixtures remain tracked; new evidence is private by default.
+/output/
+/qa/
+/backups/
+/private/
+/security-audit*/
+*.private.json
+*.private.toml
+*.private.log
+*.private.patch
+e2e/screenshots/
