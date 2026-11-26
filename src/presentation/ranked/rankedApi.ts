@@ -32,6 +32,7 @@ export type RankedProfile =
   | { enabled: false }
   | {
       enabled: true;
+      protection?:{serverNow:number;until:number;reason:'VOLUNTARY'|'PREVENTIVE'|null};
       rp: number;
       botHistory?: {
         matchId: string;

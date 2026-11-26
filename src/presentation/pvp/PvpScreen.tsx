@@ -1,3 +1,7 @@
+import {READINESS_PROTOCOL,type BattlePreparation}from'../../protocol/battleReadiness';
+import {useScenePreparation}from'../loading/scenePreparation';
+import {battleAudioSession}from'../audio/BattleAudioScene';
+import {audioExperimentEnabled}from'../audio/audio';
 import {BattleFrame} from '../battle/BattleFrame';
 import {BattleRail} from '../battle/BattleRails';
 import {OpponentChampion} from '../battle/OpponentChampion';
@@ -19,7 +23,7 @@ import { useMechanismPlayback } from "../mechanisms/mechanismPlayback";
 import { useMasteryBattleFeedback } from "../mastery/MasteryFeedback";
 import { PRESENTATION_CONTENT as DEFAULT_CONTENT } from "../qa/shapeshifter/runtime";
 import { PauseMenu } from "../react/components/PauseMenu";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   GameEngine,
   deckSummaries,
@@ -58,6 +62,7 @@ import type { RankedSnapshot } from "../ranked/rankedApi";
 import { pvpChampionRestriction } from "./eligibility";
 import { VictoryBadge } from "../ranked/RankedCosmetics";
 interface Snapshot {
+  preparation?:Pick<BattlePreparation,'id'|'phase'|'deadline'|'activeAt'>&{ready:boolean};
   mode: PvpMode;
   mapId: string;
   code: string;
@@ -123,8 +128,12 @@ const PROBE_MS = 10000,
 async function api(path: string, body?: unknown) {
   const session = loadSession();
   if (!session) throw Error("Inicia sesión para jugar PvP.");
+  if(path==='ready'){
+    const capability=await fetch(CLOUD_CONFIG.apiUrl+'/api/tactics/availability',{cache:'no-store'});const state=await capability.json();
+    if(!capability.ok||state.readinessProtocol!==READINESS_PROTOCOL)throw Error('Actualización en curso. Recarga el juego antes de iniciar otro combate.');
+  }
   const res = await fetch(
-    contentReleaseUrl(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/" + path),
+    contentReleaseUrl(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/" + path + (path.includes("?")?"&":"?")+"readinessProtocol="+READINESS_PROTOCOL),
     {
       method: body ? "POST" : "GET",
       headers: {
@@ -196,6 +205,21 @@ export function PvpScreen({
     window.addEventListener("rpggo-play-route", update);
     return () => window.removeEventListener("rpggo-play-route", update);
   }, []);
+  const boardPrepared=useScenePreparation(s=>s.boardReady),initialDialogues=useScenePreparation(s=>s.dialogues);
+  const initialDraw=useSyncExternalStore(drawRitual.subscribe,drawRitual.getSnapshot);
+  const readinessSent=useRef(0);
+  useEffect(()=>{
+    const prep=snapshot?.preparation,ws=socket.current;
+    if(!prep||prep.phase!=='PREPARING'||prep.ready||!boardPrepared||initialDialogues||initialDraw.phase!=='idle'||network!=='Conectado'||!ws||ws.readyState!==WebSocket.OPEN||document.hidden)return;
+    const frame=requestAnimationFrame(()=>{
+      const live=latest.current;if(live?.preparation?.phase!=='PREPARING'||live.matchId!==prep.id||document.hidden)return;
+      const hand=Array.from(document.querySelectorAll<HTMLElement>('.pvp-match-layout .hand .card'));
+      if(hand.length!==(live.game?.player.hand.length??0)||hand.some(c=>c.dataset.drawHidden==='true'||c.getBoundingClientRect().width===0)||!document.querySelector('.pvp-match-layout .hero-vitals'))return;
+      if(Date.now()-readinessSent.current<900)return;
+      readinessSent.current=Date.now();ws.send(JSON.stringify({type:'battle-ready',protocol:READINESS_PROTOCOL,matchId:prep.id}));
+    });
+    return()=>cancelAnimationFrame(frame);
+  },[snapshot,boardPrepared,initialDialogues,initialDraw.phase,network,clock]);
   // Ranked queue: a MATCHED ticket opens its server-created room like a joined code.
   const ranked = useRankedQueue((room) => {
     setQueueKind("RANKED");
@@ -235,6 +259,7 @@ export function PvpScreen({
   }, [rankedFinished]);
   function renderSnapshot(next: Snapshot, liveDraw = false) {
     const previousGame = latest.current?.game;
+    const previousPreparation=latest.current?.preparation;
     if (next.result) drawRitual.complete();
     if (next.version < lastRevision.current) return;
     const fresh = next.version > lastRevision.current;
@@ -271,6 +296,7 @@ export function PvpScreen({
         pairSelection: null,
         aim: null,
         introLocked: false,
+        readinessLocked:!!next.preparation&&next.preparation.phase!=='ACTIVE',
         introReached: ["unlock"],
         notice: null,
         onlineCommand: send,
@@ -288,6 +314,7 @@ export function PvpScreen({
           })),
       });
 
+      if(fresh&&liveDraw&&previousPreparation?.phase==='PREPARING'&&next.preparation?.phase==='ACTIVE'){useBattleStore.getState().showTurnBanner(state.activeFaction,state.round);if(audioExperimentEnabled)battleAudioSession.opening(`pvp:${pvpMatchKey(next)}`,state);}
       if (fresh && next.events.length)
         presentationBus.publish(next.events, state, {key:`pvp:${next.matchId??next.code}:${next.version}`,live:liveDraw,before:previousGame??undefined});
       if (fresh)
@@ -334,6 +361,7 @@ export function PvpScreen({
       const url = new URL(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/socket");
       url.searchParams.set("clientRelease", roomConnectionRelease(token.clientRelease));
       url.searchParams.set("botProtocol", BOT_POLICY_VERSION);
+      url.searchParams.set("readinessProtocol",READINESS_PROTOCOL);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       url.searchParams.set("code", room);
       url.searchParams.set("ticket", token.ticket);
@@ -603,12 +631,14 @@ export function PvpScreen({
     snapshot?.members[0]?.heroId ?? "",
     snapshot?.members[1]?.heroId ?? "",
   ] as const;
+  if(snapshot?.preparation?.phase==='ABORTED')return <section className="pvp-overlay" role="alert"><h2>No se pudo preparar el combate</h2><p>La preparación se canceló. No se registró resultado ni penalización de RP.</p><button type="button" onClick={()=>void exit()}>Volver</button></section>;
   if (game && engine)
     return (
       <div
         className={`pvp-match-layout ${matchFriend ? "has-friend-chat" : ""}`}
       >
         <BattleFrame
+          data-preparation={snapshot.preparation?.phase??"ACTIVE"}
           className="pvp-battle"
           data-pvp-mode={snapshot.mode}
           data-pvp-map={snapshot.mapId ?? "classic"}
@@ -687,6 +717,7 @@ export function PvpScreen({
             </div></BattleRail>
             <BattleRail slot="enemy"><OpponentChampion state={displayGame??game} content={engine.content}/></BattleRail>
           </header>
+          {snapshot.preparation?.phase==='PREPARING'&&<div className="battle-preparation-status" role="status">Preparando el campo de batalla… El turno aún no ha comenzado.</div>}
           <main className="battle-main">
             <div className="board-column">
               <BattleRail slot="piles"><BattlePileBank state={game} content={engine.content} opponent/></BattleRail>
@@ -719,6 +750,8 @@ export function PvpScreen({
           />
           <HandBar
             key={`hand:${pvpMatchKey(snapshot)}`}
+            audioBattleId={`pvp:${pvpMatchKey(snapshot)}`}
+            battleReady={!snapshot.preparation||snapshot.preparation.phase==='ACTIVE'}
             state={game}
             engine={engine}
           />

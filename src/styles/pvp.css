@@ -767,3 +767,9 @@
 .ranked-bot-offer p {font-size:12px;line-height:1.5;margin:8px 0;white-space:normal;}
 .ranked-panel-action .ranked-bot-offer small {display:block;max-width:none;white-space:normal;line-height:1.5;}
 .ranked-bot-offer button {width:100%;margin-top:10px;}
+
+.battle-preparation-status{position:absolute;z-index:25;top:max(84px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);padding:10px 18px;border:1px solid #bd995e;border-radius:12px;background:#101c2ced;color:#f5dfad;font-size:14px;text-align:center;pointer-events:none;}
+
+.ranked-cooldown{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,#101824,#201c18);border:1px solid #b28b45;border-radius:10px;padding:14px;color:#f0d79c;max-width:100%;overflow-wrap:anywhere}.ranked-cooldown>span{font-size:28px}.ranked-cooldown p{color:#d3ccbc;font-size:13px;line-height:1.5;margin:8px 0}.ranked-cooldown b{font-variant-numeric:tabular-nums}
+
+.pvp-lobby.ranked-mobile-21 .ranked-panel-action:has(.ranked-cooldown){max-height:calc(100dvh - 150px - env(safe-area-inset-bottom))}.pvp-lobby.ranked-mobile-21 .ranked-panel-action:has(.ranked-cooldown)>small{display:none}

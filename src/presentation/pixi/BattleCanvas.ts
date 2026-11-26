@@ -106,6 +106,7 @@ const PADDING = 20;
 const OCCLUDER_ALPHA = 0.42;
 
 export interface BattleCanvasCallbacks {
+  onVisualReady?():void;
   ultraEnabled?():boolean;
   onOpponentNotices?(rows: OpponentNotice[]): void;
   onImmersion?(view:AtmosphereView):void;
@@ -300,6 +301,7 @@ export class BattleCanvas {
   private readonly intro = new BattleIntroDirector((step) => this.callbacks.onIntroBeat(step.beat));
   /** The intro owns the root transform / canvas opacity until it has settled them once. */
   private introSettled = true;
+  private firstScenePresented=false;
   private readonly portraitQuery = window.matchMedia(
     '(orientation: portrait) and (max-width: 600px)',
   );
@@ -373,6 +375,11 @@ export class BattleCanvas {
     for(const [id,resource] of this.scoutResources)if(resource.tick(elapsed,this.effects.reduced)){resource.destroy();this.scoutResources.delete(id);}
     this.updateWizardFacing();
     this.syncActors(elapsed);
+    if(!this.firstScenePresented&&this.ready&&this.introSettled&&!this.assetGate.busy&&!this.director.busy&&!this.journey.active&&this.vm&&this.vm.state.units.filter(u=>u.hp>0).every(u=>this.units.has(u.id))){
+      this.firstScenePresented=true;
+      this.app.render();
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!this.destroyed)this.callbacks.onVisualReady?.();}));
+    }
   };
   private menuPaused = false;
   setImmersionFinished(finished:boolean):void {
@@ -568,10 +575,10 @@ export class BattleCanvas {
   private async prepareSceneAssets(vm: BoardViewModel): Promise<void> {
     const key=sceneAssetKey(vm.state);if(this.preparedScenes.has(key))return;
     loadingMark('scene-assets-start');
+    if(vm.state.units.some(u=>u.defId==='mage'||u.statuses.some(s=>s.id==='GLACIER_CLAW')))void loadClawRig().catch(()=>{});
     await Promise.all([
       loadPaintedCharacters(sceneAssetIds(vm.state)),
       prepareShieldMaterials(vm.state.units.filter(u=>u.shield>0).map(u=>u.shieldMaterial??'ENERGY')),
-      vm.state.units.some(u=>u.defId==='mage'||u.statuses.some(s=>s.id==='GLACIER_CLAW')) ? loadClawRig() : Promise.resolve(),
       this.mechanisms.prepare({...vm,mechanisms:mechanismView(vm.state)}),
       vm.state.mechanisms ? loadTempleEnvironment(vm.state) : Promise.resolve(),
     ]);
@@ -587,7 +594,7 @@ export class BattleCanvas {
       this.app.destroy(true, { children: true });
       return;
     }
-    if(this.vm&&this.callbacks.ultraEnabled?.()===true){this.arcaneView=new ArcaneRevealView(this.app,this.vm.content);if(readRevealRenderer()==='pixi')await this.arcaneView.prepare(revealWarmupCards(this.vm.content,this.vm.state)).catch((error:unknown)=>{selectRevealRenderer('css');console.warn('Ultra texture preparation unavailable; retaining CSS presentation.',error instanceof Error?error.message:'unknown');});}
+    if(this.vm&&this.callbacks.ultraEnabled?.()===true){this.arcaneView=new ArcaneRevealView(this.app,this.vm.content);if(readRevealRenderer()==='pixi')void this.arcaneView.prepare(revealWarmupCards(this.vm.content,this.vm.state)).catch((error:unknown)=>{selectRevealRenderer('css');console.warn('Ultra texture preparation unavailable; retaining CSS presentation.',error instanceof Error?error.message:'unknown');});}
     if(this.destroyed){this.app.destroy(true,{children:true});this.arcaneView?.destroy();return;}
     this.host = host;
     host.appendChild(this.app.canvas);

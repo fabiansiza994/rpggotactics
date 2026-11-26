@@ -1,3 +1,4 @@
+import {protectionRpc} from './rankedProtection';
 import {
   BOT_POLICY,
   type BotIdentity,
@@ -112,6 +113,12 @@ export async function rankedRoute(
       "La clasificatoria todavía no está disponible.",
     );
   }
+  let protection:Awaited<ReturnType<typeof protectionRpc>>={serverNow:now,until:0,reason:null};
+  if(['GET me','POST queue','GET queue','POST bot'].includes(route)){try{protection=await protectionRpc(env,caller.userId);}catch{return error(503,'PROTECTION_UNAVAILABLE','No se puede comprobar la disponibilidad Ranked. Reintenta.');}}
+  if(['POST queue','GET queue','POST bot'].includes(route)&&protection.until>now){
+    await env.DB.prepare('DELETE FROM tactics_ranked_queue WHERE user_id=? AND room_code IS NULL').bind(caller.userId).run();
+    return json({error:{code:'RANKED_COOLDOWN',message:'Búsqueda Ranked temporalmente restringida'},protection},429);
+  }
   const db = env.DB;
 
   if (PREMIUM_ROUTES.includes(route))
@@ -145,6 +152,7 @@ export async function rankedRoute(
       .all<{ tier_id: string }>();
     return json({
       enabled: true,
+      protection,
       config: rankedPublicConfig(),
       rp: row?.rp ?? 0,
       wins: row?.wins ?? 0,

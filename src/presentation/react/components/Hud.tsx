@@ -1,4 +1,5 @@
-import{audioHover}from'../../audio/audio';
+import {BattleAudioScene} from '../../audio/BattleAudioScene';
+import{audioHover,audioLeave}from'../../audio/audio';
 import {ScorpionRitualDialog} from './ScorpionRitualDialog';
 import {useHandInspection} from '../../cards/handInspection';
 import {championLabel} from '../../battle/championLabel';
@@ -313,7 +314,7 @@ export function EnemyPanel({
   );
 }
 
-export function HandBar({ state, engine }: { state: Readonly<GameState>; engine: GameEngine }) {
+export function HandBar({ state, engine, audioBattleId, battleReady=true }: { state: Readonly<GameState>; engine: GameEngine; audioBattleId?:string; battleReady?:boolean }) {
   const rails=useContext(BattleRailContext);
   const footerRef = useRef<HTMLElement>(null);
   const drawVisual=useDrawVisual();
@@ -389,6 +390,7 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
   const hintCard = hint && state.player.hand.find((c) => c.uid === inspected);
   return (
     <footer ref={footerRef} className="hand-bar" aria-busy={busy}>
+      <BattleAudioScene state={state} engine={engine} battleId={audioBattleId} serverReady={battleReady}/>
       <ScorpionRitualDialog state={state} engine={engine}/>
       <div className="mobile-combat-header" aria-label="Estado del combate">
         <div className="mobile-enemies">{state.units.filter(u => u.faction !== hero?.faction && u.hp > 0).map(u => <span key={u.id} title={engine.content.enemies[u.defId]?.name ?? u.defId} aria-label={`${engine.content.enemies[u.defId]?.name ?? u.defId}: ${u.hp} HP`}><b>{(engine.content.enemies[u.defId]?.name ?? u.defId).slice(0, 2)}</b><small>{u.hp}</small></span>)}</div>
@@ -467,8 +469,8 @@ export function HandBar({ state, engine }: { state: Readonly<GameState>; engine:
                 inspected={!discarding&&!state.responseWindow&&card.uid===inspection.uid} selected={silence.active ? false : discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
                 playable={silence.active || !block}
                 block={silence.active ? undefined : block}
-                onInspect={on=>{inspection.inspect(card.uid,on);if(on&&!busy&&!state.responseWindow&&!discarding&&!selectedCardUid)audioHover(activationBattle??engine,card.uid);}}
-                onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); inspection.remember(card.uid);setDetailUid(card.uid); }}
+                onInspect={on=>{inspection.inspect(card.uid,on);const epoch=audioBattleId??engine;if(on)audioHover(epoch,card.uid);else audioLeave(epoch,card.uid);}}
+                onLongInspect={silence.active ? undefined : () => { useBattleStore.getState().cancelAim(); inspection.remember(card.uid);audioLeave(audioBattleId??engine,card.uid);audioHover(audioBattleId??engine,card.uid);setDetailUid(card.uid); }}
                 onCancel={contextualCancel ? () => useBattleStore.getState().cancelAim() : undefined}
                 onClick={() => {
                   if(silence.active){silence.choose(card.uid);return;}

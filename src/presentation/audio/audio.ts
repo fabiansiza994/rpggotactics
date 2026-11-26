@@ -1,8 +1,9 @@
 import { runtimeAudioFiles, gatheringLoop } from './runtimeCatalog';
 import type{GameEvent}from'../../game';import type{PresentationBatch}from'../events/presentationBus';import{AudioManager}from'./AudioManager';import type{AudioCue}from'./catalog';
 export const audioExperimentEnabled=import.meta.env.VITE_ARCANE_AUDIO_ENABLED==='1';
-export const arcaneAudio=new AudioManager({files:runtimeAudioFiles,categories:{ranked_search_loop:'music'},gains:{card_hover:.12,ui_cancel:.45,card_activate:.6},loopBounds:gatheringLoop});
+export const arcaneAudio=new AudioManager({files:runtimeAudioFiles,categories:{ranked_search_loop:'music'},loopBounds:gatheringLoop});
 export function audioCue(cue:AudioCue){if(audioExperimentEnabled)arcaneAudio.play(cue);}
+export function audioLeave(epoch:unknown,uid:string){arcaneAudio.leaveHover(epoch,uid);}
 export function audioHover(epoch:unknown,uid:string){if(audioExperimentEnabled)arcaneAudio.hover(epoch,uid);}
 /** Shares the existing VFX queue's confirmed batch and cast beat, never predicts outcomes. */
 export class ConfirmedAudioPolicy{
@@ -17,7 +18,7 @@ export class RankedAudioSession{
  constructor(private audio:Pick<AudioManager,'startSearch'|'stopSearch'|'play'>=arcaneAudio,private enabled=audioExperimentEnabled){}
  begin(){this.intent=true;this.generation++;}
  update(queue:{state:string;since?:number;code?:string}){if(!this.enabled)return;if(queue.state==='SEARCHING'){this.searching=String(queue.since??this.generation);void this.audio.startSearch(this.searching);return;}this.audio.stopSearch();if(queue.state==='MATCHED'&&(this.intent||this.searching)){const key=queue.code;if(key&&!this.seen.has(key)){this.seen.add(key);if(this.seen.size>128)this.seen.delete(this.seen.values().next().value!);this.audio.play('ranked_match_found');}}this.searching=null;this.intent=false;}
- rejected(status:number){if([401,403,404,410,426,503].includes(status))this.terminal();}
+ rejected(status:number){if([401,403,404,410,426,429,503].includes(status))this.terminal();}
  terminal(){this.searching=null;this.intent=false;if(this.enabled)this.audio.stopSearch();}
  dispose(){this.terminal();}
 }

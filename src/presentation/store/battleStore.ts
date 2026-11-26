@@ -168,6 +168,7 @@ interface BattleStore {
    * intro director reaches `unlock`; the engine state is final and untouched meanwhile.
    */
   introLocked: boolean;
+  readinessLocked: boolean;
   introVariant: IntroVariant;
   /** Beats already reached by the current intro, in order. The DOM reveals itself from these. */
   introReached: IntroBeat[];
@@ -492,8 +493,8 @@ export const activeRun = (s: {
   s.mode === 'CAMPAIGN' ? s.run : s.mode === 'SKIRMISH' ? (s.skirmish?.run ?? null) : null;
 
 /** Any presentation sequence that must finish before the player acts again. */
-export const inputLocked = (s: { playbackBusy: boolean; introLocked: boolean; state?: Readonly<GameState> | null }): boolean =>
-  s.playbackBusy || s.introLocked || !!s.state?.responseWindow;
+export const inputLocked = (s: { playbackBusy: boolean; introLocked: boolean; readinessLocked?:boolean; state?: Readonly<GameState> | null }): boolean =>
+  s.playbackBusy || s.introLocked || !!s.readinessLocked || !!s.state?.responseWindow;
 let logId = 0;
 
 /**
@@ -1036,6 +1037,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     setPlaybackBusy: (playbackBusy) => set({ playbackBusy }),
     pulseHand: (count) => set((s) => ({ handPulse: s.handPulse + count })),
     introLocked: false,
+    readinessLocked: false,
     introVariant: 'FULL',
     introReached: [],
     introBeat: (beat) => {
@@ -1043,7 +1045,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
         introReached: [...s.introReached, beat],
         ...(beat === 'unlock' ? { introLocked: false } : {}),
       }));
-      if (beat === 'banner') get().showTurnBanner('PLAYER', get().state?.round ?? 1);
+      if (beat === 'banner'&&!(get().onlineCommand&&get().readinessLocked)) get().showTurnBanner('PLAYER', get().state?.round ?? 1);
     },
     turnBanner: null,
     showTurnBanner: (faction, round) =>

@@ -18,6 +18,7 @@ export function selectProvisional(cue: ProvisionalCue, variant: ProvisionalVaria
   try { localStorage.setItem(key, JSON.stringify({ ...provisionalSelections(), [cue]: variant })); } catch { /* Storage optional. */ }
 }
 export function runtimeAudioFiles(cue: AudioCue): string[] {
+  if(cue.startsWith('battle_'))return [`/audio/arcane-battle/v1/${cue}_A.mp3`];
   const variant = provisional.includes(cue as ProvisionalCue) ? provisionalSelections()[cue as ProvisionalCue] : 'A';
   const extension = cue === 'card_hover' ? '.wav' : '.mp3';
   // Alternative files exist only in DEV. Public delivery contains six selected files.

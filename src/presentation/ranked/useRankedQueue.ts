@@ -79,7 +79,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
       polling.current = true;
       const epoch = generation.current;
       void rankedApi.poll().then((r) => {
-        if (epoch === generation.current){if(r?.ok)apply(r.data.queue);else if(r)audio.rejected(r.error.status);}
+        if (epoch === generation.current){if(r?.ok)apply(r.data.queue);else if(r){audio.rejected(r.error.status);if(r.error.status===429){apply({state:"IDLE"});void refresh();}}}
         })
         .catch(() => {})
         .finally(() => {
@@ -87,8 +87,9 @@ export function useRankedQueue(onMatched: (code: string) => void) {
       });
     }, RANKED_RULES.queuePollMs);
     return () => clearInterval(timer);
-  }, [queue.state, apply, audio]);
+  }, [queue.state, apply, audio, refresh]);
 
+  useEffect(()=>{if(!profile?.enabled||!profile.protection?.until)return;const p=profile.protection,anchor=performance.now();const timer=setInterval(()=>{if(p.serverNow+performance.now()-anchor>=p.until)void refresh();},1000);return()=>clearInterval(timer);},[profile,refresh]);
   // Explicit consent only. The server still gives human pairing the final opportunity.
   async function acceptBot() {
     if (queue.state !== "SEARCHING" || !queue.botOffer || accepting.current === queue.since) return;
@@ -121,7 +122,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
       if(epoch !== generation.current) return;
     if (!r) {audio.terminal();setError("Inicia sesión para jugar clasificatoria.");}
     else if (r.ok) apply(r.data.queue);
-    else {audio.rejected(r.error.status);setError(r.error.message);}
+    else {audio.rejected(r.error.status);setError(r.error.message);if(r.error.status===429){apply({state:"IDLE"});await refresh();}}
     } catch {
       if (epoch === generation.current)
         setError("No se pudo actualizar la búsqueda.");
@@ -138,7 +139,7 @@ export function useRankedQueue(onMatched: (code: string) => void) {
     refresh,
     acceptBot,
     search: (heroId: string, deckId?: string) =>
-      {audio.begin();return run(() => rankedApi.join(heroId, deckId));},
+      {if(profile?.enabled&&profile.protection?.until)return refresh();audio.begin();return run(() => rankedApi.join(heroId, deckId));},
     cancel: () => run(() => rankedApi.cancel()),
     /** After a ranked room closes: forget the handed code so a new match can be handed. */
     reset: () => {

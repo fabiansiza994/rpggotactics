@@ -272,7 +272,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
   if (!path.startsWith('/api/tactics')) return error(404, 'NOT_FOUND', 'Not found');
   if (path === '/api/tactics/health') return json({ ok: true });
   if (path === '/api/tactics/availability' && request.method === 'GET') {
-    const response = json(maintenanceState(env));
+    const response = json({...maintenanceState(env),readinessProtocol:'battle-readiness-1'});
     response.headers.set('Cache-Control', 'no-store, max-age=0');
     return response;
   }

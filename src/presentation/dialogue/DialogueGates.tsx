@@ -1,5 +1,6 @@
+import{registerInitialDialogue}from'../loading/scenePreparation';
 import { DialoguePortrait } from './DialoguePortrait';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import type { GameContent } from '../../game';
 import { DIALOGUE_LIBRARY } from '../../game/data/dialogue';
 import {
@@ -43,6 +44,8 @@ function DialogueGate({
   sideOf?: (line: DialogueLine) => DialogueSide;
 }) {
   const [open, setOpen] = useState(play);
+  const preparationToken=useRef(Symbol('initial-dialogue'));
+  useEffect(()=>{const token=preparationToken.current;if(sequence.moment.toLowerCase().includes('intro'))registerInitialDialogue(token,open);return()=>registerInitialDialogue(token,false);},[sequence.moment,open]);
   useEffect(() => {
     if (open) seen.mark(sequence.id);
   }, [open, seen, sequence.id]);

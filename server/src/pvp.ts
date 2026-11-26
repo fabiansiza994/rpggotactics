@@ -1,3 +1,5 @@
+import {protectionRpc,type ProtectionEvent} from './rankedProtection';
+import {READINESS_PROTOCOL,newPreparation,preparationBlocks,acknowledgePreparation,abortPreparation,type BattlePreparation} from '../../src/protocol/battleReadiness';
 import { withDarkLightRelease } from '../../src/game/data/dark-light';
 import { SILENCE_RESPONSE_MS } from '../../src/game/domain/cards/silence';
 import {CONTENT_RELEASE,supportsRoomRelease,canRunRoomRules} from '../../src/game/pvp/content-release';
@@ -60,6 +62,7 @@ interface Storage {
   put(key: string, value: unknown): Promise<void>;
   setAlarm(time: number): Promise<void>;
   deleteAlarm(): Promise<void>;
+  delete?(key:string): Promise<boolean>;
   transaction?<T>(callback: (storage: Storage) => Promise<T>): Promise<T>;
 }
 interface RoomContext {
@@ -114,6 +117,7 @@ export interface Room {
   members: Member[];
   game: GameState | null;
   deadline: number | null;
+  preparation?: BattlePreparation & {protectionEvents?:{userId:number;event:ProtectionEvent}[];serverFault?:boolean};
   responseTurnRemainingMs?: number;
   result: {
     winner: number | null;
@@ -262,14 +266,15 @@ export async function pvpRoute(
     "X-Pvp-Bot-Protocol",
     new URL(request.url).searchParams.get("botProtocol") ?? "",
   );
+  headers.set('X-Pvp-Readiness',new URL(request.url).searchParams.get('readinessProtocol')??'');
   const room = env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code));
-  return room.fetch(
+  try{return await room.fetch(
     new Request("https://room/" + path.split("/").pop(), {
       method: "POST",
       headers,
       body: JSON.stringify({ ...body, code }),
     }),
-  );
+  );}catch(e){if(e instanceof Error&&e.message.includes('PROTECTION_UNAVAILABLE'))return response({error:{code:'PROTECTION_UNAVAILABLE',message:'No se puede comprobar la disponibilidad Ranked. Reintenta.'}},503);throw e;}
 }
 
 /**
@@ -401,6 +406,7 @@ export class PvPMatchRoom {
   private serial<T>(fn: () => Promise<T>): Promise<T> {
     const p = this.queue.then(fn).catch(async (error) => {
       this.room = (await this.ctx.storage.get<Room>("room")) ?? this.room;
+      if(this.room?.preparation?.phase==='PREPARING'&&error instanceof Error&&/D1_ERROR|SQLITE_|storage operation/i.test(error.message)){this.room.preparation.serverFault=true;await this.ctx.storage.put('room',this.room);}
       throw error;
     });
     this.queue = p.catch(() => {});
@@ -418,6 +424,7 @@ export class PvPMatchRoom {
     if (r.bot) {
       const active =
         !!r.game &&
+        !preparationBlocks(r.preparation) &&
         !r.result &&
         r.game.duel?.active === 1 &&
         !r.game.pendingCast &&
@@ -466,6 +473,7 @@ export class PvPMatchRoom {
     const times = [
       r.expiresAt,
       r.deadline,
+      r.preparation?.phase==='PREPARING'?r.preparation.deadline:null,
       r.game?.pendingCast?.deadline ?? null,
       r.bot?.nextDecisionAt ?? null,
       ...(r.game
@@ -489,6 +497,7 @@ export class PvPMatchRoom {
       version: r.version,
       expiresAt: r.expiresAt,
       deadline: r.deadline,
+      ...(r.preparation?{preparation:{id:r.preparation.id,phase:r.preparation.phase,deadline:r.preparation.deadline,activeAt:r.preparation.activeAt,ready:r.preparation.readySeats.includes(seat)}}:{}),
       seat,
       members: r.members.map((m, memberSeat) => ({
         name: m.name,
@@ -561,22 +570,41 @@ export class PvPMatchRoom {
       update = db
         .prepare("UPDATE tactics_pvp_rooms SET expires_at=? WHERE code=?")
         .bind(now, r.code);
-    if (!r.bot) {
-      await update.run();
-      return;
-    }
+    // Exact room identity: a late cleanup must never delete a new room's reservation.
     await db.batch([
       update,
-      db
-        .prepare("DELETE FROM tactics_match_reservations WHERE room_code=?")
-        .bind(r.code),
-      db
-        .prepare(
-          "UPDATE tactics_ranked_bot_encounters SET finished_at=COALESCE(finished_at,?) WHERE room_code=?",
-        )
-        .bind(now, r.code),
+      db.prepare("DELETE FROM tactics_match_reservations WHERE room_code=?").bind(r.code),
+      ...(r.bot?[db.prepare("UPDATE tactics_ranked_bot_encounters SET finished_at=COALESCE(finished_at,?) WHERE room_code=?").bind(now,r.code)]:[]),
     ]);
   }
+  private async cancelPreparation(now:number,actor?:number){
+    const r=this.room!,p=r.preparation;
+    if(!p||p.phase==='ACTIVE')return;
+    if(p.phase==='PREPARING'){
+      const suppressed=this.env.RELEASE2_MAINTENANCE==='1'||this.env.CONTENT_RELEASE_DRAIN==='1'||p.serverFault;
+      let seats:number[]=[];let kind:ProtectionEvent['kind']='VOLUNTARY';
+      if(r.ranked&&!suppressed){
+        if(actor!==undefined)seats=[actor];
+        else if(now>=p.deadline){kind='PREVENTIVE';const humans=r.members.flatMap((m,i)=>m.kind==='BOT'?[]:[i]);const unready=humans.filter(i=>!p.readySeats.includes(i));if(unready.length===1&&(r.bot||humans.some(i=>p.readySeats.includes(i))))seats=unready;}
+      }
+      p.protectionEvents=seats.filter(i=>r.members[i]?.kind!=='BOT').map(i=>({userId:r.members[i]!.id!,event:{id:r.matchId+':terminal:'+i,room:r.code,at:now,kind}}));
+    }
+    if(abortPreparation(p,now)){
+      r.deadline=null;r.game=null;r.expiresAt=now;r.version++;p.readySeats=[];
+      if(r.bot)r.bot.nextDecisionAt=null;
+      // Durable cancellation intent precedes D1 cleanup. If a later write fails,
+      // recovery can only retry cancellation, never acknowledge/start this match.
+      await this.save();
+    }
+    // Register before releasing D1 reservations: a new search cannot race past the policy.
+    // The durable outbox remains until success; duplicate RPCs do not extend a cooldown.
+    try{for(const item of p.protectionEvents??[])await protectionRpc(this.env,item.userId,item.event);}catch{await this.ctx.storage.setAlarm(Date.now()+1000);throw Error('PROTECTION_UNAVAILABLE');}
+    // One atomic D1 batch; safe to replay after a DO restart or partial failure.
+    await this.expireLobbyRegistration(r.expiresAt);
+    await this.ctx.storage.delete?.('initial:'+r.matchId);
+    await this.ctx.storage.deleteAlarm();
+  }
+
   private async finish(
     winner: number,
     reason: string,
@@ -1015,6 +1043,8 @@ export class PvPMatchRoom {
         return response({ ticket, code: r.code, clientRelease: r.contentRelease ?? CONTENT_RELEASE });
       }
       if (path === "/loadout" || path === "/ready") {
+        if(path==='/ready'&&request.headers.get('X-Pvp-Readiness')!==READINESS_PROTOCOL)return response({error:{code:'CLIENT_UPDATE_REQUIRED',message:'Recarga el juego para preparar el combate.'}},409);
+        if(r.preparation?.phase==='ABORTED')return response({error:{code:'PREPARATION_CANCELLED',message:'La preparación terminó. Inicia una búsqueda nueva.'}},409);
         if (r.game || r.result)
           return response(
             { error: { message: "La partida ya comenzó." } },
@@ -1087,6 +1117,7 @@ export class PvPMatchRoom {
           if (this.env.RELEASE2_CLIENT_REQUIRED === "1")
             r.contentRelease = CONTENT_RELEASE;
           r.rulesRelease = CONTENT_RELEASE;
+          if(r.ranked){for(const m of r.members.filter(m=>m.kind!=='BOT')){try{const p=await protectionRpc(this.env,m.id!);if(p.until>Date.now())return response({error:{code:'RANKED_COOLDOWN',message:'Búsqueda Ranked temporalmente restringida'},protection:p},429);}catch{return response({error:{code:'PROTECTION_UNAVAILABLE',message:'No se puede comprobar la disponibilidad Ranked. Reintenta.'}},503);}}}
           r.game = createDuel(
             r.members.map((m) => m.loadout) as [Loadout, Loadout],
             crypto.getRandomValues(new Uint32Array(1))[0]!,
@@ -1097,12 +1128,13 @@ export class PvPMatchRoom {
           );
           r.expiresAt = now + 24 * 3600000;
           r.firstPlayer = r.game.duel!.active;
-          r.startedAt = now;
+          r.startedAt = null;
+          r.preparation = newPreparation(r.matchId,now);
           await this.ctx.storage.put(
             "initial:" + r.matchId,
             structuredClone(r.game),
           );
-          r.deadline = now + 90000;
+          r.deadline = null;
           // started_at: social presence (IN_PVP) and invite busy checks (migration 0010).
           await this.env.DB.prepare(
             "UPDATE tactics_pvp_rooms SET expires_at=?, started_at=? WHERE code=?",
@@ -1114,7 +1146,8 @@ export class PvPMatchRoom {
         this.broadcast();
       }
       if (path === "/leave") {
-        if (r.game && !r.result) {
+        if(preparationBlocks(r.preparation)){await this.cancelPreparation(now,seat);this.broadcast();}
+        else if (r.game && !r.result) {
           // Ranked: walking out of a live match is a confirmed abandon (bigger RP penalty).
           await this.finish(1 - seat, r.ranked ? "ABANDONED" : "SURRENDER");
           this.broadcast();
@@ -1158,6 +1191,7 @@ export class PvPMatchRoom {
           r.startedAt = null;
           r.expiresAt = now + 30 * 60000;
           r.game = null;
+          delete r.preparation;
           r.result = null;
           r.commandCount = 0;
           r.rematch = [];
@@ -1183,6 +1217,7 @@ export class PvPMatchRoom {
       return response({}, 401);
     if (
       r.game &&
+      !preparationBlocks(r.preparation) &&
       !r.result &&
       r.members[t.seat]!.offlineAt !== null &&
       r.members[t.seat]!.offlineAt! + 60000 <= Date.now()
@@ -1246,6 +1281,7 @@ export class PvPMatchRoom {
     const r = this.room!;
     if (!canRunRoomRules(r)) throw Error("ROOM_RULES_UNAVAILABLE");
     if (!r.game || r.result) throw Error("BATTLE_OVER");
+    if(preparationBlocks(r.preparation))throw Error("BATTLE_PREPARING");
     if (
       typeof action.id !== "string" ||
       action.id.length > 80 ||
@@ -1362,7 +1398,19 @@ export class PvPMatchRoom {
           return;
         }
         const r = this.room!;
+        if(action.type==='battle-ready'){
+          const p=r.preparation;
+          if(!p||action.protocol!==READINESS_PROTOCOL||action.matchId!==r.matchId||r.members[seat]?.kind==='BOT'){ws.send(JSON.stringify({type:'snapshot',...this.view(seat)}));return;}
+          const required=r.members.flatMap((m,i)=>m.kind==='BOT'?[]:[i]);
+          if(required.some(i=>r.members[i]!.offlineAt!==null)){ws.send(JSON.stringify({type:'snapshot',...this.view(seat)}));return;}
+          const outcome=acknowledgePreparation(p,action.matchId,seat,required,Date.now());
+          if(outcome==='expired'){await this.cancelPreparation(Date.now());this.broadcast();return;}
+          if(outcome==='started'){r.startedAt=p.activeAt!;r.deadline=r.startedAt+90000;await this.env.DB.prepare('UPDATE tactics_pvp_rooms SET started_at=? WHERE code=?').bind(r.startedAt,r.code).run();}
+          if(outcome==='started'||outcome==='waiting'){r.version++;await this.save();this.broadcast();}else ws.send(JSON.stringify({type:'snapshot',...this.view(seat)}));
+          return;
+        }
         if (action.type === "surrender") {
+          if(preparationBlocks(r.preparation)){await this.cancelPreparation(Date.now(),seat);this.broadcast();return;}
           if (r.game && !r.result) {
             await this.finish(1 - seat, "SURRENDER");
             this.broadcast();
@@ -1405,6 +1453,7 @@ export class PvPMatchRoom {
       const seat = ws.deserializeAttachment().seat;
       if (!this.ctx.getWebSockets(String(seat)).some((s) => s !== ws)) {
         this.room!.members[seat]!.offlineAt = Date.now();
+        if(this.room!.preparation?.phase==='PREPARING')this.room!.preparation.readySeats=this.room!.preparation.readySeats.filter(s=>s!==seat);
         this.room!.version++;
         await this.save();
         this.broadcast();
@@ -1428,6 +1477,12 @@ export class PvPMatchRoom {
         return;
       }
       const now = Date.now();
+      if(r.preparation?.phase==='ABORTED'){await this.cancelPreparation(now);this.broadcast();return;}
+      if(r.preparation?.phase==='PREPARING'){
+        if(now>=r.preparation.deadline){await this.cancelPreparation(now);this.broadcast();await this.ctx.storage.deleteAlarm();}
+        else await this.save();
+        return;
+      }
       if (r.game?.pendingCast && r.game.pendingCast.deadline <= now) {
         const pending = r.game.pendingCast, seat = r.game.duel!.active === 0 ? 1 : 0;
         let command: Command = { type: 'SILENCE_RESPONSE', windowId: pending.id, pass: true };

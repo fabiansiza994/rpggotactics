@@ -1,10 +1,14 @@
 export const AUDIO_CUES = {
- ui_confirm:{category:'ui',duration:.38,gain:.64,limit:2,priority:1},
- ui_cancel:{category:'ui',duration:.32,gain:.52,limit:2,priority:1},
- card_hover:{category:'cards',duration:.14,gain:.32,limit:1,priority:0},
+ ui_confirm:{category:'ui',duration:.38,gain:.40,limit:2,priority:1},
+ ui_cancel:{category:'ui',duration:.32,gain:.25,limit:2,priority:1},
+ card_hover:{category:'cards',duration:.14,gain:.12,limit:1,priority:0},
  ranked_search_loop:{category:'matchmaking',duration:10,gain:.48,limit:1,priority:0},
  ranked_match_found:{category:'matchmaking',duration:2.6,gain:.85,limit:1,priority:3},
- card_activate:{category:'combat',duration:.72,gain:.64,limit:3,priority:2},
+ card_activate:{category:'combat',duration:.72,gain:.35,limit:3,priority:2},
+ battle_victory:{category:'combat',duration:5,gain:.65,limit:1,priority:4},
+ battle_defeat:{category:'combat',duration:5,gain:.55,limit:1,priority:4},
+ battle_turn_start:{category:'combat',duration:.8,gain:.30,limit:1,priority:2},
+ battle_enemy_turn:{category:'combat',duration:.6,gain:.15,limit:1,priority:1},
 } as const;
 export type AudioCue=keyof typeof AUDIO_CUES;
 export type AudioCategory='master'|'ui'|'cards'|'matchmaking'|'combat'|'music'|'effects';

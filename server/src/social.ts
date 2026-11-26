@@ -1,3 +1,4 @@
+import {emptyProtection,applyProtection,protectionView,type ProtectionState,type ProtectionEvent} from './rankedProtection';
 import {RANKED_SEASON} from '../../src/game/ranked/ranked';
 import {ensureProfileAvatar} from './profileAvatar';
 import { knownTitle } from './mastery';
@@ -1013,6 +1014,7 @@ interface HubContext {
  * no public route other than the ticketed socket, and never talks to a PvP room.
  */
 export class SocialHub {
+  private protectionQueue:Promise<unknown>=Promise.resolve();
   constructor(
     private ctx: HubContext,
     private env: Env,
@@ -1034,6 +1036,11 @@ export class SocialHub {
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if(url.pathname==='/ranked-protection'){
+      // Internal namespace RPC only: never routed from a public request or social socket.
+      const work=this.protectionQueue.then(async()=>{const now=Date.now();const body=await request.json() as {event?:ProtectionEvent};const state=(await this.ctx.storage.get<ProtectionState>('rankedProtection:v1'))??emptyProtection();state.events=state.events.filter(e=>e.at>now-1800000);if(body.event)applyProtection(state,body.event,now);await this.ctx.storage.put('rankedProtection:v1',state);return json(protectionView(state,now));});
+      this.protectionQueue=work.catch(()=>{});try{return await work;}catch{return json({error:{code:'PROTECTION_UNAVAILABLE'}},503);}
+    }
     if (url.pathname === '/ticket') {
       const userId = Number(request.headers.get('X-Social-User'));
       if (!Number.isSafeInteger(userId) || userId <= 0) return json({}, 401);

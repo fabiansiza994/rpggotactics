@@ -1,3 +1,4 @@
+import{protectionNamespace}from'./support/protection-hub';
 import { botTurnBudget } from "../src/game/ai/ranked-bot-policy";
 import { applyDuel } from "../src/game/pvp/duel";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -124,7 +125,7 @@ async function call(
     body = { acceptance: "MANUAL", ...body };
   const res = await handle(
     new Request(
-      `https://api.test/api/tactics${path}${path.includes("?") ? "&" : "?"}botProtocol=ranked-bots-1`,
+      `https://api.test/api/tactics${path}${path.includes("?") ? "&" : "?"}botProtocol=ranked-bots-1&readinessProtocol=battle-readiness-1`,
       {
         method,
         headers: {
@@ -137,6 +138,15 @@ async function call(
     env,
     deps,
   );
+  // These scheduler tests model a renderer that has finished preparation. Dedicated
+  // readiness tests exercise the held/expired barrier separately.
+  if(res.ok&&path==='/pvp/ready'&&body&&typeof body==='object'&&'code' in body){
+    const room=rooms.get(String(body.code));
+    const state=room?.data.get('room') as Room|undefined;
+    if(room&&state?.preparation?.phase==='PREPARING'){
+      for(const socket of room.sockets.filter(s=>!s.closed))await room.live.webSocketMessage(sock(socket),JSON.stringify({type:'battle-ready',protocol:'battle-readiness-1',matchId:state.matchId}));
+    }
+  }
   return { status: res.status, body: (await res.json()) as Json };
 }
 
@@ -181,6 +191,7 @@ beforeEach(() => {
     SUMMONER_RITUALS_ENABLED: "1",
     FREE_CATALOG_ENABLED: "1",
   };
+  env.SOCIAL_HUBS=protectionNamespace(env);
 });
 afterEach(() => vi.useRealTimers());
 

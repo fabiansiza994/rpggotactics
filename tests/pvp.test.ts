@@ -1,3 +1,7 @@
+import{protectionNamespace}from'./support/protection-hub';
+import{protectionRpc,type ProtectionState}from'../server/src/rankedProtection';
+import type{Env}from'../server/src/db';
+import{READINESS_PROTOCOL}from'../src/protocol/battleReadiness';
 import{competitiveFixture}from'./support/competitive-profile';
 import { describe, it, expect, vi } from 'vitest';
 import { endTurn } from './helpers';
@@ -41,12 +45,15 @@ function harness() {
   db.sql.exec(
     readFileSync(new URL('../server/migrations/0019_tactics_pvp_history.sql', import.meta.url), 'utf8'),
   );
+  db.sql.exec(readFileSync(new URL('../server/migrations/0030_tactics_ranked_bots.sql',import.meta.url),'utf8'));
+  addAccount(db,'readiness_a');addAccount(db,'readiness_b');
   const data = new Map<string, unknown>(),
     sockets: FakeSocket[] = [];
   let init = Promise.resolve();
   let alarm = 0;
   const ctx = {
     storage: {
+      delete:async(k:string)=>data.delete(k),
       get: async <T>(k: string) => structuredClone(data.get(k)) as T | undefined,
       put: async (k: string, v: unknown) => {
         data.set(k, structuredClone(v));
@@ -75,7 +82,7 @@ function harness() {
     return room.fetch(
       new Request('https://room/' + path, {
         method: 'POST',
-        headers: { 'X-Pvp-User': String(id), 'X-Pvp-Name': 'QA' + id },
+        headers: { 'X-Pvp-User': String(id), 'X-Pvp-Name': 'QA' + id, 'X-Pvp-Readiness':READINESS_PROTOCOL },
         body: JSON.stringify({
           code: 'ABCDEFGH',
           mode,
@@ -86,7 +93,7 @@ function harness() {
       }),
     );
   }
-  async function setup(mode = 'DUEL', mapId = 'classic') {
+  async function setup(mode = 'DUEL', mapId = 'classic',activate=true) {
     await call('create', 1, 'mage', mode, mapId);
     await call('join', 2, 'summoner');
     const a = new FakeSocket(0),
@@ -102,17 +109,18 @@ function harness() {
     await restarted.fetch(
       new Request('https://room/ready', {
         method: 'POST',
-        headers: { 'X-Pvp-User': '1' },
+        headers: { 'X-Pvp-User': '1','X-Pvp-Readiness':READINESS_PROTOCOL },
         body: JSON.stringify({ loadout: loads[0] }),
       }),
     );
     await restarted.fetch(
       new Request('https://room/ready', {
         method: 'POST',
-        headers: { 'X-Pvp-User': '2' },
+        headers: { 'X-Pvp-User': '2','X-Pvp-Readiness':READINESS_PROTOCOL },
         body: JSON.stringify({ loadout: loads[1] }),
       }),
     );
+    if(activate){const matchId=(data.get('room')as Room).matchId;for(const socket of[a,b])await restarted.webSocketMessage(socket as unknown as Parameters<typeof restarted.webSocketMessage>[0],JSON.stringify({type:'battle-ready',protocol:READINESS_PROTOCOL,matchId}));}
     return { live: restarted, a, b };
   }
   return { db, data, sockets, ctx, call, setup, alarm: () => alarm };
@@ -629,7 +637,7 @@ describe('Dominion authoritative room integration', () => {
     await live.fetch(
       new Request('https://room/loadout', {
         method: 'POST',
-        headers: { 'X-Pvp-User': '2' },
+        headers: { 'X-Pvp-User': '2','X-Pvp-Readiness':READINESS_PROTOCOL },
         body: JSON.stringify({ mode: 'DUEL', loadout: loads[1] }),
       }),
     );
@@ -738,7 +746,7 @@ describe('authoritative map and terrain security', () => {
     await live.fetch(
       new Request('https://room/loadout', {
         method: 'POST',
-        headers: { 'X-Pvp-User': '2' },
+        headers: { 'X-Pvp-User': '2','X-Pvp-Readiness':READINESS_PROTOCOL },
         body: JSON.stringify({ loadout: loads[1], mapId: 'classic', terrain: 'NORMAL' }),
       }),
     );
@@ -849,4 +857,70 @@ describe('PvP dialogue match id', () => {
     expect(last(a).matchId).toBe(stored.matchId);
     expect(last(b).matchId).toBe(stored.matchId);
   });
+});
+
+
+describe('Room visual-readiness admission',()=>{
+ it('holds state and clock; requires both authenticated seats; repeated/stale ACKs cannot restart time',async()=>{
+  const h=harness(),{live,a,b}=await h.setup('DUEL','classic',false),before=structuredClone(h.data.get('room')as Room);
+  expect(before.preparation?.phase).toBe('PREPARING');expect(before.deadline).toBeNull();expect(before.startedAt).toBeNull();
+  await live.webSocketMessage(a as unknown as Parameters<typeof live.webSocketMessage>[0],JSON.stringify({id:'early',version:before.version,command:{type:'END_TURN'}}));
+  expect(JSON.parse(a.messages.at(-1)!).message).toBe('BATTLE_PREPARING');expect((h.data.get('room')as Room).game).toEqual(before.game);
+  await live.alarm();expect((h.data.get('room')as Room).game).toEqual(before.game);
+  const ack=(socket:FakeSocket,id=before.matchId)=>live.webSocketMessage(socket as unknown as Parameters<typeof live.webSocketMessage>[0],JSON.stringify({type:'battle-ready',protocol:READINESS_PROTOCOL,matchId:id}));
+  await ack(a,'obsolete');expect((h.data.get('room')as Room).preparation?.readySeats).toEqual([]);
+  await ack(a);expect((h.data.get('room')as Room).deadline).toBeNull();await ack(a);expect((h.data.get('room')as Room).preparation?.readySeats).toEqual([0]);
+  await Promise.all([ack(b),ack(b)]);const active=h.data.get('room')as Room;expect(active.preparation?.phase).toBe('ACTIVE');expect(active.game).toEqual(before.game);expect(active.firstPlayer).toBe(before.firstPlayer);const deadline=active.deadline;await ack(a);expect((h.data.get('room')as Room).deadline).toBe(deadline);
+ });
+ it('cancels an expired preparation without settling a result or history',async()=>{
+  const h=harness(),{live}=await h.setup('DUEL','classic',false),r=h.data.get('room')as Room;
+  const now=vi.spyOn(Date,'now').mockReturnValue(r.preparation!.deadline+1);
+  try{await live.alarm();const after=h.data.get('room')as Room;expect(after.preparation?.phase).toBe('ABORTED');expect(after.result).toBeNull();expect(after.game).toBeNull();expect(after.deadline).toBeNull();expect(h.db.sql.prepare('SELECT count(*) n FROM tactics_pvp_matches').get()).toEqual({n:0});}finally{now.mockRestore();}
+ });
+});
+
+
+describe('preparation reservation recovery',()=>{
+ const roomState=(h:ReturnType<typeof harness>)=>h.data.get('room')as Room;
+ const ack=(live:PvPMatchRoom,s:FakeSocket,id:string)=>live.webSocketMessage(socketType(s),JSON.stringify({type:'battle-ready',protocol:READINESS_PROTOCOL,matchId:id}));
+ const cancel=(live:PvPMatchRoom,s:FakeSocket)=>live.webSocketMessage(socketType(s),JSON.stringify({type:'surrender'}));
+ it('atomically releases both reservations; repeated cancellation/late cleanup cannot release a new match',async()=>{
+  const h=harness(),{live,a,b}=await h.setup('DUEL','classic',false),r=roomState(h);
+  expect(h.db.sql.prepare('SELECT count(*) n FROM tactics_match_reservations WHERE room_code=?').get(r.code)).toEqual({n:2});
+  await Promise.all([cancel(live,a),cancel(live,b)]);
+  expect(roomState(h).preparation?.phase).toBe('ABORTED');expect(roomState(h).preparation?.readySeats).toEqual([]);expect(h.alarm()).toBe(0);expect(h.data.has('initial:'+r.matchId)).toBe(false);
+  expect(h.db.sql.prepare('SELECT count(*) n FROM tactics_match_reservations').get()).toEqual({n:0});
+  h.db.sql.prepare("INSERT INTO tactics_match_reservations(user_id,room_code,expires_at) VALUES(1,'NEXTROOM',?)").run(Date.now()+60000);
+  await live.alarm();await ack(live,a,r.matchId);await cancel(live,b);
+  expect(h.db.sql.prepare('SELECT room_code FROM tactics_match_reservations WHERE user_id=1').get()).toEqual({room_code:'NEXTROOM'});
+  expect(h.db.sql.prepare('SELECT count(*) n FROM tactics_pvp_matches').get()).toEqual({n:0});
+ });
+ it('cancel wins before last acknowledgement, and duplicate/late acknowledgements cannot start',async()=>{
+  const h=harness(),{live,a,b}=await h.setup('DUEL','classic',false),r=roomState(h);await ack(live,a,r.matchId);
+  await Promise.all([cancel(live,a),ack(live,b,r.matchId),cancel(live,b)]);
+  expect(roomState(h).preparation?.phase).toBe('ABORTED');expect(roomState(h).startedAt).toBeNull();expect(roomState(h).result).toBeNull();expect(h.alarm()).toBe(0);
+ });
+ it('acknowledgement wins before cancellation: active match uses normal result path, never reservation-only abort',async()=>{
+  const h=harness(),{live,a,b}=await h.setup('DUEL','classic',false),r=roomState(h);await ack(live,a,r.matchId);
+  await Promise.all([ack(live,b,r.matchId),cancel(live,a)]);
+  expect(roomState(h).preparation?.phase).toBe('ACTIVE');expect(roomState(h).result).not.toBeNull();
+ });
+ it('deadline wins over concurrent acknowledgement, reconnect and repeated alarms',async()=>{
+  const h=harness(),{live,a,b}=await h.setup('DUEL','classic',false),r=roomState(h),now=vi.spyOn(Date,'now').mockReturnValue(r.preparation!.deadline);
+  try{await Promise.all([live.alarm(),ack(live,a,r.matchId),ack(live,b,r.matchId)]);await live.webSocketClose(socketType(a));await live.alarm();expect(roomState(h).preparation?.phase).toBe('ABORTED');expect(roomState(h).result).toBeNull();expect(h.alarm()).toBe(0);expect(h.db.sql.prepare('SELECT count(*) n FROM tactics_match_reservations').get()).toEqual({n:0});}finally{now.mockRestore();}
+ });
+ it('durable abort intent recovers a failed D1 batch without reopening preparation',async()=>{
+  const h=harness(),{live,a,b}=await h.setup('DUEL','classic',false),r=roomState(h);const failure=vi.spyOn(h.db,'batch').mockRejectedValueOnce(Error('local injected DB failure'));
+  await cancel(live,a);expect(a.messages.some(m=>JSON.parse(m).type==='error')).toBe(true);failure.mockRestore();
+  expect(roomState(h).preparation?.phase).toBe('ABORTED');const restarted=new PvPMatchRoom(h.ctx as unknown as ConstructorParameters<typeof PvPMatchRoom>[0],{DB:h.db});
+  await restarted.alarm();await ack(restarted,b,r.matchId);expect(roomState(h).preparation?.phase).toBe('ABORTED');expect(h.db.sql.prepare('SELECT count(*) n FROM tactics_match_reservations').get()).toEqual({n:0});expect(h.alarm()).toBe(0);
+ });
+});
+
+
+describe('preparation protection attribution and recovery',()=>{
+ async function fixture(){const h=harness(),base=await h.setup('DUEL','classic',false),r=h.data.get('room')as Room;r.ranked={rp:[0,0],outcome:null};const env={DB:h.db}as Env,hub=protectionNamespace(env);env.SOCIAL_HUBS=hub;const live=new PvPMatchRoom(h.ctx as unknown as ConstructorParameters<typeof PvPMatchRoom>[0],env);await Promise.resolve();return{h,...base,live,r,env,hub};}
+ it('voluntary actor only, idempotent across policy hub restart and retry',async()=>{const f=await fixture();await f.live.webSocketMessage(socketType(f.a),JSON.stringify({type:'surrender'}));f.hub.restart('user:1');await f.live.alarm();const state=f.hub.peek('user:1')as ProtectionState;expect(state.events).toHaveLength(1);expect(state.events[0]!.kind).toBe('VOLUNTARY');expect((await protectionRpc(f.env,2)).until).toBe(0);expect((f.hub.peek('user:2')as ProtectionState).events).toHaveLength(0);});
+ it.each(['one-ready','both-unready','server-fault','maintenance']as const)('timeout attribution %s uses only server evidence',async mode=>{const f=await fixture();const stored=f.h.data.get('room')as Room;stored.preparation!.readySeats=mode==='both-unready'?[]:[1];stored.preparation!.serverFault=mode==='server-fault';if(mode==='maintenance')f.env.RELEASE2_MAINTENANCE='1';const live=new PvPMatchRoom(f.h.ctx as unknown as ConstructorParameters<typeof PvPMatchRoom>[0],f.env);const now=vi.spyOn(Date,'now').mockReturnValue(stored.preparation!.deadline);try{await live.alarm();await protectionRpc(f.env,1);await protectionRpc(f.env,2);expect((f.hub.peek('user:1')as ProtectionState).events.map(e=>e.kind)).toEqual(mode==='one-ready'?['PREVENTIVE']:[]);expect((f.hub.peek('user:2')as ProtectionState).events).toEqual([]);}finally{now.mockRestore();}});
+ it('temporary policy failure retains reservations, retries durable event once, then releases',async()=>{const f=await fixture();const original=f.env.SOCIAL_HUBS!;f.env.SOCIAL_HUBS={...original,get:()=>({fetch:async()=>new Response('{}',{status:503})})};await f.live.webSocketMessage(socketType(f.a),JSON.stringify({type:'surrender'}));expect((f.h.data.get('room')as Room).preparation!.phase).toBe('ABORTED');expect(f.h.db.sql.prepare('SELECT count(*) n FROM tactics_match_reservations').get()).toEqual({n:2});f.env.SOCIAL_HUBS=original;await f.live.alarm();await f.live.alarm();expect(f.b.messages.some(m=>JSON.parse(m).preparation?.phase==='ABORTED')).toBe(true);expect((f.hub.peek('user:1')as ProtectionState).events).toHaveLength(1);expect(f.h.db.sql.prepare('SELECT count(*) n FROM tactics_match_reservations').get()).toEqual({n:0});});
 });

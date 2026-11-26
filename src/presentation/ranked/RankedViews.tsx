@@ -95,6 +95,8 @@ export function RankedPanel({
   onCancel: () => void;
   onAcceptBot?: () => void;
 }) {
+  const protection=profile.protection;
+  const cooldown=!!protection?.until;
   const rank = rankFor(profile.rp);
   const searching = queue.state === "SEARCHING";
   const elapsed = useElapsed(searching ? queue.since : null);
@@ -165,7 +167,7 @@ export function RankedPanel({
           <>
             <button
               className="lobby-primary"
-              disabled={busy || !!blocked}
+              disabled={busy || !!blocked || cooldown}
               onClick={onSearch}
             >
               Buscar partida
@@ -175,6 +177,7 @@ export function RankedPanel({
             </small>
           </>
         )}
+        {cooldown&&<section className="ranked-cooldown" role="status"><span aria-hidden="true">◷</span><div><strong>{protection?.reason==='PREVENTIVE'?'Pausa temporal de búsqueda':'Búsqueda Ranked temporalmente restringida'}</strong><p>{protection?.reason==='PREVENTIVE'?'Varias partidas no han podido completar su preparación. Comprueba tu conexión antes de volver a buscar rival.':'Has cancelado varias partidas durante la preparación. Podrás volver a buscar rival cuando finalice el tiempo de espera.'}</p><CooldownClock key={protection?.serverNow} until={protection!.until} serverNow={protection!.serverNow}/></div></section>}
         {error && (
           <p className="lobby-error" role="alert">
             {error}
@@ -382,3 +385,5 @@ export function RankedHistoryBadge({
     </span>
   );
 }
+
+function CooldownClock({until,serverNow}:{until:number;serverNow:number}){const [clock,setClock]=useState(serverNow);useEffect(()=>{const anchor=performance.now();const timer=setInterval(()=>setClock(serverNow+performance.now()-anchor),500);return()=>clearInterval(timer);},[serverNow]);const seconds=Math.max(0,Math.ceil((until-clock)/1000));return <b>{seconds?`Disponible en ${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`:'Comprobando disponibilidad…'}</b>;}

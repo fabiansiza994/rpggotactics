@@ -89,11 +89,12 @@ export function DialogueOverlay({ sequence, content, mode, sideOf, onClose, onCu
     return () => window.removeEventListener('keydown', onKey, true);
   }, [mode]);
 
+  const ambientHoldMs=line?Math.min(2600,Math.max(1400,autoAdvanceMs(line)*.55)):0;
   useEffect(() => {
-    if (mode !== 'ambient' || !line) return;
-    const timer = setTimeout(() => actions.current.advance(), Math.min(2600, Math.max(1400, autoAdvanceMs(line) * .55)));
+    if (mode !== 'ambient' || !ambientHoldMs) return;
+    const timer = setTimeout(() => actions.current.advance(), ambientHoldMs);
     return () => clearTimeout(timer);
-  }, [mode, line]);
+  }, [mode, sequence.id, index, ambientHoldMs]);
 
   useEffect(() => {
     if (mode !== 'modal') return;

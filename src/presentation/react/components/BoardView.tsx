@@ -1,3 +1,4 @@
+import {useScenePreparation} from '../../loading/scenePreparation';
 import {BattleRail} from '../../battle/BattleRails';
 import {RedemptionControls,type RedemptionSelection} from './RedemptionControls';
 import {refreshRevealControl,setRevealAccount,revealEnabled} from '../../cards/revealControl';
@@ -47,7 +48,9 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
     const holdState=hold.current;
     if (!host) return;
     const { setHoverTile, clickTile, tapTile, cancelAim } = useBattleStore.getState();
+    useScenePreparation.setState({boardReady:false,presentedId:null});
     const canvas = new BattleCanvas({
+      onVisualReady:()=>{useScenePreparation.setState({boardReady:true});},
       ultraEnabled:revealEnabled,
       onImmersion:next=>setImmersion(previous=>previous.hp===next.hp&&previous.max===next.max&&previous.finished===next.finished&&previous.rooted===next.rooted&&previous.frozen===next.frozen&&previous.burning===next.burning&&previous.terrain===next.terrain?previous:next),
       onOpponentNotices: rows => setNotices(previous => JSON.stringify(previous)===JSON.stringify(rows)?previous:rows),
@@ -110,6 +113,7 @@ export function BoardView({ focusedEnemyId, finished = false, menuPaused = false
     const off = presentationBus.subscribe((events, state, batch) => canvas.playEvents(events,
       archerBattlePreviewEnabled && useBattleStore.getState().onlineCommand===null ? archerPresentationState(state) : state, batch));
     return () => {
+      useScenePreparation.setState({boardReady:false,presentedId:null});
       disposed=true;offAccount();offSupport();off();if(holdState.timer)clearTimeout(holdState.timer);
       canvas.destroy();
       canvasRef.current = null;
