@@ -247,3 +247,32 @@ body .battle.premium-battle .tactical-map-cell.terrain-ice{background:#376e86;bo
   max-width:calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
  }
 }
+
+/* Targeting actions occupy the existing HUD, never a floating strip over the board. */
+body .battle.premium-battle .mobile-aim-controls {
+  position: static; inset: auto; transform: none; width: auto; max-width: 100%;
+  height: auto; min-height: 44px; margin: 0; padding: 0; background: none;
+  border: 0; border-radius: 0; box-shadow: none; display: flex; gap: 8px;
+  justify-content: flex-end; pointer-events: auto;
+}
+@media (max-width:899px), (max-height:599px) {
+  body .battle.premium-battle .mobile-aim-controls {
+    position: fixed; top: calc(6px + env(safe-area-inset-top));
+    right: calc(60px + env(safe-area-inset-right)); left: auto; bottom: auto;
+    z-index: 17; max-width: 160px; height: 44px;
+  }
+  body .battle.premium-battle:has(.mobile-aim-controls) .mobile-combat-header { padding-right: 204px; }
+  body .battle.premium-battle .mobile-aim-controls button.aim-activate {
+    flex: 0 1 auto; width: auto; min-width: 64px; max-width: 100px;
+    height: 44px; min-height: 44px; flex-direction: row; padding: 4px 6px;
+  }
+  body .battle.premium-battle .mobile-aim-controls button.aim-activate .card-activation-icon { width: 18px; height: 20px; }
+}
+/* Compact landscape/tablet layouts reuse the turn-action gutter below the board. */
+@media (min-width:601px) and (max-width:899px), (orientation:landscape) and (max-height:599px) {
+  body .battle.premium-battle .mobile-aim-controls {
+    top: auto; bottom: calc(12px + env(safe-area-inset-bottom));
+    right: calc(12px + env(safe-area-inset-right));
+  }
+  body .battle.premium-battle:has(.mobile-aim-controls) .end-turn-box { visibility: hidden; pointer-events: none; }
+}

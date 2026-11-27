@@ -85,13 +85,16 @@ export function drawRanges(g: Graphics, proj: GridProjection, vm: BoardViewModel
       .stroke({ color: PALETTE.moveRange, alpha: vm.mechanisms && !vm.hoverTile ? 0.22 : 0.52, width: 1.35 });
   }
   for (const p of vm.targetTiles) {
-    const enemy = vm.state.units.some(
-      (u) => u.faction === 'ENEMY' && u.pos.x === p.x && u.pos.y === p.y,
+    const occupied = vm.state.units.some(
+      (u) => u.pos.x === p.x && u.pos.y === p.y,
     );
-    const tone = enemy ? PALETTE.intentThreat : PALETTE.targetRange;
+    const tone = vm.targetTheme === 'LIGHT' ? 0xffe39a : vm.targetTheme === 'DARK' ? 0xa46be0 : vm.targetElement ? targetingColors[vm.targetElement] : PALETTE.targetRange;
     g.poly(pts(proj.getInsetPolygon(p, 0.04)))
-      .fill({ color: tone, alpha: 0.055 })
-      .stroke({ color: tone, alpha: 0.72, width: 1.6 });
+      .fill({ color: tone, alpha: 0.10 })
+      .stroke({ color: 0x07101b, alpha: 0.85, width: 4 })
+      .stroke({ color: tone, alpha: 0.95, width: 2.2 });
+    corners(g, proj, p, tone, 0.95);
+    if (vm.unitTargeting && occupied) groundCircle(g, proj, p.x + 0.5, p.y + 0.5, 0.28).stroke({ color: tone, width: 2.2, alpha: 0.95 });
     diamond(g, proj, p.x + 0.5, p.y + 0.84, 0.045).stroke({
       color: tone,
       width: 1.5,

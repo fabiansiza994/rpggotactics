@@ -137,3 +137,33 @@ button.onb-card:hover, button.onb-card:focus-visible { border-color: #d8b56a; }
 }
 @media (max-width: 599px) { .onboarding-dialog { padding: 18px; } .onb-portrait { height: 190px; } }
 @media (prefers-reduced-motion: reduce) { .onb-card, .onb-unlock[open] { transition: none; animation: none; } .onb-card.is-selected::after { animation: none; } }
+
+/* A fixed header/footer frame; only the champion content scrolls, in every entry flow. */
+.onboarding-dialog[open] {
+  display: flex; flex-direction: column; box-sizing: border-box;
+  inset: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  margin: auto;
+  width: min(1040px, calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+  max-width: calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: hidden; padding: clamp(12px, 2vmin, 24px); gap: 8px;
+}
+.onboarding-dialog .onb-header { flex: none; min-width: 0; }
+.onboarding-dialog .onb-header p { margin-bottom: 0; }
+.onboarding-dialog .onb-content { flex: 1 1 auto; min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 4px; }
+.onboarding-dialog .onb-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); overflow: visible; margin: 0; padding: 4px; gap: 12px; scroll-snap-type: none; }
+.onboarding-dialog .onb-card { width: 100%; min-width: 0; min-height: 0; box-sizing: border-box; flex-direction: column; }
+.onboarding-dialog .onb-portrait { width: 100%; height: clamp(100px, 24dvh, 220px); flex-shrink: 0; }
+.onboarding-dialog .onb-card-text { min-width: 0; overflow-wrap: anywhere; }
+.onboarding-dialog .onb-tagline { display: block; }
+.onboarding-dialog .confirm-actions { flex: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding-top: 10px; border-top: 1px solid #b7996070; }
+.onboarding-dialog .confirm-actions button { flex: 1 1 130px; min-width: 0; min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 599px), (max-height: 500px) {
+  .onboarding-dialog .onb-card { flex-direction: row; align-items: center; text-align: left; }
+  .onboarding-dialog .onb-portrait { width: 30%; height: clamp(88px, 22dvh, 150px); }
+  .onboarding-dialog .onb-card-text { flex: 1; padding: 10px; }
+  .onboarding-dialog .onb-name { font-size: 20px; }
+  .onboarding-dialog .onb-role, .onboarding-dialog .onb-tagline { font-size: 12px; }
+  .onboarding-dialog .onb-header h2 { font-size: 22px; }
+}

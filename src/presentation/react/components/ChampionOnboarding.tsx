@@ -121,12 +121,13 @@ function FirstChampionChoice({mobile=false}:{mobile?:boolean}) {
     <Dialog label="Elige tu campeón" className={`onb-first${mobile?' onb-mobile':''}`}>
       {!confirming ? (
         <>
-          <span className="onb-eyebrow">Tu primera aventura</span>
+          <header className="onb-header"><span className="onb-eyebrow">Tu primera aventura</span>
           <h2>Elige tu campeón</h2>
           <p>
             Empiezas con uno. Los demás siguen visibles y se desbloquean avanzando en la campaña: al completar el{' '}
             {encounterLabel(second.encounters)} eliges el siguiente.
           </p>
+          </header><div className="onb-content">
           <div className="onb-cards" role="group" aria-label="Campeones disponibles">
             {available.map((id) => (
               <ChampionCard key={id} heroId={id} selected={picked === id} onSelect={() => setPicked(id)} />
@@ -134,7 +135,7 @@ function FirstChampionChoice({mobile=false}:{mobile?:boolean}) {
           </div>
           {picked && <button type="button" className="db-btn onb-preview" aria-expanded={preview} onClick={() => setPreview(!preview)}>Ver mazo inicial · {DEFAULT_CONTENT.heroes[picked]!.name}</button>}
           {preview && picked && <StarterDeck heroId={picked} />}
-          <div className="confirm-actions">
+          </div><div className="confirm-actions">
             {mobile&&picked&&<p className="onb-choice-summary" role="status">Elegido: <strong>{DEFAULT_CONTENT.heroes[picked]!.name}</strong><small>{championOf(picked)?.role}</small></p>}
             {guest && (
               <button type="button" className="account-link onb-signin" onClick={() => openAccountView('LOGIN')}>
@@ -148,9 +149,9 @@ function FirstChampionChoice({mobile=false}:{mobile?:boolean}) {
         </>
       ) : (
         <>
-          <span className="onb-eyebrow">Has elegido</span>
+          <header className="onb-header"><span className="onb-eyebrow">Has elegido</span>
           <h2>{DEFAULT_CONTENT.heroes[picked!]!.name}</h2>
-          <div className="onb-confirm">
+          </header><div className="onb-content"><div className="onb-confirm">
             <ChampionCard heroId={picked!} />
             <StarterDeck heroId={picked!} />
           </div>
@@ -160,6 +161,7 @@ function FirstChampionChoice({mobile=false}:{mobile?:boolean}) {
               {error}
             </p>
           )}
+          </div>
           <div className="confirm-actions">
             <button type="button" className="db-btn" disabled={busy} onClick={() => setConfirming(false)}>
               Volver
@@ -194,13 +196,14 @@ function ChampionUnlockDialog({ onLater }: { onLater(): void }) {
   }
   return (
     <Dialog label={reveal ? 'Nuevo campeón desbloqueado' : 'Desbloquea un nuevo campeón'} className="onb-unlock" onClose={onLater}>
-      <span className="onb-eyebrow">Has completado el {encounterLabel(milestone.encounters)}</span>
+      <header className="onb-header"><span className="onb-eyebrow">Has completado el {encounterLabel(milestone.encounters)}</span>
       <h2>{reveal ? 'Nuevo campeón desbloqueado' : 'Desbloquea un nuevo campeón'}</h2>
       <p>
         {reveal
           ? 'Se une a tu grupo. Empieza su propia campaña desde el Encuentro I.'
           : `Elige uno. Empieza su propia campaña desde el Encuentro I.${next ? ` El otro se desbloquea al completar el ${encounterLabel(next.encounters)}.` : ''}`}
       </p>
+      </header><div className="onb-content">
       <div className="onb-cards" role="group" aria-label="Campeones">
         {pending.options.map((id) =>
           reveal ? <ChampionCard key={id} heroId={id} /> : <ChampionCard key={id} heroId={id} selected={picked === id} onSelect={() => setPicked(id)} />,
@@ -211,6 +214,7 @@ function ChampionUnlockDialog({ onLater }: { onLater(): void }) {
           {error}
         </p>
       )}
+      </div>
       <div className="confirm-actions">
         <button type="button" className="db-btn" disabled={busy} onClick={onLater}>
           Más tarde

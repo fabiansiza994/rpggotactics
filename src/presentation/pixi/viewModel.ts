@@ -25,6 +25,9 @@ export interface BoardViewModel {
   hoverPath: Pos[];
   /** Selectable tiles for the selected card. */
   targetTiles: Pos[];
+  /** Selected card identity, independent of the current hover target. */
+  targetElement?: import('../../game/domain/cards/card').VisualElement;
+  targetTheme?: 'LIGHT' | 'DARK';
   unitTargeting?: boolean;
   /** Resolved area for the hovered target (null if nothing hovered / no card). */
   preview: {

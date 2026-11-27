@@ -1000,7 +1000,7 @@ export class BattleCanvas {
     this.templeEnvironment.react(vm.state);
     this.drawUnits(vm); // Persistent art; update status chrome only when its data changes.
     this.drawPickups(vm);
-    const rangesKey = JSON.stringify([vm.moveTiles.map((n) => n.pos), vm.targetTiles, vm.mechanisms ? !!vm.hoverTile : false]);
+    const rangesKey = JSON.stringify([vm.moveTiles.map((n) => n.pos), vm.targetTiles, vm.targetElement, vm.targetTheme, vm.unitTargeting, vm.mechanisms ? !!vm.hoverTile : false]);
     if (rangesKey !== this.lastRangesKey) {
       clearLayer(this.tileLayer);
       const g = new Graphics();

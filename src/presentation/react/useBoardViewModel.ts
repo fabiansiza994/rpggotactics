@@ -95,6 +95,8 @@ export function useBoardViewModel(focusedEnemyId: string | null): BoardViewModel
       moveTiles: base.moveTiles,
       hoverPath,
       targetTiles: base.targetTiles,
+      targetElement: selectedCardUid?.startsWith('redemption:') ? 'ARCANE' : engine.content.cards[selectedId ?? '']?.presentation?.element,
+      targetTheme: selectedCardUid?.startsWith('redemption:') || selectedId?.startsWith('light_') ? 'LIGHT' : selectedId?.startsWith('dark_') ? 'DARK' : undefined,
       unitTargeting,
       preview,
       intents: base.intents,
