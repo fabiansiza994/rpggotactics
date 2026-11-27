@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import type { D1Database, D1PreparedStatement } from "../../server/src/db";
 
@@ -14,7 +15,7 @@ CREATE TABLE sessions (token TEXT PRIMARY KEY, username TEXT NOT NULL, created_a
  * unlocks (migration 0012 backfill: open roster) — for suites about other features.
  */
 export function memoryD1(
-  options: { legacyProfiles?: boolean; bots?: boolean; storyTransition?:boolean;storyVersioning?:boolean } = {},
+  options: { legacyProfiles?: boolean; bots?: boolean; storyTransition?:boolean;storyVersioning?:boolean; sessionDigest?: boolean; storyAttempts?: boolean; importClaims?: boolean } = {},
 ): D1Database & { sql: DatabaseSync } {
   const sql = new DatabaseSync(":memory:");
   sql.exec("PRAGMA foreign_keys = ON;");
@@ -46,6 +47,15 @@ export function memoryD1(
     );
   if(options.storyTransition!==false){sql.exec(readFileSync(new URL('../../server/migrations/0035_tactics_story_transition.sql',import.meta.url),'utf8'));sql.exec("UPDATE tactics_winter_transition SET phase='ACTIVE' WHERE id=1");}
   if(options.storyTransition!==false&&options.storyVersioning!==false){sql.exec(readFileSync(new URL('../../server/migrations/0036_tactics_story_rule_versions.sql',import.meta.url),'utf8'));sql.exec("UPDATE tactics_story_rule_transition SET phase='ACTIVE' WHERE id=1");}
+  // Security Hardening 1.0: opt-in so suites that insert positional session rows keep working.
+  if (options.sessionDigest) sql.exec(readFileSync(new URL('../../server/migrations/0037_tactics_session_token_digest.sql', import.meta.url), 'utf8'));
+  // 0039 is part of the migrated schema (STRICT import needs it); `importClaims: false` models a
+  // Worker deployed before the migration.
+  if (options.importClaims !== false) sql.exec(readFileSync(new URL('../../server/migrations/0039_tactics_import_claims.sql', import.meta.url), 'utf8'));
+  // SEC-006: 0038 (dormant, superseded) + 0040 (admission ledger and receipts), as migrated in order.
+  if (options.storyAttempts)
+    for (const file of ['0038_tactics_story_attempt_seeds.sql', '0040_tactics_story_attempt_receipts.sql'])
+      sql.exec(readFileSync(new URL(`../../server/migrations/${file}`, import.meta.url), 'utf8'));
   if (options.bots)
     for (const file of [
       "0004_pvp.sql",
@@ -111,4 +121,20 @@ export function addAccount(
     )
     .run(token, username, opts.expiresAt ?? 4_000_000_000_000);
   return { id: Number(info.lastInsertRowid), token };
+}
+
+/**
+ * SEC-002: a live session whose digest is persisted (migration 0037), i.e. the identity the outer
+ * Worker binds every PvP/social ticket to. Suites that drive a Durable Object directly (fake
+ * sockets, internal `/connect`) use it to represent an authenticated, verified player connection.
+ */
+export function verifiedSession(db: ReturnType<typeof memoryD1>, label: string, expiresAt = 4_000_000_000_000): string {
+  const hasDigest = db.sql.prepare("SELECT 1 FROM pragma_table_info('sessions') WHERE name = 'token_digest'").get();
+  if (!hasDigest) db.sql.exec(readFileSync(new URL("../../server/migrations/0037_tactics_session_token_digest.sql", import.meta.url), "utf8"));
+  const token = `verified-${label}`;
+  const sid = createHash("sha256").update(token).digest("hex");
+  db.sql
+    .prepare("INSERT OR IGNORE INTO sessions (token, username, created_at, expires_at, token_digest) VALUES (?, ?, 0, ?, ?)")
+    .run(token, label, expiresAt, sid);
+  return sid;
 }

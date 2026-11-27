@@ -133,6 +133,20 @@ export function botIdentity(
     deckVersion: "published-competitive-1",
   };
 }
+/**
+ * What a client may see of a bot (SEC-004). The seed, personality and difficulty mix are the
+ * private inputs of its deck and play (botDeck / botDifficulty): publishing them lets a player
+ * rebuild the hidden 40-card loadout. Name and champion are already shown by the match itself.
+ */
+export type PublicBotIdentity = Pick<BotIdentity, "kind" | "id" | "name" | "heroId" | "policyVersion" | "deckVersion">;
+export const publicBotIdentity = (identity: BotIdentity): PublicBotIdentity => ({
+  kind: identity.kind,
+  id: identity.id,
+  name: identity.name,
+  heroId: identity.heroId,
+  policyVersion: identity.policyVersion,
+  deckVersion: identity.deckVersion,
+});
 export type BotOutcome = "WIN" | "LOSS" | "ABANDON" | "DRAW" | "SERVER_ERROR";
 export function botReward(
   input: {

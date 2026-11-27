@@ -88,6 +88,7 @@ import type { CloudResult } from '../cloud/http';
 import { loadSession, saveSession, type CloudSession } from '../cloud/session';
 import { archerCampaignBuildEnabled, campaignHeroes, championReleased, guestRewardContent, openProgressionBuild, releasedCampaignHero, warriorBuildEnabled, withPrimordialQaSeals, world2BuildEnabled, world3BuildEnabled } from '../campaignRelease';
 import { freshBattleSeed } from './battleSeed';
+import { createStoryAttemptSeeds, localReceiptStore, pendingBlocksPrefetch } from './storyAttemptSeeds';
 import {
   loadCampaigns,
   loadWorldHistory,
@@ -346,6 +347,20 @@ interface BattleStore {
 let unsubscribeEngine: (() => void) | null = null;
 /** The signed-in session (token) while an account is attached; never part of React state. */
 let session: CloudSession | null = null;
+/** SEC-006: the server binds new Story admissions to issued receipts (from the last state). */
+let storyBinding = false;
+/** Shown instead of starting a seed-bound battle without any issued receipt (offline). */
+const RECEIPT_REQUIRED_NOTICE = 'Conéctate para iniciar este encuentro. Tu progreso y cualquier victoria pendiente están a salvo.';
+/** SEC-006: server-issued Story attempt receipts (prefetched, persisted per account; see storyAttemptSeeds.ts). */
+const storySeeds = createStoryAttemptSeeds(async (run) => {
+  const current = session;
+  if (!current) return null;
+  const result = await tacticsApi.attempt(current.token, run.heroId, run.campaignId);
+  return result.ok && session === current ? result.data.attempt : null;
+}, {
+  store: () => (session ? localReceiptStore(session.username) : null),
+  binding: () => storyBinding,
+});
 /** Re-runs the last failed cloud step, including what happens after it succeeds. */
 let retryAction: (() => void) | null = null;
 /**
@@ -612,6 +627,14 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     });
     keepCampaignHeroUsable();
     keepWorldUsable();
+    // SEC-006: have the next attempt seed ready for every admitted encounter (deduplicated) — except
+    // an admission whose won result is still pending confirmation: it is re-submitted first.
+    storyBinding = data.storyAttemptBinding === true;
+    const unconfirmed = pendingVictory(data.user.username);
+    const cloudRuns = [...Object.values(runs), ...Object.values(data.worldRuns ?? {}).flatMap((w) => Object.values(w ?? {}))].filter((r): r is RunState => !!r);
+    storySeeds.retain(cloudRuns); // receipts of admissions that closed are no longer needed
+    for (const r of cloudRuns)
+      if (r.status === 'IN_BATTLE' && !pendingBlocksPrefetch(r, unconfirmed)) void storySeeds.prefetch(r);
   }
 
   /** The campaign card never shows a champion this player cannot play (locked or unreleased). */
@@ -633,6 +656,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
   }
 
   function expireSession(): void {
+    storySeeds.reset();
     session = null;
     saveSession(null);
     // Never let an interrupted cloud PvE battle write its rewards into the guest save.
@@ -947,7 +971,9 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     const legacy=get().account.status==='READY'?get().legacyCampaigns[`${run.campaignId}:${run.heroId}`]:undefined;
     if(legacy&&legacy.runSeed===run.seed&&legacy.encounterId===run.currentEncounterId){
       if(!legacy.deckPinned){set({notice:'Este encuentro conserva sus reglas registradas. Selecciona un mazo legal y poseído de 40 cartas compatible con esa versión para reintentarlo. Tus mazos no se han modificado.'});return false;}
-      begin(storyBattle(legacy.rules,legacy.profile,run,freshBattleSeed()));
+      const storySeed=storySeeds.take(run);
+      if(storySeed===null){set({notice:RECEIPT_REQUIRED_NOTICE});return false;}
+      begin(storyBattle(legacy.rules,legacy.profile,run,storySeed));
       set({storyRules:legacy.rules,notice:'Este encuentro pendiente conserva el mazo y las reglas registrados hasta su primera victoria verificada.'});return true;
 
     }
@@ -956,9 +982,12 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     if (shapeshifterQaEnabled && run.heroId === 'shapeshifter' && qaOpening() === 'guaranteed' && !content.heroes.shapeshifter!.deck.some(e => e.count > 0 && content.cards[e.cardId]?.effects.some(f => f.type === 'TRANSFORM'))) {
       set({notice:'QA: añade una transformación al mazo o usa apertura normal.'}); return false;
     }
-    begin(shapeshifterQaEnabled && run.heroId === 'shapeshifter'
-      ? bindQaCampaign(realQaEngine(encounter, content, freshBattleSeed(), qaOpening(), qaDepthRules()), run)
-      : new GameEngine(encounter, content, freshBattleSeed()));
+    const qa = shapeshifterQaEnabled && run.heroId === 'shapeshifter';
+    const battleSeed = qa ? freshBattleSeed() : cloudActive(get()) ? storySeeds.take(run) : freshBattleSeed();
+    if (battleSeed === null) { set({ notice: RECEIPT_REQUIRED_NOTICE }); return false; }
+    begin(qa
+      ? bindQaCampaign(realQaEngine(encounter, content, battleSeed, qaOpening(), qaDepthRules()), run)
+      : new GameEngine(encounter, content, battleSeed));
     return true;
   }
 
@@ -1188,6 +1217,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
     sessionExpired: expireSession,
 
     async signOut() {
+      storySeeds.reset();
       const old = session;
       pendingAccount = null;
       get().backToMenu();
@@ -1402,6 +1432,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
         const data = await cloudStep('Nueva campaña', (t) => tacticsApi.startCampaign(t, heroId, campaign.id));
         const run = data ? runIn(get(), heroId, campaign.id) : null;
         if (!run || run.heroId !== heroId) return false;
+        await storySeeds.prefetch(run); // SEC-006: the first attempt uses a server-issued seed.
         return beginEncounter(run);
       }
       // Replaying a completed world keeps it completed (its run is about to be replaced).
@@ -1501,6 +1532,12 @@ export const useBattleStore = create<BattleStore>((set, get) => {
       }
       const { engine } = get();
       if (!engine) return;
+      // SEC-006: a cloud Story retry uses an issued receipt; none available offline while bound → stay.
+      const storyRun = get().mode === 'CAMPAIGN' && cloudActive(get()) ? activeRun(get()) : null;
+      const retrySeed = get().mode === 'SKIRMISH' && get().skirmish
+        ? get().skirmish!.run.seed
+        : storyRun?.status === 'IN_BATTLE' ? storySeeds.take(storyRun) : freshBattleSeed();
+      if (retrySeed === null) { set({ notice: RECEIPT_REQUIRED_NOTICE }); return; }
       set({
         selectedCardUid: null, pairSelection: null,
         handDiscard: null,
@@ -1513,9 +1550,7 @@ export const useBattleStore = create<BattleStore>((set, get) => {
         introReached: [],
         turnBanner: null,
       });
-      engine.restart(
-        get().mode === 'SKIRMISH' && get().skirmish ? get().skirmish!.run.seed : freshBattleSeed(),
-      ); // fresh draw pile + shuffle; listeners receive the new initial events
+      engine.restart(retrySeed); // fresh draw pile + shuffle; listeners receive the new initial events
     },
 
     backToMenu() {

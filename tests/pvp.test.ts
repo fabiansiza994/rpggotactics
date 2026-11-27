@@ -23,7 +23,8 @@ import {
 import { PvPMatchRoom, validCommand, type Room } from '../server/src/pvp';
 import { createPlayer } from '../server/src/repo';
 import { handle } from '../server/src/index';
-import { memoryD1, addAccount } from './support/d1';
+import { memoryD1, addAccount, verifiedSession } from './support/d1';
+import { createHash } from 'node:crypto';
 const profile = createProfile(DEFAULT_CONTENT);
 for(const hero of ['mage','summoner']){const p=competitiveFixture(hero).profile;profile.heroes[hero]=p.heroes[hero]!;profile.heroes[hero]!.activeDeckId='competitive';}
 const loads = [validateLoadout(profile, 'mage'), validateLoadout(profile, 'summoner')] as const;
@@ -47,6 +48,8 @@ function harness() {
   );
   db.sql.exec(readFileSync(new URL('../server/migrations/0030_tactics_ranked_bots.sql',import.meta.url),'utf8'));
   addAccount(db,'readiness_a');addAccount(db,'readiness_b');
+  // SEC-002: fake sockets stand for authenticated players whose session the Worker verified.
+  for (const seat of [0, 1]) verifiedSession(db, `pvp-seat-${seat}`);
   const data = new Map<string, unknown>(),
     sockets: FakeSocket[] = [];
   let init = Promise.resolve();
@@ -140,12 +143,14 @@ async function passPendingResponse(h: ReturnType<typeof harness>, live: PvPMatch
   expect((h.data.get('room') as Room).game?.pendingCast).toBeUndefined();
 }
 
+/** Session digest of `verifiedSession(db, 'pvp-seat-<n>')` (the identity a real ticket carries). */
+const seatSid = (seat: number) => createHash('sha256').update(`verified-pvp-seat-${seat}`).digest('hex');
 class FakeSocket {
   messages: string[] = [];
   closed = false;
   constructor(public seat: number) {}
   deserializeAttachment() {
-    return { seat: this.seat };
+    return { seat: this.seat, sid: seatSid(this.seat) };
   }
   serializeAttachment() {}
   send(s: string) {

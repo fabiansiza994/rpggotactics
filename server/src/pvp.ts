@@ -10,6 +10,7 @@ import {
   BOT_POLICY,
   BOT_POLICY_VERSION,
   botTurnBudget,
+  publicBotIdentity,
   type BotIdentity,
 } from "../../src/game/ai/ranked-bot-policy";
 import { botObservation, planBot } from "../../src/game/ai/ranked-bot";
@@ -56,6 +57,7 @@ import { premiumConfigured, premiumResultStatements } from "./rankedPremium";
 import { RANKED_RULES } from "../../src/game/ranked/ranked";
 import { equippedTitle, masteryAllowed, pvpMastery } from "./mastery";
 import type { Env } from "./db";
+import { checkSession, recheckDue, SESSION_BINDING_RETRY, SESSION_RENEW_CLOSE, SESSION_REVOKED_CLOSE } from "./sessionAuth";
 
 interface Storage {
   get<T>(key: string): Promise<T | undefined>;
@@ -77,6 +79,9 @@ interface Socket extends WebSocket {
     seat: number;
     clientRelease?: string;
     botProtocol?: string;
+    /** SEC-002: digest of the session that obtained the ticket, and when it was last confirmed. */
+    sid?: string | null;
+    sessionCheckedAt?: number;
   };
 }
 export interface RoomNamespace {
@@ -126,7 +131,7 @@ export interface Room {
     finishedAt: number;
   } | null;
   commandCount: number;
-  ticket: Record<string, { seat: number; expires: number }>;
+  ticket: Record<string, { seat: number; expires: number; sid?: string | null }>;
   rematch: number[];
   /** Ranked Preseason room (created only by the queue): RP per seat at match start + applied result. */
   bot?: {
@@ -166,11 +171,26 @@ export const randomCode = () =>
   ).join("");
 const secret = () => crypto.randomUUID();
 
+/** Keep-alive frames carry no game action: they never need a fresh session check. */
+function isHeartbeat(message: string | ArrayBuffer): boolean {
+  if (typeof message !== "string") return false;
+  if (message === "ping" || message === "pong") return true;
+  try {
+    const type = (JSON.parse(message) as { type?: unknown } | null)?.type;
+    return type === "ping" || type === "pong";
+  } catch {
+    return false;
+  }
+}
+
+/** Open casual rooms a player may author at once (unchanged limit; SEC-005 makes it atomic). */
+const AUTHORED_ROOM_LIMIT = 3;
+
 /** Outer Worker resolves identity and server-owned loadout. This DO has no public route. */
 export async function pvpRoute(
   request: Request,
   env: Env,
-  caller: { userId: number; username: string },
+  caller: { userId: number; username: string; sid?: string | null },
 ): Promise<Response> {
   if (!env.PVP_ROOMS)
     return response({ error: { message: "PvP no disponible." } }, 503);
@@ -227,7 +247,7 @@ export async function pvpRoute(
       )
       .bind(caller.userId, Date.now())
       .first<{ n: number }>();
-    if ((active?.n ?? 0) >= 3)
+    if ((active?.n ?? 0) >= AUTHORED_ROOM_LIMIT)
       return response(
         { error: { message: "Cierra tus salas pendientes primero." } },
         429,
@@ -241,6 +261,9 @@ export async function pvpRoute(
     "X-Pvp-User": String(caller.userId),
     "X-Pvp-Name": encodeURIComponent(caller.username),
   });
+  // SEC-002: the room binds its connection ticket to this session (internal header only; the
+  // room has no public route, so a client can never set it).
+  if (caller.sid) headers.set("X-Pvp-Session", caller.sid);
   if (
     create ||
     path.endsWith("/join") ||
@@ -521,7 +544,8 @@ export class PvPMatchRoom {
       // Public per seat: RP at match start (rank is derived client-side) + the applied delta.
       bot: r.bot
         ? {
-            identity: r.bot.identity,
+            // SEC-004: public DTO only; the room keeps the full identity for the bot itself.
+            identity: publicBotIdentity(r.bot.identity),
             policy: r.bot.policy,
             outcome: r.bot.outcome,
           }
@@ -553,6 +577,13 @@ export class PvPMatchRoom {
         !supportsRoomRelease(attachment.clientRelease, this.room.contentRelease)
       ) {
         ws.close(1008, "CLIENT_UPDATE_REQUIRED");
+        continue;
+      }
+      // SEC-002: a socket without a verified session (attachment from a Worker before Security
+      // Hardening, kept across a deploy by hibernation) never receives private state: it is asked
+      // to renew; the client reconnects through an authenticated ticket within the normal window.
+      if (!attachment.sid) {
+        try { ws.close(SESSION_RENEW_CLOSE, "SESSION_RENEW_REQUIRED"); } catch { /* already closed */ }
         continue;
       }
       try {
@@ -820,11 +851,27 @@ export class PvPMatchRoom {
           ticket: {},
           rematch: [],
         };
+        // SEC-005: the authored-room quota is enforced by the same statement that reserves the
+        // room (one D1 write = one serialized SQLite transaction), so concurrent creations can
+        // never exceed it. Same limit and same counting rule as the outer pre-check.
         await this.env.DB.prepare(
-          "INSERT INTO tactics_pvp_rooms (code,player_a,created_at,expires_at) VALUES (?,?,?,?)",
+          "INSERT INTO tactics_pvp_rooms (code,player_a,created_at,expires_at) SELECT ?,?,?,? WHERE (SELECT count(*) FROM tactics_pvp_rooms WHERE player_a=? AND expires_at>? AND finished_at IS NULL) < ?",
         )
-          .bind(this.room.code, id, now, this.room.expiresAt)
+          .bind(this.room.code, id, now, this.room.expiresAt, id, now, AUTHORED_ROOM_LIMIT)
           .run();
+        const reserved = await this.env.DB.prepare(
+          "SELECT player_a FROM tactics_pvp_rooms WHERE code=?",
+        )
+          .bind(this.room.code)
+          .first<{ player_a: number }>();
+        if (reserved?.player_a !== id) {
+          // Nothing was stored for this room: no reservation, alarm or member state to clean up.
+          this.room = null;
+          return response(
+            { error: { message: "Cierra tus salas pendientes primero." } },
+            429,
+          );
+        }
         await this.save();
       }
       if (path === "/bot-create") {
@@ -1034,11 +1081,15 @@ export class PvPMatchRoom {
           409,
         );
       if (path === "/connect") {
+        // SEC-002: a ticket always carries a session identity confirmed as stored (B4/B5). Without
+        // it the client's reconnect loop retries; the seat, match and reconnection window are kept.
+        const sid = request.headers.get("X-Pvp-Session");
+        if (!sid) return response({ error: SESSION_BINDING_RETRY }, 503);
         const ticket = secret();
         r.ticket = Object.fromEntries(
           Object.entries(r.ticket).filter(([, v]) => v.expires > now),
         );
-        r.ticket[ticket] = { seat, expires: now + 30000 };
+        r.ticket[ticket] = { seat, expires: now + 30000, sid };
         await this.save();
         return response({ ticket, code: r.code, clientRelease: r.contentRelease ?? CONTENT_RELEASE });
       }
@@ -1215,6 +1266,13 @@ export class PvPMatchRoom {
       t = r?.ticket[token];
     if (!r || !t || t.expires < Date.now() || r.expiresAt < Date.now())
       return response({}, 401);
+    // SEC-002: a ticket issued before Security Hardening has no session identity → never opens a
+    // socket; the client's reconnect asks the outer Worker for a new (session-bound) ticket.
+    if (!t.sid) {
+      delete r.ticket[token];
+      await this.save();
+      return response({ error: { code: "SESSION_RENEW_REQUIRED", message: "Reconectando…" } }, 401);
+    }
     if (
       r.game &&
       !preparationBlocks(r.preparation) &&
@@ -1259,6 +1317,9 @@ export class PvPMatchRoom {
     this.ctx.acceptWebSocket(ws, [String(t.seat)]);
     ws.serializeAttachment({
       seat: t.seat,
+      sid: t.sid ?? null,
+      // The session was confirmed when the ticket was issued (at most 30 s before).
+      sessionCheckedAt: t.expires - 30000,
       clientRelease:
         new URL(request.url).searchParams.get("clientRelease") ?? undefined,
       botProtocol:
@@ -1366,6 +1427,7 @@ export class PvPMatchRoom {
     return this.serial(async () => {
       const attachment = ws.deserializeAttachment(),
         seat = attachment.seat;
+      // Close-only gates (unchanged order): they never send data nor apply anything.
       if (this.room && !canRunRoomRules(this.room)) {
         ws.close(1012, "ROOM_RULES_UNAVAILABLE");
         return;
@@ -1380,6 +1442,31 @@ export class PvPMatchRoom {
       if (this.room?.bot && attachment.botProtocol !== BOT_POLICY_VERSION) {
         ws.close(1008, "CLIENT_UPDATE_REQUIRED");
         return;
+      }
+      // SEC-002: no session identity (legacy attachment) → nothing is applied or answered; renew.
+      if (!attachment.sid) {
+        try { ws.close(SESSION_RENEW_CLOSE, "SESSION_RENEW_REQUIRED"); } catch { /* already closed */ }
+        return;
+      }
+      // SEC-002: a socket whose session was revoked (logout, recovery, expiry) never acts again.
+      // Every protected message (anything but a heartbeat) re-checks its session BEFORE it is
+      // applied — zero authorization window — with one indexed point read, inside the serial queue
+      // (command order is kept). Heartbeats only re-check every SESSION_RECHECK_MS, which bounds
+      // how long an idle revoked socket stays physically open. A D1 error (UNKNOWN) never closes
+      // a socket; a protected action is then refused for that message only.
+      const checkedNow = Date.now();
+      const protectedMessage = !isHeartbeat(message);
+      if (protectedMessage || recheckDue(attachment.sessionCheckedAt, checkedNow)) {
+        const check = await checkSession(this.env.DB, attachment.sid, checkedNow);
+        if (check === "REVOKED") {
+          ws.close(SESSION_REVOKED_CLOSE, "SESSION_REVOKED");
+          return;
+        }
+        if (check === "VALID") ws.serializeAttachment({ ...attachment, sessionCheckedAt: checkedNow });
+        else if (protectedMessage) {
+          try { ws.send(JSON.stringify({ type: "error", code: "SESSION_CHECK_UNAVAILABLE", message: "Reintenta en un momento." })); } catch { /* closed */ }
+          return;
+        }
       }
       try {
         if (typeof message !== "string" || message.length > 4096)

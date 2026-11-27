@@ -1,4 +1,4 @@
-import type { BotIdentity } from "../../game/ai/ranked-bot-policy";
+import type { PublicBotIdentity as BotIdentity } from "../../game/ai/ranked-bot-policy";
 import { CLOUD_CONFIG } from "../cloud/config";
 import { request, type CloudResult } from "../cloud/http";
 import { loadSession } from "../cloud/session";

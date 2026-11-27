@@ -377,10 +377,26 @@ describe('server: guest import keeps (and re-validates) champion progress', () =
     expect(imported.runs.map((r) => [r.heroId, r.currentEncounterId])).toEqual([['summoner', order[3]]]);
   });
 
-  it('pre-unlock guest saves import as legacy (backfill policy)', () => {
-    const imported = sanitizeLocalImport(save(createProfile(DEFAULT_CONTENT)), { mage: serializeRun(runAt('mage', 6)) }, DEFAULT_CONTENT, DECK_RULES, NO_WARRIOR);
+  // Historical contract (kept under the reversible LEGACY_ALLOWANCE switch): a pre-unlock save
+  // imported as the legacy open roster with its full progress.
+  it('LEGACY_ALLOWANCE: pre-unlock guest saves import as legacy (backfill policy)', () => {
+    const imported = sanitizeLocalImport(save(createProfile(DEFAULT_CONTENT)), { mage: serializeRun(runAt('mage', 6)) }, DEFAULT_CONTENT, DECK_RULES, NO_WARRIOR, 'LEGACY_ALLOWANCE');
     expect(imported.profile.champions).toBeUndefined();
     expect(imported.runs[0]!.completedEncounterIds).toHaveLength(6);
+  });
+
+  // Approved contract (SEC-001 STRICT, decision B): the legacy roster and progress past the guest
+  // limit cannot be verified from a device save — they are preserved as claims, never granted.
+  it('STRICT: a pre-unlock save starts with onboarding; roster and progress past the guest limit become claims', () => {
+    const imported = sanitizeLocalImport(save(createProfile(DEFAULT_CONTENT)), { mage: serializeRun(runAt('mage', 6)) }, DEFAULT_CONTENT, DECK_RULES, NO_WARRIOR);
+    expect(imported.profile.champions).toMatchObject({ mode: 'PROGRESSION', startingChampionId: null, unlocks: [] });
+    expect(imported.runs).toEqual([]);
+    expect(imported.unverifiedClaims.map((c) => c.kind).sort()).toEqual(['CAMPAIGN_PROGRESS', 'CHAMPION_ROSTER']);
+  });
+  it('STRICT: a pre-unlock save within the guest limit keeps its legal progress once a champion is chosen (roster still a claim)', () => {
+    const imported = sanitizeLocalImport(save(createProfile(DEFAULT_CONTENT)), { mage: serializeRun(runAt('mage', 2)) }, DEFAULT_CONTENT, DECK_RULES, NO_WARRIOR);
+    expect(imported.profile.champions?.campaignBest).toBe(2);
+    expect(imported.unverifiedClaims.map((c) => c.kind)).toEqual(['CHAMPION_ROSTER']);
   });
 
   it('forged unlocks or progress past the guest limit are dropped, never granted', () => {

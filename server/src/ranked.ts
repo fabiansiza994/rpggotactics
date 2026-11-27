@@ -1,6 +1,7 @@
 import {protectionRpc} from './rankedProtection';
 import {
   BOT_POLICY,
+  publicBotIdentity,
   type BotIdentity,
 } from "../../src/game/ai/ranked-bot-policy";
 import {
@@ -16,7 +17,23 @@ import {
   rankedPublicConfig,
 } from "../../src/game/ranked/ranked";
 import type { Env } from "./db";
-import { error, json } from "./http";
+import { error, json as httpJson } from "./http";
+
+/**
+ * SEC-004: every Ranked response goes through here so a queued bot offer only ever reaches the
+ * client as its public DTO. Internally the full identity keeps building the bot room.
+ */
+function json(body: unknown, status = 200): Response {
+  const queue = (body as { queue?: unknown } | null)?.queue as
+    | { botOffer?: { identity?: BotIdentity } }
+    | undefined;
+  if (queue?.botOffer?.identity)
+    body = {
+      ...(body as object),
+      queue: { ...queue, botOffer: { ...queue.botOffer, identity: publicBotIdentity(queue.botOffer.identity) } },
+    };
+  return httpJson(body, status);
+}
 import { playableBotChampions, recentBotChampions } from "./botChampions";
 import { PVP_CONTENT, randomCode, serverLoadout, type RankedSeat } from "./pvp";
 import { currentRp } from "./rankedResults";
@@ -167,7 +184,7 @@ export async function rankedRoute(
           )
           .bind(caller.userId)
           .all()
-      ).results.map((r) => ({ ...r, bot: JSON.parse(String(r.bot)) })),
+      ).results.map((r) => ({ ...r, bot: publicBotIdentity(JSON.parse(String(r.bot)) as BotIdentity) })),
     });
   }
 

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   addCard,
+  asNewPlayer,
+  chooseStartingChampion,
   ASCENT_CAMPAIGN,
   campaignBattleContent,
   createProfile,
@@ -36,11 +39,11 @@ const norm = (deck: readonly { cardId: string; count: number }[]) => [...deck].s
 let db: ReturnType<typeof memoryD1>;
 const deps = { content: DEFAULT_CONTENT, now: () => 1_000_000, seed: () => 7 };
 
-async function call(token: string | null, method: string, path: string, body?: unknown): Promise<{ status: number; body: State }> {
+async function call(token: string | null, method: string, path: string, body?: unknown, env: Record<string, string> = {}): Promise<{ status: number; body: State }> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   const req = new Request(`https://api.test/api/tactics${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-  const res = await handle(req, { DB: db }, deps);
+  const res = await handle(req, { DB: db, ...env }, deps);
   return { status: res.status, body: (await res.json()) as State };
 }
 
@@ -210,23 +213,47 @@ describe('one-time local import', () => {
     ...patch,
   });
 
-  it('imports a valid local save once and marks the migration', async () => {
+  // Historical contract (reversible LEGACY_ALLOWANCE switch): a pre-unlock save with a third
+  // claimed copy imports with that copy and its deck.
+  const LEGACY = { TACTICS_IMPORT_POLICY: 'LEGACY_ALLOWANCE' };
+  it('LEGACY_ALLOWANCE: imports a valid local save once and marks the migration', async () => {
     const { token } = addAccount(db, 'ana');
     const profile = { ...createProfile(DEFAULT_CONTENT), selectedChampionId: 'summoner' };
     profile.heroes.mage!.collection.repulse = { copies: 3, acquired: 1 };
     const deck = addCard(removeCard(starterDeck(mage), 'blink'), 'repulse');
     profile.heroes.mage!.decks[0]!.cards = deck;
-    const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(localRun()) });
+    const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(localRun()) }, LEGACY);
     expect(res.status).toBe(200);
     expect(res.body.meta!.migratedFromLocalAt).toBe(1_000_000);
     expect(res.body.profile!.selectedChampionId).toBe('summoner');
     expect(norm(res.body.profile!.heroes.mage!.decks[0]!.cards)).toEqual(norm(deck));
     expect(res.body.run!.currentEncounterId).toBe('ascent_02_watchtower');
     // Only when the server has no save: a second import (e.g. another device) is refused.
+    expect((await call(token, 'POST', '/import', { profile: serializeProfile(profile) }, LEGACY)).status).toBe(409);
+  });
+
+  // Approved STRICT contract: a legitimate guest save (unlock state + new-account grant + legal deck
+  // + progress within the guest limit) imports completely, once, with nothing pending.
+  const legitGuest = () => {
+    const chosen = chooseStartingChampion(asNewPlayer(createProfile(DEFAULT_CONTENT)), 'mage', Object.keys(DEFAULT_CONTENT.heroes));
+    if (!chosen.ok) throw new Error('fixture: cannot choose mage');
+    return { ...chosen.profile, selectedChampionId: 'mage' };
+  };
+  it('STRICT: imports a legitimate local save once (deck, selection, guest-bounded run) and marks the migration', async () => {
+    const { token } = addAccount(db, 'ana');
+    const profile = legitGuest();
+    const deck = profile.heroes.mage!.decks[0]!.cards;
+    const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(localRun()) });
+    expect(res.status).toBe(200);
+    expect(res.body.meta!.migratedFromLocalAt).toBe(1_000_000);
+    expect(res.body.profile!.selectedChampionId).toBe('mage');
+    expect(norm(res.body.profile!.heroes.mage!.decks[0]!.cards)).toEqual(norm(deck));
+    expect(res.body.run!.currentEncounterId).toBe('ascent_02_watchtower');
+    expect((res.body as Record<string, unknown>).importPendingReview).toBeUndefined();
     expect((await call(token, 'POST', '/import', { profile: serializeProfile(profile) })).status).toBe(409);
   });
 
-  it('refuses unverifiable surplus before importing; corrected import validates cards, decks and reward offers', async () => {
+  it('LEGACY_ALLOWANCE: refuses unverifiable surplus before importing; corrected import validates cards, decks and reward offers', async () => {
     const { token } = addAccount(db, 'ana');
     const profile = createProfile(DEFAULT_CONTENT);
     profile.heroes.mage!.collection.fireball = { copies: 99, acquired: 1 };
@@ -239,11 +266,11 @@ describe('one-time local import', () => {
       completedEncounterIds: ['ascent_01_outpost', 'ascent_02_watchtower'],
       rewardOptions: [{ id: 'reward-0-frost_nova', kind: 'ADD_CARD', cardId: 'frost_nova', rarity: 'UNCOMMON' }],
     });
-    const rejected = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) });
+    const rejected = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) }, LEGACY);
     expect(rejected.status).toBe(422);expect(rejected.body.error!.code).toBe('IMPORT_REQUIRES_REVIEW');
     expect((await call(token,'GET','/state')).body.hasProfile).toBe(false);
     profile.heroes.mage!.collection.fireball!.copies=3;
-    const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) });
+    const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) }, LEGACY);
     expect(res.status).toBe(200);
     const collection = res.body.profile!.heroes.mage!.collection;
     expect(collection.fireball!.copies).toBe(3);
@@ -253,6 +280,34 @@ describe('one-time local import', () => {
     expect(res.body.run!.rewardOptions.map((o) => o.id)).not.toEqual(['reward-0-frost_nova']);
     expect(res.body.run!.rewardOptions).toHaveLength(3);
     expect(res.body.importNotes!.length).toBeGreaterThan(0);
+  });
+
+  it('STRICT: forged surplus, unknown and foreign cards are never granted; claims preserved; deck and reward offer revalidated', async () => {
+    db.sql.exec(readFileSync(new URL('../server/migrations/0039_tactics_import_claims.sql', import.meta.url), 'utf8'));
+    const { token, id } = addAccount(db, 'ana');
+    const profile = legitGuest();
+    const grantedFireball = profile.heroes.mage!.collection.fireball?.copies ?? 0;
+    profile.heroes.mage!.collection.fireball = { copies: 99, acquired: 1 };
+    profile.heroes.mage!.collection.not_a_card = { copies: 5, acquired: 2 };
+    profile.heroes.mage!.collection.summon_chicken = { copies: 3, acquired: 3 };
+    profile.heroes.mage!.decks[0]!.cards = [{ cardId: 'fireball', count: 20 }];
+    const forgedOffer = localRun({
+      status: 'CHOOSING_REWARD',
+      currentEncounterId: 'ascent_02_watchtower',
+      completedEncounterIds: ['ascent_01_outpost', 'ascent_02_watchtower'],
+      rewardOptions: [{ id: 'reward-0-frost_nova', kind: 'ADD_CARD', cardId: 'frost_nova', rarity: 'UNCOMMON' }],
+    });
+    const res = await call(token, 'POST', '/import', { profile: serializeProfile(profile), campaign: serializeRun(forgedOffer) });
+    expect(res.status).toBe(200);
+    const collection = res.body.profile!.heroes.mage!.collection;
+    expect(collection.fireball?.copies ?? 0).toBe(grantedFireball);
+    expect(collection.not_a_card).toBeUndefined();
+    expect(collection.summon_chicken).toBeUndefined();
+    expect(norm(res.body.profile!.heroes.mage!.decks[0]!.cards)).toEqual(norm(starterDeck(mage)));
+    expect(res.body.run!.rewardOptions.map((o) => o.id)).not.toEqual(['reward-0-frost_nova']);
+    expect(res.body.run!.rewardOptions).toHaveLength(3);
+    const claim = JSON.parse(String(db.sql.prepare('SELECT claims_json FROM tactics_import_claims WHERE user_id = ?').get(id)!.claims_json));
+    expect(claim.cards).toContainEqual({ ownerId: 'mage', cardId: 'fireball', claimed: 99, allowance: grantedFireball });
   });
 
   it('garbage local data falls back to a clean starter account instead of failing', async () => {

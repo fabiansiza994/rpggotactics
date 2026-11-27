@@ -6,6 +6,7 @@ import {
   GUEST_ENCOUNTER_LIMIT,
   isChampionUnlocked,
   revalidateChampionProgress,
+  asNewPlayer,
   createProfile,
   isCardForHero,
   isNeutral,
@@ -34,7 +35,40 @@ export interface ImportResult {
   notes: string[];
   /** Client totals above the legacy allowance need provenance before ANY import is saved. */
   unverifiedCopies: { ownerId: string; cardId: string; claimed: number; allowance: number }[];
+  /** Non-card claims the server cannot verify under the active policy (SEC-001). */
+  unverifiedClaims: { kind: 'CHAMPION_ROSTER' | 'CAMPAIGN_PROGRESS'; detail: string }[];
 }
+
+/**
+ * SEC-001 — provenance policy of the one-time local import.
+ * - STRICT (default): a device save carries no server receipt, so it only GRANTS what any new
+ *   account is authoritatively granted (POST /profile), plus legal decks, preferences and
+ *   guest-bounded campaign progress. Every other claim (extra copies, legacy open roster,
+ *   progress past the guest limit) is PRESERVED as a pending claim (tactics_import_claims) —
+ *   never granted, never discarded — pending the owner's decision on honouring it.
+ * - LEGACY_ALLOWANCE: the previous behaviour (frozen per-rarity allowance, legacy open roster).
+ *   Kept only as a reversible compatibility switch pending the owner's decision.
+ */
+export type ImportPolicy = 'STRICT' | 'LEGACY_ALLOWANCE';
+
+/** Claims stored for review are bounded (the column also caps the size at 64 KiB). */
+const MAX_CLAIM_ENTRIES = 500;
+export function boundedClaims(c: { cards: ImportResult['unverifiedCopies']; claims: ImportResult['unverifiedClaims'] }) {
+  const claims = {
+    version: 1,
+    cards: c.cards.slice(0, MAX_CLAIM_ENTRIES),
+    claims: c.claims.slice(0, MAX_CLAIM_ENTRIES).map((x) => ({ kind: x.kind, detail: x.detail.slice(0, 200) })),
+    truncated: c.cards.length > MAX_CLAIM_ENTRIES || c.claims.length > MAX_CLAIM_ENTRIES,
+  };
+  return { claims, json: JSON.stringify(claims) };
+}
+/** Integrity digest of the stored claim evidence (SHA-256 hex of claims_json). */
+export async function claimsDigest(json: string): Promise<string> {
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(json)));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+export const importPolicy = (env: { TACTICS_IMPORT_POLICY?: string }): ImportPolicy =>
+  env.TACTICS_IMPORT_POLICY === 'LEGACY_ALLOWANCE' ? 'LEGACY_ALLOWANCE' : 'STRICT';
 
 /** Frozen legacy migration allowance, NOT derived from current deck rules. Unverified
  * client totals above this allowance cannot authorize grants to a connected account. */
@@ -66,10 +100,14 @@ export function sanitizeLocalImport(
   rules: DeckRules,
   /** Champions released to the importing account (see the Worker's `availableChampions`). */
   available: readonly string[] = Object.keys(content.heroes),
+  policy: ImportPolicy = 'STRICT',
 ): ImportResult {
+  const strict = policy === 'STRICT';
   const notes: string[] = [];
   const unverifiedCopies: ImportResult['unverifiedCopies'] = [];
-  let profile = createProfile(content);
+  const unverifiedClaims: ImportResult['unverifiedClaims'] = [];
+  // STRICT: without a valid save the account is a new one (onboarding), never the legacy roster.
+  let profile = strict ? asNewPlayer(createProfile(content)) : createProfile(content);
   if (typeof rawProfile === 'string' && rawProfile) {
     const parsed = parseProfileSave(rawProfile, content);
     if (parsed.status === 'OK') {
@@ -78,15 +116,19 @@ export function sanitizeLocalImport(
     } else if (parsed.status === 'INVALID') notes.push(`profile discarded: ${parsed.reason}`);
   }
 
-  const starterPool = starterShared(content).collection;
+  // STRICT floor = exactly what POST /profile grants a new account (createProfile), so an
+  // imported account is never poorer than a fresh one and never richer than the server grants.
+  const granted = createProfile(content);
+  const starterPool = strict ? (granted.shared?.collection ?? {}) : starterShared(content).collection;
   const shared: SharedCollection = { collection: {}, acquisitions: 0 };
   for (const [cardId, owned] of Object.entries(profile.shared?.collection ?? {})) {
     const card = content.cards[cardId];
     if (!card || !isNeutral(card)) continue;
-    const copies = Math.max(starterPool[cardId]?.copies ?? 0, Math.min(owned.copies, importAllowance(card)));
+    const floor = starterPool[cardId]?.copies ?? 0;
+    const copies = strict ? floor : Math.max(floor, Math.min(owned.copies, importAllowance(card)));
     if (copies < owned.copies) unverifiedCopies.push({ownerId:'*',cardId,claimed:owned.copies,allowance:copies});
     if (copies < owned.copies) notes.push(`shared: ${cardId} unverified surplus not imported; legacy allowance ${copies} copies`);
-    if (copies > 0) shared.collection[cardId] = { copies, acquired: Math.max(0, Math.floor(owned.acquired)) };
+    if (copies > 0) shared.collection[cardId] = strict && starterPool[cardId] ? { ...starterPool[cardId]! } : { copies, acquired: Math.max(0, Math.floor(owned.acquired)) };
   }
   for (const [cardId, owned] of Object.entries(starterPool)) shared.collection[cardId] ??= { ...owned };
   shared.acquisitions = Object.values(shared.collection).reduce((n, c) => Math.max(n, c.acquired), 0);
@@ -94,7 +136,7 @@ export function sanitizeLocalImport(
   const heroes: Record<string, HeroProfile> = {};
   for (const hero of Object.values(content.heroes)) {
     const local = profile.heroes[hero.id] ?? starterHeroProfile(hero, content);
-    const starter = starterHeroProfile(hero, content).collection;
+    const starter = strict ? (granted.heroes[hero.id]?.collection ?? starterHeroProfile(hero, content).collection) : starterHeroProfile(hero, content).collection;
     const collection: HeroProfile['collection'] = {};
     for (const [cardId, owned] of Object.entries(local.collection)) {
       const card = content.cards[cardId];
@@ -106,10 +148,10 @@ export function sanitizeLocalImport(
         continue;
       }
       const floor = starter[cardId]?.copies ?? 0;
-      const copies = Math.max(floor, Math.min(owned.copies, importAllowance(card)));
+      const copies = strict ? floor : Math.max(floor, Math.min(owned.copies, importAllowance(card)));
       if (copies < owned.copies) unverifiedCopies.push({ownerId:hero.id,cardId,claimed:owned.copies,allowance:copies});
       if (copies < owned.copies) notes.push(`${hero.id}: ${cardId} unverified surplus not imported; legacy allowance ${copies} copies`);
-      if (copies > 0) collection[cardId] = { copies, acquired: Math.max(0, Math.floor(owned.acquired)) };
+      if (copies > 0) collection[cardId] = strict && starter[cardId] ? { ...starter[cardId]! } : { copies, acquired: Math.max(0, Math.floor(owned.acquired)) };
     }
     for (const [cardId, owned] of Object.entries(starter)) collection[cardId] ??= { ...owned };
     const owns = (cardId: string) => (collection[cardId] ?? shared.collection[cardId])?.copies ?? 0;
@@ -145,14 +187,19 @@ export function sanitizeLocalImport(
       ? (rawRuns as Record<string, unknown>)
       : { [defaultCampaignHero(ASCENT_CAMPAIGN)]: rawRuns };
   const progression = profile.champions?.mode === 'PROGRESSION';
+  // STRICT: a save without unlock state (or a LEGACY one) claims the open legacy roster, which
+  // only the server's own 0012 backfill may grant.
+  if (strict && !progression) unverifiedClaims.push({ kind: 'CHAMPION_ROSTER', detail: 'legacy open roster cannot be verified from a device save' });
   const parsedRuns: RunState[] = [];
   for (const heroId of ASCENT_CAMPAIGN.heroIds) {
     const raw = saves[heroId];
     if (typeof raw !== 'string' || !raw) continue;
     const parsed = parseRunSave(raw, ASCENT_CAMPAIGN, content);
     if (parsed.status === 'OK' && parsed.run.heroId !== heroId) notes.push(`${heroId}: campaign discarded: it is a ${parsed.run.heroId} run`);
-    else if (parsed.status === 'OK' && progression && parsed.run.completedEncounterIds.length > GUEST_ENCOUNTER_LIMIT)
+    else if (parsed.status === 'OK' && (progression || strict) && parsed.run.completedEncounterIds.length > GUEST_ENCOUNTER_LIMIT) {
       notes.push(`${heroId}: campaign discarded: a guest cannot pass encounter ${GUEST_ENCOUNTER_LIMIT}`);
+      if (strict) unverifiedClaims.push({ kind: 'CAMPAIGN_PROGRESS', detail: `${heroId}: ${parsed.run.completedEncounterIds.length} encounters claimed, guest limit ${GUEST_ENCOUNTER_LIMIT}` });
+    }
     else if (parsed.status === 'OK') parsedRuns.push(parsed.run);
     else if (parsed.status === 'INVALID') notes.push(`${heroId}: campaign discarded: ${parsed.reason}`);
   }
@@ -170,6 +217,13 @@ export function sanitizeLocalImport(
     if (!isChampionUnlocked(sanitized, sanitized.selectedChampionId) && champions.startingChampionId)
       sanitized = { ...sanitized, selectedChampionId: champions.startingChampionId };
   }
+  // STRICT: an unverifiable legacy roster is preserved as a claim, and the account starts like any
+  // new one (first-champion onboarding) with guest-bounded progress.
+  if (strict && !progression) {
+    const fresh = asNewPlayer(sanitized);
+    const best = Math.min(GUEST_ENCOUNTER_LIMIT, Math.max(0, ...parsedRuns.map((r) => r.completedEncounterIds.length)));
+    sanitized = { ...fresh, champions: { ...fresh.champions!, campaignBest: best } };
+  }
   const runs: RunState[] = [];
   for (const run of parsedRuns) {
     if (!isChampionUnlocked(sanitized, run.heroId)) {
@@ -180,5 +234,5 @@ export function sanitizeLocalImport(
     runs.push(reofferPending(ASCENT_CAMPAIGN, content, sanitized, run, rules));
   }
   const run = runs.find((r) => r.heroId === defaultCampaignHero(ASCENT_CAMPAIGN)) ?? null;
-  return { profile: sanitized, runs, run, notes, unverifiedCopies };
+  return { profile: sanitized, runs, run, notes, unverifiedCopies, unverifiedClaims };
 }

@@ -3,6 +3,12 @@ import type { ChampionDeckSummary, DeckEntry, PlayerProfile, RunState, VictoryPr
 import { CLOUD_CONFIG } from './config';
 import { request, type CloudResult } from './http';
 
+/** SEC-006: an issued Story attempt (immutable server receipt of the run's current admission). */
+export interface AttemptReceipt {
+  seed: number; campaignId: string; heroId: string; runSeed: number; encounterId: string;
+  attemptId?: string; admissionId?: string; seq?: number; mode?: 'LEGACY' | 'BOUND'; reissued?: boolean;
+}
+
 /** What the Tactics API returns after every call: the authoritative player state. */
 export interface CloudState {
   storyEncounters?:CloudState['legacyCampaigns'];
@@ -14,6 +20,8 @@ export interface CloudState {
   qaSummonerCampaign?: boolean;
   /** The server lets this account play the (QA-only) Warrior. */
   warriorAvailable?: boolean;
+  /** SEC-006: new Story admissions require a server-issued attempt receipt. */
+  storyAttemptBinding?: boolean;
   /** Champions released to this account (first-time choice + unlocks). Older servers omit it. */
   championsAvailable?: string[];
   meta: {
@@ -133,6 +141,14 @@ export const tacticsApi = {
    * world) and the world's campaign; World 1 ('ascent') omits it, as clients always did.
    */
   startCampaign: (token: string, heroId: string, campaignId = 'ascent') => api(token, 'POST', '/campaign/start', { heroId, ...world(campaignId) }),
+  /** SEC-006: the server-issued receipt (seed) for the next attempt of the run's current admission. */
+  attempt: (token: string, heroId: string, campaignId = 'ascent') =>
+    request<{ attempt: AttemptReceipt }>(CLOUD_CONFIG.apiUrl, '/api/tactics/campaign/attempt', {
+      method: 'POST',
+      body: { heroId, ...world(campaignId) },
+      token,
+      timeoutMs: CLOUD_CONFIG.timeoutMs,
+    }),
   victory: (token: string, proof: VictoryProof, heroId: string, campaignId = 'ascent') =>
     api(token, 'POST', '/campaign/victory', { proof, heroId, ...world(campaignId) }),
   reward: (token: string, optionId: string, encounterId: string, heroId: string, campaignId = 'ascent') =>

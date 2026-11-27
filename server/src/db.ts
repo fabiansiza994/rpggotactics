@@ -48,6 +48,10 @@ export interface Env {
   STORE_QUOTE_SECRET?: string;
   /** Stops admissions only; active rooms remain reconnectable/playable for safe rollback. */
   CONTENT_RELEASE_DRAIN?: string;
+  /** SEC-001: 'LEGACY_ALLOWANCE' restores the pre-hardening import allowance; anything else = STRICT. */
+  TACTICS_IMPORT_POLICY?: string;
+  /** SEC-006: '1' makes every new Story admission require a server-issued attempt seed. */
+  STORY_SEED_BINDING?: string;
   RELEASE2_MAINTENANCE?: string;
   RELEASE2_QA_USERS?: string;
   RELEASE2_CLIENT_REQUIRED?: string;

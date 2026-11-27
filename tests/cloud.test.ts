@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addCard,
@@ -39,6 +40,8 @@ let requests: string[] = [];
 let loseVictoryResponse = false;
 /** Server-side SUMMONER_CAMPAIGN switch. */
 let serverSummoner = false;
+/** Server-side STORY_SEED_BINDING switch (SEC-006). */
+let serverBinding = false;
 
 /** Network: the auth Worker's /api/login (password = "pw-<username>") and the real Tactics API handler. */
 async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -78,7 +81,7 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   if (url.startsWith(API)) {
     const response = await handle(
       new Request(url, init),
-      { DB: db },
+      { DB: db, ...(serverBinding ? { STORY_SEED_BINDING: '1' } : {}) },
       { content: DEFAULT_CONTENT, now: () => 5, seed: () => SERVER_SEED, summonerCampaign: serverSummoner },
     );
     if (loseVictoryResponse && url.endsWith('/campaign/victory') && response.ok) {
@@ -109,6 +112,7 @@ beforeEach(() => {
   requests = [];
   loseVictoryResponse = false;
   serverSummoner = false;
+  serverBinding = false;
   addAccount(db, 'ana');
   vi.stubEnv('VITE_AUTH_API_URL', AUTH);
   vi.stubEnv('VITE_TACTICS_API_URL', API);
@@ -431,6 +435,12 @@ describe('multi-champion campaign through the cloud', () => {
   it('the Summoner run is played, verified and rewarded on the server without touching the Mage run', async () => {
     serverSummoner = true;
     vi.stubEnv('VITE_SUMMONER_CAMPAIGN', '1');
+    // SEC-006: with STORY_SEED_BINDING on (admission ledger, migrations 0038+0040) the Summoner
+    // admission is born BOUND, so the victory below only verifies if the client replays a receipt
+    // the server issued for that admission.
+    for (const m of ['0038_tactics_story_attempt_seeds.sql', '0040_tactics_story_attempt_receipts.sql'])
+      db.sql.exec(readFileSync(new URL(`../server/migrations/${m}`, import.meta.url), 'utf8'));
+    serverBinding = true;
     const device = memoryStorage();
     let store = await boot(device);
     await store.getState().signIn('ana', 'pw-ana');
@@ -442,7 +452,17 @@ describe('multi-champion campaign through the cloud', () => {
     store.getState().selectCampaignHero('summoner');
     expect(await store.getState().startRun()).toBe(true);
     expect(store.getState().run).toMatchObject({ heroId: 'summoner', seed: SERVER_SEED });
-    expect(requests.at(-1)).toContain('/campaign/start');
+    // The run is started first, then the first attempt seed is requested before the battle begins
+    // (previously /campaign/start was the last request; the attempt is now part of the flow).
+    const startAt = requests.map((r) => r.includes('/campaign/start')).lastIndexOf(true);
+    expect(startAt).toBeGreaterThanOrEqual(0);
+    expect(requests.slice(startAt + 1).some((r) => r.includes('/campaign/attempt'))).toBe(true);
+    type Admission = { admission_id: string; run_seed: number; encounter_id: string; mode: string; closed_at: number | null; close_reason: string | null };
+    const admission = (encounter: string) => db.sql.prepare("SELECT admission_id, run_seed, encounter_id, mode, closed_at, close_reason FROM tactics_story_attempt_admissions WHERE hero_id = 'summoner' AND encounter_id = ?").get(encounter) as Admission | undefined;
+    const receipts = (a: Admission) => (db.sql.prepare('SELECT seed FROM tactics_story_attempt_receipts WHERE admission_id = ? ORDER BY seq').all(a.admission_id) as { seed: number }[]).map((r) => r.seed);
+    const first = admission('ascent_01_outpost')!;
+    expect(first).toMatchObject({ run_seed: SERVER_SEED, mode: 'BOUND', closed_at: null });
+    expect(receipts(first)).toContain(store.getState().engine!.seed); // the battle uses an issued receipt
     for (let i = 0; i < 40 && store.getState().run!.status === 'IN_BATTLE'; i++) {
       store.getState().restart();
       playBattle(store.getState().engine!, 30);
@@ -450,12 +470,20 @@ describe('multi-champion campaign through the cloud', () => {
     }
     const run = store.getState().run!;
     expect(run).toMatchObject({ heroId: 'summoner', completedEncounterIds: ['ascent_01_outpost'] });
+    // The verified victory belongs to a receipt of that BOUND admission, which is now CONCLUDED.
+    expect(admission('ascent_01_outpost')).toMatchObject({ mode: 'BOUND', close_reason: 'CONCLUDED' });
+    const proofs = db.sql.prepare("SELECT COUNT(*) AS n FROM tactics_reward_log WHERE hero_id = 'summoner' AND event IN ('OFFERED','NO_DROP')").get() as { n: number };
+    expect(proofs.n).toBe(1);
+    expect(requests.filter((r) => r.includes('/campaign/attempt')).length).toBeGreaterThanOrEqual(2); // retries consumed further attempts
     if (run.status === 'CHOOSING_REWARD') {
       store.getState().chooseReward(run.rewardOptions[0]!.id);
       await idle(store);
     }
     expect(store.getState().run).toMatchObject({ heroId: 'summoner', status: 'IN_BATTLE', currentEncounterId: 'ascent_02_watchtower' });
     expect(store.getState().runs.mage).toEqual(mageRun);
+    // The next admitted encounter gets its own attempt seed (prefetched after the reward claim).
+    await vi.waitFor(() => expect(receipts(admission('ascent_02_watchtower')!).length).toBeGreaterThan(0));
+    expect(admission('ascent_02_watchtower')).toMatchObject({ mode: 'BOUND', closed_at: null });
     // Signed in, no guest slot is ever written.
     expect([...device.data.keys()].some((k) => k.startsWith('rpg-go-tactics:campaign:hero:'))).toBe(false);
 

@@ -5,7 +5,7 @@ import { PvPMatchRoom } from '../server/src/pvp';
 import { SOCIAL_LIMITS, SocialHub, cleanMessage } from '../server/src/social';
 import type { Env } from '../server/src/db';
 import { DEFAULT_CONTENT } from '../src/game';
-import { addAccount, memoryD1 } from './support/d1';
+import { addAccount, memoryD1, verifiedSession } from './support/d1';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -115,7 +115,8 @@ const send = (token: string, conversationId: string, body: unknown) =>
 const pushesTo = (id: number) => pushes.filter((p) => p.user === 'user:' + id).map((p) => p.body);
 
 beforeEach(() => {
-  db = memoryD1({ legacyProfiles: true });
+  // SEC-002: sessions carry their persisted digest (0037), the identity every socket ticket needs.
+  db = memoryD1({ legacyProfiles: true, sessionDigest: true });
   for (const f of [
     '0004_pvp.sql',
     '0005_pvp_dominion.sql',
@@ -359,7 +360,7 @@ describe('chat', () => {
     expect(overview.body.friends[0].unread).toBe(2);
     // Offline delivery: a new session (logout/login, reload) sees the same history.
     db.sql
-      .prepare("INSERT INTO sessions VALUES ('token-bruno-2', 'bruno', 0, 4000000000000)")
+      .prepare("INSERT INTO sessions (token, username, created_at, expires_at) VALUES ('token-bruno-2', 'bruno', 0, 4000000000000)")
       .run();
     const later = await call('token-bruno-2', 'GET', `/social/conversations/${conv}/messages`);
     expect(later.body.messages.map((m: Json) => [m.body, m.mine])).toEqual([
@@ -776,8 +777,10 @@ describe('SocialHub (per-user real-time + presence)', () => {
       send(m: string): void;
       close(): void;
       serializeAttachment(): void;
-      deserializeAttachment(): { userId: number };
+      deserializeAttachment(): { userId: number; sid: string };
     }[] = [];
+    // SEC-002: hub sockets stand for authenticated tabs whose session the Worker verified.
+    const sid = verifiedSession(db, 'social-hub');
     const ctx = {
       storage: {
         get: async <T>(k: string) => data.get(k) as T | undefined,
@@ -800,24 +803,24 @@ describe('SocialHub (per-user real-time + presence)', () => {
           this.closed = true;
         },
         serializeAttachment() {},
-        deserializeAttachment: () => ({ userId }),
+        deserializeAttachment: () => ({ userId, sid }),
       };
       sockets.push(s);
       return s;
     };
-    return { hub, socket };
+    return { hub, socket, sid };
   }
 
   it('fans pushes out to the user sockets, issues one-use tickets, and keeps approximate presence', async () => {
     const ana = await player('ana');
     const bruno = await player('bruno');
     await befriend(ana, bruno);
-    const { hub, socket } = hubHarness();
+    const { hub, socket, sid } = hubHarness();
     const ticket = await (
       await hub.fetch(
         new Request('https://hub/ticket', {
           method: 'POST',
-          headers: { 'X-Social-User': String(bruno.id) },
+          headers: { 'X-Social-User': String(bruno.id), 'X-Social-Session': sid },
         }),
       )
     ).json();

@@ -7,6 +7,7 @@ import { equippableCosmetics } from '../../src/game/ranked/rankedCosmetics';
 import type { D1Database, Env } from './db';
 import { error, json } from './http';
 import { pvpRoute } from './pvp';
+import { checkSession, recheckDue, SESSION_BINDING_RETRY, SESSION_RENEW_CLOSE, SESSION_REVOKED_CLOSE } from './sessionAuth';
 
 /**
  * Social phase: friends, blocks, private 1:1 chat, PvP invites between friends, reports and
@@ -76,6 +77,7 @@ export interface FriendEntry {
 interface Caller {
   userId: number;
   username: string;
+  sid?: string | null;
 }
 
 const pair = (a: number, b: number): [number, number] => (a < b ? [a, b] : [b, a]);
@@ -536,11 +538,13 @@ export async function socialRoute(
   // ── Real-time: a short-lived ticket for this user's own hub socket ─────────────────────
   if (route === 'POST connect') {
     if (!env.SOCIAL_HUBS) return error(503, 'UNAVAILABLE', 'Tiempo real no disponible.');
+    // SEC-002: only a session whose identity is stored gets a ticket (retryable; polling continues).
+    if (!caller.sid) return error(503, SESSION_BINDING_RETRY.code, SESSION_BINDING_RETRY.message);
     const hub = env.SOCIAL_HUBS.get(env.SOCIAL_HUBS.idFromName('user:' + me));
     const res = await hub.fetch(
       new Request('https://hub/ticket', {
         method: 'POST',
-        headers: { 'X-Social-User': String(me) },
+        headers: { 'X-Social-User': String(me), 'X-Social-Session': caller.sid },
       }),
     );
     const data = (await res.json()) as { ticket: string };
@@ -1000,7 +1004,7 @@ interface HubStorage {
 }
 interface HubSocket extends WebSocket {
   serializeAttachment(value: unknown): void;
-  deserializeAttachment(): { userId: number } | null;
+  deserializeAttachment(): { userId: number; sid?: string | null; sessionCheckedAt?: number } | null;
 }
 interface HubContext {
   storage: HubStorage;
@@ -1013,6 +1017,12 @@ interface HubContext {
  * a D1 write; the hub fans them out. It also keeps that user's approximate presence row. It has
  * no public route other than the ticketed socket, and never talks to a PvP room.
  */
+/** A hub ticket: legacy rows are a bare expiry; new ones also carry the session digest. */
+type HubTicket = number | { expires: number; sid: string | null };
+const ticketExpiry = (t: HubTicket) => (typeof t === 'number' ? t : t.expires);
+/** Social sockets are push-only, so their heartbeat re-check can be less frequent than PvP. */
+const SOCIAL_RECHECK_MS = 30_000;
+
 export class SocialHub {
   private protectionQueue:Promise<unknown>=Promise.resolve();
   constructor(
@@ -1044,36 +1054,63 @@ export class SocialHub {
     if (url.pathname === '/ticket') {
       const userId = Number(request.headers.get('X-Social-User'));
       if (!Number.isSafeInteger(userId) || userId <= 0) return json({}, 401);
+      const sid = request.headers.get('X-Social-Session');
+      if (!sid) return json({ error: SESSION_BINDING_RETRY }, 503);
       const ticket = crypto.randomUUID();
       const now = Date.now();
       const tickets = Object.fromEntries(
         Object.entries(
-          (await this.ctx.storage.get<Record<string, number>>('tickets')) ?? {},
-        ).filter(([, exp]) => exp > now),
+          (await this.ctx.storage.get<Record<string, HubTicket>>('tickets')) ?? {},
+        ).filter(([, t]) => ticketExpiry(t) > now),
       );
-      tickets[ticket] = now + 30_000;
+      // SEC-002: the ticket remembers which session asked for it (internal header only).
+      tickets[ticket] = { expires: now + 30_000, sid };
       await this.ctx.storage.put('tickets', tickets);
       await this.ctx.storage.put('userId', userId);
       return json({ ticket });
     }
     if (url.pathname === '/push') {
       const text = await request.text();
-      for (const ws of this.ctx.getWebSockets())
+      // SEC-002: private pushes (chat, invitations, challenges) are delivered only to sockets whose
+      // session is still live — checked now, once per distinct session, not per heartbeat window.
+      const now = Date.now();
+      const verdict = new Map<string, Promise<'VALID' | 'REVOKED' | 'UNKNOWN'>>();
+      for (const ws of this.ctx.getWebSockets()) {
+        const attachment = ws.deserializeAttachment();
+        // No session identity (attachment from before Security Hardening): never deliver; renew.
+        if (!attachment?.sid) {
+          try { ws.close(SESSION_RENEW_CLOSE, 'SESSION_RENEW_REQUIRED'); } catch { /* already closed */ }
+          continue;
+        }
+        if (!verdict.has(attachment.sid)) verdict.set(attachment.sid, checkSession(this.env.DB, attachment.sid, now));
+        const check = await verdict.get(attachment.sid)!;
+        if (check === 'REVOKED') {
+          try { ws.close(SESSION_REVOKED_CLOSE, 'SESSION_REVOKED'); } catch { /* already closed */ }
+          continue;
+        }
+        if (check === 'UNKNOWN') continue; // never leak on an unconfirmed session; no disconnect
+        ws.serializeAttachment({ ...attachment, sessionCheckedAt: now });
         try {
           ws.send(text);
         } catch {
           /* closed socket */
         }
+      }
       return json({ ok: true });
     }
     if (url.pathname === '/socket') {
       const ticket = url.searchParams.get('ticket') ?? '';
-      const tickets = (await this.ctx.storage.get<Record<string, number>>('tickets')) ?? {};
+      const tickets = (await this.ctx.storage.get<Record<string, HubTicket>>('tickets')) ?? {};
       const userId = await this.ctx.storage.get<number>('userId');
+      const issued = tickets[ticket];
       if (
         !userId ||
-        !tickets[ticket] ||
-        tickets[ticket]! < Date.now() ||
+        !issued ||
+        ticketExpiry(issued) < Date.now() ||
+        // A ticket from before Security Hardening has no session identity: the client reconnects
+        // with a new one (its normal backoff); polling keeps the overview fresh meanwhile.
+        typeof issued !== 'object' ||
+        !issued.sid ||
         request.headers.get('Upgrade') !== 'websocket'
       )
         return json({}, 401);
@@ -1086,7 +1123,11 @@ export class SocialHub {
       ).WebSocketPair;
       const sockets = new pairCtor();
       this.ctx.acceptWebSocket(sockets[1]);
-      sockets[1].serializeAttachment({ userId });
+      sockets[1].serializeAttachment({
+        userId,
+        sid: issued.sid,
+        sessionCheckedAt: ticketExpiry(issued) - 30_000,
+      });
       await this.presence(userId, true);
       return new Response(null, { status: 101, webSocket: sockets[0] } as ResponseInit);
     }
@@ -1096,13 +1137,30 @@ export class SocialHub {
   async webSocketMessage(ws: HubSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== 'string' || message.length > 256) return;
     if (message === 'ping' || message.includes('"ping"')) {
+      const attachment = ws.deserializeAttachment();
+      // SEC-002: a socket without a verified session identity is asked to renew (client reconnects).
+      if (!attachment?.sid) {
+        try { ws.close(SESSION_RENEW_CLOSE, 'SESSION_RENEW_REQUIRED'); } catch { /* already closed */ }
+        return;
+      }
       try {
         ws.send(JSON.stringify({ type: 'pong' }));
       } catch {
         /* closed */
       }
+      // SEC-002: a revoked session stops receiving this account's private pushes (chat,
+      // invitations, challenges). Checked on the heartbeat, at most every SOCIAL_RECHECK_MS.
+      const checkedNow = Date.now();
+      if (recheckDue(attachment.sessionCheckedAt, checkedNow, SOCIAL_RECHECK_MS)) {
+        const check = await checkSession(this.env.DB, attachment.sid, checkedNow);
+        if (check === 'REVOKED') {
+          try { ws.close(SESSION_REVOKED_CLOSE, 'SESSION_REVOKED'); } catch { /* already closed */ }
+          return;
+        }
+        if (check === 'VALID') ws.serializeAttachment({ ...attachment, sessionCheckedAt: checkedNow });
+      }
       // Heartbeat → presence, throttled to one D1 write a minute.
-      const userId = ws.deserializeAttachment()?.userId;
+      const userId = attachment?.userId;
       const last = (await this.ctx.storage.get<number>('presenceAt')) ?? 0;
       if (userId && Date.now() - last > 60_000) await this.presence(userId, true);
     }

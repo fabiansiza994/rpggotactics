@@ -7,11 +7,14 @@ import { DEFAULT_CONTENT, fallbackDiscardUid } from "../src/game";
 import { handle } from "../server/src/index";
 import { PvPMatchRoom, PVP_CONTENT, type Room } from "../server/src/pvp";
 import type { Env } from "../server/src/db";
-import { addAccount, memoryD1 } from "./support/d1";
+import { addAccount, memoryD1, verifiedSession } from "./support/d1";
+import { createHash } from "node:crypto";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 type DB = ReturnType<typeof memoryD1>;
 
+/** SEC-002: the verified session a real ticket carries (`verifiedSession(db, 'ranked-seat')`). */
+const SEAT_SID = createHash("sha256").update("verified-ranked-seat").digest("hex");
 class FakeSocket {
   closed = false;
   messages: string[] = [];
@@ -22,6 +25,7 @@ class FakeSocket {
   deserializeAttachment() {
     return {
       seat: this.seat,
+      sid: SEAT_SID,
       ...(this.botProtocol ? { botProtocol: this.botProtocol } : {}),
     };
   }
@@ -166,7 +170,8 @@ const count = (table: string) =>
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(1_800_000_000_000);
-  db = memoryD1({ legacyProfiles: true });
+  db = memoryD1({ legacyProfiles: true, sessionDigest: true });
+  verifiedSession(db, "ranked-seat");
   for (const f of [
     "0004_pvp.sql",
     "0005_pvp_dominion.sql",
@@ -364,6 +369,7 @@ describe("ranked bot authoritative room integration", () => {
         headers: {
           "X-Pvp-User": String(a.id),
           "X-Pvp-Bot-Protocol": "ranked-bots-1",
+          "X-Pvp-Session": SEAT_SID,
         },
         body: "{}",
       }),
@@ -745,6 +751,7 @@ for (const human of ["mage", "summoner", "shapeshifter"])
           headers: {
             "X-Pvp-User": String(a.id),
             "X-Pvp-Bot-Protocol": "ranked-bots-1",
+            "X-Pvp-Session": SEAT_SID,
           },
           body: "{}",
         }),

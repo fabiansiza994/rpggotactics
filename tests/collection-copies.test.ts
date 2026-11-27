@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { beforeEach, describe, it, expect } from "vitest";
 import {
   ASCENT_CAMPAIGN,
@@ -197,7 +198,8 @@ describe("accumulated ownership stays independent from deck rules", () => {
       }),
     ]);
   });
-  it("keeps legacy import allowance independent of future deck caps and refuses unverifiable excess", () => {
+  // Historical contract, kept under the reversible LEGACY_ALLOWANCE switch.
+  it("LEGACY_ALLOWANCE: keeps legacy import allowance independent of future deck caps and refuses unverifiable excess", () => {
     const profile = createProfile(DEFAULT_CONTENT);
     profile.heroes.mage!.collection.glacial_shell = {
       copies: 500,
@@ -212,6 +214,8 @@ describe("accumulated ownership stays independent from deck rules", () => {
       {},
       DEFAULT_CONTENT,
       rules,
+      undefined,
+      "LEGACY_ALLOWANCE",
     );
     expect(imported.profile.heroes.mage!.collection.glacial_shell!.copies).toBe(
       1,
@@ -219,6 +223,17 @@ describe("accumulated ownership stays independent from deck rules", () => {
     expect(imported.notes.some((n) => n.includes("unverified surplus"))).toBe(
       true,
     );
+  });
+  // Approved SEC-001 contract: nothing above the new-account grant is granted, whatever the deck
+  // caps say; the full claimed total is preserved for review.
+  it("STRICT: grants only the new-account amount independent of deck caps and preserves the claimed total", () => {
+    const profile = createProfile(DEFAULT_CONTENT);
+    const granted = profile.heroes.mage!.collection.glacial_shell?.copies ?? 0;
+    profile.heroes.mage!.collection.glacial_shell = { copies: 500, acquired: 1 };
+    const rules = { ...DECK_RULES, maxCopiesByRarity: { ...DECK_RULES.maxCopiesByRarity, RARE: 5 } };
+    const imported = sanitizeLocalImport(serializeProfile(profile), {}, DEFAULT_CONTENT, rules);
+    expect(imported.profile.heroes.mage!.collection.glacial_shell?.copies ?? 0).toBe(granted);
+    expect(imported.unverifiedCopies).toContainEqual({ ownerId: "mage", cardId: "glacial_shell", claimed: 500, allowance: granted });
   });
   it("legitimate repeated purchases increment 0→1→2→3 and survive state reload without changing price", async () => {
     const a = await account();
@@ -440,14 +455,17 @@ describe("accumulated ownership stays independent from deck rules", () => {
     expect(count(a.id)).toBe(0);
   });
 
-  it("unverifiable imported totals are rejected without saving a clipped collection or consuming import", async () => {
+  it("unverifiable imported totals are never granted: refused while claims cannot be stored, preserved once they can", async () => {
+    db = memoryD1({ legacyProfiles: true, importClaims: false }); // a Worker deployed before migration 0039
     const a = addAccount(db, "unverified_import");
     const p = createProfile(DEFAULT_CONTENT);
+    const granted = p.heroes.mage!.collection.glacial_shell?.copies ?? 0;
     p.heroes.mage!.collection.glacial_shell = { copies: 5, acquired: 1 };
     const raw = serializeProfile(p);
-    const result = await call(a.token, "/import", { profile: raw });
-    expect(result.status).toBe(422);
-    expect(result.body.error!.code).toBe("IMPORT_REQUIRES_REVIEW");
+    // Without migration 0039 STRICT does not degrade: nothing is saved and the import is not consumed.
+    const refused = await call(a.token, "/import", { profile: raw });
+    expect(refused.status).toBe(503);
+    expect(refused.body.error!.code).toBe("IMPORT_REVIEW_UNAVAILABLE");
     expect(serializeProfile(p)).toBe(raw);
     expect(
       db.sql
@@ -455,15 +473,26 @@ describe("accumulated ownership stays independent from deck rules", () => {
         .get(a.id),
     ).toMatchObject({ n: 0 });
     expect(count(a.id)).toBe(0);
+    // With 0039 the same import is accepted with the authoritative grant and the claim preserved.
+    db.sql.exec(readFileSync(new URL("../server/migrations/0039_tactics_import_claims.sql", import.meta.url), "utf8"));
+    const accepted = await call(a.token, "/import", { profile: raw });
+    expect(accepted.status).toBe(200);
+    expect(accepted.body.profile!.heroes.mage!.collection.glacial_shell?.copies ?? 0).toBe(granted);
+    const claim = db.sql.prepare("SELECT claims_json, status FROM tactics_import_claims WHERE user_id=?").get(a.id) as { claims_json: string; status: string };
+    expect(claim.status).toBe("PENDING_REVIEW");
+    expect(JSON.parse(claim.claims_json).cards).toContainEqual({ ownerId: "mage", cardId: "glacial_shell", claimed: 5, allowance: granted });
   });
-  it('exclusive world cards supplied by an import require proof instead of being silently discarded', async () => {
+  it('exclusive world cards supplied by an import require proof: never granted, never silently discarded', async () => {
+    db.sql.exec(readFileSync(new URL('../server/migrations/0039_tactics_import_claims.sql', import.meta.url), 'utf8'));
     const a = addAccount(db, 'exclusive_import');
     const p = createProfile(DEFAULT_CONTENT);
     p.heroes.summoner!.collection.summon_ash_hound = {copies:2, acquired:1};
     const result = await call(a.token, '/import', {profile:serializeProfile(p)});
-    expect(result.status).toBe(422);
-    expect(result.body.error!.code).toBe('IMPORT_REQUIRES_REVIEW');
-    expect(db.sql.prepare('SELECT COUNT(*) n FROM tactics_profiles WHERE user_id=?').get(a.id)).toMatchObject({n:0});
+    expect(result.status).toBe(200);
+    expect(result.body.profile!.heroes.summoner!.collection.summon_ash_hound).toBeUndefined();
+    expect(db.sql.prepare("SELECT COALESCE(SUM(copies),0) n FROM tactics_player_cards WHERE user_id=? AND card_id='summon_ash_hound'").get(a.id)).toMatchObject({n:0});
+    const claim = db.sql.prepare('SELECT claims_json FROM tactics_import_claims WHERE user_id=?').get(a.id) as { claims_json: string };
+    expect(JSON.parse(claim.claims_json).cards).toContainEqual({ ownerId: 'summoner', cardId: 'summon_ash_hound', claimed: 2, allowance: 0 });
   });
 
 });

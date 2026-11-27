@@ -146,12 +146,21 @@ describe('neutral pool persistence', () => {
     expect(twice.status === 'OK' && twice.profile.shared!.collection.ward_stone!.copies).toBe(2);
   });
 
-  it('a local import caps neutral copies and keeps them shared', () => {
+  it('LEGACY_ALLOWANCE: a local import caps neutral copies and keeps them shared', () => {
     const profile = granted(granted(granted(createProfile(CONTENT), 'mage', 'ward_stone'), 'mage', 'ward_stone'), 'mage', 'ward_stone');
-    const imported = sanitizeLocalImport(serializeProfile(profile), null, CONTENT, DECK_RULES);
+    const imported = sanitizeLocalImport(serializeProfile(profile), null, CONTENT, DECK_RULES, undefined, 'LEGACY_ALLOWANCE');
     expect(imported.profile.shared!.collection.ward_stone!.copies).toBe(2); // UNCOMMON cap
     expect(imported.notes).toContain('shared: ward_stone unverified surplus not imported; legacy allowance 2 copies');
     expect(imported.profile.heroes.mage!.collection.ward_stone).toBeUndefined();
+  });
+  it('STRICT: neutral copies beyond the new-account grant are never granted, stay in the shared pool and are claimed', () => {
+    const base = createProfile(CONTENT);
+    const grantedCopies = base.shared?.collection.ward_stone?.copies ?? 0;
+    const profile = granted(granted(granted(base, 'mage', 'ward_stone'), 'mage', 'ward_stone'), 'mage', 'ward_stone');
+    const imported = sanitizeLocalImport(serializeProfile(profile), null, CONTENT, DECK_RULES);
+    expect(imported.profile.shared!.collection.ward_stone?.copies ?? 0).toBe(grantedCopies);
+    expect(imported.profile.heroes.mage!.collection.ward_stone).toBeUndefined();
+    expect(imported.unverifiedCopies).toContainEqual({ ownerId: '*', cardId: 'ward_stone', claimed: 3, allowance: grantedCopies });
   });
 });
 

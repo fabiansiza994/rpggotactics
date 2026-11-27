@@ -43,7 +43,7 @@ import { error, json } from './http';
 import { summonerQaAllowed, qaCampaignSetup } from './campaignQa';
 import { releasedContent } from './ritualRelease';
 import { championAllowed, warriorAllowed } from './warriorRelease';
-import { sanitizeLocalImport } from './importLocal';
+import { boundedClaims, claimsDigest, importPolicy, sanitizeLocalImport } from './importLocal';
 import { deckRoute } from './decks';
 import { pvpRoute } from './pvp';
 import { pvpHistoryRoute } from './pvpHistory';
@@ -59,12 +59,15 @@ import { launchRewardRoute } from './launchReward';
 import { giftRoute } from './gifts';
 import { archerCampaignAllowed, championRuns, world2Allowed, worldsBody, worldsFor } from './worlds';
 export { PvPMatchRoom } from './pvp';
+import { bearerToken, resolveSession } from './sessionAuth';
+import { checkStoryAttempt, issueStoryAttempt } from './storyAttempts';
 import { socialRoute } from './social';
 import { supportRoute } from './support';
 import { epaycoWebhookRoute, realMoneyPublicRoute, realMoneyRoute, type EpaycoClient } from './epayco';
 export { SocialHub } from './social';
 import {
   createPlayer,
+  hasImportClaimsTable,
   prepareSummonerQa,
   saveChampionUnlock,
   saveStartingChampion,
@@ -112,6 +115,8 @@ export function corsHeaders(
 export interface Caller {
   userId: number;
   username: string;
+  /** SHA-256 of the bearer (SEC-002): lets sockets re-check that this session still exists. */
+  sid?: string | null;
 }
 
 /** Bearer token → the account behind it (via the RPG-GO session table). Null = not signed in. */
@@ -120,17 +125,9 @@ export async function resolveCaller(
   db: D1Database,
   now: number,
 ): Promise<Caller | null> {
-  const header = request.headers.get('Authorization') ?? '';
-  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
-  if (!token || token.length > 200) return null;
-  const row = await db
-    .prepare(
-      'SELECT u.id AS id, u.username AS username, s.expires_at AS expires_at FROM sessions s JOIN users u ON u.username = s.username WHERE s.token = ?',
-    )
-    .bind(token)
-    .first<{ id: number; username: string; expires_at: number }>();
-  if (!row || row.expires_at < now) return null;
-  return { userId: row.id, username: row.username };
+  const token = bearerToken(request);
+  if (!token) return null;
+  return resolveSession(db, token, now);
 }
 
 async function readJson(request: Request): Promise<Record<string, unknown> | null> {
@@ -151,6 +148,8 @@ function stateBody(caller: Caller, record: PlayerRecord | null, env: Env, deps: 
     user: { id: caller.userId, username: caller.username },
     qaSummonerCampaign: summonerQaAllowed(env, caller.username),
     warriorAvailable: warriorAllowed(env, caller.username),
+    /** SEC-006: new Story admissions are seed-bound (a battle then needs a server-issued receipt). */
+    storyAttemptBinding: env.STORY_SEED_BINDING === '1',
     /** Champions released to this account (onboarding choices and milestone unlocks come from here). */
     championsAvailable: availableChampions(env, deps, caller.username),
     hasProfile: record !== null,
@@ -354,11 +353,22 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     if (!body) return error(400, 'BAD_REQUEST', 'Cuerpo inválido.');
     const imported =
       route === 'POST /api/tactics/import'
-        ? sanitizeLocalImport(body.profile, localCampaigns(body), content, DECK_RULES, availableChampions(env, deps, caller.username))
+        ? sanitizeLocalImport(body.profile, localCampaigns(body), content, DECK_RULES, availableChampions(env, deps, caller.username), importPolicy(env))
         : null;
-    if (imported?.unverifiedCopies.length) return error(422, 'IMPORT_REQUIRES_REVIEW',
+    // SEC-001: client data alone never grants ownership. STRICT imports only the server grant and
+    // preserves every unverifiable claim for review; LEGACY_ALLOWANCE keeps the previous 422.
+    const policy = importPolicy(env);
+    const pendingClaims = imported && policy === 'STRICT' && (imported.unverifiedCopies.length || imported.unverifiedClaims.length)
+      ? { cards: imported.unverifiedCopies, claims: imported.unverifiedClaims } : null;
+    // Decision B: claims are kept for manual review. Without migration 0039 there is nowhere safe
+    // to keep them, so the import stops (nothing created; the device keeps its progress) instead of
+    // silently dropping them or falling back to the legacy allowance.
+    if (pendingClaims && !(await hasImportClaimsTable(db)))
+      return error(503, 'IMPORT_REVIEW_UNAVAILABLE', 'La importación está en mantenimiento. Tu progreso local se conserva; inténtalo más tarde.');
+    const claimRecord = pendingClaims ? boundedClaims(pendingClaims) : null;
+    if (imported && !pendingClaims && (imported.unverifiedCopies.length || imported.unverifiedClaims.length)) return error(422, 'IMPORT_REQUIRES_REVIEW',
       'La colección local contiene copias que necesitan verificación. Se conserva tu progreso local y no se ha creado ni reemplazado ningún inventario.',
-      { cards: imported.unverifiedCopies, notes: imported.notes });
+      { cards: imported.unverifiedCopies, claims: imported.unverifiedClaims, notes: imported.notes });
     if (imported?.runs.some(run => !campaignReleased(run.heroId, env, deps, caller.username))) return error(403, 'CHAMPION_LOCKED', 'Este campeón todavía no está disponible en la campaña.');
     try {
       await createPlayer(
@@ -373,6 +383,8 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
           source: imported ? 'LOCAL_IMPORT' : 'STARTER',
           importedAt: imported ? now : null,
           now,
+          storySeedBinding: env.STORY_SEED_BINDING === '1',
+          importClaims: claimRecord ? { claims: claimRecord.claims, digest: await claimsDigest(claimRecord.json), policy } : undefined,
         },
       );
     } catch {
@@ -382,6 +394,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
     return json({
       ...stateBody(caller, await loadReconciled(), env, deps),
       importNotes: imported?.notes ?? [],
+      ...(pendingClaims ? { importPendingReview: pendingClaims } : {}),
     });
   }
 
@@ -655,6 +668,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       const keep = worldCompleted(worlds, world, runs, history) && history[world.id]?.completedAt == null;
       // A run always starts at the world's first encounter (the server never skips encounters).
       await saveCampaignStep(db, caller.userId, now, {
+        storySeedBinding: env.STORY_SEED_BINDING === '1',
         run: createRun(campaign, content, deps.seed(), heroId),
         extra: keep
           ? worldCompletionStatements(db, caller.userId, { heroId, worldId: world.id, crystals: 0, payReward: false, transactionId: '', now })
@@ -663,6 +677,18 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       return respond();
     }
     const run = runs[campaign.id] ?? null;
+    // SEC-006: the seed of the next attempt of the run's admitted encounter comes from the server.
+    if (route === 'POST /api/tactics/campaign/attempt') {
+      if (!run || run.status !== 'IN_BATTLE') return error(409, 'NO_RUN', 'No hay encuentro en curso.');
+      if (!legacySnapshot(record, run) && !versionedSnapshot(record, run))
+        return error(409, 'STORY_ADMISSION_MISSING', 'Actualiza antes de iniciar el encuentro.');
+      // Never binds the admission (its mode was fixed when it was admitted) and never touches an
+      // admission other than the one this run is in (conditioned on the revision read here).
+      const attempt = await issueStoryAttempt(db, caller.userId, run, record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`], deps.seed(), now);
+      if (!attempt) return error(409, 'STORY_ADMISSION_CHANGED', 'La campaña cambió en otro dispositivo. Actualiza para continuar.');
+      if (attempt === 'UNAVAILABLE') return error(503, 'STORY_ATTEMPTS_UNAVAILABLE', 'Intentos verificados no disponibles todavía.');
+      return json({ attempt });
+    }
     if (route === 'POST /api/tactics/campaign/victory') {
       if (!run) return error(409, 'NO_RUN', 'No hay campaña en curso.');
       // A lost success response must recover the durable result, not replay against
@@ -677,6 +703,13 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       const versioned=versionedSnapshot(record,run);
       const rules=versioned?.rules??legacy?.rules;
       if(rules&&await consumedStoryProof(db,caller.userId,rules,body.proof))return error(422,'STORY_PROOF_ALREADY_USED','Este resultado ya fue verificado.');
+      // SEC-006: a seed-bound admission only replays with a seed the server issued for it.
+      const attempt = await checkStoryAttempt(db, caller.userId, run, body.proof);
+      // Activation metric for STORY_SEED_BINDING (no account data): result per admission mode and
+      // whether the replayed seed was server-issued (client readiness on LEGACY admissions too).
+      console.log(JSON.stringify({ evt: 'story_attempt_check', result: attempt.result, mode: attempt.mode, seedIssued: attempt.seedIssued, rules: rules ?? null, binding: env.STORY_SEED_BINDING === '1' }));
+      if (attempt.result === 'NOT_ISSUED') return error(409, 'STORY_ATTEMPT_REQUIRED', 'Reinicia el encuentro para continuar.');
+      if (attempt.result === 'WRONG_SEED') return error(422, 'INVALID_VICTORY', 'La victoria no pudo verificarse.', { reason: 'seed not issued for this attempt' });
       const proof = legacy?verifyLegacyCampaign(record,run,body.proof)!:versioned?verifyVersionedStory(record,run,body.proof)!:{ok:false as const,error:'Missing authoritative Story rules'};
       if (!proof.ok)
         return error(422, 'INVALID_VICTORY', 'La victoria no pudo verificarse.', {
@@ -706,7 +739,9 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
         : [];
       try {
         await saveCampaignStep(db, caller.userId, now, {
+          storySeedBinding: env.STORY_SEED_BINDING === '1',
           expectedRevision: record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`],
+          ...(attempt.admissionId ? { admissionGuard: attempt.admissionId } : {}),
           ...(rules?{storyProof:{digest:(await versionedProofDigest(rules,body.proof))!,engine:rules,runSeed:run.seed,encounterId:run.currentEncounterId}}:{}),
           ...(legacy?{closedLegacyProofDigest:(await legacyProofDigest(body.proof))!}:{}),
           run: { ...won.run, rewardOptions: won.run.rewardOptions.map(option => ({
@@ -769,6 +804,7 @@ async function route(request: Request, env: Env, deps: Deps): Promise<Response> 
       const source = `${encounter.rewards.pool}_DROP` as CardSource;
       try {
         await saveCampaignStep(db, caller.userId, now, {
+          storySeedBinding: env.STORY_SEED_BINDING === '1',
           expectedRevision: record.campaignRevisions?.[`${run.campaignId}:${run.heroId}`],
           run: claim.run,
           grant: claim.granted
