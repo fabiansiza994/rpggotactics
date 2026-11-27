@@ -1,3 +1,4 @@
+import {figureOverlayWeights} from './figureOverlayWeights';
 import { MISSING_UNIT_ART } from '../assets/missingUnitArt';
 import { shapeshifterPresentationEnabled } from '../shapeshifterRelease';
 import { verticalAsset, verticalGeometry, isVerticalView, verticalMirror } from '../qa/locomotion/directionalProfiles';
@@ -28,7 +29,7 @@ export class PaintedFigure extends Container {
   private readonly sprite: Sprite;
   private idleMesh: MeshPlane | null = null;
   private idleVertices: Float32Array | null = null;
-  private idlePrepared?:{key:string;base:Float32Array;sample:ReturnType<typeof prepareIdlePose>};
+  private idlePrepared?:{key:string;base:Float32Array;sample:ReturnType<typeof prepareIdlePose>;overlays:ReturnType<typeof figureOverlayWeights>};
   private idlePose = true;
   private directional: WizardFacing | null = null;
   private motion: CharacterMotion = 'idle';
@@ -176,9 +177,22 @@ export class PaintedFigure extends Container {
   }
 
   private discardIdleMesh(): void {
-    this.idleMesh?.destroy();
+    const mesh = this.idleMesh;
     this.idleMesh = null;
     this.idleVertices = null;
+    this.idlePrepared = undefined;
+    if (mesh) {
+      // MeshPlane owns this geometry. Mesh.destroy only detaches it in Pixi 8;
+      // release its private GPU buffers now, without destroying shared artwork.
+      const geometry = mesh.geometry;
+      mesh.destroy();
+      geometry.destroy(true);
+    }
+  }
+
+  override destroy(options?: Parameters<Container['destroy']>[0]): void {
+    this.discardIdleMesh();
+    super.destroy(options);
   }
 
   setDirectionalFacing(facing: WizardFacing): void {
@@ -277,49 +291,28 @@ export class PaintedFigure extends Container {
     const buffer = mesh.geometry.getAttribute('aPosition').buffer;
     const vertices = buffer.data;
     const base = this.idleVertices!;
-    const poseKey=`${this.animationVariantId}:${mesh.texture.width}:${mesh.texture.height}`;
-    if(this.idlePrepared?.key!==poseKey||this.idlePrepared.base!==base)this.idlePrepared={key:poseKey,base,sample:prepareIdlePose(this.animationVariantId,base,mesh.texture.width,mesh.texture.height)};
+    const width = mesh.texture.width, height = mesh.texture.height;
+    const poseKey=`${this.animationVariantId}:${width}:${height}`;
+    if(this.idlePrepared?.key!==poseKey||this.idlePrepared.base!==base)this.idlePrepared={
+      key:poseKey,base,sample:prepareIdlePose(this.animationVariantId,base,width,height),
+      overlays:figureOverlayWeights(base,width,height,this.unitId==='summoner'),
+    };
     const displacement=this.idlePrepared.sample(phase,enabled);
+    const {head,arm}=this.idlePrepared.overlays;
+    const meshScaleX=mesh.scale.x,meshScaleY=mesh.scale.y,figureScaleX=this.scale.x;
+    const ritualPulse = ritualCast && gestures
+      ? Math.sin(Math.min(1, this.castElapsed / (this.castReleaseMs + 100)) * Math.PI)
+      : 0;
     for (let i = 0; i < vertices.length; i += 2) {
-      const delta = {x:displacement[i]!,y:displacement[i+1]!};
-      const headWeight = Math.max(
-        0,
-        1 -
-          Math.hypot(
-            (base[i]! / mesh.texture.width - 0.5) / 0.2,
-            (base[i + 1]! / mesh.texture.height - 0.25) / 0.18,
-          ),
-      );
       const castDelta = directionalCast
-        ? wizardCastDisplacement(
-            castView,
-            base[i]! / mesh.texture.width,
-            base[i + 1]! / mesh.texture.height,
-            castPose,
-          )
-        : { x: 0, y: 0 };
-      const armWeight = ritualCast
-        ? Math.max(
-            0,
-            1 -
-              Math.hypot(
-                (base[i]! / mesh.texture.width - 0.36) / 0.15,
-                (base[i + 1]! / mesh.texture.height - 0.34) / 0.12,
-              ),
-          )
-        : 0;
-      const ritualPulse = gestures
-        ? Math.sin(Math.min(1, this.castElapsed / (this.castReleaseMs + 100)) * Math.PI)
-        : 0;
-      vertices[i] =
-        base[i]! +
-        (delta.x +
-          castDelta.x +
-          armWeight * ritualPulse * 2 +
-          headWeight * (directionalCast ? 0 : this.headLean) * this.scale.x) /
-          mesh.scale.x;
-      vertices[i + 1] =
-        base[i + 1]! + (delta.y + castDelta.y - armWeight * ritualPulse * 2) / mesh.scale.y;
+        ? wizardCastDisplacement(castView,base[i]! / width,base[i + 1]! / height,castPose)
+        : null;
+      const armWeight = ritualCast ? arm![i / 2]! : 0;
+      vertices[i] = base[i]! +
+        (displacement[i]! + (castDelta?.x ?? 0) + armWeight * ritualPulse * 2 +
+          head[i / 2]! * (directionalCast ? 0 : this.headLean) * figureScaleX) / meshScaleX;
+      vertices[i + 1] = base[i + 1]! +
+        (displacement[i + 1]! + (castDelta?.y ?? 0) - armWeight * ritualPulse * 2) / meshScaleY;
     }
     buffer.update();
   }

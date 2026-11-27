@@ -1,3 +1,4 @@
+import {battleRasterOptions} from './battleRasterOptions';
 import {winterOnsetActive} from '../../game/domain/combat/winter-onset';
 import {fitBattlefield} from '../responsive/battleFit';
 import {ManualCamera} from './ManualCamera';
@@ -587,7 +588,7 @@ export class BattleCanvas {
   async mount(host: HTMLElement, initialVm?: BoardViewModel): Promise<void> {
     if(initialVm)this.vm=initialVm;
     loadingMark('canvas-start');loadingMark('renderer-start');
-    const renderer=this.app.init({background:0x000000,backgroundAlpha:0,antialias:true,resizeTo:host,autoDensity:true,resolution:Math.min(2,window.devicePixelRatio||1)}).then(()=>loadingMark('renderer-end'));
+    const renderer=this.app.init({background:0x000000,backgroundAlpha:0,resizeTo:host,autoDensity:true,...battleRasterOptions(window.devicePixelRatio)}).then(()=>loadingMark('renderer-end'));
     await Promise.all([renderer,this.vm?this.prepareSceneAssets(this.vm):Promise.resolve()]);
     if(this.vm&&!this.preparedScenes.has(sceneAssetKey(this.vm.state)))await this.prepareSceneAssets(this.vm);
     if (this.destroyed) {
