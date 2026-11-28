@@ -242,7 +242,7 @@ export async function handle(
     if (origin && !(env.ALLOWED_ORIGINS ?? '').split(',').includes(origin)) return error(403, 'FORBIDDEN', 'Origen no permitido.');
     const code = (socketUrl.searchParams.get('code') ?? '').toUpperCase();
     if (!env.PVP_ROOMS || !/^[A-Z2-9]{8}$/.test(code) || request.headers.get('Upgrade') !== 'websocket') return error(400, 'BAD_REQUEST', 'Conexión inválida.');
-    return env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code)).fetch(new Request('https://room/socket?ticket=' + encodeURIComponent(socketUrl.searchParams.get('ticket') ?? '') + '&clientRelease=' + encodeURIComponent(socketUrl.searchParams.get('clientRelease') ?? '') + '&botProtocol=' + encodeURIComponent(socketUrl.searchParams.get('botProtocol') ?? ''), request));
+    return env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code)).fetch(new Request('https://room/socket?ticket=' + encodeURIComponent(socketUrl.searchParams.get('ticket') ?? '') + '&clientRelease=' + encodeURIComponent(socketUrl.searchParams.get('clientRelease') ?? '') + '&botProtocol=' + encodeURIComponent(socketUrl.searchParams.get('botProtocol') ?? '') + '&responseProtocol=' + encodeURIComponent(socketUrl.searchParams.get('responseProtocol') ?? ''), request));
   }
   if (socketUrl.pathname === '/api/tactics/social/socket') {
     // The user's own social hub (chat/notifications). Separate from every PvP room.
