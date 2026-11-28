@@ -1,14 +1,36 @@
-/* Context only: no layout rows, modal, backdrop or server-side timer ownership. */
-.silence-context {position:fixed;z-index:82;display:flex;gap:8px;width:104px;height:48px;pointer-events:auto;animation:silence-context-in 140ms ease-out;}
-.silence-context button {width:48px;min-width:48px;height:48px;min-height:48px;padding:11px;border:1px solid;border-radius:50%;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 12px #0008;}
-.silence-context button svg {width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
-.silence-accept {color:#b9ffda;background:radial-gradient(circle,#24634d,#0b2820);border-color:#6fe7ac!important;}
-.silence-pass {color:#ffd2d2;background:radial-gradient(circle,#683740,#2d101b);border-color:#f18b9c!important;}
-.silence-context button:disabled {opacity:.55;cursor:default;}
-.silence-context button:focus-visible {outline:3px solid #f4d592;outline-offset:3px;}
-.silence-context-caption {position:fixed;top:var(--silence-caption-top);left:clamp(8px,var(--silence-caption-left),calc(100vw - 222px));width:min(214px,calc(100vw - 16px));padding:3px 6px;border:1px solid #b49aca80;border-radius:7px;background:#131c2be8;color:#f4e9ce;font-size:11px;line-height:16px;text-align:center;pointer-events:none;box-sizing:border-box;}
-.silence-context-caption span {display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.silence-context-caption strong {font-size:10px;line-height:13px;display:block;color:#dfc2ff;}
+.silence-response-panel {display:flex;flex-direction:column;min-height:0;width:100%;height:100%;max-height:480px;box-sizing:border-box;border:1px solid #bea0ed;border-radius:14px;background:linear-gradient(145deg,#202335,#111c2b);color:#f4e9ce;box-shadow:0 8px 25px #0008;pointer-events:auto;overflow:hidden;}
+.silence-response-panel>header {display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid #b49aca60;font-size:13px;flex:none;}
+.silence-response-panel [role=timer] {font-size:18px;font-variant-numeric:tabular-nums;color:#f5d899;white-space:nowrap;}
+.silence-response-body {overflow:auto;overscroll-behavior:contain;min-height:0;flex:1;padding:8px;}
+.silence-response-panel>footer {flex:none;padding:8px;border-top:1px solid #b49aca60;}
+.silence-response-panel>footer>strong {display:block;font-size:12px;line-height:1.3;margin-bottom:6px;color:#e1c9ff;}
+.silence-response-actions {display:flex;gap:6px;}
+.silence-response-actions button {flex:1;min-width:0;min-height:44px;padding:6px;border:1px solid #aa8dbe;border-radius:8px;font-size:12px;cursor:pointer;touch-action:manipulation;}
+.silence-accept {color:#d8ffe9;background:#1b493d;}
+.silence-pass {color:#ffe1e6;background:#4a2836;}
+.silence-response-actions button:disabled {opacity:.55;cursor:default;}
+.silence-response-actions button:focus-visible {outline:3px solid #f4d592;outline-offset:-3px;}
+.silence-public-target {display:flex;flex-direction:column;gap:4px;padding:8px 2px;font-size:12px;}
+.silence-response-panel .silence-announced-card {width:100%;max-width:none;transform:none;position:relative;opacity:1;}
+.silence-response-panel .fc-text {max-height:none;overflow:visible;-webkit-line-clamp:unset;line-clamp:unset;font-size:13px;line-height:1.45;}
+.silence-response-panel .fc-art {height:140px;min-height:0;}
+body .battle.premium-battle .slot-preview:has(.silence-response-panel) {height:min(54dvh,480px);min-height:0;}
+@media(max-width:899px),(max-height:599px) {
+ .silence-response-panel {position:fixed;z-index:80;left:12px;top:12px;width:min(300px,35vw);height:calc(100dvh - 24px);max-height:none;}
+ .battle:has(.silence-response-panel) .battle-main {padding-left:calc(min(300px,35vw) + 24px);box-sizing:border-box;}
+ .silence-response-panel .fc-art {height:85px;aspect-ratio:auto;}
+ .battle:has(.silence-response-panel) .hand-bar {padding-left:calc(min(300px,35vw) + 24px);box-sizing:border-box;}
+ .battle:has(.silence-response-panel) .pause-trigger {left:calc(min(300px,35vw) + 24px);right:auto;}
+}
+@media(max-width:600px) and (orientation:portrait) {
+ .silence-response-panel {left:8px;top:calc(54px + env(safe-area-inset-top,0px));width:calc(100% - 16px);height:min(250px,34dvh);}
+ .battle:has(.silence-response-panel) .battle-main {padding-left:0;padding-top:calc(min(250px,34dvh) + 12px);}
+ .silence-response-panel .fc-art {height:64px;aspect-ratio:auto;}
+ .silence-response-panel .fc-head {min-height:32px;padding:4px;}
+ .silence-response-panel .fc-name {font-size:15px;}
+ .battle:has(.silence-response-panel) .hand-bar {padding-left:8px;}
+ .battle:has(.silence-response-panel) .pause-trigger {left:auto;right:8px;}
+}
 .silence-wait {position:fixed;z-index:24;left:50%;transform:translateX(-50%);top:58px;padding:3px 8px;background:#101d2de8;color:#eadcf9;font-size:11px;border-radius:6px;pointer-events:none;}
 .battle .hand .card[data-silence-role] {transition:transform 140ms ease-out,filter 140ms ease-out;}
 .battle .hand .card[data-silence-role='muted'] {filter:brightness(.72) saturate(.8);}
@@ -23,4 +45,19 @@
 @media(max-width:600px) and (orientation:portrait) {
   .battle .hand.is-silence-response {overflow-x:auto;overflow-y:hidden;justify-content:safe center;gap:8px;overscroll-behavior-x:contain;scroll-padding-inline:8px;}
   .battle .hand.is-silence-response .card {margin-left:0!important;}
+}
+/* Compact inspection keeps the effect beside the original art, above pinned actions. */
+.silence-response-panel .silence-announced-card {aspect-ratio:auto;}
+.silence-response-panel .fc-frame {height:auto;}
+@media(max-width:600px) and (orientation:portrait) {
+ .silence-response-panel {height:min(250px,32dvh);}
+ .battle:has(.silence-response-panel) .battle-main {padding-top:calc(min(250px,32dvh) + 8px);}
+ .battle:has(.silence-response-panel) .board-host {--battle-top-inset:0px;}
+ .silence-response-panel .fc-frame {display:grid;grid-template-columns:68px minmax(0,1fr);gap:4px;padding:5px;}
+ .silence-response-panel .fc-head {grid-column:1/-1;}
+ .silence-response-panel .fc-art {grid-column:1;grid-row:2/4;height:68px;}
+ .silence-response-panel .fc-typeline {grid-column:2;font-size:10px;}
+ .silence-response-panel .fc-text {grid-column:2;font-size:12px;line-height:1.35;margin:0;}
+ .silence-response-panel .fc-support {grid-column:1/-1;font-size:10px;}
+ .silence-response-panel .fc-cost {width:24px;height:24px;font-size:18px;}
 }

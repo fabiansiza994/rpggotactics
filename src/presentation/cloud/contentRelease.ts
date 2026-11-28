@@ -1,3 +1,4 @@
+import {INFORMED_RESPONSE_PROTOCOL} from '../../protocol/negationResponse';
 import { BOT_POLICY_VERSION } from "../../game/ai/ranked-bot-policy";
 /** Compatibility marker, never an auth credential or ownership assertion. */
 import { CONTENT_RELEASE } from "../../game/pvp/content-release";
@@ -8,5 +9,6 @@ export function contentReleaseUrl(value: string): string {
     url.searchParams.set("clientRelease", CONTENT_RELEASE);
   if (url.pathname.startsWith("/api/tactics/pvp/"))
     url.searchParams.set("botProtocol", BOT_POLICY_VERSION);
+  if (/^\/api\/tactics\/(pvp|ranked)\//.test(url.pathname)) url.searchParams.set('responseProtocol', INFORMED_RESPONSE_PROTOCOL);
   return url.toString();
 }

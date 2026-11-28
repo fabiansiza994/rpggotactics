@@ -189,7 +189,7 @@ export function duelView(
   if (meta.active !== seat)
     for (const u of view.units) u.faction = u.faction === 'PLAYER' ? 'ENEMY' : 'PLAYER';
   view.player = own;
-  view.responseWindow = view.pendingCast ? { id: view.pendingCast.id, cardId: view.pendingCast.cardId, casterId: view.pendingCast.casterId, respondingHeroId: view.pendingCast.respondingHeroId, deadline: view.pendingCast.deadline } : undefined;
+  view.responseWindow = view.pendingCast ? { id: view.pendingCast.id, cardId: view.pendingCast.cardId, casterId: view.pendingCast.casterId, respondingHeroId: view.pendingCast.respondingHeroId, deadline: view.pendingCast.deadline, ...(view.pendingCast.announcement ? {announcement: structuredClone(view.pendingCast.announcement), durationMs:view.pendingCast.durationMs} : {}) } : undefined;
   delete view.pendingCast;
   view.deadSummonSources = view.deadSummonSources?.filter(source => source.ownerId === own.heroId);
   view.competitiveRules = meta.competitiveRules;

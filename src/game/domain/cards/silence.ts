@@ -22,6 +22,9 @@ export interface PendingCast {
   paidEnergy: number;
   /** Server supplies its own clock once; reconnect never rewrites this value. */
   deadline: number;
+  /** Public announcement captured by the authoritative engine, never a rival hand projection. */
+  announcement?: { card: import('./card').CardDefinition; paidEnergy: number; target: Pos | null; secondary?: Pos | null };
+  durationMs?: number;
 }
 export type SilenceResponse = { type: 'SILENCE_RESPONSE'; windowId: string; pass: true } | { type: 'SILENCE_RESPONSE'; windowId: string; pass: false; sealUid: string; discardUid: string };
 

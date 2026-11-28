@@ -423,14 +423,14 @@ export function HandBar({ state, engine, audioBattleId, battleReady=true }: { st
       )}
       <DrawRitual state={state} engine={engine} busy={busy} footer={footerRef}/>
       <SummonSearchDialog key={selectedCardUid ?? 'no-search'} state={state} engine={engine} />
-      <SilenceResponseContext context={silence} engine={engine} footer={footerRef} />
+      <SilenceResponseContext context={silence} engine={engine} />
       <PendingCardChoiceDialog state={state} engine={engine} />
       <RitualEchoDialog key={`echo-${selectedCardUid ?? 'none'}`} state={state} engine={engine} />
       <RitualTransfer heroId={engine.heroId} />
       {!discarding && aimedCard && engine.content.cards[aimedCard.cardId]?.ritualPiece && <RitualCardActions key={`ritual-choice:${aimedCard.uid}`} uid={aimedCard.uid} state={state} engine={engine} busy={busy}/> }
       {!state.responseWindow && <ResolvingCardPreview engine={engine} />}
-      <BattleRail slot="preview"><BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected} lastInspectedCardUid={discarding || state.responseWindow ? null : inspection.uid}
-        inspectedCardUid={discarding || state.responseWindow ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} /></BattleRail>
+      {!state.responseWindow && <BattleRail slot="preview"><BattleCardFeature state={state} engine={engine} selectedCardUid={state.responseWindow ? null : selectedCardUid} hoveredCardUid={discarding || state.responseWindow ? null : inspected} lastInspectedCardUid={discarding || state.responseWindow ? null : inspection.uid}
+        inspectedCardUid={discarding || state.responseWindow ? null : detailUid} onCloseInspection={() => setDetailUid(null)} onChooseInspection={uid => { setDetailUid(null); selectCard(uid); }} /></BattleRail>}
       <BattleRail slot="altar"><AltarPanel key={`${state.player.heroId}:${hero?.defId}`} state={state} engine={engine} busy={busy} /></BattleRail>
       {handPulse > 0 && (
         <span key={handPulse} className="draw-feedback" aria-live="polite">
@@ -463,7 +463,7 @@ export function HandBar({ state, engine, audioBattleId, battleReady=true }: { st
                 handSize={state.player.hand.length}
                 disabled={silence.active ? false : busy}
                 responseRole={silence.role(card.uid)}
-                responseProgress={silence.active && card.uid===silence.sealUid ? silence.remaining/5000 : undefined}
+                responseProgress={silence.active && card.uid===silence.sealUid ? silence.remaining/silence.duration : undefined}
                 inspected={!discarding&&!state.responseWindow&&card.uid===inspection.uid} selected={silence.active ? false : discarding ? card.uid === handDiscard?.uid : card.uid === selectedCardUid}
                 playable={silence.active || !block}
                 block={silence.active ? undefined : block}

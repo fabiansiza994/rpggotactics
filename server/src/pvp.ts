@@ -1,7 +1,8 @@
+import {INFORMED_RESPONSE_PROTOCOL,negotiateResponseProtocol,responseDuration} from '../../src/protocol/negationResponse';
+import {worldFrozenCard} from '../../src/game/domain/cards/world-frozen';
 import {protectionRpc,type ProtectionEvent} from './rankedProtection';
 import {READINESS_PROTOCOL,newPreparation,preparationBlocks,acknowledgePreparation,abortPreparation,type BattlePreparation} from '../../src/protocol/battleReadiness';
 import { withDarkLightRelease } from '../../src/game/data/dark-light';
-import { SILENCE_RESPONSE_MS } from '../../src/game/domain/cards/silence';
 import {CONTENT_RELEASE,supportsRoomRelease,canRunRoomRules} from '../../src/game/pvp/content-release';
 import { botPause, botActionTiming, pacingCredit } from "./botPacing";
 import { botChampionAvatar } from "./botChampions";
@@ -89,6 +90,7 @@ export interface RoomNamespace {
   get(id: unknown): { fetch(request: Request): Promise<Response> };
 }
 interface Member {
+  responseProtocol?: string;
   clientRelease?: string;
   id: number | null;
   kind?: "HUMAN" | "BOT";
@@ -106,6 +108,8 @@ interface Member {
   badgeId?: string | null;
 }
 export interface Room {
+  /** Timing version negotiated once at admission, absent means legacy five seconds. */
+  responseProtocol?: string;
   /** Immutable engine version; absent means pre-expansion and requires the old Worker. */
   rulesRelease?: string;
   contentRelease?: string;
@@ -289,6 +293,7 @@ export async function pvpRoute(
     "X-Pvp-Bot-Protocol",
     new URL(request.url).searchParams.get("botProtocol") ?? "",
   );
+  headers.set('X-Pvp-Negation',new URL(request.url).searchParams.get('responseProtocol')??'');
   headers.set('X-Pvp-Readiness',new URL(request.url).searchParams.get('readinessProtocol')??'');
   const room = env.PVP_ROOMS.get(env.PVP_ROOMS.idFromName(code));
   try{return await room.fetch(
@@ -511,6 +516,19 @@ export class PvPMatchRoom {
   }
   private view(seat: number, events: GameEvent[] = []) {
     const r = this.room!;
+    const game = r.game ? duelView(r.game, seat as 0 | 1, PVP_CONTENT) : null;
+    // Older persisted windows retain their deadline; only their public wire view is enriched.
+    if (game?.responseWindow && r.game?.pendingCast && !game.responseWindow.announcement) {
+      const pending = r.game.pendingCast;
+      const caster = r.game.units.find(u => u.id === pending.casterId);
+      game.responseWindow.announcement = {
+        card: structuredClone(worldFrozenCard(PVP_CONTENT.cards[pending.cardId]!, caster)),
+        paidEnergy: pending.paidEnergy,
+        target: pending.target ? {...pending.target} : null,
+        ...(pending.secondary ? {secondary: {...pending.secondary}} : {}),
+      };
+      game.responseWindow.durationMs = pending.durationMs ?? responseDuration(r.responseProtocol);
+    }
     return {
       mode: r.mode ?? "DUEL",
       mapId: r.mapId ?? "classic",
@@ -556,7 +574,7 @@ export class PvPMatchRoom {
             outcome: r.ranked.outcome ? (r.ranked.outcome[seat] ?? null) : null,
           }
         : null,
-      game: r.game ? duelView(r.game, seat as 0 | 1, PVP_CONTENT) : null,
+      game,
       events: r.game ? duelEvents(r.game, seat as 0 | 1, events) : [],
     };
   }
@@ -1080,6 +1098,8 @@ export class PvPMatchRoom {
           },
           409,
         );
+      if (r.responseProtocol === INFORMED_RESPONSE_PROTOCOL && path !== '/leave' && request.headers.get('X-Pvp-Negation') !== INFORMED_RESPONSE_PROTOCOL)
+        return response({error:{code:'CLIENT_UPDATE_REQUIRED',message:'Recarga para recuperar esta ventana de respuesta.'}},409);
       if (path === "/connect") {
         // SEC-002: a ticket always carries a session identity confirmed as stored (B4/B5). Without
         // it the client's reconnect loop retries; the seat, match and reconnection window are kept.
@@ -1138,6 +1158,7 @@ export class PvPMatchRoom {
           member.loadout = loadout;
           for (const m of r.members) m.ready = false;
         }
+        member.responseProtocol = request.headers.get('X-Pvp-Negation') === INFORMED_RESPONSE_PROTOCOL ? INFORMED_RESPONSE_PROTOCOL : undefined;
         member.clientRelease =
           request.headers.get("X-Pvp-Client-Release") ?? undefined;
         member.ready = path === "/ready";
@@ -1168,6 +1189,7 @@ export class PvPMatchRoom {
           if (this.env.RELEASE2_CLIENT_REQUIRED === "1")
             r.contentRelease = CONTENT_RELEASE;
           r.rulesRelease = CONTENT_RELEASE;
+          r.responseProtocol = negotiateResponseProtocol(r.members);
           if(r.ranked){for(const m of r.members.filter(m=>m.kind!=='BOT')){try{const p=await protectionRpc(this.env,m.id!);if(p.until>Date.now())return response({error:{code:'RANKED_COOLDOWN',message:'Búsqueda Ranked temporalmente restringida'},protection:p},429);}catch{return response({error:{code:'PROTECTION_UNAVAILABLE',message:'No se puede comprobar la disponibilidad Ranked. Reintenta.'}},503);}}}
           r.game = createDuel(
             r.members.map((m) => m.loadout) as [Loadout, Loadout],
@@ -1307,6 +1329,8 @@ export class PvPMatchRoom {
       );
     if (r.contentRelease && !supportsRoomRelease(new URL(request.url).searchParams.get("clientRelease") ?? undefined, r.contentRelease))
       return response({error:{code:"CLIENT_UPDATE_REQUIRED",message:"Recarga para recuperar esta partida."}},426);
+    if(r.responseProtocol === INFORMED_RESPONSE_PROTOCOL && new URL(request.url).searchParams.get('responseProtocol') !== INFORMED_RESPONSE_PROTOCOL)
+      return response({error:{code:'CLIENT_UPDATE_REQUIRED',message:'Recarga para recuperar esta ventana de respuesta.'}},426);
     delete r.ticket[token];
     const pair = new (
       globalThis as unknown as {
@@ -1390,7 +1414,9 @@ export class PvPMatchRoom {
     if (!previousResponse && r.game.pendingCast) {
       r.responseTurnRemainingMs = Math.max(0, (turnDeadline ?? Date.now() + 90000) - Date.now());
       r.deadline = null;
-      r.game.pendingCast.deadline = Date.now() + SILENCE_RESPONSE_MS;
+      const pending=r.game.pendingCast;
+      pending.deadline = Date.now() + responseDuration(r.responseProtocol);
+      pending.durationMs = responseDuration(r.responseProtocol);
     } else if (previousResponse && !r.game.pendingCast) {
       r.deadline = Date.now() + (r.responseTurnRemainingMs ?? 90000);
       delete r.responseTurnRemainingMs;

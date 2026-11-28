@@ -1,3 +1,4 @@
+import {INFORMED_RESPONSE_PROTOCOL} from '../../protocol/negationResponse';
 import {RankedChallenge} from '../ranked/GlobalRanked';
 import {rankedOccupied,useRankedPresence} from '../ranked/rankedPresence';
 import {READINESS_PROTOCOL,type BattlePreparation}from'../../protocol/battleReadiness';
@@ -368,6 +369,7 @@ export function PvpScreen({
       if (!alive.current || generation !== connectionGeneration.current) return;
       const url = new URL(CLOUD_CONFIG.apiUrl + "/api/tactics/pvp/socket");
       url.searchParams.set("clientRelease", roomConnectionRelease(token.clientRelease));
+      url.searchParams.set("responseProtocol",INFORMED_RESPONSE_PROTOCOL);
       url.searchParams.set("botProtocol", BOT_POLICY_VERSION);
       url.searchParams.set("readinessProtocol",READINESS_PROTOCOL);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";

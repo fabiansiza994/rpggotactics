@@ -3,7 +3,7 @@ import { DEFAULT_CONTENT } from '../src/game/data';
 import { withDarkLightRelease } from '../src/game/data/dark-light';
 import { createProfile } from '../src/game/collection/profile';
 import { createDuel, validateLoadout, applyDuel, duelView } from '../src/game/pvp/duel';
-import { validCommand } from '../server/src/pvp';
+import { PVP_CONTENT, validCommand } from '../server/src/pvp';
 import { SILENCE_RESPONSE_MS } from '../src/game/domain/cards/silence';
 const content = withDarkLightRelease(DEFAULT_CONTENT);
 function setup() {
@@ -86,4 +86,19 @@ describe('Silence: a real persisted response window', () => {
     expect(validCommand({ type: 'SILENCE_RESPONSE', windowId: 'cast-1', pass: false, sealUid: 's', discardUid: 'd' })).toBe(true);
     expect(validCommand({ type: 'SILENCE_RESPONSE', windowId: 'cast-1', pass: false, sealUid: {} })).toBe(false);
   });
+  it('captures the exact upgraded definition announced by the engine without aliasing the registry',()=>{
+    const state=setup();state.player.hand=[{uid:'cast',cardId:'ice_prison'}];
+    state.units.find(u=>u.id===state.player.heroId)!.statuses.push({id:'ABSOLUTE_ZERO',turnsLeft:5});
+    const result=applyDuel(state,{type:'PLAY_CARD',cardUid:'cast',target:{x:3,y:2}},PVP_CONTENT);
+    const card=result.state.pendingCast!.announcement!.card;
+    expect(card.worldFrozenActive).toBe(true);
+    expect(card.rulesText).toBe(PVP_CONTENT.cards.ice_prison!.worldFrozenUpgrade!.rulesText);
+    expect(card).not.toBe(PVP_CONTENT.cards.ice_prison);
+    expect(card.rulesText).not.toBe(PVP_CONTENT.cards.ice_prison!.rulesText);
+  });
+  it('retains the five-field public projection for previously persisted windows without an announcement',()=>{
+    const state=announce().state;delete state.pendingCast!.announcement;
+    expect(Object.keys(duelView(state,1,content).responseWindow!).sort()).toEqual(['cardId','casterId','deadline','id','respondingHeroId']);
+  });
+
 });

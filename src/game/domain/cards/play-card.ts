@@ -177,7 +177,7 @@ export function playCard(ctx: RuleContext, cardUid: string, target: Pos | null, 
     ctx.state.stats.cardsPlayed += 1;
     if (ctx.state.duel?.darkLightRelease && !card.twistedCurse && hasLegalSilenceResponse(ctx)) {
       const id = `cast-${ctx.state.nextId++}`;
-      ctx.state.pendingCast = { id, cardUid, cardId: def.id, casterId: caster.id, respondingHeroId: ctx.state.duel.other.heroId, target: target ? { ...target } : null, searchUid, secondary: secondary ? { ...secondary } : secondary, wallOrientation, sacrificeHp, paidEnergy: price.cost, deadline: 0 };
+      ctx.state.pendingCast = { id, cardUid, cardId: def.id, casterId: caster.id, respondingHeroId: ctx.state.duel.other.heroId, target: target ? { ...target } : null, searchUid, secondary: secondary ? { ...secondary } : secondary, wallOrientation, sacrificeHp, paidEnergy: price.cost, deadline: 0, announcement: { card: structuredClone(def), paidEnergy: price.cost, target: target ? {...target} : null, ...(secondary ? {secondary: {...secondary}} : {}) } };
       ctx.emit({ type: 'CARD_CAST_PENDING', cardUid, cardId: def.id, casterId: caster.id, windowId: id });
       return OK;
     }

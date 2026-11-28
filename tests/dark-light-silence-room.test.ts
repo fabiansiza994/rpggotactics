@@ -1,3 +1,4 @@
+import { INFORMED_RESPONSE_PROTOCOL, negotiateResponseProtocol, responseDuration } from '../src/protocol/negationResponse';
 import { withDarkLightRelease } from '../src/game/data/dark-light';
 import{competitiveFixture}from'./support/competitive-profile';
 import { describe, it, expect, vi } from 'vitest';
@@ -123,9 +124,12 @@ class FakeSocket {
   }
 }
 describe('Dark/light room response deadlines (local DO harness)', () => {
-  async function pendingRoom(allowResponse = true) {
+  async function pendingRoom(allowResponse = true, protocol?: string) {
     const h = harness(); await h.setup();
     const room = h.data.get('room') as Room;
+    room.responseProtocol = protocol;
+    room.rulesRelease = 'universal-cards-1';
+    room.preparation = undefined;
     const profile = createProfile(DEFAULT_CONTENT);
     const load = validateLoadout(profile, 'mage');
     room.game = createDuel([load, load], 42, 'DUEL', 'classic', withDarkLightRelease(DEFAULT_CONTENT));
@@ -199,4 +203,76 @@ describe('Dark/light room response deadlines (local DO harness)', () => {
     await h.driver.applyRoomCommand(1, action);
     expect(JSON.stringify(h.snapshot().game)).toBe(before);
   });
+  it('negotiates fifteen seconds only when every human supports it', () => {
+    const modern={responseProtocol:INFORMED_RESPONSE_PROTOCOL};
+    expect(negotiateResponseProtocol([modern,modern])).toBe(INFORMED_RESPONSE_PROTOCOL);
+    expect(negotiateResponseProtocol([modern,{kind:'BOT'}])).toBe(INFORMED_RESPONSE_PROTOCOL);
+    expect(negotiateResponseProtocol([modern,{}])).toBeUndefined();
+    expect(responseDuration(undefined)).toBe(5000);
+    expect(responseDuration(INFORMED_RESPONSE_PROTOCOL)).toBe(15000);
+  });
+  it('persists fifteen seconds across hydration, expires once, and resumes the paused turn', async () => {
+    vi.spyOn(Date,'now').mockReturnValue(4000000);
+    try {
+      const h=await pendingRoom(true,INFORMED_RESPONSE_PROTOCOL);
+      expect(h.snapshot().game!.pendingCast!.deadline).toBe(4015000);
+      expect(h.snapshot().deadline).toBeNull();
+      const pending=h.snapshot().game!.pendingCast!;
+      expect(pending.durationMs).toBe(15000);
+      expect(pending.announcement!.card.id).toBe('magic_missile');
+      expect(pending.announcement!.paidEnergy).toBe(1);
+      expect(pending.announcement!.target).toEqual({x:3,y:2});
+      vi.mocked(Date.now).mockReturnValue(4002000);
+      const restored=new PvPMatchRoom(h.ctx as unknown as ConstructorParameters<typeof PvPMatchRoom>[0],{DB:h.db});
+      await Promise.resolve();await Promise.resolve();
+      expect(h.snapshot().game!.pendingCast!.deadline-Date.now()).toBe(13000);
+      vi.mocked(Date.now).mockReturnValue(4014999);
+      await restored.alarm();
+      expect(h.snapshot().game!.pendingCast).toBeDefined();
+      vi.mocked(Date.now).mockReturnValue(4015000);
+      await restored.alarm();
+      expect(h.snapshot().game!.pendingCast).toBeUndefined();
+      expect(h.snapshot().deadline).toBe(4060000);
+      expect(h.snapshot().game!.player.energy).toBe(4);
+      const before=JSON.stringify(h.snapshot().game);
+      await restored.alarm();
+      expect(JSON.stringify(h.snapshot().game)).toBe(before);
+    } finally {vi.restoreAllMocks();}
+  });
+  it('allows immediate pass in a fifteen-second room without spending the response cards', async () => {
+    const h=await pendingRoom(true,INFORMED_RESPONSE_PROTOCOL), pending=h.snapshot();
+    await h.driver.applyRoomCommand(1,{id:'v2-pass',version:pending.version,command:{type:'SILENCE_RESPONSE',windowId:pending.game!.pendingCast!.id,pass:true}});
+    expect(h.snapshot().game!.pendingCast).toBeUndefined();
+    expect(h.snapshot().game!.duel!.other.hand.map(c=>c.uid)).toEqual(['seal','cost']);
+    expect(h.snapshot().game!.duel!.other.energy).toBe(3);
+  });
+
+  it('projects only the public announcement and requires the new capability to resume a new room', async () => {
+    const h=await pendingRoom(true,INFORMED_RESPONSE_PROTOCOL);
+    const old=await h.live.fetch(new Request('https://room/state',{method:'POST',body:'{}',headers:{'X-Pvp-User':'2'}}));
+    expect(old.status).toBe(409);
+    const current=await h.live.fetch(new Request('https://room/state',{method:'POST',body:'{}',headers:{'X-Pvp-User':'2','X-Pvp-Negation':INFORMED_RESPONSE_PROTOCOL}}));
+    expect(current.status).toBe(200);
+    const wire=await current.json() as {game:{responseWindow:unknown;pendingCast?:unknown}};
+    const announcement=JSON.stringify(wire.game.responseWindow);
+    expect(announcement).toContain('magic_missile');
+    expect(announcement).toContain('15000');
+    for(const privateKey of ['cardUid','searchUid','sealUid','discardUid','twistedCurse','sacrificeHp'])expect(announcement).not.toContain(privateKey);
+    expect(wire.game.pendingCast).toBeUndefined();
+  });
+  it('retains existing Seal energy and discard costs in the fifteen-second room', async () => {
+    const h=await pendingRoom(true,INFORMED_RESPONSE_PROTOCOL),pending=h.snapshot();
+    await h.driver.applyRoomCommand(1,{id:'v2-seal',version:pending.version,command:{type:'SILENCE_RESPONSE',windowId:pending.game!.pendingCast!.id,pass:false,sealUid:'seal',discardUid:'cost'}});
+    const game=h.snapshot().game!;
+    expect(game.pendingCast).toBeUndefined();
+    expect(game.duel!.other.hand).toHaveLength(0);
+    expect(game.duel!.other.discard.map(c=>c.uid)).toEqual(expect.arrayContaining(['seal','cost']));
+    expect(game.duel!.other.energy).toBe(1);
+  });
+  it('does not open fifteen seconds without a legal response',async()=>{
+    const h=await pendingRoom(false,INFORMED_RESPONSE_PROTOCOL);
+    expect(h.snapshot().game!.pendingCast).toBeUndefined();
+    expect(h.snapshot().deadline).not.toBeNull();
+  });
+
 });

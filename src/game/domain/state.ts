@@ -66,7 +66,7 @@ export interface BattleOutcome {
  */
 export interface GameState {
   pendingCast?: import('./cards/silence').PendingCast;
-  responseWindow?: Pick<import('./cards/silence').PendingCast, 'id' | 'cardId' | 'casterId' | 'respondingHeroId' | 'deadline'>;
+  responseWindow?: Pick<import('./cards/silence').PendingCast, 'id' | 'cardId' | 'casterId' | 'respondingHeroId' | 'deadline' | 'announcement' | 'durationMs'>;
   deadSummonSources?: { ownerId: string; cardUid: string; summonId: string }[];
   competitiveRules?: '40_DECK_OUT_V1';
   /** Wire-only rival discard identities that were already publicly revealed. */
